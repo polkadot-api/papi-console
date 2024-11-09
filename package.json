@@ -44,6 +44,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
+    "idb-keyval": "^6.2.1",
     "lucide-react": "^0.456.0",
     "polkadot-api": "^1.7.3",
     "react": "^18.3.1",

@@ -1,6 +1,6 @@
 import { getDynamicBuilder, getLookupFn } from "@polkadot-api/metadata-builders"
 import { getObservableClient } from "@polkadot-api/observable-client"
-import { decAnyMetadata, HexString } from "@polkadot-api/substrate-bindings"
+import { decAnyMetadata } from "@polkadot-api/substrate-bindings"
 import {
   createClient as createSubstrateClient,
   JsonRpcProvider,
@@ -21,6 +21,7 @@ import { startFromWorker } from "polkadot-api/smoldot/from-worker"
 import SmWorker from "polkadot-api/smoldot/worker?worker"
 import { getWsProvider } from "polkadot-api/ws-provider/web"
 import {
+  catchError,
   concat,
   EMPTY,
   filter,
@@ -37,6 +38,7 @@ import ksmRawNetworks from "./networks/kusama.json"
 import polkadotRawNetworks from "./networks/polkadot.json"
 import paseoRawNetworks from "./networks/paseo.json"
 import westendRawNetworks from "./networks/westend.json"
+import { cyclingLocalCache } from "./utils/cyclingLocalCache"
 
 export type ChainSource = { id: string } & (
   | {
@@ -185,29 +187,13 @@ const uncachedRuntimeCtx$ = chainClient$.pipeState(
   filter((v) => !!v),
 )
 
-const getMetadataCache = () => {
-  const cached = localStorage.getItem(`metadata-cache`)
-  return new Map<string, { time: number; data: HexString }>(
-    cached ? JSON.parse(cached) : [],
-  )
-}
-const getCachedMetadata = (id: string) =>
-  getMetadataCache().get(id)?.data ?? null
-const setCachedMetadata = (id: string, data: HexString) => {
-  const cached = getMetadataCache()
-  cached.set(id, { time: Date.now(), data })
-  if (cached.size > 3) {
-    const oldest = [...cached.entries()].reduce((a, b) =>
-      a[1].time < b[1].time ? a : b,
-    )[0]
-    cached.delete(oldest)
-  }
-  localStorage.setItem("metadata-cache", JSON.stringify([...cached.entries()]))
-}
+const [getCachedMetadata, setCachedMetadata] =
+  cyclingLocalCache("metadata-cache")
 export const runtimeCtx$ = chainClient$.pipeState(
-  switchMap(({ id }) => {
-    const cached = getCachedMetadata(id)
-
+  switchMap(({ id }) =>
+    getCachedMetadata(id).then((cached) => ({ id, cached })),
+  ),
+  switchMap(({ id, cached }) => {
     const realCtx$ = uncachedRuntimeCtx$.pipe(
       tap((v) => {
         setCachedMetadata(id, toHex(v.metadataRaw))
@@ -228,6 +214,26 @@ export const runtimeCtx$ = chainClient$.pipeState(
     }
     return realCtx$
   }),
+)
+
+const [getCachedSmoldotDb, setCachedSmoldotDb] = cyclingLocalCache("smoldot-db")
+export const persistSyncState$ = chainClient$.pipe(
+  switchMap(({ id, client }) => {
+    if (!relayChains.has(id)) return EMPTY
+
+    return uncachedRuntimeCtx$.pipe(
+      switchMap(() =>
+        client._request<string, []>("chainHead_unstable_finalizedDatabase", []),
+      ),
+      catchError(() => EMPTY),
+      filter((v) => !!v),
+      map((db) => ({
+        id,
+        db,
+      })),
+    )
+  }),
+  tap(({ id, db }) => setCachedSmoldotDb(id, db)),
 )
 
 export const lookup$ = runtimeCtx$.pipeState(map((ctx) => ctx.lookup))
@@ -251,22 +257,28 @@ export function getProvider(source: ChainSource): JsonRpcProvider {
         console.debug("smoldot[%s(%s)] %s", target, level, message)
       },
     })
+
+    const preinitChains = [
+      { name: "polkadot", chainSpec },
+      { name: "kusama", chainSpec: ksmChainSpec },
+      { name: "westend", chainSpec: westendChainSpec },
+      { name: "paseo", chainSpec: paseoChainSpec },
+    ]
+    const relayChains = Object.fromEntries(
+      preinitChains.map(({ name, chainSpec }) => [
+        name,
+        getCachedSmoldotDb(name).then((db) =>
+          client.addChain({
+            chainSpec,
+            databaseContent: db ?? undefined,
+          }),
+        ),
+      ]),
+    )
+
     smoldot = {
       client,
-      relayChains: {
-        polkadot: client.addChain({
-          chainSpec: chainSpec,
-        }),
-        kusama: client.addChain({
-          chainSpec: ksmChainSpec,
-        }),
-        westend: client.addChain({
-          chainSpec: westendChainSpec,
-        }),
-        paseo: client.addChain({
-          chainSpec: paseoChainSpec,
-        }),
-      },
+      relayChains,
     }
   }
   const chain = source.value.relayChain
