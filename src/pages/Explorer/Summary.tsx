@@ -8,14 +8,14 @@ import { useStateObservable, withDefault } from "@react-rxjs/core"
 import { tap } from "rxjs"
 
 const finalized$ = chainHead$.pipeState(
-  tap({
-    next: (v) => console.log("next chainHead$", v),
-    error: () => console.log("suspense chainHead$"),
-    subscribe: () => console.log("subscribe chainHead$"),
-    unsubscribe: () => console.log("unsubscribe chainHead$"),
-  }),
+  // tap({
+  //   next: (v) => console.log("next chainHead$", v),
+  //   error: () => console.log("suspense chainHead$"),
+  //   subscribe: () => console.log("subscribe chainHead$"),
+  //   unsubscribe: () => console.log("unsubscribe chainHead$"),
+  // }),
   switchMap((chainHead) => from(chainHead.finalized$)),
-  tap((v) => console.log("finalized", v)),
+  // tap((v) => console.log("finalized", v)),
   map((v) => v.number.toLocaleString()),
 )
 const best$ = chainHead$.pipeState(

@@ -22,6 +22,7 @@ import SmWorker from "polkadot-api/smoldot/worker?worker"
 import { getWsProvider } from "polkadot-api/ws-provider/web"
 import {
   concat,
+  defer,
   EMPTY,
   filter,
   finalize,
@@ -158,37 +159,43 @@ const r = new Subject<void>()
 ;(window as any).nextSub = () => r.next()
 export const chainClient$ = state(
   selectedSource$.pipe(
-    map((src) => [src.id, getProvider(src)] as const),
     switchMap((v) =>
       r.pipe(
         startWith(null),
         map(() => v),
       ),
     ),
+    map((src) => [src.id, getProvider(src)] as const),
     switchMap(([id, provider], i) => {
-      const id2 = i++
-      console.log("create new", id2)
-      const substrateClient = createSubstrateClient(provider)
-      const observableClient = getObservableClient(substrateClient)
-      const chainHead = observableClient.chainHead$(2)
-      const client = createClient(provider)
-      const sub = client.finalizedBlock$.subscribe((v) =>
-        console.log("finalized", id2, v),
-      )
       return concat(
         i === 0 ? EMPTY : of(SUSPENSE),
         of(null).pipe(
           tap((v) => console.log("send new", v)),
           ignoreElements(),
         ),
-        of({ id, client, substrateClient, observableClient, chainHead }),
-        NEVER,
-      ).pipe(
-        finalize(() => {
-          // sub.unsubscribe()
-          chainHead.unfollow()
-          // client.destroy()
-          observableClient.destroy()
+        timer(500).pipe(ignoreElements()),
+        defer(() => {
+          const id2 = i++
+          console.log("create new", id2)
+          const substrateClient = createSubstrateClient(provider)
+          const observableClient = getObservableClient(substrateClient)
+          const chainHead = observableClient.chainHead$(2)
+          const client = createClient(provider)
+          const sub = client.finalizedBlock$.subscribe((v) =>
+            console.log("finalized", id2, v),
+          )
+
+          return concat(
+            of({ id, client, substrateClient, observableClient, chainHead }),
+            NEVER,
+          ).pipe(
+            finalize(() => {
+              sub.unsubscribe()
+              chainHead.unfollow()
+              client.destroy()
+              observableClient.destroy()
+            }),
+          )
         }),
       )
     }),
