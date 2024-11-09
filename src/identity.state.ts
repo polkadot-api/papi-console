@@ -26,45 +26,45 @@ const cache = localStorageSubject<Record<string, Identity>>(
   {},
 )
 
-const client = createClient(
-  getProvider({
-    id: "polkadot_people",
-    type: "chainSpec",
-    value: {
-      chainSpec,
-      relayChain: "polkadot",
-    },
-  }),
-)
-const typedApi = client.getTypedApi(polkadot_people)
+// const client = createClient(
+//   getProvider({
+//     id: "polkadot_people",
+//     type: "chainSpec",
+//     value: {
+//       chainSpec,
+//       relayChain: "polkadot",
+//     },
+//   }),
+// )
+// const typedApi = client.getTypedApi(polkadot_people)
 
 export const identity$ = state(
-  (address: SS58String) =>
-    typedApi.query.Identity.IdentityOf.watchValue(address).pipe(
-      map((res): Identity | null => {
-        const displayName = res && readIdentityData(res[0].info.display)
-        return displayName
-          ? {
-              displayName: displayName.asText(),
-              judgments: res[0].judgements.map(([registrar, judgement]) => ({
-                registrar,
-                judgement: judgement.type,
-              })),
-            }
-          : null
-      }),
-      tap((v) =>
-        cache.setValue((c) => {
-          if (v) {
-            return { ...c, [address]: v }
-          } else {
-            delete c[address]
-            return c
-          }
-        }),
-      ),
-      catchError(() => of(null)),
-    ),
+  (address: SS58String) => of(null),
+  // typedApi.query.Identity.IdentityOf.watchValue(address).pipe(
+  //   map((res): Identity | null => {
+  //     const displayName = res && readIdentityData(res[0].info.display)
+  //     return displayName
+  //       ? {
+  //           displayName: displayName.asText(),
+  //           judgments: res[0].judgements.map(([registrar, judgement]) => ({
+  //             registrar,
+  //             judgement: judgement.type,
+  //           })),
+  //         }
+  //       : null
+  //   }),
+  //   tap((v) =>
+  //     cache.setValue((c) => {
+  //       if (v) {
+  //         return { ...c, [address]: v }
+  //       } else {
+  //         delete c[address]
+  //         return c
+  //       }
+  //     }),
+  //   ),
+  //   catchError(() => of(null)),
+  // ),
   (address) => cache.getValue()[address] ?? null,
 )
 

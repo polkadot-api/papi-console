@@ -25,13 +25,17 @@ import {
   EMPTY,
   filter,
   finalize,
+  ignoreElements,
+  interval,
   map,
   NEVER,
   Observable,
   of,
   startWith,
+  Subject,
   switchMap,
   tap,
+  timer,
 } from "rxjs"
 import ksmRawNetworks from "./networks/kusama.json"
 import polkadotRawNetworks from "./networks/polkadot.json"
@@ -149,22 +153,41 @@ const selectedSource$ = selectedChain$.pipe(
   ),
 )
 
+let i = 0
+const r = new Subject<void>()
+;(window as any).nextSub = () => r.next()
 export const chainClient$ = state(
   selectedSource$.pipe(
     map((src) => [src.id, getProvider(src)] as const),
+    switchMap((v) =>
+      r.pipe(
+        startWith(null),
+        map(() => v),
+      ),
+    ),
     switchMap(([id, provider], i) => {
+      const id2 = i++
+      console.log("create new", id2)
       const substrateClient = createSubstrateClient(provider)
       const observableClient = getObservableClient(substrateClient)
       const chainHead = observableClient.chainHead$(2)
       const client = createClient(provider)
+      const sub = client.finalizedBlock$.subscribe((v) =>
+        console.log("finalized", id2, v),
+      )
       return concat(
         i === 0 ? EMPTY : of(SUSPENSE),
+        of(null).pipe(
+          tap((v) => console.log("send new", v)),
+          ignoreElements(),
+        ),
         of({ id, client, substrateClient, observableClient, chainHead }),
         NEVER,
       ).pipe(
         finalize(() => {
+          // sub.unsubscribe()
           chainHead.unfollow()
-          client.destroy()
+          // client.destroy()
           observableClient.destroy()
         }),
       )

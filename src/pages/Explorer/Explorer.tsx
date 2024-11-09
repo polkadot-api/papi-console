@@ -5,6 +5,7 @@ import { BlockTable } from "./BlockTable"
 import { BlockDetail } from "./Detail"
 import { Events } from "./Events"
 import { Summary } from "./Summary"
+import { Suspense } from "react"
 
 export const Explorer = withSubscribe(
   () => (
@@ -14,10 +15,16 @@ export const Explorer = withSubscribe(
         path="*"
         element={
           <div className="overflow-auto p-4 pb-0">
-            <Summary />
+            <Suspense fallback="Summary">
+              <Summary />
+            </Suspense>
             <div className="flex gap-2 items-start flex-wrap lg:flex-nowrap">
-              <BlockTable />
-              <Events />
+              <Suspense fallback="Block table">
+                <BlockTable />
+              </Suspense>
+              <Suspense fallback="Events">
+                <Events />
+              </Suspense>
             </div>
           </div>
         }

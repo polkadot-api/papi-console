@@ -1,13 +1,21 @@
 import { chainHead$, runtimeCtx$ } from "@/chain.state"
-import { FC, PropsWithChildren } from "react"
-import { map, switchMap } from "rxjs"
+import { FC, PropsWithChildren, Suspense } from "react"
+import { from, map, switchMap } from "rxjs"
 import { twMerge } from "tailwind-merge"
 import { BlockTime } from "./BlockTime"
 import { EpochRemainingTime } from "./EpochTime"
 import { useStateObservable, withDefault } from "@react-rxjs/core"
+import { tap } from "rxjs"
 
 const finalized$ = chainHead$.pipeState(
-  switchMap((chainHead) => chainHead.finalized$),
+  tap({
+    next: (v) => console.log("next chainHead$", v),
+    error: () => console.log("suspense chainHead$"),
+    subscribe: () => console.log("subscribe chainHead$"),
+    unsubscribe: () => console.log("unsubscribe chainHead$"),
+  }),
+  switchMap((chainHead) => from(chainHead.finalized$)),
+  tap((v) => console.log("finalized", v)),
   map((v) => v.number.toLocaleString()),
 )
 const best$ = chainHead$.pipeState(
@@ -31,17 +39,25 @@ export const Summary: FC = () => {
   const hasEpoch = useStateObservable(hasEpoch$)
   return (
     <div className="flex gap-4 items-center py-2">
-      <SummaryItem title="Block Time" className="bg-card/0 border-none">
-        <BlockTime />
-      </SummaryItem>
-      {hasEpoch ? (
-        <SummaryItem title="Epoch" className="bg-card/0 border-none">
-          <EpochRemainingTime />
+      <Suspense fallback="BlockTime">
+        <SummaryItem title="Block Time" className="bg-card/0 border-none">
+          <BlockTime />
         </SummaryItem>
-      ) : null}
+      </Suspense>
+      <Suspense fallback="Epoch">
+        {hasEpoch ? (
+          <SummaryItem title="Epoch" className="bg-card/0 border-none">
+            <EpochRemainingTime />
+          </SummaryItem>
+        ) : null}
+      </Suspense>
       <div className="flex-1" />
-      <SummaryItem title="Finalized">{finalized$}</SummaryItem>
-      <SummaryItem title="Best">{best$}</SummaryItem>
+      <Suspense fallback="Finalized">
+        <SummaryItem title="Finalized">{finalized$}</SummaryItem>
+      </Suspense>
+      <Suspense fallback="Best">
+        <SummaryItem title="Best">{best$}</SummaryItem>
+      </Suspense>
     </div>
   )
 }
