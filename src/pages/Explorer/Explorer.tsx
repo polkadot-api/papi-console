@@ -15,7 +15,7 @@ export const Explorer = withSubscribe(
         element={
           <div className="overflow-auto p-4 pb-0">
             <Summary />
-            <div className="flex gap-2 items-start flex-wrap lg:flex-nowrap">
+            <div className="flex gap-2 lg:gap-8 items-start flex-wrap lg:flex-nowrap">
               <BlockTable />
               <Events />
             </div>
