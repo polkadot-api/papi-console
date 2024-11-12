@@ -105,7 +105,7 @@ export function NetworkSwitcher() {
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="w-[200px] flex gap-0 justify-between text-base px-3 border border-border bg-input"
+          className="w-[100px] lg:w-[200px] flex gap-0 justify-between text-base px-3 border border-border bg-input"
         >
           <span className="overflow-hidden text-ellipsis">
             {selectedChain.network.display}
