@@ -161,7 +161,15 @@ const serializeValue = (value: Binary): string | Binary => {
 const textDecoder = new TextDecoder("utf-8", { fatal: true })
 export const bytesToString = (value: Binary) => {
   try {
-    return textDecoder.decode(value.asBytes())
+    const bytes = value.asBytes()
+    const nullPos = bytes.indexOf(0)
+    // if there's a null character (except at the end of the text) we want hex
+    if (
+      bytes.length === 0 ||
+      (nullPos !== -1 && (bytes.length === 1 || nullPos !== bytes.length - 1))
+    )
+      throw null
+    return textDecoder.decode(bytes)
   } catch (_) {
     return value.asHex()
   }
