@@ -10,17 +10,21 @@ import { Transactions } from "./pages/Transactions"
 
 export default function App() {
   return (
-    <div className="w-full max-w-screen-lg h-screen bg-background flex flex-col">
+    <div className="w-full h-screen bg-background flex flex-col">
       <Header />
-      <Routes>
-        <Route path="explorer/*" element={<Explorer />} />
-        <Route path="extrinsics/*" element={<Extrinsics />} />
-        <Route path="storage/*" element={<Storage />} />
-        <Route path="constants/*" element={<Constants />} />
-        <Route path="runtimeCalls/*" element={<RuntimeCalls />} />
-        <Route path="metadata/*" element={<Metadata />} />
-        <Route path="*" element={<Navigate to="/explorer" replace />} />
-      </Routes>
+      <div className="flex-1 overflow-auto relative">
+        <div className="max-w-screen-lg m-auto">
+          <Routes>
+            <Route path="explorer/*" element={<Explorer />} />
+            <Route path="extrinsics/*" element={<Extrinsics />} />
+            <Route path="storage/*" element={<Storage />} />
+            <Route path="constants/*" element={<Constants />} />
+            <Route path="runtimeCalls/*" element={<RuntimeCalls />} />
+            <Route path="metadata/*" element={<Metadata />} />
+            <Route path="*" element={<Navigate to="/explorer" replace />} />
+          </Routes>
+        </div>
+      </div>
       <Transactions />
     </div>
   )

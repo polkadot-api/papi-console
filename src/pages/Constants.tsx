@@ -35,7 +35,7 @@ export const Constants = withSubscribe(
     const entries = useStateObservable(metadataConstants$)
 
     return (
-      <div className="p-4 pb-0 flex flex-col gap-2 items-start overflow-auto leading-relaxed">
+      <div className="p-4 pb-0 flex flex-col gap-2 items-start leading-relaxed">
         <ul>
           {entries.map(({ name, constants }) => (
             <PalletConstants key={name} name={name} entries={constants} />
