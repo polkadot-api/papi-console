@@ -15,6 +15,7 @@ import { map } from "rxjs"
 import { EditMode } from "./EditMode"
 import { JsonMode } from "./JsonMode"
 import { ExtrinsicModal } from "./SubmitTx/SubmitTx"
+import { twMerge } from "tailwind-merge"
 
 const extrinsicProps$ = state(
   runtimeCtx$.pipe(
@@ -51,7 +52,13 @@ export const Extrinsics = withSubscribe(
           : componentValue.value.encoded) ?? null
 
     return (
-      <div className="flex flex-col overflow-hidden gap-2 p-4 pb-0">
+      <div
+        className={twMerge(
+          "flex flex-col overflow-hidden gap-2 p-4 pb-0",
+          // Bypassing top-level scroll area, since we need a specific scroll area for the tree view
+          "absolute w-full h-full max-w-screen-lg",
+        )}
+      >
         <BinaryDisplay
           {...extrinsicProps}
           value={componentValue}

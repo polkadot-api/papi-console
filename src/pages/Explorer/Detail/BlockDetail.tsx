@@ -116,7 +116,7 @@ export const BlockDetail = () => {
     : defaultTab
 
   return (
-    <div className="overflow-auto">
+    <div>
       <div className="p-2">
         <div className="flex flex-wrap justify-between">
           <h2 className="font-bold text-xl whitespace-nowrap overflow-hidden text-ellipsis">
