@@ -6,7 +6,7 @@ import {
 } from "@polkadot-api/descriptors"
 import { state } from "@react-rxjs/core"
 import { Binary, createClient, SS58String } from "polkadot-api"
-import { catchError, map, of, tap } from "rxjs"
+import { catchError, from, of, tap } from "rxjs"
 import { getProvider } from "./chains/chain.state"
 import { chainSpec } from "./chains/chainspecs/polkadot_people"
 
@@ -38,21 +38,37 @@ const client = createClient(
 )
 const typedApi = client.getTypedApi(polkadot_people)
 
+export const getAddressName = async (
+  addr: string,
+): Promise<Identity | null> => {
+  let id = await typedApi.query.Identity.IdentityOf.getValue(addr)
+
+  let subIdStr = ""
+  if (!id) {
+    const sup = await typedApi.query.Identity.SuperOf.getValue(addr)
+    if (!sup) return null
+    const subDisplay = readIdentityData(sup[1])?.asText() || ""
+    if (!subDisplay) return null
+    subIdStr = ` (${subDisplay})`
+    id = await typedApi.query.Identity.IdentityOf.getValue(sup[0])
+    if (!id) return null
+  }
+
+  const displayName = readIdentityData(id[0].info.display)?.asText()
+  return displayName
+    ? {
+        displayName: `${displayName}${subIdStr}`,
+        judgments: id[0].judgements.map(([registrar, judgement]) => ({
+          registrar,
+          judgement: judgement.type,
+        })),
+      }
+    : null
+}
+
 export const identity$ = state(
   (address: SS58String) =>
-    typedApi.query.Identity.IdentityOf.watchValue(address).pipe(
-      map((res): Identity | null => {
-        const displayName = res && readIdentityData(res[0].info.display)
-        return displayName
-          ? {
-              displayName: displayName.asText(),
-              judgments: res[0].judgements.map(([registrar, judgement]) => ({
-                registrar,
-                judgement: judgement.type,
-              })),
-            }
-          : null
-      }),
+    from(getAddressName(address)).pipe(
       tap((v) =>
         cache.setValue((c) => {
           if (v) {
