@@ -18,7 +18,7 @@ import {
   switchMap,
   tap,
 } from "rxjs"
-import { defaultNetwork, Network } from "./networks"
+import { defaultNetwork, Network, networkCategories } from "./networks"
 import {
   createSmoldotSource,
   getSmoldotProvider,
@@ -50,10 +50,62 @@ export const getProvider = (source: ChainSource) =>
 
 export const [selectedChainChanged$, onChangeChain] =
   createSignal<SelectedChain>()
-export const selectedChain$ = state<SelectedChain>(selectedChainChanged$, {
-  network: defaultNetwork,
-  endpoint: "light-client",
-})
+const SELECTED_CHAIN_KEY = "selected-chain"
+selectedChainChanged$.subscribe((chain) =>
+  localStorage.setItem(
+    SELECTED_CHAIN_KEY,
+    JSON.stringify({
+      networkId: chain.network.id,
+      endpoint: chain.endpoint,
+    }),
+  ),
+)
+const getDefaultChain = (): SelectedChain => {
+  const findNetwork = (networkId: string) => {
+    for (const { networks } of networkCategories) {
+      for (const network of networks) {
+        if (network.id === networkId) {
+          return network
+        }
+      }
+    }
+    return null
+  }
+  if (globalThis.location?.hash) {
+    const hashParams = new URLSearchParams(location.hash.slice(1))
+    if (hashParams.has("networkId") && hashParams.has("endpoint")) {
+      const network = findNetwork(hashParams.get("networkId")!)
+      if (network) {
+        return { network, endpoint: hashParams.get("endpoint")! }
+      }
+    }
+  }
+
+  const lsValue = localStorage.getItem(SELECTED_CHAIN_KEY)
+  if (lsValue) {
+    try {
+      const { networkId, endpoint } = JSON.parse(lsValue)
+      const network = findNetwork(networkId)
+      if (network) {
+        return {
+          network,
+          endpoint,
+        }
+      }
+    } catch (ex) {
+      console.error(ex)
+    }
+  }
+
+  return {
+    network: defaultNetwork,
+    endpoint: "light-client",
+  }
+}
+export const selectedChain$ = state<SelectedChain>(
+  selectedChainChanged$,
+  getDefaultChain(),
+)
 
 const selectedSource$ = selectedChain$.pipe(switchMap(getChainSource))
 
