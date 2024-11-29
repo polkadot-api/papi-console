@@ -1,7 +1,8 @@
-import { Link, useLocation } from "react-router-dom"
-import { NetworkSwitcher } from "./Network/Network"
+import { Link } from "@/hashParams"
 import { FC, PropsWithChildren } from "react"
+import { useLocation } from "react-router-dom"
 import { twMerge } from "tailwind-merge"
+import { NetworkSwitcher } from "./Network/Network"
 
 export const Header = () => (
   <div className="flex-shrink-0 border-b">

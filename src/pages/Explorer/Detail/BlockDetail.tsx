@@ -1,18 +1,21 @@
-import { runtimeCtx$ } from "@/state/chains/chain.state"
 import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
 import { AccountIdDisplay } from "@/components/AccountIdDisplay"
+import { CopyText } from "@/components/Copy"
 import { ExpandBtn } from "@/components/Expand"
 import { JsonDisplay } from "@/components/JsonDisplay"
 import { Loading } from "@/components/Loading"
+import { Link } from "@/hashParams"
 import { groupBy } from "@/lib/groupBy"
+import { runtimeCtx$ } from "@/state/chains/chain.state"
 import { SystemEvent } from "@polkadot-api/observable-client"
 import { toHex } from "@polkadot-api/utils"
 import * as Tabs from "@radix-ui/react-tabs"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { combineKeys } from "@react-rxjs/utils"
 import { Edit } from "lucide-react"
+import { Enum, HexString, SS58String } from "polkadot-api"
 import { FC, useEffect, useRef, useState } from "react"
-import { Link, useLocation, useParams } from "react-router-dom"
+import { useLocation, useParams } from "react-router-dom"
 import {
   combineLatest,
   distinctUntilChanged,
@@ -26,8 +29,6 @@ import { twMerge } from "tailwind-merge"
 import { blockInfoState$, blocksByHeight$, BlockState } from "../block.state"
 import { BlockStatusIcon, statusText } from "./BlockState"
 import { createExtrinsicCodec, DecodedExtrinsic } from "./extrinsicDecoder"
-import { CopyText } from "@/components/Copy"
-import { Enum, HexString, SS58String } from "polkadot-api"
 
 const Sender: React.FC<{
   sender: Enum<{ Id: SS58String }> | SS58String | HexString
@@ -321,7 +322,7 @@ const Extrinsic: FC<{
               <Edit size={14} />
             </span>
           ) : (
-            <Link to={"/extrinsics#" + toHex(extrinsic.callData)}>
+            <Link to={"/extrinsics#data=" + toHex(extrinsic.callData)}>
               <Edit size={14} />
             </Link>
           )}

@@ -1,7 +1,7 @@
 import { CopyText } from "@/components/Copy"
 import { JsonDisplay } from "@/components/JsonDisplay"
+import { Link } from "@/hashParams"
 import { FC } from "react"
-import { Link } from "react-router-dom"
 import { BlockStatusIcon, statusText } from "./Detail/BlockState"
 import { EventInfo, eventKey } from "./events.state"
 

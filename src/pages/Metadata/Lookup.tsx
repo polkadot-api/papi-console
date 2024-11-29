@@ -1,4 +1,5 @@
 import { ExpandBtn } from "@/components/Expand"
+import { Link } from "@/hashParams"
 import { V14Lookup } from "@polkadot-api/substrate-bindings"
 import { Edit } from "lucide-react"
 import {
@@ -8,7 +9,6 @@ import {
   useContext,
   useState,
 } from "react"
-import { Link } from "react-router-dom"
 import { twMerge } from "tailwind-merge"
 
 export const Lookup: FC = () => {

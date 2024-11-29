@@ -1,8 +1,8 @@
 import { CopyText } from "@/components/Copy"
+import { Link } from "@/hashParams"
 import { shortStr } from "@/utils"
 import { TxBroadcastEvent } from "polkadot-api"
 import * as React from "react"
-import { Link } from "react-router-dom"
 import { onGoingEvents } from "./transactions.state"
 
 export const Transaction: React.FC<{

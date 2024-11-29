@@ -29,6 +29,7 @@ import {
   getWebsocketProvider,
   WebsocketSource,
 } from "./websocket"
+import { getHashParams, setHashParams } from "@/hashParams"
 
 export type ChainSource = WebsocketSource | SmoldotSource
 
@@ -50,15 +51,11 @@ export const getProvider = (source: ChainSource) =>
 
 export const [selectedChainChanged$, onChangeChain] =
   createSignal<SelectedChain>()
-const SELECTED_CHAIN_KEY = "selected-chain"
-selectedChainChanged$.subscribe((chain) =>
-  localStorage.setItem(
-    SELECTED_CHAIN_KEY,
-    JSON.stringify({
-      networkId: chain.network.id,
-      endpoint: chain.endpoint,
-    }),
-  ),
+selectedChainChanged$.subscribe(({ network, endpoint }) =>
+  setHashParams({
+    networkId: network.id,
+    endpoint,
+  }),
 )
 const getDefaultChain = (): SelectedChain => {
   const findNetwork = (networkId: string) => {
@@ -71,29 +68,11 @@ const getDefaultChain = (): SelectedChain => {
     }
     return null
   }
-  if (globalThis.location?.hash) {
-    const hashParams = new URLSearchParams(location.hash.slice(1))
-    if (hashParams.has("networkId") && hashParams.has("endpoint")) {
-      const network = findNetwork(hashParams.get("networkId")!)
-      if (network) {
-        return { network, endpoint: hashParams.get("endpoint")! }
-      }
-    }
-  }
-
-  const lsValue = localStorage.getItem(SELECTED_CHAIN_KEY)
-  if (lsValue) {
-    try {
-      const { networkId, endpoint } = JSON.parse(lsValue)
-      const network = findNetwork(networkId)
-      if (network) {
-        return {
-          network,
-          endpoint,
-        }
-      }
-    } catch (ex) {
-      console.error(ex)
+  const hashParams = getHashParams()
+  if (hashParams.has("networkId") && hashParams.has("endpoint")) {
+    const network = findNetwork(hashParams.get("networkId")!)
+    if (network) {
+      return { network, endpoint: hashParams.get("endpoint")! }
     }
   }
 
