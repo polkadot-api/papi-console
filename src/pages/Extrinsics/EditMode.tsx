@@ -8,20 +8,20 @@ import { SubtreeFocus } from "@/codec-components/common/SubtreeFocus"
 import { EditCodec } from "@/codec-components/EditCodec"
 import { TreeCodec } from "@/codec-components/EditCodec/Tree/index"
 import { FocusPath } from "@/codec-components/LookupTypeEdit"
+import { MetadataLookup } from "@polkadot-api/metadata-builders"
 import {
   CodecComponentUpdate,
   CodecComponentValue,
-  MetadataType,
 } from "@polkadot-api/react-builder"
 import { useEffect, useRef, useState } from "react"
 
 export const EditMode: React.FC<{
   codecType: number
-  metadata: MetadataType
+  lookup: MetadataLookup
   value: CodecComponentValue
   onUpdate: (value: CodecComponentUpdate) => void
 }> = (props) => {
-  const { metadata, codecType, value } = props
+  const { lookup, codecType, value } = props
   const treeRef = useRef<HTMLDivElement | null>(null)
   const listRef = useRef<HTMLDivElement | null>(null)
 
@@ -35,7 +35,7 @@ export const EditMode: React.FC<{
   return (
     <div className="flex flex-col items-start overflow-hidden">
       <FocusPath
-        metadata={metadata}
+        lookup={lookup}
         typeId={codecType}
         value={focusingSubtree}
         onFocus={setFocusingSubtree}

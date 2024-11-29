@@ -1,8 +1,8 @@
-import { runtimeCtx$ } from "@/state/chains/chain.state"
 import { BinaryDisplay } from "@/codec-components/LookupTypeEdit"
 import { ButtonGroup } from "@/components/ButtonGroup"
 import { LoadingMetadata } from "@/components/Loading"
 import { withSubscribe } from "@/components/withSuspense"
+import { runtimeCtx$ } from "@/state/chains/chain.state"
 import {
   CodecComponentType,
   CodecComponentValue,
@@ -12,10 +12,10 @@ import { state, useStateObservable } from "@react-rxjs/core"
 import { useState } from "react"
 import { useLocation } from "react-router-dom"
 import { map } from "rxjs"
+import { twMerge } from "tailwind-merge"
 import { EditMode } from "./EditMode"
 import { JsonMode } from "./JsonMode"
 import { ExtrinsicModal } from "./SubmitTx/SubmitTx"
-import { twMerge } from "tailwind-merge"
 
 const extrinsicProps$ = state(
   runtimeCtx$.pipe(
@@ -26,7 +26,7 @@ const extrinsicProps$ = state(
           : // TODO v14 is this one?
             lookup.metadata.extrinsic.type
       return {
-        metadata: lookup.metadata,
+        lookup,
         codecType,
         codec: dynamicBuilder.buildDefinition(codecType),
       }

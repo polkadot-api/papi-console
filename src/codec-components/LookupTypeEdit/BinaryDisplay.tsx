@@ -18,7 +18,7 @@ export const BinaryDisplay: FC<
     }
     className?: string
   }
-> = ({ codecType, metadata, value, onUpdate, codec, className }) => {
+> = ({ codecType, lookup, value, onUpdate, codec, className }) => {
   const [wrap, setWrap] = useState(false)
   const encoded = (() => {
     if (value.type === CodecComponentType.Initial) {
@@ -56,7 +56,7 @@ export const BinaryDisplay: FC<
               0x
               <BinaryViewCodec
                 codecType={codecType}
-                metadata={metadata}
+                lookup={lookup}
                 value={value}
               />
             </>

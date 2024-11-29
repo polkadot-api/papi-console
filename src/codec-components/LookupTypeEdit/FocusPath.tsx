@@ -1,16 +1,15 @@
 import { lookupToType, TypeIcon, TypeIcons } from "@/components/Icons"
-import { getLookupFn, Var } from "@polkadot-api/metadata-builders"
-import { V14, V15 } from "@polkadot-api/substrate-bindings"
+import { MetadataLookup, Var } from "@polkadot-api/metadata-builders"
 import { FC, ReactElement } from "react"
 import { twMerge as clsx } from "tailwind-merge"
 
 export const FocusPath: FC<{
-  metadata: V14 | V15
+  lookup: MetadataLookup
   typeId: number
   value: string[] | null
   onFocus: (value: string[] | null) => void
-}> = ({ metadata, typeId, value, onFocus }) => {
-  const breadcrumbs = getBreadcrumbs(metadata, typeId, value ?? [], onFocus)
+}> = ({ lookup, typeId, value, onFocus }) => {
+  const breadcrumbs = getBreadcrumbs(lookup, typeId, value ?? [], onFocus)
 
   return (
     <div className="flex-shrink-0 px-2">
@@ -37,12 +36,11 @@ type BreadcrumbNode = {
 }
 
 function getBreadcrumbs(
-  metadata: V14 | V15,
+  lookup: MetadataLookup,
   typeId: number,
   path: string[],
   onFocus: (value: string[] | null) => void,
 ): Breadcrumb[] {
-  const lookup = getLookupFn(metadata)
   const nodes: BreadcrumbNode[] = [
     {
       label: "Root",
