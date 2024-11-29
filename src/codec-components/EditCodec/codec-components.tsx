@@ -13,6 +13,7 @@ import { FC, ReactNode, useState } from "react"
 import { twMerge } from "tailwind-merge"
 import { ListItem } from "../common/ListItem"
 import { useSubtreeFocus } from "../common/SubtreeFocus"
+import { StorageKeyValue } from "./specialInputs/StorageKeyValue"
 
 export const CBool: EditBool = ({ value, onValueChanged, path }) => {
   return (
@@ -50,11 +51,16 @@ export const CEthAccount: EditEthAccount = ({ value }) => (
   <span>{withDefault(value, "")}</span>
 )
 
-export const CArray: EditArray = ({ innerComponents, path }) => {
+export const CArray: EditArray = (props) => {
+  const { innerComponents, path } = props
   const focus = useSubtreeFocus()
   const sub = focus.getNextPath(path)
   if (sub) {
     return innerComponents[Number(sub)]
+  }
+
+  if (path.join(".").startsWith("System.set_storage.")) {
+    return <StorageKeyValue {...props} />
   }
 
   return (

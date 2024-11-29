@@ -16,6 +16,35 @@ import { twMerge } from "tailwind-merge"
 import { EditMode } from "./EditMode"
 import { JsonMode } from "./JsonMode"
 import { ExtrinsicModal } from "./SubmitTx/SubmitTx"
+// import { MetadataLookup } from "@polkadot-api/metadata-builders"
+
+// const enhanceSystemStorage = (lookup: MetadataLookup) => {
+//   const system = lookup.metadata.pallets.find((p) => p.name === "System")
+//   const calls = system?.calls && lookup(system.calls)
+//   if (!calls || calls.type !== "enum") return lookup
+
+//   const getEntry = (call: string) => {
+//     const x = calls.value[call]
+//     if (!("value" in x)) return null
+//     const value = x.value
+//     if (Array.isArray(value)) return value[0] ?? null
+//     if (typeof value.type === "string") return value
+//     return Object.values(value)[0] ?? null
+//   }
+
+//   const setStorage = getEntry("set_storage")
+//   if (setStorage?.type === "sequence" && setStorage.value.type === "array") {
+//     const originalLookup = lookup.metadata.lookup[setStorage.value.id]
+//     originalLookup.path = ["System::SetStorage", ...originalLookup.path]
+//   }
+
+//   const killStorage = getEntry("kill_storage")
+//   if (killStorage) {
+//     const originalLookup = lookup.metadata.lookup[killStorage.id]
+//     originalLookup.path = ["System::KillStorage", ...originalLookup.path]
+//   }
+//   return lookup
+// }
 
 const extrinsicProps$ = state(
   runtimeCtx$.pipe(
