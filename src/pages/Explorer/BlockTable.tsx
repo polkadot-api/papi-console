@@ -18,8 +18,6 @@ interface PositionedBlock {
   branches: number[]
 }
 
-// 1 hour in polkadot
-export const MAX_LENGTH = 3600 / 6
 const blockTable$ = state(
   combineLatest([blocksByHeight$, best$]).pipe(
     debounceTime(0),
@@ -35,11 +33,7 @@ const blockTable$ = state(
           }
         }
       }
-      for (
-        let height = best.number;
-        blocks[height] && result.length < MAX_LENGTH;
-        height--
-      ) {
+      for (let height = best.number; blocks[height]; height--) {
         const competingBlocks = [...blocks[height].values()]
         if (competingBlocks.length > 1) {
           if (height === best.number) {

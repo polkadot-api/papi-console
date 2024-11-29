@@ -36,6 +36,7 @@ import {
   takeUntil,
   takeWhile,
   tap,
+  timer,
   withLatestFrom,
 } from "rxjs"
 
@@ -157,8 +158,14 @@ export const [blockInfo$, recordedBlocks$] = partitionByKey(
             NEVER,
           ),
       ),
-      // Reset when chainHead is changed
-      takeUntil(chainHead$.pipe(skip(1))),
+      takeUntil(
+        merge(
+          // Reset when chainHead is changed
+          chainHead$.pipe(skip(1)),
+          // Or after 1 hour
+          timer(60 * 60 * 1000),
+        ),
+      ),
     ),
 )
 
@@ -232,13 +239,19 @@ export const blocksByHeight$ = state(
   merge(
     recordedBlocks$.pipe(
       mergeMap((change) => {
+        if (change.type === "remove") {
+          return of({
+            type: "remove" as const,
+            keys: change.keys,
+          })
+        }
         const targets$ = forkJoin(
           [...change.keys].map((hash) => blockInfo$(hash).pipe(take(1))),
         )
 
         return targets$.pipe(
           map((targets) => ({
-            type: change.type,
+            type: "add" as const,
             targets,
           })),
         )
@@ -254,23 +267,31 @@ export const blocksByHeight$ = state(
     scan(
       (acc, evt) => {
         if (evt.type === "remove") {
-          for (const { hash, number } of evt.targets) {
-            acc[number]?.delete(hash)
-            if (!acc[number]?.size) {
-              delete acc[number]
+          for (const hash of evt.keys) {
+            const height = acc.heightOfBlock[hash]
+            acc.blocksByHeight[height]?.delete(hash)
+            if (!acc.blocksByHeight[height]?.size) {
+              delete acc.blocksByHeight[height]
             }
+            delete acc.heightOfBlock[hash]
           }
         } else {
           for (const block of evt.targets) {
-            acc[block.number] = acc[block.number] ?? new Map()
-            acc[block.number].set(block.hash, block)
+            acc.heightOfBlock[block.hash] = block.number
+            acc.blocksByHeight[block.number] =
+              acc.blocksByHeight[block.number] ?? new Map()
+            acc.blocksByHeight[block.number].set(block.hash, block)
           }
         }
 
         return acc
       },
-      {} as Record<number, Map<string, BlockInfo>>,
+      {
+        blocksByHeight: {} as Record<number, Map<string, BlockInfo>>,
+        heightOfBlock: {} as Record<string, number>,
+      },
     ),
+    map((v) => v.blocksByHeight),
   ),
 )
 

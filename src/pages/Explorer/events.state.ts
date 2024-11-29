@@ -4,7 +4,6 @@ import { state } from "@react-rxjs/core"
 import { combineKeys } from "@react-rxjs/utils"
 import { filter, map, takeWhile } from "rxjs"
 import { blockInfo$, BlockState, recordedBlocks$ } from "./block.state"
-import { MAX_LENGTH } from "./BlockTable"
 
 const blackList = new Set([
   "System.*",
@@ -102,8 +101,7 @@ export const recentEvents$ = state(
             }
             return group
           })
-        })
-        .slice(0, MAX_LENGTH),
+        }),
     ),
   ),
   [],
