@@ -37,9 +37,21 @@ interface EventEllipsis {
   hash: string
   index: number
 }
-export const eventKey = (evt: EventInfo | EventEllipsis) =>
-  `${evt?.number.toLocaleString()}-${evt?.extrinsicNumber}`
+interface BlockEllipsis {
+  number: number
+  length: number
+  hash: string
+}
+
+export const eventKey = (evt?: EventInfo | EventEllipsis | BlockEllipsis) =>
+  `${evt?.number.toLocaleString()}-${evt ? ("extrinsicNumber" in evt ? evt.extrinsicNumber : "block_ellipsis") : "N/A"}`
+
+// Maximum events per extrinsic
 const MAX_GROUP_LENGTH = 7
+// Maximum extrinsics per block
+const MAX_BLOCK_LENGTH = 5
+// Max amount of total rows
+const MAX_LENGTH = 600
 export const recentEvents$ = state(
   combineKeys(recordedBlocks$, (key) =>
     blockInfo$(key).pipe(
@@ -75,33 +87,57 @@ export const recentEvents$ = state(
             evt.status === BlockState.Best ||
             evt.status === BlockState.Finalized,
         )
-        .flatMap(({ status, hash, number, events }) => {
-          const eventInfo = events!.map(
-            ({ event, extrinsicNumber, index }): EventInfo => ({
-              status,
-              hash,
-              number,
-              event,
-              extrinsicNumber,
-              index,
-            }),
-          )
-          const groupedEventInfo = groupBy(eventInfo, eventKey)
-
-          return Object.values(groupedEventInfo).flatMap((group) => {
-            if (group.length > MAX_GROUP_LENGTH) {
-              const ellipsis: EventEllipsis = {
-                length: group.length - MAX_GROUP_LENGTH + 1,
-                extrinsicNumber: group[0].extrinsicNumber,
-                number,
+        .flatMap(
+          ({
+            status,
+            hash,
+            number,
+            events,
+          }): Array<EventInfo | EventEllipsis | BlockEllipsis> => {
+            const eventInfo = events!.map(
+              ({ event, extrinsicNumber, index }): EventInfo => ({
+                status,
                 hash,
-                index: group.length,
-              }
-              return [...group.slice(0, MAX_GROUP_LENGTH - 1), ellipsis]
-            }
-            return group
-          })
-        }),
+                number,
+                event,
+                extrinsicNumber,
+                index,
+              }),
+            )
+            const groupedEventInfo = groupBy(eventInfo, eventKey)
+
+            const groupedEvents = Object.values(groupedEventInfo).map(
+              (group) => {
+                if (group.length > MAX_GROUP_LENGTH) {
+                  const ellipsis: EventEllipsis = {
+                    length: group.length - MAX_GROUP_LENGTH + 1,
+                    extrinsicNumber: group[0].extrinsicNumber,
+                    number,
+                    hash,
+                    index: group.length,
+                  }
+                  return [...group.slice(0, MAX_GROUP_LENGTH - 1), ellipsis]
+                }
+                return group
+              },
+            )
+
+            const rows =
+              groupedEvents.length > MAX_BLOCK_LENGTH
+                ? [
+                    ...groupedEvents.slice(0, MAX_BLOCK_LENGTH - 1),
+                    [
+                      {
+                        hash,
+                        length: groupedEvents.length - MAX_BLOCK_LENGTH + 1,
+                        number,
+                      },
+                    ],
+                  ].flat()
+                : groupedEvents.flat()
+            return rows.slice(0, MAX_LENGTH)
+          },
+        ),
     ),
   ),
   [],

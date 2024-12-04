@@ -31,19 +31,43 @@ export const Events = () => {
           const key = eventKey(evt)
           const span = numberSpan(idx)
 
+          if (!("extrinsicNumber" in evt)) {
+            return (
+              <Finalizing.Row
+                key={key}
+                number={events.length - idx}
+                finalized={events.length - finalizedIdx}
+                idx={idx}
+                firstInGroup
+              >
+                <td className="p-2 whitespace-nowrap">
+                  {evt.number.toLocaleString()}
+                </td>
+                <td
+                  className="p-1 w-full"
+                  colSpan={2}
+                >{`… ${evt.length} more extrinsics with events`}</td>
+              </Finalizing.Row>
+            )
+          }
+
+          const isFirstInGroup = eventKey(events[idx - 1]) !== key
+          const isLastInGroup = eventKey(events[idx + 1]) !== key
+          const isInGroup = !isFirstInGroup || !isLastInGroup
+
           return (
             <Finalizing.Row
-              key={`${evt.hash}-${evt.extrinsicNumber}-${evt.index}`}
+              key={`${key}-${evt.index}`}
               number={events.length - idx}
               finalized={events.length - finalizedIdx}
               idx={idx}
-              firstInGroup
+              firstInGroup={isFirstInGroup}
             >
-              {eventKey(events[idx - 1]) !== key && (
+              {isFirstInGroup && (
                 <td
                   className={twMerge(
                     "p-2 whitespace-nowrap",
-                    span > 1 &&
+                    isInGroup &&
                       twMerge(
                         idx > 0 ? "border-y" : "border-b",
                         "border-card-foreground/25",
@@ -57,7 +81,20 @@ export const Events = () => {
                   {key}
                 </td>
               )}
-              <td className="p-1 w-full">
+              <td
+                className={twMerge(
+                  "p-1 w-full",
+                  isInGroup &&
+                    twMerge(
+                      isFirstInGroup && idx > 0 && "border-t",
+                      isLastInGroup && "border-b",
+                      "border-card-foreground/25",
+                      idx === finalizedIdx && "border-t-card-foreground/50",
+                      idx === finalizedIdx - span &&
+                        "border-b-card-foreground/50",
+                    ),
+                )}
+              >
                 {"event" in evt ? (
                   <Popover content={<EventPopover event={evt} />}>
                     <button className="w-full p-1 text-left text-card-foreground/80 hover:text-card-foreground/100">{`${evt.event.type}.${evt.event.value.type}`}</button>
