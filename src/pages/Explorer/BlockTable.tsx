@@ -8,6 +8,7 @@ import { twMerge } from "tailwind-merge"
 import { BlockInfo, blocksByHeight$, finalized$ } from "./block.state"
 import { BlockPopover } from "./BlockPopover"
 import * as Finalizing from "./FinalizingTable"
+import { Link } from "react-router-dom"
 
 const best$ = chainHead$.pipeState(switchMap((chainHead) => chainHead.best$))
 
@@ -124,7 +125,9 @@ export const BlockTable = () => {
                     "border-b-card-foreground/50",
                 )}
               >
-                {row.block.number.toLocaleString()}
+                <Link to={`/explorer/${row.block.hash}`}>
+                  {row.block.number.toLocaleString()}
+                </Link>
               </td>
             ) : null}
             <td className="p-0">

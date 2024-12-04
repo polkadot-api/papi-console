@@ -5,6 +5,7 @@ import { finalized$ } from "./block.state"
 import { EventPopover } from "./EventPopover"
 import { eventKey, recentEvents$ } from "./events.state"
 import * as Finalizing from "./FinalizingTable"
+import { Link } from "react-router-dom"
 
 export const Events = () => {
   const events = useStateObservable(recentEvents$)
@@ -41,7 +42,9 @@ export const Events = () => {
                 firstInGroup
               >
                 <td className="p-2 whitespace-nowrap">
-                  {evt.number.toLocaleString()}
+                  <Link to={`/explorer/${evt.hash}`}>
+                    {evt.number.toLocaleString()}
+                  </Link>
                 </td>
                 <td
                   className="p-1 w-full"
@@ -78,7 +81,9 @@ export const Events = () => {
                   )}
                   rowSpan={span}
                 >
-                  {key}
+                  <Link to={`/explorer/${evt.hash}#tx=${evt.index}`}>
+                    {key}
+                  </Link>
                 </td>
               )}
               <td
