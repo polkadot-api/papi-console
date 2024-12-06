@@ -1,21 +1,23 @@
-import { runtimeCtx$ } from "@/state/chains/chain.state"
 import { BinaryDisplay } from "@/codec-components/LookupTypeEdit"
 import { ButtonGroup } from "@/components/ButtonGroup"
 import { LoadingMetadata } from "@/components/Loading"
 import { withSubscribe } from "@/components/withSuspense"
+import { getHashParams, setHashParams } from "@/hashParams"
+import { runtimeCtx$ } from "@/state/chains/chain.state"
 import {
   CodecComponentType,
   CodecComponentValue,
 } from "@polkadot-api/react-builder"
 import { Binary } from "@polkadot-api/substrate-bindings"
+import { toHex } from "@polkadot-api/utils"
 import { state, useStateObservable } from "@react-rxjs/core"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useLocation } from "react-router-dom"
 import { map } from "rxjs"
+import { twMerge } from "tailwind-merge"
 import { EditMode } from "./EditMode"
 import { JsonMode } from "./JsonMode"
 import { ExtrinsicModal } from "./SubmitTx/SubmitTx"
-import { twMerge } from "tailwind-merge"
 
 const extrinsicProps$ = state(
   runtimeCtx$.pipe(
@@ -42,7 +44,7 @@ export const Extrinsics = withSubscribe(
 
     const [componentValue, setComponentValue] = useState<CodecComponentValue>({
       type: CodecComponentType.Initial,
-      value: location.hash.slice(1),
+      value: getHashParams(location).get("data") ?? "",
     })
     const binaryValue =
       (componentValue.type === CodecComponentType.Initial
@@ -50,6 +52,19 @@ export const Extrinsics = withSubscribe(
         : componentValue.value.empty
           ? null
           : componentValue.value.encoded) ?? null
+
+    useEffect(() => {
+      if (binaryValue && binaryValue.length < 1024 * 1024) {
+        setHashParams({
+          data:
+            typeof binaryValue === "string" ? binaryValue : toHex(binaryValue),
+        })
+      } else {
+        setHashParams({
+          data: null,
+        })
+      }
+    }, [binaryValue])
 
     return (
       <div

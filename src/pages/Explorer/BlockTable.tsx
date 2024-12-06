@@ -1,6 +1,7 @@
-import { chainHead$ } from "@/state/chains/chain.state"
 import { CopyText } from "@/components/Copy"
 import { Popover } from "@/components/Popover"
+import { Link } from "@/hashParams"
+import { chainHead$ } from "@/state/chains/chain.state"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { FC } from "react"
 import { combineLatest, debounceTime, map, switchMap } from "rxjs"
@@ -8,7 +9,6 @@ import { twMerge } from "tailwind-merge"
 import { BlockInfo, blocksByHeight$, finalized$ } from "./block.state"
 import { BlockPopover } from "./BlockPopover"
 import * as Finalizing from "./FinalizingTable"
-import { Link } from "react-router-dom"
 
 const best$ = chainHead$.pipeState(switchMap((chainHead) => chainHead.best$))
 

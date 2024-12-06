@@ -1,11 +1,11 @@
 import { Popover } from "@/components/Popover"
+import { Link } from "@/hashParams"
 import { useStateObservable } from "@react-rxjs/core"
 import { twMerge } from "tailwind-merge"
 import { finalized$ } from "./block.state"
 import { EventPopover } from "./EventPopover"
 import { eventKey, recentEvents$ } from "./events.state"
 import * as Finalizing from "./FinalizingTable"
-import { Link } from "react-router-dom"
 
 export const Events = () => {
   const events = useStateObservable(recentEvents$)

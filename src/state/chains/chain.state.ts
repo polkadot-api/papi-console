@@ -18,7 +18,7 @@ import {
   switchMap,
   tap,
 } from "rxjs"
-import { defaultNetwork, Network } from "./networks"
+import { defaultNetwork, Network, networkCategories } from "./networks"
 import {
   createSmoldotSource,
   getSmoldotProvider,
@@ -29,6 +29,7 @@ import {
   getWebsocketProvider,
   WebsocketSource,
 } from "./websocket"
+import { getHashParams, setHashParams } from "@/hashParams"
 
 export type ChainSource = WebsocketSource | SmoldotSource
 
@@ -50,10 +51,40 @@ export const getProvider = (source: ChainSource) =>
 
 export const [selectedChainChanged$, onChangeChain] =
   createSignal<SelectedChain>()
-export const selectedChain$ = state<SelectedChain>(selectedChainChanged$, {
-  network: defaultNetwork,
-  endpoint: "light-client",
-})
+selectedChainChanged$.subscribe(({ network, endpoint }) =>
+  setHashParams({
+    networkId: network.id,
+    endpoint,
+  }),
+)
+const getDefaultChain = (): SelectedChain => {
+  const findNetwork = (networkId: string) => {
+    for (const { networks } of networkCategories) {
+      for (const network of networks) {
+        if (network.id === networkId) {
+          return network
+        }
+      }
+    }
+    return null
+  }
+  const hashParams = getHashParams()
+  if (hashParams.has("networkId") && hashParams.has("endpoint")) {
+    const network = findNetwork(hashParams.get("networkId")!)
+    if (network) {
+      return { network, endpoint: hashParams.get("endpoint")! }
+    }
+  }
+
+  return {
+    network: defaultNetwork,
+    endpoint: "light-client",
+  }
+}
+export const selectedChain$ = state<SelectedChain>(
+  selectedChainChanged$,
+  getDefaultChain(),
+)
 
 const selectedSource$ = selectedChain$.pipe(switchMap(getChainSource))
 
