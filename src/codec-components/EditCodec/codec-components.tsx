@@ -1,9 +1,7 @@
 import SliderToggle from "@/components/Toggle"
-import { withDefault } from "@/utils/default"
 import {
   EditArray,
   EditBool,
-  EditEthAccount,
   EditOption,
   EditResult,
   EditVoid,
@@ -44,11 +42,6 @@ export const CBool: EditBool = ({ value, onValueChanged, path }) => {
 }
 
 export const CVoid: EditVoid = () => null
-
-// TODO
-export const CEthAccount: EditEthAccount = ({ value }) => (
-  <span>{withDefault(value, "")}</span>
-)
 
 export const CArray: EditArray = ({ innerComponents, path }) => {
   const focus = useSubtreeFocus()
