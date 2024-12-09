@@ -1,4 +1,4 @@
-import { AccountIdDisplay } from "@/components/AccountIdDisplay"
+import { EthAccountDisplay } from "@/components/EthAccountDisplay"
 import { Button } from "@/components/ui/button"
 import {
   Command,
@@ -13,61 +13,64 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import {
-  accountDetail$,
-  accounts$,
-  getPublicKey,
-} from "@/state/extension-accounts.state"
-import { identity$, isVerified } from "@/state/identity.state"
+import { accountDetail$, accounts$ } from "@/state/extension-accounts.state"
 import { cn } from "@/utils/cn"
-import { EditAccountId, NOTIN } from "@polkadot-api/react-builder"
-import { getSs58AddressInfo } from "@polkadot-api/substrate-bindings"
-import { toHex } from "@polkadot-api/utils"
+import { EditEthAccount, NOTIN } from "@polkadot-api/react-builder"
+import { ethAccount, HexString } from "@polkadot-api/substrate-bindings"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { combineKeys } from "@react-rxjs/utils"
 import { Check, ChevronsUpDown } from "lucide-react"
-import { FC, useState } from "react"
-import { map, switchMap, take } from "rxjs"
+import { FC, useMemo, useState } from "react"
+import { map, take } from "rxjs"
 
 const hintedAccounts$ = state(
   combineKeys(
     accounts$.pipe(
       map((accounts) =>
         [...accounts.entries()]
-          .filter(([, { address }]) => !address.startsWith("0x"))
+          .filter(([, { address }]) => address.startsWith("0x"))
           .map(([key]) => key),
       ),
     ),
-    (address) =>
+    (account) =>
       accounts$.pipe(
-        map((v) => v.get(address)!),
+        map((v) => {
+          const details = v.get(account)!
+          return {
+            address: details.address,
+            name: details.name,
+          }
+        }),
         take(1),
-        switchMap((details) =>
-          identity$(details.address).pipe(
-            map((identity) => ({
-              address: details.address,
-              name: identity?.displayName ?? details.name,
-              isVerified: isVerified(identity),
-            })),
-          ),
-        ),
       ),
-  ).pipe(map((v) => new Map(v))),
+  ).pipe(
+    map(
+      (v) => new Map([...v].map(([key, value]) => [key.toLowerCase(), value])),
+    ),
+  ),
   new Map<
     string,
     {
       address: string
       name: string | undefined
-      isVerified: boolean | undefined
     }
   >(),
 )
 
-export const CAccountId: EditAccountId = ({ value, onValueChanged }) => {
+const isEthAddressValid = (address: HexString) => {
+  try {
+    ethAccount.dec(address)
+  } catch {
+    return false
+  }
+  return true
+}
+
+export const CEthAccount: EditEthAccount = ({ value, onValueChanged }) => {
   const accounts = useStateObservable(hintedAccounts$)
 
   const [query, setQuery] = useState("")
-  const queryInfo = getSs58AddressInfo(query)
+  const isValid = useMemo(() => isEthAddressValid(query), [query])
 
   const [open, _setOpen] = useState(false)
   const setOpen = (value: boolean) => {
@@ -77,12 +80,12 @@ export const CAccountId: EditAccountId = ({ value, onValueChanged }) => {
 
   const valueIsNew =
     value !== NOTIN &&
-    !accounts.has(toHex(getPublicKey(value) ?? new Uint8Array()))
+    !accounts.has(isEthAddressValid(value) ? value.toLowerCase() : "")
 
   const accountList = Array.from(accounts.entries())
   if (value !== NOTIN) {
-    accountList.sort(([, a], [, b]) =>
-      a.address === value ? -1 : b.address === value ? 1 : 0,
+    accountList.sort(([a], [b]) =>
+      a === b ? -1 : b === value.toLowerCase() ? 1 : 0,
     )
   }
 
@@ -103,7 +106,7 @@ export const CAccountId: EditAccountId = ({ value, onValueChanged }) => {
           forceSvgSize={false}
         >
           {value !== NOTIN ? (
-            <AccountIdDisplay value={value} className="overflow-hidden" />
+            <EthAccountDisplay value={value} className="overflow-hidden" />
           ) : (
             <span className="opacity-80">Select…</span>
           )}
@@ -120,7 +123,7 @@ export const CAccountId: EditAccountId = ({ value, onValueChanged }) => {
           <CommandList>
             <CommandEmpty>
               <div className="text-foreground/50">
-                The value is not a valid Account ID
+                The value is not a valid Ethereum Address
               </div>
             </CommandEmpty>
             <CommandGroup>
@@ -142,7 +145,7 @@ export const CAccountId: EditAccountId = ({ value, onValueChanged }) => {
                   }}
                 />
               ))}
-              {queryInfo.isValid && (
+              {isValid && (
                 <AccountOption
                   account={query}
                   selected={value === query}
@@ -166,9 +169,8 @@ const AccountOption: FC<{
   onSelect: () => void
 }> = ({ account, selected, onSelect }) => {
   const details = useStateObservable(accountDetail$(account))
-  const identity = useStateObservable(identity$(account))
 
-  const name = identity?.displayName ?? details?.name
+  const name = details?.name
 
   return (
     <CommandItem
@@ -177,7 +179,7 @@ const AccountOption: FC<{
       className="flex flex-row items-center gap-2 p-1"
       forceSvgSize={false}
     >
-      <AccountIdDisplay value={account} className="overflow-hidden" />
+      <EthAccountDisplay value={account} className="overflow-hidden" />
       <Check
         size={12}
         className={cn(
