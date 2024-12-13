@@ -27,7 +27,7 @@ import {
   useState,
 } from "react"
 import { twMerge } from "tailwind-merge"
-import { isActive$, setHovered } from "../../common/paths.state"
+import { isActive$, PathsRoot, setHovered } from "../../common/paths.state"
 
 export const CVoid: EditVoid = () => null
 
@@ -137,6 +137,7 @@ export const ItemTitle: FC<
 }) => {
   const [binaryOpen, setBinaryOpen] = useState(false)
   const isActive = useStateObservable(isActive$(path))
+  const pathId = useContext(PathsRoot)
 
   return (
     <>
@@ -147,8 +148,8 @@ export const ItemTitle: FC<
           className,
         )}
         data-marker={`marker-${path}`}
-        onMouseEnter={() => setHovered({ id: path, hover: true })}
-        onMouseLeave={() => setHovered({ id: path, hover: false })}
+        onMouseEnter={() => setHovered(pathId, { id: path, hover: true })}
+        onMouseLeave={() => setHovered(pathId, { id: path, hover: false })}
       >
         <span
           className={twMerge(

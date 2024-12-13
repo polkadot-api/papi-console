@@ -8,6 +8,7 @@ import { Marker } from "../common/Markers"
 import {
   isActive$,
   isCollapsed$,
+  PathsRoot,
   setHovered,
   toggleCollapsed,
 } from "../common/paths.state"
@@ -25,6 +26,7 @@ const StructItem: React.FC<{
   field: Var
   value: unknown
 }> = ({ name, children, path, field, value }) => {
+  const pathsRootId = useContext(PathsRoot)
   const pathStr = path.join(".")
   const isActive = useStateObservable(isActive$(pathStr))
   const isExpanded = !useStateObservable(isCollapsed$(pathStr))
@@ -35,8 +37,8 @@ const StructItem: React.FC<{
 
   const title = isComplexShape ? (
     <span
-      onClick={() => toggleCollapsed(pathStr)}
-      className="cursor-pointer flex select-none items-center py-1 gap-1"
+      onClick={() => toggleCollapsed(pathsRootId, pathStr)}
+      className="cursor-pointer flex items-center py-1 gap-1"
     >
       {hasParentTitle && <ItemMarker />}
       <ExpandBtn expanded={isExpanded} />
@@ -51,7 +53,7 @@ const StructItem: React.FC<{
     <span className="flex items-center py-1 gap-1">
       {hasParentTitle && <ItemMarker />}
       <Dot size={16} />
-      <span className="select-none flex items-center gap-1">
+      <span className="flex items-center gap-1">
         <span className="opacity-75">{name}</span>
         <span ref={setTitleElement} />
       </span>
@@ -68,8 +70,10 @@ const StructItem: React.FC<{
         "flex flex-col transition-all duration-300",
         isActive && "bg-secondary/80",
       )}
-      onMouseEnter={() => setHovered({ id: pathStr, hover: true })}
-      onMouseLeave={() => setHovered({ id: pathStr, hover: false })}
+      onMouseEnter={() => setHovered(pathsRootId, { id: pathStr, hover: true })}
+      onMouseLeave={() =>
+        setHovered(pathsRootId, { id: pathStr, hover: false })
+      }
     >
       <ChildProvider titleElement={titleElement}>
         <Marker id={path} />

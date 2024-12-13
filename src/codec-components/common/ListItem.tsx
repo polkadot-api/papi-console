@@ -1,15 +1,16 @@
 import { ExpandBtn } from "@/components/Expand"
 import { useStateObservable } from "@react-rxjs/core"
 import { Dot, Trash2 } from "lucide-react"
+import { ReactNode, useContext } from "react"
 import { twMerge as clsx, twMerge } from "tailwind-merge"
 import { Marker } from "./Markers"
 import {
   isActive$,
   isCollapsed$,
+  PathsRoot,
   setHovered,
   toggleCollapsed,
 } from "./paths.state"
-import { ReactNode } from "react"
 
 export const ListItem: React.FC<{
   idx: number
@@ -19,6 +20,7 @@ export const ListItem: React.FC<{
   actions?: ReactNode
   inline?: boolean
 }> = ({ idx, onDelete, children, path, actions, inline }) => {
+  const pathsRootId = useContext(PathsRoot)
   const pathStr = path.join(".")
   const isActive = useStateObservable(isActive$(pathStr))
   const isCollapsed = useStateObservable(isCollapsed$(pathStr))
@@ -46,7 +48,7 @@ export const ListItem: React.FC<{
       <Marker id={path} />
       <span
         className="cursor-pointer flex items-center py-1 gap-1"
-        onClick={() => toggleCollapsed(pathStr)}
+        onClick={() => toggleCollapsed(pathsRootId, pathStr)}
       >
         <ExpandBtn expanded={!isCollapsed} />
         Item {idx + 1}.
@@ -66,8 +68,10 @@ export const ListItem: React.FC<{
   return (
     <li
       className={twMerge("flex flex-col mb-1", isActive && "bg-secondary/80")}
-      onMouseEnter={() => setHovered({ id: pathStr, hover: true })}
-      onMouseLeave={() => setHovered({ id: pathStr, hover: false })}
+      onMouseEnter={() => setHovered(pathsRootId, { id: pathStr, hover: true })}
+      onMouseLeave={() =>
+        setHovered(pathsRootId, { id: pathStr, hover: false })
+      }
     >
       {title}
       {inline ? null : (

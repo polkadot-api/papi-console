@@ -1,24 +1,32 @@
-import { createSignal } from "@react-rxjs/utils"
-import { state } from "@react-rxjs/core"
-import { defer, map, scan } from "rxjs"
+import { createContextState } from "@/lib/contextState"
+import { createKeyedSignal } from "@react-rxjs/utils"
+import { createContext, useContext } from "react"
+import { map, scan } from "rxjs"
 
-export const [collapsedToggle$, toggleCollapsed] = createSignal<string>()
+export const PathsRoot = createContext<string>("")
 
-const collapsedPaths$ = state(
-  defer(() =>
-    collapsedToggle$.pipe(
+const pathsState = createContextState(() => useContext(PathsRoot))
+
+export const [collapsedToggle$, toggleCollapsed] = createKeyedSignal<
+  string,
+  string
+>()
+
+const collapsedPaths$ = pathsState(
+  (id) =>
+    collapsedToggle$(id).pipe(
       scan((acc, v) => {
         if (acc.has(v)) acc.delete(v)
         else acc.add(v)
         return acc
       }, new Set<string>()),
     ),
-  ),
-  new Set(),
+  new Set<string>(),
 )
 
-export const isCollapsed$ = state(
-  (path: string) => collapsedPaths$.pipe(map((v) => v.has(path))),
+export const isCollapsed$ = pathsState(
+  (path: string, id: string) =>
+    collapsedPaths$(id).pipe(map((v) => v.has(path))),
   false,
 )
 
@@ -26,9 +34,9 @@ export const isCollapsed$ = state(
  * Returns true if it's a collapsed root.
  * Same as `isCollapsed`, but returns `false` if a parent path is also collapsed.
  */
-export const isCollapsedRoot$ = state(
-  (path: string) =>
-    collapsedPaths$.pipe(
+export const isCollapsedRoot$ = pathsState(
+  (path: string, id: string) =>
+    collapsedPaths$(id).pipe(
       map((collapsedPaths) => {
         if (!collapsedPaths.has(path)) return false
 
@@ -40,27 +48,29 @@ export const isCollapsedRoot$ = state(
   false,
 )
 
-export const [hoverChange$, setHovered] = createSignal<{
-  id: string
-  hover: boolean
-}>()
+export const [hoverChange$, setHovered] = createKeyedSignal<
+  string,
+  {
+    id: string
+    hover: boolean
+  }
+>()
 
-const hoverPaths$ = state(
-  defer(() =>
-    hoverChange$.pipe(
+const hoverPaths$ = pathsState(
+  (id: string) =>
+    hoverChange$(id).pipe(
       scan((acc, v) => {
         if (v.hover) acc.add(v.id)
         else acc.delete(v.id)
         return acc
       }, new Set<string>()),
     ),
-  ),
-  new Set(),
+  new Set<string>(),
 )
 
-export const isActive$ = state(
-  (path: string) =>
-    hoverPaths$.pipe(
+export const isActive$ = pathsState(
+  (path: string, id: string) =>
+    hoverPaths$(id).pipe(
       map((hoverPaths) => {
         if (!hoverPaths.has(path)) return false
 

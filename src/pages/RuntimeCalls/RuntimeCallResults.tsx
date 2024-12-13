@@ -9,6 +9,7 @@ import {
   runtimeCallResult$,
   runtimeCallResultKeys$,
 } from "./runtimeCalls.state"
+import { PathsRoot } from "@/codec-components/common/paths.state"
 
 export const RuntimeCallResults: FC = () => {
   const keys = useStateObservable(runtimeCallResultKeys$)
@@ -63,7 +64,9 @@ const RuntimeCallResultBox: FC<{ subscription: string }> = ({
           </button>
         </div>
       </div>
-      <ResultDisplay runtimeCallResult={runtimeCallResult} mode={mode} />
+      <PathsRoot.Provider value={subscription}>
+        <ResultDisplay runtimeCallResult={runtimeCallResult} mode={mode} />
+      </PathsRoot.Provider>
     </li>
   )
 }

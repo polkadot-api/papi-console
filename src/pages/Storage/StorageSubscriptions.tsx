@@ -16,6 +16,7 @@ import {
   stringifyArg,
   toggleSubscriptionPause,
 } from "./storage.state"
+import { PathsRoot } from "@/codec-components/common/paths.state"
 
 export const StorageSubscriptions: FC = () => {
   const keys = useStateObservable(storageSubscriptionKeys$)
@@ -81,15 +82,20 @@ const StorageSubscriptionBox: FC<{ subscription: string }> = ({
           </button>
         </div>
       </div>
-      <ResultDisplay storageSubscription={storageSubscription} mode={mode} />
+      <ResultDisplay
+        storageSubscription={storageSubscription}
+        subscriptionKey={subscription}
+        mode={mode}
+      />
     </li>
   )
 }
 
 const ResultDisplay: FC<{
   storageSubscription: StorageSubscription
+  subscriptionKey: string
   mode: "json" | "decoded"
-}> = ({ storageSubscription, mode }) => {
+}> = ({ storageSubscription, subscriptionKey, mode }) => {
   if (!("result" in storageSubscription)) {
     return <div className="text-sm text-foreground/50">Loading…</div>
   }
@@ -97,12 +103,14 @@ const ResultDisplay: FC<{
   if (storageSubscription.single) {
     return (
       <div className="max-h-[60svh] overflow-auto">
-        <ValueDisplay
-          mode={mode}
-          type={storageSubscription.type}
-          value={storageSubscription.result}
-          title={"Result"}
-        />
+        <PathsRoot.Provider value={subscriptionKey}>
+          <ValueDisplay
+            mode={mode}
+            type={storageSubscription.type}
+            value={storageSubscription.result}
+            title={"Result"}
+          />
+        </PathsRoot.Provider>
       </div>
     )
   }
@@ -119,12 +127,14 @@ const ResultDisplay: FC<{
       .join(", ")
     return (
       <div key={title} className={itemClasses}>
-        <ValueDisplay
-          mode={mode}
-          title={title}
-          value={value}
-          type={storageSubscription.type}
-        />
+        <PathsRoot.Provider value={`${subscriptionKey}-${title}`}>
+          <ValueDisplay
+            mode={mode}
+            title={title}
+            value={value}
+            type={storageSubscription.type}
+          />
+        </PathsRoot.Provider>
       </div>
     )
   }
