@@ -4,7 +4,7 @@ import { useContext, useState } from "react"
 import { Portal } from "react-portal"
 import { twMerge } from "tailwind-merge"
 import { Marker } from "../common/Markers"
-import { isActive$, setHovered } from "../common/paths.state"
+import { isActive$, PathsRoot, setHovered } from "../common/paths.state"
 import { useSubtreeFocus } from "../common/SubtreeFocus"
 import { useAppendTitle } from "../EditCodec/Tree/CEnum"
 import { CopyBinary, useReportBinary } from "./CopyBinary"
@@ -17,6 +17,7 @@ export const CEnum: ViewEnum = ({ value, inner, path, encodedValue }) => {
   const [newElement, setNewElement] = useState<HTMLElement | null>(null)
   const pathStr = path.join(".")
   const isActive = useStateObservable(isActive$(pathStr))
+  const pathId = useContext(PathsRoot)
   useReportBinary(encodedValue)
   const sub = focus.getNextPath(path)
   if (sub) {
@@ -37,8 +38,8 @@ export const CEnum: ViewEnum = ({ value, inner, path, encodedValue }) => {
   return (
     <div
       className={twMerge("flex flex-col")}
-      onMouseEnter={() => setHovered({ id: pathStr, hover: true })}
-      onMouseLeave={() => setHovered({ id: pathStr, hover: false })}
+      onMouseEnter={() => setHovered(pathId, { id: pathStr, hover: true })}
+      onMouseLeave={() => setHovered(pathId, { id: pathStr, hover: false })}
     >
       <Marker id={[...path, value.type]} />
       <div className="flex gap-2 overflow-hidden justify-between">

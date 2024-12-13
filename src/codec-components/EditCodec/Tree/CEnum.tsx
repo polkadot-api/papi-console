@@ -1,3 +1,4 @@
+import { PathsRoot, setHovered } from "@/codec-components/common/paths.state"
 import { Enum } from "@/components/Icons"
 import { isComplex } from "@/utils/shape"
 import { EditEnum, NOTIN } from "@polkadot-api/react-builder"
@@ -11,7 +12,6 @@ import {
   TitleContext,
   useReportBinaryStatus,
 } from "./codec-components"
-import { setHovered } from "@/codec-components/common/paths.state"
 
 export const CEnum: EditEnum = ({
   value,
@@ -23,6 +23,7 @@ export const CEnum: EditEnum = ({
   onValueChanged,
   decode,
 }) => {
+  const pathId = useContext(PathsRoot)
   const className =
     "text-slate-500 hover:text-polkadot-500 cursor-pointer whitespace-nowrap [&:not(:first-child)]:ml-1"
 
@@ -48,8 +49,12 @@ export const CEnum: EditEnum = ({
           <Portal node={titleElement}>
             <span
               onClick={() => scrollToMarker(innerPath)}
-              onMouseEnter={() => setHovered({ id: pathStr, hover: true })}
-              onMouseLeave={() => setHovered({ id: pathStr, hover: false })}
+              onMouseEnter={() =>
+                setHovered(pathId, { id: pathStr, hover: true })
+              }
+              onMouseLeave={() =>
+                setHovered(pathId, { id: pathStr, hover: false })
+              }
             >
               / {value.type}
             </span>

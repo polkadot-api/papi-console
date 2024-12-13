@@ -2,13 +2,14 @@ import { ExpandBtn } from "@/components/Expand"
 import { getFinalType } from "@/utils/shape"
 import { EditStruct } from "@polkadot-api/react-builder"
 import { useStateObservable } from "@react-rxjs/core"
-import React from "react"
+import React, { useContext } from "react"
 import { twMerge as clsx, twMerge } from "tailwind-merge"
 import { Marker } from "../common/Markers"
 import { useSubtreeFocus } from "../common/SubtreeFocus"
 import {
   isActive$,
   isCollapsed$,
+  PathsRoot,
   setHovered,
   toggleCollapsed,
 } from "../common/paths.state"
@@ -19,6 +20,7 @@ const StructItem: React.FC<{
   path: string[]
   type?: string
 }> = ({ name, children, path, type }) => {
+  const pathsRootId = useContext(PathsRoot)
   const pathStr = path.join(".")
   const isActive = useStateObservable(isActive$(pathStr))
   const isExpanded = !useStateObservable(isCollapsed$(pathStr))
@@ -29,12 +31,14 @@ const StructItem: React.FC<{
         "flex flex-col transition-all duration-300",
         isActive && "bg-secondary/20",
       )}
-      onMouseEnter={() => setHovered({ id: pathStr, hover: true })}
-      onMouseLeave={() => setHovered({ id: pathStr, hover: false })}
+      onMouseEnter={() => setHovered(pathsRootId, { id: pathStr, hover: true })}
+      onMouseLeave={() =>
+        setHovered(pathsRootId, { id: pathStr, hover: false })
+      }
     >
       <Marker id={path} />
       <span
-        onClick={() => toggleCollapsed(pathStr)}
+        onClick={() => toggleCollapsed(pathsRootId, pathStr)}
         className="cursor-pointer flex select-none items-center py-1 gap-1"
       >
         <ExpandBtn expanded={isExpanded} />
