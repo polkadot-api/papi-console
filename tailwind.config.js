@@ -1,3 +1,5 @@
+import tailwindAnimate from "tailwindcss-animate"
+
 /**
  * @type {import("tailwindcss").Config}
  */
@@ -96,6 +98,6 @@ export default {
     function ({ addVariant }) {
       addVariant("group-state-open", ':merge(.group)[data-state="open"] &')
     },
-    require("tailwindcss-animate"),
+    tailwindAnimate,
   ],
 }

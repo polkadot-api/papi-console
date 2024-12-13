@@ -36,7 +36,7 @@ const StructItem: React.FC<{
   const title = isComplexShape ? (
     <span
       onClick={() => toggleCollapsed(pathStr)}
-      className="cursor-pointer flex select-none items-center py-1 gap-1"
+      className="cursor-pointer flex items-center py-1 gap-1"
     >
       {hasParentTitle && <ItemMarker />}
       <ExpandBtn expanded={isExpanded} />
@@ -51,7 +51,7 @@ const StructItem: React.FC<{
     <span className="flex items-center py-1 gap-1">
       {hasParentTitle && <ItemMarker />}
       <Dot size={16} />
-      <span className="select-none flex items-center gap-1">
+      <span className="flex items-center gap-1">
         <span className="opacity-75">{name}</span>
         <span ref={setTitleElement} />
       </span>
