@@ -75,6 +75,15 @@ const ResultDisplay: FC<{
   runtimeCallResult: RuntimeCallResult
   mode: "json" | "decoded"
 }> = ({ runtimeCallResult, mode }) => {
+  if ("error" in runtimeCallResult) {
+    return (
+      <div className="text-sm">
+        <div>The call crashed</div>
+        <div>Message: {runtimeCallResult.error.message ?? "N/A"}</div>
+      </div>
+    )
+  }
+
   if (!("result" in runtimeCallResult)) {
     return <div className="text-sm text-foreground/50">Loading…</div>
   }

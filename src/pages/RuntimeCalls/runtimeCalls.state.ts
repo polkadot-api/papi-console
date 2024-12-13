@@ -5,7 +5,16 @@ import {
   partitionByKey,
   toKeySet,
 } from "@react-rxjs/utils"
-import { from, map, Observable, startWith, switchMap, takeUntil } from "rxjs"
+import {
+  catchError,
+  from,
+  map,
+  Observable,
+  of,
+  startWith,
+  switchMap,
+  takeUntil,
+} from "rxjs"
 import { v4 as uuid } from "uuid"
 
 export type RuntimeCallMetadataMethod = {
@@ -34,8 +43,8 @@ export const [removeRuntimeCallResult$, removeRuntimeCallResult] =
 export type RuntimeCallResult = {
   name: string
   type: number
-} & ({ result: unknown } | {})
-const [getStorageSubscription$, storageSubscriptionKeyChange$] = partitionByKey(
+} & ({ result: unknown } | { error?: any })
+const [getRuntimeCallSubscription$, runtimeCallKeyChange$] = partitionByKey(
   newRuntimeCallQuery$,
   () => uuid(),
   (src$, id) =>
@@ -48,6 +57,13 @@ const [getStorageSubscription$, storageSubscriptionKeyChange$] = partitionByKey(
               result,
               paused: false,
             })),
+            catchError((ex) => {
+              console.error(ex)
+              return of({
+                ...props,
+                error: ex,
+              })
+            }),
             startWith(props),
           ),
       ),
@@ -56,7 +72,7 @@ const [getStorageSubscription$, storageSubscriptionKeyChange$] = partitionByKey(
 )
 
 export const runtimeCallResultKeys$ = state(
-  storageSubscriptionKeyChange$.pipe(
+  runtimeCallKeyChange$.pipe(
     toKeySet(),
     map((keys) => [...keys].reverse()),
   ),
@@ -64,6 +80,7 @@ export const runtimeCallResultKeys$ = state(
 )
 
 export const runtimeCallResult$ = state(
-  (key: string): Observable<RuntimeCallResult> => getStorageSubscription$(key),
+  (key: string): Observable<RuntimeCallResult> =>
+    getRuntimeCallSubscription$(key),
   null,
 )

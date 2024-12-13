@@ -30,6 +30,7 @@ import {
   WebsocketSource,
 } from "./websocket"
 import { getHashParams, setHashParams } from "@/hashParams"
+import { withLogsRecorder } from "polkadot-api/logs-provider"
 
 export type ChainSource = WebsocketSource | SmoldotSource
 
@@ -44,10 +45,16 @@ export const getChainSource = ({
   endpoint === "light-client"
     ? createSmoldotSource(id, relayChain)
     : createWebsocketSource(id, endpoint)
-export const getProvider = (source: ChainSource) =>
-  source.type === "websocket"
-    ? getWebsocketProvider(source)
-    : getSmoldotProvider(source)
+export const getProvider = (source: ChainSource) => {
+  const provider =
+    source.type === "websocket"
+      ? getWebsocketProvider(source)
+      : getSmoldotProvider(source)
+
+  return import.meta.env.DEV
+    ? withLogsRecorder(console.debug, provider)
+    : provider
+}
 
 export const [selectedChainChanged$, onChangeChain] =
   createSignal<SelectedChain>()

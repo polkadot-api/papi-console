@@ -9,9 +9,7 @@ import { toHex } from "@polkadot-api/utils"
 import { HexString } from "polkadot-api"
 import React, { lazy, Suspense, useState } from "react"
 
-const SelectAccountFromExtension = lazy(
-  () => import("./SelectAccountFromExtension"),
-)
+const SendTransactionForm = lazy(() => import("./SubmitTxForm"))
 
 export const ExtrinsicModal: React.FC<{
   callData: Uint8Array | HexString | undefined
@@ -36,7 +34,7 @@ export const ExtrinsicModal: React.FC<{
       >
         <DialogTitle>Create TX</DialogTitle>
         <Suspense fallback="Loading…">
-          <SelectAccountFromExtension
+          <SendTransactionForm
             callData={
               callData instanceof Uint8Array ? toHex(callData) : callData!
             }
