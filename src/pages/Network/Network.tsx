@@ -30,6 +30,7 @@ import {
   SelectedChain,
   selectedChain$,
 } from "@/state/chains/chain.state"
+import { addCustomNetwork, getCustomNetwork } from "@/state/chains/networks"
 import { useStateObservable } from "@react-rxjs/core"
 import { useCommandState } from "cmdk"
 import { Check, ChevronDown } from "lucide-react"
@@ -114,6 +115,7 @@ export function NetworkSwitcher() {
         </Button>
       </DialogTrigger>
       <NetworkSwitchDialogContent
+        key={selectedChain.endpoint}
         selectedChain={selectedChain}
         onClose={() => setOpen(false)}
       />
@@ -148,10 +150,16 @@ const NetworkSwitchDialogContent: FC<{
   }
 
   const handleConfirm = () => {
-    onChangeChain({
-      network: selectedNetwork,
-      endpoint: selectedRpc,
-    })
+    if (selectedNetwork.id === "custom-network") {
+      addCustomNetwork(selectedRpc)
+      onChangeChain({ network: getCustomNetwork(), endpoint: selectedRpc })
+      setEnteredText("")
+    } else {
+      onChangeChain({
+        network: selectedNetwork,
+        endpoint: selectedRpc,
+      })
+    }
     onClose()
   }
 

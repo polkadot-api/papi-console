@@ -18,7 +18,13 @@ import {
   switchMap,
   tap,
 } from "rxjs"
-import { defaultNetwork, Network, networkCategories } from "./networks"
+import {
+  addCustomNetwork,
+  defaultNetwork,
+  getCustomNetwork,
+  Network,
+  networkCategories,
+} from "./networks"
 import {
   createSmoldotSource,
   getSmoldotProvider,
@@ -64,23 +70,25 @@ selectedChainChanged$.subscribe(({ network, endpoint }) =>
     endpoint,
   }),
 )
+
+const allNetworks = networkCategories.map((x) => x.networks).flat()
+const findNetwork = (networkId: string): Network | undefined =>
+  allNetworks.find((x) => x.id == networkId)
+
 const getDefaultChain = (): SelectedChain => {
-  const findNetwork = (networkId: string) => {
-    for (const { networks } of networkCategories) {
-      for (const network of networks) {
-        if (network.id === networkId) {
-          return network
-        }
-      }
-    }
-    return null
-  }
   const hashParams = getHashParams()
   if (hashParams.has("networkId") && hashParams.has("endpoint")) {
-    const network = findNetwork(hashParams.get("networkId")!)
-    if (network) {
-      return { network, endpoint: hashParams.get("endpoint")! }
+    const networkId = hashParams.get("networkId")!
+    const endpoint = hashParams.get("endpoint")!
+    if (networkId === "custom") {
+      addCustomNetwork(endpoint)
+      return {
+        network: getCustomNetwork(),
+        endpoint,
+      }
     }
+    const network = findNetwork(networkId)
+    if (network) return { network, endpoint }
   }
 
   return {

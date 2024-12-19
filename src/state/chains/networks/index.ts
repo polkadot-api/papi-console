@@ -38,13 +38,13 @@ const networks = {
   Kusama,
   Paseo,
   Westend,
-  Development: [
+  Custom: [
     {
-      id: "localhost",
-      display: "Localhost",
+      id: "custom",
+      display: "Custom",
       lightclient: false,
       endpoints: {
-        "Local (ws://127.0.0.1:9944)": "ws://127.0.0.1:9944",
+        "ws://127.0.0.1:9944": "ws://127.0.0.1:9944",
       },
     } as Network,
   ],
@@ -53,5 +53,10 @@ const networks = {
 export const networkCategories: NetworkCategory[] = Object.entries(
   networks,
 ).map(([name, networks]) => ({ name, networks }))
+
+export const getCustomNetwork = () => networks.Custom[0]
+export const addCustomNetwork = (uri: string) => {
+  getCustomNetwork().endpoints[uri] = uri
+}
 
 export const defaultNetwork = Polkadot[0]
