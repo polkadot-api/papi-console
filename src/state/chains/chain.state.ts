@@ -75,12 +75,26 @@ const allNetworks = networkCategories.map((x) => x.networks).flat()
 const findNetwork = (networkId: string): Network | undefined =>
   allNetworks.find((x) => x.id == networkId)
 
+export const isValidUri = (input: string): boolean => {
+  try {
+    new URL(input)
+  } catch {
+    return false
+  }
+  return true
+}
+
+const defaultSelectedChain: SelectedChain = {
+  network: defaultNetwork,
+  endpoint: "light-client",
+}
 const getDefaultChain = (): SelectedChain => {
   const hashParams = getHashParams()
   if (hashParams.has("networkId") && hashParams.has("endpoint")) {
     const networkId = hashParams.get("networkId")!
     const endpoint = hashParams.get("endpoint")!
     if (networkId === "custom") {
+      if (!isValidUri(endpoint)) return defaultSelectedChain
       addCustomNetwork(endpoint)
       return {
         network: getCustomNetwork(),
@@ -88,7 +102,7 @@ const getDefaultChain = (): SelectedChain => {
       }
     }
     const network = findNetwork(networkId)
-    if (network) return { network, endpoint }
+    if (network) return defaultSelectedChain
   }
 
   return {

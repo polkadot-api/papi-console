@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
+  isValidUri,
   Network,
   networkCategories,
   onChangeChain,
@@ -35,15 +36,6 @@ import { useStateObservable } from "@react-rxjs/core"
 import { useCommandState } from "cmdk"
 import { Check, ChevronDown } from "lucide-react"
 import { FC, useEffect, useRef, useState } from "react"
-
-const isValidUri = (input: string): boolean => {
-  try {
-    new URL(input)
-  } catch {
-    return false
-  }
-  return true
-}
 
 const EmptyOption: React.FC<{
   enteredText: string
