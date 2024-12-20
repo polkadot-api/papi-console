@@ -1,13 +1,13 @@
-import { lookup$, metadata$ } from "@/state/chains/chain.state"
 import { LookupTypeEdit } from "@/codec-components/LookupTypeEdit"
 import { ButtonGroup } from "@/components/ButtonGroup"
 import { JsonDisplay } from "@/components/JsonDisplay"
 import { LoadingMetadata } from "@/components/Loading"
 import { withSubscribe } from "@/components/withSuspense"
+import { lookup$, metadata$ } from "@/state/chains/chain.state"
 import { getTypeComplexity } from "@/utils/shape"
 import { useStateObservable } from "@react-rxjs/core"
 import { useState } from "react"
-import { Route, Routes, useParams } from "react-router-dom"
+import { Route, Routes, useNavigate, useParams } from "react-router-dom"
 import { Extrinsic } from "./Extrinsic"
 import { Lookup, LookupContext } from "./Lookup"
 import { Pallets } from "./Pallets"
@@ -17,8 +17,8 @@ import { Custom, OuterEnums } from "./V15Fields"
 export const Metadata = withSubscribe(
   () => (
     <Routes>
-      <Route path="editor/:id" element={<Editor />} />
-      <Route path="*" element={<MetadataExplorer />} />
+      <Route path="lookup/editor/:id" element={<Editor />} />
+      <Route path=":mode?" element={<MetadataExplorer />} />
     </Routes>
   ),
   {
@@ -27,7 +27,13 @@ export const Metadata = withSubscribe(
 )
 
 const MetadataExplorer = () => {
-  const [mode, setMode] = useState<string>("pallets")
+  const params = useParams()
+  const navigate = useNavigate()
+  const mode = params.mode || "pallets"
+  const setMode = (mode: string) =>
+    navigate("../" + mode, {
+      replace: true,
+    })
   const metadata = useStateObservable(metadata$)
 
   const tabs = [
@@ -101,11 +107,13 @@ const Editor = () => {
   const complexity = getTypeComplexity(shape)
 
   return (
-    <LookupTypeEdit
-      type={Number(id)}
-      value={value}
-      onValueChange={setValue}
-      tree={complexity === "tree"}
-    />
+    <div className="p-4">
+      <LookupTypeEdit
+        type={Number(id)}
+        value={value}
+        onValueChange={setValue}
+        tree={complexity === "tree"}
+      />
+    </div>
   )
 }

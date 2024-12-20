@@ -1,32 +1,82 @@
 import { ExpandBtn } from "@/components/Expand"
 import { Link } from "@/hashParams"
 import { V14Lookup } from "@polkadot-api/substrate-bindings"
-import { Edit } from "lucide-react"
+import { Edit, Search } from "lucide-react"
 import {
   createContext,
   FC,
   PropsWithChildren,
   useContext,
+  useMemo,
   useState,
 } from "react"
 import { twMerge } from "tailwind-merge"
 
 export const Lookup: FC = () => {
+  const lookup = useContext(LookupContext)
   const [id, setId] = useState(0)
+  const [search, setSearch] = useState("")
+
+  const matchingResults = useMemo(() => {
+    if (!search.trim()) return null
+
+    const tokens = search
+      .toLocaleLowerCase()
+      .split(".")
+      .map((v) => v.trim())
+      .filter((v) => v !== "")
+
+    return lookup.filter((node) =>
+      tokens.every((token) =>
+        node.path.some((p) => p.toLocaleLowerCase().startsWith(token)),
+      ),
+    )
+  }, [search, lookup])
 
   return (
     <div className="border rounded p-2 flex flex-col gap-2">
-      <label>
-        Id:{" "}
-        <input
-          className="text-sm border rounded p-2 border-polkadot-200 leading-tight text-white"
-          value={id}
-          onChange={(evt) => setId(evt.target.valueAsNumber)}
-          type="number"
-        />
-      </label>
-      <div className="border-t">
-        <LookupNode id={id} />
+      <div className="flex justify-between">
+        <label>
+          Id:{" "}
+          <input
+            className="text-sm border rounded p-2 border-polkadot-200 leading-tight text-white"
+            value={id}
+            onChange={(evt) => {
+              setSearch("")
+              setId(evt.target.valueAsNumber)
+            }}
+            type="number"
+          />
+        </label>
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+          <input
+            className="pl-8 px-4 py-2 border border-border rounded leading-tight text-foreground"
+            value={search}
+            placeholder="Search by path…"
+            onChange={(evt) => setSearch(evt.target.value)}
+          />
+        </div>
+      </div>
+      <div>
+        {matchingResults ? (
+          matchingResults.length ? (
+            <div className="space-y-4">
+              {matchingResults.slice(0, 20).map(({ id }) => (
+                <div className="bg-card border rounded p-2">
+                  <p>id: {id}</p>
+                  <LookupNode key={id} id={id} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <span>No results found</span>
+          )
+        ) : (
+          <div className="bg-card border rounded p-2">
+            <LookupNode id={id} />
+          </div>
+        )}
       </div>
     </div>
   )
