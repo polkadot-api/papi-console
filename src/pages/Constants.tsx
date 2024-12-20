@@ -4,7 +4,6 @@ import { ButtonGroup } from "@/components/ButtonGroup"
 import { DocsRenderer } from "@/components/DocsRenderer"
 import { ExpandBtn } from "@/components/Expand"
 import { LoadingMetadata } from "@/components/Loading"
-import { Tooltip } from "@/components/Tooltip"
 import { withSubscribe } from "@/components/withSuspense"
 import { CodecComponentType } from "@polkadot-api/react-builder"
 import { getTypeComplexity } from "@/utils/shape"
@@ -15,6 +14,11 @@ import { FC, useState } from "react"
 import { map } from "rxjs"
 import { twMerge } from "tailwind-merge"
 import { ValueDisplay } from "./Storage/StorageSubscriptions"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 const metadataConstants$ = state(
   lookup$.pipe(
@@ -112,17 +116,17 @@ const ConstantEntry: FC<{
       onClick={() => setExpanded((e) => !e)}
     >
       {isInline ? <Dot size={16} /> : <ExpandBtn expanded={expanded} />}
-      <Tooltip
-        content={
-          docs.length ? (
+      <Tooltip disableHoverableContent>
+        <TooltipTrigger className="cursor-default">
+          <div className={isInline ? "text-foreground/60" : ""}>
+            {name + (isInline ? ":" : "")}
+          </div>
+        </TooltipTrigger>
+        {docs.length ? (
+          <TooltipContent>
             <DocsRenderer docs={docs} className="max-h-none" />
-          ) : null
-        }
-        disableHoverableContent
-      >
-        <div className={isInline ? "text-foreground/60" : ""}>
-          {name + (isInline ? ":" : "")}
-        </div>
+          </TooltipContent>
+        ) : null}
       </Tooltip>
       {isInline ? (
         <ViewCodec
