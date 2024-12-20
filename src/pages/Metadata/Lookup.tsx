@@ -51,7 +51,7 @@ export const Lookup: FC = () => {
         <div className="relative">
           <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
           <input
-            className="pl-8 px-4 py-2 border border-border leading-tight text-foreground"
+            className="pl-8 px-4 py-2 border border-border rounded leading-tight text-foreground"
             value={search}
             placeholder="Search by path…"
             onChange={(evt) => setSearch(evt.target.value)}
