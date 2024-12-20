@@ -5,11 +5,11 @@ import { BrowserRouter } from "react-router-dom"
 import { merge } from "rxjs"
 import App from "./App.tsx"
 import { dynamicBuilder$ } from "@/state/chains/chain.state"
-import { TooltipProvider } from "./components/Tooltip.tsx"
 import "./index.css"
 import { explorer$ } from "./pages/Explorer"
 import { transactions$ } from "./pages/Transactions"
 import { ThemeProvider } from "./ThemeProvider.tsx"
+import { TooltipProvider } from "./components/ui/tooltip.tsx"
 
 createRoot(document.getElementById("root")!).render(
   <Subscribe source$={merge(dynamicBuilder$, explorer$, transactions$)}>
@@ -17,7 +17,7 @@ createRoot(document.getElementById("root")!).render(
       <StrictMode>
         <ThemeProvider>
           <BrowserRouter>
-            <TooltipProvider>
+            <TooltipProvider delayDuration={500}>
               <App />
             </TooltipProvider>
           </BrowserRouter>
