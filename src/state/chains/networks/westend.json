@@ -119,5 +119,22 @@
       "decimals": 12
     },
     "hasChainSpecs": false
+  },
+  {
+    "id": "westend_penpal",
+    "display": "Penpal",
+    "rpcs": {
+      "Parity": "wss://westend-penpal-rpc.polkadot.io"
+    },
+    "relayChainInfo": {
+      "id": "westend",
+      "isSystem": false,
+      "parachain": 2042
+    },
+    "nativeToken": {
+      "symbol": "PEN",
+      "decimals": 12
+    },
+    "hasChainSpecs": false
   }
 ]
