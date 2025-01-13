@@ -60,7 +60,7 @@ export const Extrinsic: FC<{
           <div className="p-2 overflow-auto max-h-[80vh] border-t">
             <ol className="flex flex-col gap-1">
               {events.map((evt, i) => (
-                <ExtrinsicEvent
+                <EventDisplay
                   key={i}
                   index={i}
                   evt={evt}
@@ -80,12 +80,12 @@ const SignedExtensions: FC<{ extra: unknown }> = () => {
   return null
 }
 
-const ExtrinsicEvent: FC<{
-  evt: ApplyExtrinsicEvent
+export const EventDisplay: FC<{
+  evt: SystemEvent
   index: number
-  defaultOpen: boolean
+  defaultOpen?: boolean
 }> = ({ evt, index, defaultOpen }) => {
-  const [expanded, setExpanded] = useState(defaultOpen)
+  const [expanded, setExpanded] = useState(defaultOpen ?? false)
   const ref = useRef<HTMLLIElement>(null)
 
   useEffect(() => {

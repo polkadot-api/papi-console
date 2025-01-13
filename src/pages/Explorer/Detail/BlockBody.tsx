@@ -10,6 +10,7 @@ import { twMerge } from "tailwind-merge"
 import { BlockInfo, blockInfoState$ } from "../block.state"
 import { ApplyExtrinsicEvent, Extrinsic } from "./Extrinsic"
 import { createExtrinsicCodec, DecodedExtrinsic } from "./extrinsicDecoder"
+import { BlockEvents } from "./BlockEvents"
 
 const blockExtrinsics$ = state((hash: string) => {
   const decoder$ = runtimeCtx$.pipe(
@@ -31,22 +32,21 @@ const blockExtrinsics$ = state((hash: string) => {
   )
 }, [])
 
+type Tab = "signed" | "unsigned" | "events"
 export const BlockBody: FC<{
   block: BlockInfo
 }> = ({ block }) => {
   const { hash } = useParams()
-  const [selectedTab, setSelectedTab] = useState<"signed" | "unsigned" | null>(
-    null,
-  )
+  const [selectedTab, setSelectedTab] = useState<Tab | null>(null)
   const extrinsics = useStateObservable(blockExtrinsics$(hash ?? ""))
   const location = useLocation()
   const hashParams = new URLSearchParams(location.hash.slice(1))
   const eventParam = hashParams.get("event")
   const defaultEventOpen =
-    eventParam && block?.events
+    eventParam && block.events
       ? (block.events[Number(eventParam)] as ApplyExtrinsicEvent)
       : null
-  const eventsByExtrinsic = block?.events
+  const eventsByExtrinsic = block.events
     ? groupBy(
         block.events.filter(
           (evt): evt is ApplyExtrinsicEvent =>
@@ -62,21 +62,24 @@ export const BlockBody: FC<{
     extrinsics.map((e, index) => ({ ...e, index })),
     (e) => (e.signed ? "signed" : ("unsigned" as const)),
   )
-  const defaultTab =
-    defaultEventOpen?.phase.type === "ApplyExtrinsic"
-      ? extrinsics[defaultEventOpen.phase.value].signed
+
+  // This is done separately in case the extrinsics/events have not fully loaded yet.
+  const getDefaultTab = (): Tab => {
+    if (defaultEventOpen?.phase.type === "ApplyExtrinsic") {
+      return extrinsics[defaultEventOpen.phase.value]?.signed
         ? "signed"
         : "unsigned"
-      : groupedExtrinsics.signed?.length
-        ? "signed"
-        : "unsigned"
-  const effectiveTab = selectedTab
-    ? groupedExtrinsics[selectedTab]?.length
-      ? selectedTab
-      : selectedTab === "signed"
-        ? "unsigned"
-        : "signed"
-    : defaultTab
+    }
+    if (groupedExtrinsics.signed?.length) {
+      return "signed"
+    }
+    if (groupedExtrinsics.unsigned?.length) {
+      return "unsigned"
+    }
+    return "events"
+  }
+
+  const effectiveTab = selectedTab ?? getDefaultTab()
 
   return (
     <div className="p-2">
@@ -108,6 +111,16 @@ export const BlockBody: FC<{
           >
             Unsigned
           </Tabs.Trigger>
+          <Tabs.Trigger
+            className={twMerge(
+              "bg-secondary text-secondary-foreground/80 px-4 py-2 hover:text-polkadot-500 border-t border-r rounded-tr border-polkadot-200",
+              "disabled:text-secondary-foreground/50 disabled:pointer-events-none",
+              "data-[state=active]:font-bold data-[state=active]:text-secondary-foreground",
+            )}
+            value="events"
+          >
+            Events
+          </Tabs.Trigger>
         </Tabs.List>
         <Tabs.Content value="signed" className="py-2">
           <ol>
@@ -132,6 +145,9 @@ export const BlockBody: FC<{
               />
             ))}
           </ol>
+        </Tabs.Content>
+        <Tabs.Content value="events" className="py-2">
+          <BlockEvents block={block} />
         </Tabs.Content>
       </Tabs.Root>
     </div>
