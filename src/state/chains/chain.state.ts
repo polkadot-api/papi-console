@@ -102,13 +102,10 @@ const getDefaultChain = (): SelectedChain => {
       }
     }
     const network = findNetwork(networkId)
-    if (network) return defaultSelectedChain
+    if (network) return { network, endpoint }
   }
 
-  return {
-    network: defaultNetwork,
-    endpoint: "light-client",
-  }
+  return defaultSelectedChain
 }
 export const selectedChain$ = state<SelectedChain>(
   selectedChainChanged$,
