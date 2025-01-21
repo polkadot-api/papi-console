@@ -17,6 +17,7 @@ import {
   NEVER,
   Observable,
   of,
+  retry,
   scan,
   startWith,
   switchMap,
@@ -73,11 +74,23 @@ const setPreselectedExtension = (extension: string, selected: boolean) => {
 
 const extension$ = (name: string) => {
   const connect$ = defer(() => connectInjectedExtension(name)).pipe(
+    // PolkadotJS rejects the promise straight away instead of waiting for user input
+    retry({
+      delay(error) {
+        if (error?.message.includes("pending authorization request")) {
+          return timer(1000)
+        }
+        throw error
+      },
+    }),
     map((extension) => ({
       type: ConnectStatus.Connected as const,
       extension,
     })),
-    catchError(() => of({ type: ConnectStatus.Disconnected as const })),
+    catchError((ex) => {
+      console.error(ex)
+      return of({ type: ConnectStatus.Disconnected as const })
+    }),
     startWith({ type: ConnectStatus.Connecting as const }),
   )
 
