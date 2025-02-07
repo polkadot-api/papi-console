@@ -1,4 +1,5 @@
 import { bytesToString } from "@/components/BinaryInput"
+import { selectedChainChanged$ } from "@/state/chains/chain.state"
 import { state } from "@react-rxjs/core"
 import {
   createKeyedSignal,
@@ -9,10 +10,15 @@ import {
 import { Binary } from "polkadot-api"
 import {
   combineLatest,
+  concat,
   distinctUntilChanged,
+  ignoreElements,
   map,
+  merge,
   Observable,
+  of,
   scan,
+  shareReplay,
   startWith,
   switchMap,
   takeUntil,
@@ -49,6 +55,7 @@ export type StorageSubscription = {
   type: number
   single: boolean
   paused: boolean
+  completed: boolean
 } & ({ result: unknown } | {})
 const [getStorageSubscription$, storageSubscriptionKeyChange$] = partitionByKey(
   newStorageSubscription$,
@@ -64,15 +71,24 @@ const [getStorageSubscription$, storageSubscriptionKeyChange$] = partitionByKey(
           map((result) => ({
             ...props,
             result,
-            paused: false,
           })),
           startWith(props),
+          shareReplay(1),
         )
-        return combineLatest([paused$, result$]).pipe(
-          map(([paused, result]) => ({ ...result, paused })),
+        const completed$ = concat(
+          of(false),
+          result$.pipe(ignoreElements()),
+          of(true),
+        )
+        return combineLatest([paused$, completed$, result$]).pipe(
+          map(([paused, completed, result]) => ({
+            ...result,
+            paused,
+            completed,
+          })),
         )
       }),
-      takeUntil(removeStorageSubscription$(id)),
+      takeUntil(merge(removeStorageSubscription$(id), selectedChainChanged$)),
     ),
 )
 
@@ -83,6 +99,7 @@ export const storageSubscriptionKeys$ = state(
   ),
   [],
 )
+export const storage$ = storageSubscriptionKeys$
 
 export const storageSubscription$ = state(
   (key: string): Observable<StorageSubscription> =>

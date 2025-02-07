@@ -208,8 +208,8 @@ const StorageKeyInput: FC<{ idx: number; type: number; disabled: boolean }> = ({
             ? null
             : (value.value.encoded ?? codec.enc(value.value.decoded))) ?? null
       )
-    } catch {
-      null
+    } catch (ex) {
+      console.error(ex)
     }
   }
   const binaryValue = getBinValue()
