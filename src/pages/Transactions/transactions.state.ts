@@ -9,6 +9,8 @@ import {
 import { HexString, InvalidTxError, TxBroadcastEvent } from "polkadot-api"
 import {
   catchError,
+  filter,
+  merge,
   mergeMap,
   Observable,
   of,
@@ -21,6 +23,8 @@ import {
 const [signedTx$, trackSignedTx] = createSignal<HexString>()
 const [unsignedTx$, trackUnsignedTx] = createSignal<HexString>()
 export { trackSignedTx, trackUnsignedTx }
+
+export const [dismissTransaction$, dismissTransaction] = createSignal<string>()
 
 const transactions$ = mergeWithKey({ signedTx$, unsignedTx$ }).pipe(
   withLatestFrom(chainClient$),
@@ -46,6 +50,7 @@ const transactions$ = mergeWithKey({ signedTx$, unsignedTx$ }).pipe(
           value: err,
         }),
       ),
+      takeUntil(dismissTransaction$.pipe(filter((v) => v === txHash))),
     )
   }),
 )
@@ -53,7 +58,15 @@ const transactions$ = mergeWithKey({ signedTx$, unsignedTx$ }).pipe(
 const [tx$, txKeys$] = partitionByKey(
   transactions$,
   (x) => x.txHash,
-  (x) => x.pipe(takeUntil(chainClient$.pipe(skip(1)))),
+  (x, hash) =>
+    x.pipe(
+      takeUntil(
+        merge(
+          chainClient$.pipe(skip(1)),
+          dismissTransaction$.pipe(filter((v) => v === hash)),
+        ),
+      ),
+    ),
 )
 
 export const grouppedTransactions$ = state(combineKeys(txKeys$, tx$))

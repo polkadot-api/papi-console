@@ -3,7 +3,8 @@ import { Link } from "@/hashParams"
 import { shortStr } from "@/utils"
 import { TxBroadcastEvent } from "polkadot-api"
 import * as React from "react"
-import { onGoingEvents } from "./transactions.state"
+import { dismissTransaction, onGoingEvents } from "./transactions.state"
+import { Trash2 } from "lucide-react"
 
 export const Transaction: React.FC<{
   event:
@@ -23,7 +24,8 @@ export const Transaction: React.FC<{
       case "invalid":
         return (
           <span>
-            Invalid transaction. {JSON.stringify(event.value, null, 2)}
+            Invalid transaction.{" "}
+            {JSON.stringify(event.value, bigintReplacer, 2)}
           </span>
         )
       case "txBestBlocksState": {
@@ -37,7 +39,7 @@ export const Transaction: React.FC<{
             >
               best block
             </Link>
-            .
+            {event.ok ? "." : ", but it's failing."}
           </span>
         ) : (
           <span>Transaction no longer in a best block.</span>
@@ -58,7 +60,9 @@ export const Transaction: React.FC<{
               {" "}
               finalized block
             </Link>
-            .
+            {event.ok
+              ? "."
+              : `, but it failed: ${JSON.stringify(event.dispatchError, bigintReplacer, 2)}.`}
           </span>
         )
     }
@@ -66,14 +70,22 @@ export const Transaction: React.FC<{
   const { txHash, type } = event
   return (
     <div className="mb-4 p-3 bg-secondary/60 text-secondary-foreground/80 border border-border rounded-lg">
-      <p className="font-medium">
-        {shortStr(txHash, 14)} <CopyText text={txHash} />
-      </p>
+      <div className="flex justify-between items-start">
+        <p className="font-medium">
+          {shortStr(txHash, 14)} <CopyText text={txHash} />
+        </p>
+        <button
+          className="text-red-500"
+          onClick={() => dismissTransaction(txHash)}
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
       <p
         className={`text-sm ${
           onGoingEvents.has(type)
             ? "text-yellow-500"
-            : type === "finalized"
+            : type === "finalized" && event.ok
               ? "text-green-500"
               : "text-red-500"
         }`}
@@ -83,3 +95,6 @@ export const Transaction: React.FC<{
     </div>
   )
 }
+
+const bigintReplacer = (_key: string, value: any) =>
+  typeof value === "bigint" ? value.toString() : value
