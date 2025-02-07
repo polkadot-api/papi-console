@@ -22,7 +22,15 @@ import { state, useStateObservable } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
 import { InjectedExtension } from "polkadot-api/pjs-signer"
 import React from "react"
-import { combineLatest, distinctUntilChanged, map, merge, of, tap } from "rxjs"
+import {
+  combineLatest,
+  defer,
+  distinctUntilChanged,
+  map,
+  merge,
+  of,
+  tap,
+} from "rxjs"
 
 const Accounts: React.FC<{ extension: InjectedExtension }> = ({
   extension,
@@ -68,7 +76,7 @@ const [valueSelected$, selectValue] = createSignal<string>()
 const LS_KEY = "selected-signer"
 const selectedValue$ = state(
   merge(
-    of(localStorage.getItem(LS_KEY)),
+    defer(() => of(localStorage.getItem(LS_KEY))),
     valueSelected$.pipe(tap((v) => localStorage.setItem(LS_KEY, v))),
   ),
   null,
