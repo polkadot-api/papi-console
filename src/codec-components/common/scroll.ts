@@ -2,24 +2,15 @@ export function synchronizeScroll(
   scrollingElement: HTMLElement,
   targetElement: HTMLElement,
 ) {
-  let heightCache = {
-    time: 0,
-    targetHeight: 0,
-  }
   const onScroll = async () => {
-    await Promise.resolve()
-    const now = Date.now()
-    heightCache =
-      heightCache.time > now - 500
-        ? heightCache
-        : {
-            time: now,
-            targetHeight: targetElement.getBoundingClientRect().height,
-          }
-
+    const buffer = targetElement.offsetHeight / 3
     const listScrollPos =
-      scrollingElement.scrollTop / scrollingElement.scrollHeight
-    targetElement.scrollTop = listScrollPos * heightCache.targetHeight
+      Math.max(0, scrollingElement.scrollTop - buffer) /
+      (scrollingElement.scrollHeight - scrollingElement.offsetHeight)
+
+    targetElement.scrollTop =
+      listScrollPos *
+      (targetElement.scrollHeight - targetElement.offsetHeight + buffer / 2)
   }
 
   scrollingElement.addEventListener("scroll", onScroll)

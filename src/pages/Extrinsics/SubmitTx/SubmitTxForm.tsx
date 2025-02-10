@@ -78,7 +78,6 @@ export default function SubmitTxF(props: {
       <AccountProvider />
       <div className="flex flex-col gap-2">
         <SignAndSubmit {...props} />
-        <div className="text-center">Or</div>
         <SubmitUnsigned {...props} />
       </div>
     </>
