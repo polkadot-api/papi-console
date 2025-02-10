@@ -70,13 +70,15 @@ const StorageSubscriptionBox: FC<{ subscription: string }> = ({
               },
             ]}
           />
-          <button onClick={() => toggleSubscriptionPause(subscription)}>
-            {storageSubscription.paused ? (
-              <PlayCircle {...iconButtonProps} />
-            ) : (
-              <PauseCircle {...iconButtonProps} />
-            )}
-          </button>
+          {storageSubscription.completed ? null : (
+            <button onClick={() => toggleSubscriptionPause(subscription)}>
+              {storageSubscription.paused ? (
+                <PlayCircle {...iconButtonProps} />
+              ) : (
+                <PauseCircle {...iconButtonProps} />
+              )}
+            </button>
+          )}
           <button onClick={() => removeStorageSubscription(subscription)}>
             <Trash2 {...iconButtonProps} />
           </button>
