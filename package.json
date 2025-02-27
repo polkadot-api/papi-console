@@ -53,7 +53,7 @@
     "react-router-dom": "^7.2.0",
     "react-svg": "^16.3.0",
     "react-virtuoso": "^4.12.5",
-    "react18-json-view": "^0.2.8",
+    "react18-json-view": "^0.2.9",
     "rxjs": "^7.8.1",
     "save-as": "^0.1.8",
     "tailwind-merge": "^2.5.4",
@@ -84,8 +84,8 @@
   "packageManager": "pnpm@9.12.2+sha512.22721b3a11f81661ae1ec68ce1a7b879425a1ca5b991c975b074ac220b187ce56c708fe5db69f4c962c989452eee76c82877f4ee80f474cebd61ee13461b6228",
   "pnpm": {
     "patchedDependencies": {
-      "react18-json-view@0.2.8": "patches/react18-json-view@0.2.8.patch",
-      "@polkadot-api/observable-client": "patches/@polkadot-api__observable-client.patch"
+      "@polkadot-api/observable-client": "patches/@polkadot-api__observable-client.patch",
+      "react18-json-view": "patches/react18-json-view.patch"
     }
   }
 }
