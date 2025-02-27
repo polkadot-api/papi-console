@@ -1,9 +1,9 @@
 .json-view .json-view--copy {
-    opacity: 0.4;
+  opacity: 0.4;
 }
 .json-view .json-view--copy:hover {
-    opacity: 1;
+  opacity: 1;
 }
 .json-view .jv-button {
-    padding: 0 0.3rem;
+  padding: 0 0.3rem;
 }
