@@ -293,7 +293,7 @@ const encodedKey$ = state(
         selectedEntry.entry,
       )
       try {
-        return codec.enc(...args)
+        return codec.keys.enc(...args)
       } catch (_) {
         return null
       }
@@ -331,7 +331,7 @@ const KeyDisplay: FC = () => {
             value.forEach((value, idx) => setKeyValue({ idx, value }))
           }}
           decode={(v) =>
-            codec.keyDecoder(
+            codec.keys.dec(
               typeof v === "string" ? v : Binary.fromBytes(v).asHex(),
             )
           }

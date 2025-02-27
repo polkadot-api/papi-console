@@ -52,7 +52,7 @@ export const CSequence: EditSequence = ({
         )}
         onClick={addItem}
       >
-        add item <CirclePlus strokeWidth="1"/>
+        add item <CirclePlus strokeWidth="1" />
       </button>
     </div>
   )

@@ -1,0 +1,143 @@
+diff --git a/dist/components/json-view.d.ts b/dist/components/json-view.d.ts
+index 44b3fdc1f5d619833af09f0f916a685e55fcc9c8..7054064cb847e7d69eac8ddad21b5593b707c1bc 100644
+--- a/dist/components/json-view.d.ts
++++ b/dist/components/json-view.d.ts
+@@ -107,6 +107,7 @@ export declare const JsonViewContext: import("react").Context<{
+     }, {}, any> | undefined;
+ }>;
+ export interface JsonViewProps {
++    replacer?: (node: any) => any;
+     src: any;
+     collapseStringsAfterLength?: number;
+     collapseStringMode?: 'directly' | 'word' | 'address';
+diff --git a/dist/es/index.mjs b/dist/es/index.mjs
+index ee2e3dee5780764f111f8761442e45014d8f050e..70adf8d3cad13239dfc255d2ae3d87225eb5d0b1 100644
+--- a/dist/es/index.mjs
++++ b/dist/es/index.mjs
+@@ -495,7 +495,7 @@ function LargeArrayNode({ originNode, node, depth, index, deleteHandle: _deleteS
+         forceUpdate();
+     };
+     const Icons = (jsxs(Fragment, { children: [!fold && (jsxs("span", Object.assign({ onClick: () => setFold(true), className: 'jv-size-chevron' }, { children: [ifDisplay(displaySize, depth, fold) && jsxs("span", Object.assign({ className: 'jv-size' }, { children: [objectSize(node), " Items"] })), jsx(SvgAngleDown, { className: 'jv-chevron' })] }))), !fold && enableClipboard && customCopy(customOptions) && (jsx(CopyButton, { node: node, nodeMeta: { depth, indexOrName: index, parent, parentPath, currentPath } })), typeof CustomOperation === 'function' ? jsx(CustomOperation, { node: node }) : null] }));
+-    return (jsxs("div", { children: [jsx("span", { children: '[' }), Icons, !fold ? (jsx("div", Object.assign({ className: 'jv-indent' }, { children: node.map((n, i) => (jsx(NameValue, { indexOrName: i + startIndex, value: n, depth: depth, parent: node, deleteHandle: deleteHandle, editHandle: editHandle, parentPath: parentPath }, String(index) + String(i)))) }))) : (jsxs("button", Object.assign({ onClick: () => setFold(false), className: 'jv-button' }, { children: [startIndex, " ... ", startIndex + node.length - 1] }))), jsx("span", { children: ']' })] }));
++    return (jsxs("div", { children: [jsx("span", { children: '[' }), Icons, !fold ? (jsx("div", Object.assign({ className: 'jv-indent' }, { children: node.map((n, i) => (jsx(NameValue, { indexOrName: i + startIndex, value: n, depth: depth, parent: node, deleteHandle: deleteHandle, editHandle: editHandle, parentPath: parentPath }, String(index) + String(i)))) }))) : (jsxs("button", Object.assign({ onClick: () => setFold(false), className: 'jv-button' }, { children: [startIndex, " … ", startIndex + node.length - 1] }))), jsx("span", { children: ']' })] }));
+ }
+ 
+ function LargeArray({ node, depth, deleteHandle: _deleteSelf, indexOrName, customOptions, parent, parentPath }) {
+@@ -546,7 +546,7 @@ function LargeArray({ node, depth, deleteHandle: _deleteSelf, indexOrName, custo
+     const Icons = (jsxs(Fragment, { children: [!fold && !isEditing && (jsxs("span", Object.assign({ onClick: () => setFold(true), className: 'jv-size-chevron' }, { children: [ifDisplay(displaySize, depth, fold) && jsxs("span", Object.assign({ className: 'jv-size' }, { children: [node.length, " Items"] })), jsx(SvgAngleDown, { className: 'jv-chevron' })] }))), isEditing && jsx(SvgDone, { className: 'json-view--edit', style: { display: 'inline-block' }, onClick: adding ? add : deleteSelf }), isEditing && jsx(SvgCancel, { className: 'json-view--edit', style: { display: 'inline-block' }, onClick: cancel }), !fold && !isEditing && enableClipboard && customCopy(customOptions) && (jsx(CopyButton, { node: node, nodeMeta: { depth, indexOrName, parent, parentPath, currentPath } })), !fold && !isEditing && editableAdd(editable) && customAdd(customOptions) && (jsx(SvgAddSquare, { className: 'json-view--edit', onClick: () => {
+                     add();
+                 } })), !fold && !isEditing && editableDelete(editable) && customDelete(customOptions) && _deleteSelf && (jsx(SvgTrash, { className: 'json-view--edit', onClick: () => setDeleting(true) })), typeof CustomOperation === 'function' ? jsx(CustomOperation, { node: node }) : null] }));
+-    return (jsxs(Fragment, { children: [jsx("span", { children: '[' }), Icons, !fold ? (jsx("div", Object.assign({ className: 'jv-indent' }, { children: nestCollapsedArray.map((item, index) => (jsx(LargeArrayNode, { originNode: node, node: item, depth: depth, index: index, startIndex: index * 100, deleteHandle: _deleteSelf, customOptions: customOptions, parentPath: parentPath }, String(indexOrName) + String(index)))) }))) : (jsx("button", Object.assign({ onClick: () => setFold(false), className: 'jv-button' }, { children: "..." }))), jsx("span", { children: ']' }), fold && ifDisplay(displaySize, depth, fold) && (jsxs("span", Object.assign({ onClick: () => setFold(false), className: 'jv-size' }, { children: [node.length, " Items"] })))] }));
++    return (jsxs(Fragment, { children: [jsx("span", { children: '[' }), Icons, !fold ? (jsx("div", Object.assign({ className: 'jv-indent' }, { children: nestCollapsedArray.map((item, index) => (jsx(LargeArrayNode, { originNode: node, node: item, depth: depth, index: index, startIndex: index * 100, deleteHandle: _deleteSelf, customOptions: customOptions, parentPath: parentPath }, String(indexOrName) + String(index)))) }))) : (jsx("button", Object.assign({ onClick: () => setFold(false), className: 'jv-button' }, { children: "…" }))), jsx("span", { children: ']' }), fold && ifDisplay(displaySize, depth, fold) && (jsxs("span", Object.assign({ onClick: () => setFold(false), className: 'jv-size' }, { children: [node.length, " Items"] })))] }));
+ }
+ 
+ function ObjectNode({ node, depth, indexOrName, deleteHandle: _deleteSelf, customOptions, parent, parentPath }) {
+@@ -666,10 +666,10 @@ function ObjectNode({ node, depth, indexOrName, deleteHandle: _deleteSelf, custo
+                     }
+                 } })), !fold && !isEditing && editableDelete(editable) && customDelete(customOptions) && _deleteSelf && (jsx(SvgTrash, { className: 'json-view--edit', onClick: () => setDeleting(true) })), typeof CustomOperation === 'function' ? jsx(CustomOperation, { node: node }) : null] }));
+     if (Array.isArray(node)) {
+-        return (jsxs(Fragment, { children: [jsx("span", { children: '[' }), Icons, !fold ? (jsx("div", Object.assign({ className: 'jv-indent' }, { children: node.map((n, i) => (jsx(NameValue, { indexOrName: i, value: n, depth: depth, parent: node, deleteHandle: deleteHandle, editHandle: editHandle, parentPath: currentPath }, String(indexOrName) + String(i)))) }))) : (jsx("button", Object.assign({ onClick: () => setFold(false), className: 'jv-button' }, { children: "..." }))), jsx("span", { children: ']' }), fold && ifDisplay(displaySize, depth, fold) && (jsxs("span", Object.assign({ onClick: () => setFold(false), className: 'jv-size' }, { children: [objectSize(node), " Items"] })))] }));
++        return (jsxs(Fragment, { children: [jsx("span", { children: '[' }), Icons, !fold ? (jsx("div", Object.assign({ className: 'jv-indent' }, { children: node.map((n, i) => (jsx(NameValue, { indexOrName: i, value: n, depth: depth, parent: node, deleteHandle: deleteHandle, editHandle: editHandle, parentPath: currentPath }, String(indexOrName) + String(i)))) }))) : (jsx("button", Object.assign({ onClick: () => setFold(false), className: 'jv-button' }, { children: "…" }))), jsx("span", { children: ']' }), fold && ifDisplay(displaySize, depth, fold) && (jsxs("span", Object.assign({ onClick: () => setFold(false), className: 'jv-size' }, { children: [objectSize(node), " Items"] })))] }));
+     }
+     else if (isPlainObject) {
+-        return (jsxs(Fragment, { children: [jsx("span", { children: '{' }), Icons, !fold ? (jsx("div", Object.assign({ className: 'jv-indent' }, { children: Object.entries(node).map(([name, value]) => (jsx(NameValue, { indexOrName: name, value: value, depth: depth, parent: node, deleteHandle: deleteHandle, editHandle: editHandle, parentPath: currentPath }, String(indexOrName) + String(name)))) }))) : (jsx("button", Object.assign({ onClick: () => setFold(false), className: 'jv-button' }, { children: "..." }))), jsx("span", { children: '}' }), fold && ifDisplay(displaySize, depth, fold) && (jsxs("span", Object.assign({ onClick: () => setFold(false), className: 'jv-size' }, { children: [objectSize(node), " Items"] })))] }));
++        return (jsxs(Fragment, { children: [jsx("span", { children: '{' }), Icons, !fold ? (jsx("div", Object.assign({ className: 'jv-indent' }, { children: Object.entries(node).map(([name, value]) => (jsx(NameValue, { indexOrName: name, value: value, depth: depth, parent: node, deleteHandle: deleteHandle, editHandle: editHandle, parentPath: currentPath }, String(indexOrName) + String(name)))) }))) : (jsx("button", Object.assign({ onClick: () => setFold(false), className: 'jv-button' }, { children: "…" }))), jsx("span", { children: '}' }), fold && ifDisplay(displaySize, depth, fold) && (jsxs("span", Object.assign({ onClick: () => setFold(false), className: 'jv-size' }, { children: [objectSize(node), " Items"] })))] }));
+     }
+     else {
+         return jsx("span", { children: String(node) });
+@@ -686,7 +686,7 @@ const LongString = React__default.forwardRef(({ str, className, ctrlClick }, ref
+         ? customizeCollapseStringUI(str_show, truncated)
+         : typeof customizeCollapseStringUI === 'string'
+             ? customizeCollapseStringUI
+-            : '...';
++            : '…';
+     const clickToTruncateOrEdit = (event) => {
+         var _a;
+         if ((event.ctrlKey || event.metaKey) && ctrlClick) {
+@@ -768,7 +768,8 @@ var SvgLink = function SvgLink(props) {
+ 
+ function JsonNode({ node, depth, deleteHandle: _deleteHandle, indexOrName, parent, editHandle, parentPath }) {
+     // prettier-ignore
+-    const { collapseStringsAfterLength, enableClipboard, editable, src, onDelete, onChange, customizeNode, matchesURL, urlRegExp, EditComponent, DoneComponent, CancelComponent, CustomOperation } = useContext(JsonViewContext);
++    const { replacer, collapseStringsAfterLength, enableClipboard, editable, src, onDelete, onChange, customizeNode, matchesURL, urlRegExp, EditComponent, DoneComponent, CancelComponent, CustomOperation } = useContext(JsonViewContext);
++    node = replacer ? replacer(node) : node;
+     let customReturn;
+     if (typeof customizeNode === 'function')
+         customReturn = safeCall(customizeNode, [{ node, depth, indexOrName }]);
+@@ -920,12 +921,13 @@ const JsonViewContext = createContext({
+     DoneComponent: undefined,
+     CustomOperation: undefined
+ });
+-function JsonView({ src: _src, collapseStringsAfterLength = 99, collapseStringMode = 'directly', customizeCollapseStringUI, collapseObjectsAfterLength = 99, collapsed, onCollapse, enableClipboard = true, editable = false, onEdit, onDelete, onAdd, onChange, dark = false, theme = 'default', customizeNode, customizeCopy = node => stringifyForCopying(node), displaySize, displayArrayIndex = true, style, className, matchesURL = false, urlRegExp = defaultURLRegExp, ignoreLargeArray = false, CopyComponent, CopiedComponent, EditComponent, CancelComponent, DoneComponent, CustomOperation }) {
++function JsonView({ replacer, src: _src, collapseStringsAfterLength = 99, collapseStringMode = 'directly', customizeCollapseStringUI, collapseObjectsAfterLength = 99, collapsed, onCollapse, enableClipboard = true, editable = false, onEdit, onDelete, onAdd, onChange, dark = false, theme = 'default', customizeNode, customizeCopy = node => stringifyForCopying(node), displaySize, displayArrayIndex = true, style, className, matchesURL = false, urlRegExp = defaultURLRegExp, ignoreLargeArray = false, CopyComponent, CopiedComponent, EditComponent, CancelComponent, DoneComponent, CustomOperation }) {
+     const [_, update] = useState(0);
+     const forceUpdate = useCallback(() => update(state => ++state), []);
+     const [src, setSrc] = useState(_src);
+     useEffect(() => setSrc(_src), [_src]);
+     return (jsx(JsonViewContext.Provider, Object.assign({ value: {
++            replacer,
+             src,
+             collapseStringsAfterLength,
+             collapseStringMode,
+diff --git a/dist/es/index.mjs.rej b/dist/es/index.mjs.rej
+new file mode 100644
+index 0000000000000000000000000000000000000000..d3aa344afc67465a7c74d20c7b6d55cda25a225e
+--- /dev/null
++++ b/dist/es/index.mjs.rej
+@@ -0,0 +1,56 @@
++@@ -295,7 +295,7 @@
++         forceUpdate();
++     };
++     const Icons = (jsxs(Fragment, { children: [!fold && (jsxs("span", Object.assign({ onClick: () => setFold(true), className: 'jv-size-chevron' }, { children: [ifDisplay(displaySize, depth, fold) && jsxs("span", Object.assign({ className: 'jv-size' }, { children: [objectSize(node), " Items"] })), jsx(SvgAngleDown, { className: 'jv-chevron' })] }))), !fold && enableClipboard && customCopy(customOptions) && jsx(CopyButton, { node: node })] }));
++-    return (jsxs("div", { children: [jsx("span", { children: '[' }), Icons, !fold ? (jsx("div", Object.assign({ className: 'jv-indent' }, { children: node.map((n, i) => (jsx(NameValue, { indexOrName: i + startIndex, value: n, depth: depth, parent: node, deleteHandle: deleteHandle, editHandle: editHandle }, String(index) + String(i)))) }))) : (jsxs("button", Object.assign({ onClick: () => setFold(false), className: 'jv-button' }, { children: [startIndex, " ... ", startIndex + node.length - 1] }))), jsx("span", { children: ']' })] }));
+++    return (jsxs("div", { children: [jsx("span", { children: '[' }), Icons, !fold ? (jsx("div", Object.assign({ className: 'jv-indent' }, { children: node.map((n, i) => (jsx(NameValue, { indexOrName: i + startIndex, value: n, depth: depth, parent: node, deleteHandle: deleteHandle, editHandle: editHandle }, String(index) + String(i)))) }))) : (jsxs("button", Object.assign({ onClick: () => setFold(false), className: 'jv-button' }, { children: [startIndex, " … ", startIndex + node.length - 1] }))), jsx("span", { children: ']' })] }));
++ }
++ 
++ function LargeArray({ node, depth, deleteHandle: _deleteSelf, indexOrName, customOptions }) {
++@@ -344,7 +344,7 @@
++     const Icons = (jsxs(Fragment, { children: [!fold && !isEditing && (jsxs("span", Object.assign({ onClick: () => setFold(true), className: 'jv-size-chevron' }, { children: [ifDisplay(displaySize, depth, fold) && jsxs("span", Object.assign({ className: 'jv-size' }, { children: [node.length, " Items"] })), jsx(SvgAngleDown, { className: 'jv-chevron' })] }))), isEditing && jsx(SvgDone, { className: 'json-view--edit', style: { display: 'inline-block' }, onClick: adding ? add : deleteSelf }), isEditing && jsx(SvgCancel, { className: 'json-view--edit', style: { display: 'inline-block' }, onClick: cancel }), !fold && !isEditing && enableClipboard && customCopy(customOptions) && jsx(CopyButton, { node: node }), !fold && !isEditing && editableAdd(editable) && customAdd(customOptions) && (jsx(SvgAddSquare, { className: 'json-view--edit', onClick: () => {
++                     add();
++                 } })), !fold && !isEditing && editableDelete(editable) && customDelete(customOptions) && _deleteSelf && (jsx(SvgTrash, { className: 'json-view--edit', onClick: () => setDeleting(true) }))] }));
++-    return (jsxs(Fragment, { children: [jsx("span", { children: '[' }), Icons, !fold ? (jsx("div", Object.assign({ className: 'jv-indent' }, { children: nestCollapsedArray.map((item, index) => (jsx(LargeArrayNode, { originNode: node, node: item, depth: depth, index: index, startIndex: index * 100 }, String(indexOrName) + String(index)))) }))) : (jsx("button", Object.assign({ onClick: () => setFold(false), className: 'jv-button' }, { children: "..." }))), jsx("span", { children: ']' }), fold && ifDisplay(displaySize, depth, fold) && (jsxs("span", Object.assign({ onClick: () => setFold(false), className: 'jv-size' }, { children: [node.length, " Items"] })))] }));
+++    return (jsxs(Fragment, { children: [jsx("span", { children: '[' }), Icons, !fold ? (jsx("div", Object.assign({ className: 'jv-indent' }, { children: nestCollapsedArray.map((item, index) => (jsx(LargeArrayNode, { originNode: node, node: item, depth: depth, index: index, startIndex: index * 100 }, String(indexOrName) + String(index)))) }))) : (jsx("button", Object.assign({ onClick: () => setFold(false), className: 'jv-button' }, { children: "…" }))), jsx("span", { children: ']' }), fold && ifDisplay(displaySize, depth, fold) && (jsxs("span", Object.assign({ onClick: () => setFold(false), className: 'jv-size' }, { children: [node.length, " Items"] })))] }));
++ }
++ 
++ function ObjectNode({ node, depth, indexOrName, deleteHandle: _deleteSelf, customOptions }) {
++@@ -457,10 +457,10 @@
++                     }
++                 } })), !fold && !isEditing && editableDelete(editable) && customDelete(customOptions) && _deleteSelf && (jsx(SvgTrash, { className: 'json-view--edit', onClick: () => setDeleting(true) }))] }));
++     if (Array.isArray(node)) {
++-        return (jsxs(Fragment, { children: [jsx("span", { children: '[' }), Icons, !fold ? (jsx("div", Object.assign({ className: 'jv-indent' }, { children: node.map((n, i) => (jsx(NameValue, { indexOrName: i, value: n, depth: depth, parent: node, deleteHandle: deleteHandle, editHandle: editHandle }, String(indexOrName) + String(i)))) }))) : (jsx("button", Object.assign({ onClick: () => setFold(false), className: 'jv-button' }, { children: "..." }))), jsx("span", { children: ']' }), fold && ifDisplay(displaySize, depth, fold) && (jsxs("span", Object.assign({ onClick: () => setFold(false), className: 'jv-size' }, { children: [objectSize(node), " Items"] })))] }));
+++        return (jsxs(Fragment, { children: [jsx("span", { children: '[' }), Icons, !fold ? (jsx("div", Object.assign({ className: 'jv-indent' }, { children: node.map((n, i) => (jsx(NameValue, { indexOrName: i, value: n, depth: depth, parent: node, deleteHandle: deleteHandle, editHandle: editHandle }, String(indexOrName) + String(i)))) }))) : (jsx("button", Object.assign({ onClick: () => setFold(false), className: 'jv-button' }, { children: "…" }))), jsx("span", { children: ']' }), fold && ifDisplay(displaySize, depth, fold) && (jsxs("span", Object.assign({ onClick: () => setFold(false), className: 'jv-size' }, { children: [objectSize(node), " Items"] })))] }));
++     }
++     else if (isPlainObject) {
++-        return (jsxs(Fragment, { children: [jsx("span", { children: '{' }), Icons, !fold ? (jsx("div", Object.assign({ className: 'jv-indent' }, { children: Object.entries(node).map(([name, value]) => (jsx(NameValue, { indexOrName: name, value: value, depth: depth, parent: node, deleteHandle: deleteHandle, editHandle: editHandle }, String(indexOrName) + String(name)))) }))) : (jsx("button", Object.assign({ onClick: () => setFold(false), className: 'jv-button' }, { children: "..." }))), jsx("span", { children: '}' }), fold && ifDisplay(displaySize, depth, fold) && (jsxs("span", Object.assign({ onClick: () => setFold(false), className: 'jv-size' }, { children: [objectSize(node), " Items"] })))] }));
+++        return (jsxs(Fragment, { children: [jsx("span", { children: '{' }), Icons, !fold ? (jsx("div", Object.assign({ className: 'jv-indent' }, { children: Object.entries(node).map(([name, value]) => (jsx(NameValue, { indexOrName: name, value: value, depth: depth, parent: node, deleteHandle: deleteHandle, editHandle: editHandle }, String(indexOrName) + String(name)))) }))) : (jsx("button", Object.assign({ onClick: () => setFold(false), className: 'jv-button' }, { children: "…" }))), jsx("span", { children: '}' }), fold && ifDisplay(displaySize, depth, fold) && (jsxs("span", Object.assign({ onClick: () => setFold(false), className: 'jv-size' }, { children: [objectSize(node), " Items"] })))] }));
++     }
++     return null;
++ }
++@@ -767,7 +767,8 @@
++ };
++ 
++ function JsonNode({ node, depth, deleteHandle: _deleteHandle, indexOrName, parent, editHandle }) {
++-    const { collapseStringsAfterLength, enableClipboard, editable, src, onDelete, onChange, customizeNode, matchesURL, urlRegExp } = useContext(JsonViewContext);
+++    const { replacer, collapseStringsAfterLength, enableClipboard, editable, src, onDelete, onChange, customizeNode, matchesURL, urlRegExp } = useContext(JsonViewContext);
+++    node = replacer ? replacer(node) : node;
++     let customReturn;
++     if (typeof customizeNode === 'function')
++         customReturn = safeCall(customizeNode, [{ node, depth, indexOrName }]);
++@@ -904,12 +905,13 @@
++     urlRegExp: defaultURLRegExp,
++     ignoreLargeArray: false
++ });
++-function JsonView({ src: _src, collapseStringsAfterLength = 99, collapseStringMode = 'directly', customizeCollapseStringUI, collapseObjectsAfterLength = 99, collapsed, enableClipboard = true, editable = false, onEdit, onDelete, onAdd, onChange, dark = false, theme = 'default', customizeNode, customizeCopy = stringifyForCopying, displaySize, style, className, matchesURL = false, urlRegExp = defaultURLRegExp, ignoreLargeArray = false }) {
+++function JsonView({ replacer, src: _src, collapseStringsAfterLength = 99, collapseStringMode = 'directly', customizeCollapseStringUI, collapseObjectsAfterLength = 99, collapsed, enableClipboard = true, editable = false, onEdit, onDelete, onAdd, onChange, dark = false, theme = 'default', customizeNode, customizeCopy = stringifyForCopying, displaySize, style, className, matchesURL = false, urlRegExp = defaultURLRegExp, ignoreLargeArray = false }) {
++     const [_, update] = useState(0);
++     const forceUpdate = useCallback(() => update(state => ++state), []);
++     const [src, setSrc] = useState(_src);
++     useEffect(() => setSrc(_src), [_src]);
++     return (jsx(JsonViewContext.Provider, Object.assign({ value: {
+++            replacer,
++             src,
++             collapseStringsAfterLength,
++             collapseStringMode,
