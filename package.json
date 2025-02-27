@@ -17,11 +17,11 @@
     "@ledgerhq/hw-transport-webusb": "^6.29.4",
     "@noble/hashes": "^1.5.0",
     "@polkadot-api/descriptors": "file:.papi/descriptors",
-    "@polkadot-api/ledger-signer": "^0.1.7",
-    "@polkadot-api/metadata-builders": "^0.9.2",
-    "@polkadot-api/observable-client": "^0.6.3",
-    "@polkadot-api/react-builder": "0.2.1",
-    "@polkadot-api/substrate-bindings": "^0.9.4",
+    "@polkadot-api/ledger-signer": "^0.1.10",
+    "@polkadot-api/metadata-builders": "^0.10.1",
+    "@polkadot-api/observable-client": "^0.8.1",
+    "@polkadot-api/react-builder": "0.2.4",
+    "@polkadot-api/substrate-bindings": "^0.11.0",
     "@polkadot-api/substrate-client": "^0.3.0",
     "@polkadot-api/utils": "^0.1.2",
     "@radix-ui/react-accordion": "^1.2.1",
@@ -46,7 +46,7 @@
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
     "lucide-react": "^0.460.0",
-    "polkadot-api": "^1.7.7",
+    "polkadot-api": "^1.9.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-portal": "^4.2.2",
@@ -85,7 +85,7 @@
   "pnpm": {
     "patchedDependencies": {
       "react18-json-view@0.2.8": "patches/react18-json-view@0.2.8.patch",
-      "@polkadot-api/observable-client@0.6.3": "patches/@polkadot-api__observable-client@0.6.3.patch"
+      "@polkadot-api/observable-client": "patches/@polkadot-api__observable-client.patch"
     }
   }
 }

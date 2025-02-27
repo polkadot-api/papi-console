@@ -1,19 +1,19 @@
 diff --git a/dist/esm/chainHead/chainHead.mjs b/dist/esm/chainHead/chainHead.mjs
-index 43d1b02d7e3346d854971b92c102a61378c4e150..557ca7f05fe8effbfc3e448c7417f5e9ef715c04 100644
+index 299d6849e6b8f9b97f97fc444e2fbf5e31ca49cc..a0508f9ef99f549207e024e16d2e13903a047189 100644
 --- a/dist/esm/chainHead/chainHead.mjs
 +++ b/dist/esm/chainHead/chainHead.mjs
-@@ -154,7 +154,7 @@ const getChainHead$ = (chainHead) => {
-     best$.pipe(map((b) => b.hash))
+@@ -175,7 +175,7 @@ const getChainHead$ = (chainHead) => {
+     usingBlock
    );
-   const _body$ = withOptionalHash$(commonEnhancer(lazyFollower("body")));
+   const _body$ = withOptionalHash$(commonEnhancer(lazyFollower("body"), "body"));
 -  const body$ = (hash) => upsertCachedStream(hash, "body", _body$(hash, true));
 +  const body$ = (hash, canonical) => upsertCachedStream(hash, "body", _body$(hash, canonical));
-   const _storage$ = commonEnhancer(lazyFollower("storage"));
+   const _storage$ = commonEnhancer(lazyFollower("storage"), "storage");
    const storage$ = withOptionalHash$(
      (hash, withCanonicalChain2, type, keyMapper, childTrie = null, mapper) => pinnedBlocks$.pipe(
-@@ -243,11 +243,11 @@ const getChainHead$ = (chainHead) => {
-       runtime$,
+@@ -289,11 +289,11 @@ const getChainHead$ = (chainHead) => {
        metadata$,
+       genesis$,
        header$,
 -      body$,
 -      call$: withCanonicalChain(call$),
@@ -24,6 +24,6 @@ index 43d1b02d7e3346d854971b92c102a61378c4e150..557ca7f05fe8effbfc3e448c7417f5e9
        storageQueries$,
 -      eventsAt$: withCanonicalChain(eventsAt$),
 +      eventsAt$: withCanonicalChain(eventsAt$, false),
+       holdBlock,
        trackTx$,
        trackTxWithoutEvents$,
-       validateTx$,
