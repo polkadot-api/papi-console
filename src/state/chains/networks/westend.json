@@ -19,7 +19,7 @@
   },
   {
     "id": "westend_asset_hub",
-    "display": "AssetHub",
+    "display": "Westend AssetHub",
     "rpcs": {
       "Dwellir": "wss://asset-hub-westend-rpc.dwellir.com",
       "Dwellir Tunisia": "wss://westmint-rpc-tn.dwellir.com",
@@ -40,7 +40,7 @@
   },
   {
     "id": "westend_bridge_hub",
-    "display": "BridgeHub",
+    "display": "Westend BridgeHub",
     "rpcs": {
       "Dwellir": "wss://bridge-hub-westend-rpc.dwellir.com",
       "Dwellir Tunisia": "wss://westend-bridge-hub-rpc-tn.dwellir.com",
@@ -61,7 +61,7 @@
   },
   {
     "id": "westend_collectives",
-    "display": "Collectives",
+    "display": "Westend Collectives",
     "rpcs": {
       "Dwellir": "wss://collectives-westend-rpc.dwellir.com",
       "Dwellir Tunisia": "wss://westend-collectives-rpc-tn.dwellir.com",
@@ -82,7 +82,7 @@
   },
   {
     "id": "westend_core_time",
-    "display": "Coretime",
+    "display": "Westend Coretime",
     "rpcs": {
       "Dwellir": "wss://coretime-westend-rpc.dwellir.com",
       "IBP1": "wss://sys.ibp.network/coretime-westend",
@@ -102,7 +102,7 @@
   },
   {
     "id": "westend_people_chain",
-    "display": "People",
+    "display": "Westend People",
     "rpcs": {
       "Dwellir": "wss://people-westend-rpc.dwellir.com",
       "IBP1": "wss://sys.ibp.network/people-westend",

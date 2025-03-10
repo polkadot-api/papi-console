@@ -17,7 +17,7 @@
   },
   {
     "id": "paseo_asset_hub",
-    "display": "AssetHub",
+    "display": "Paseo AssetHub",
     "rpcs": {
       "Dwellir": "wss://asset-hub-paseo-rpc.dwellir.com",
       "IBP1": "wss://sys.ibp.network/asset-hub-paseo",
@@ -38,7 +38,7 @@
   },
   {
     "id": "paseo_bridge_hub",
-    "display": "BridgeHub",
+    "display": "Paseo BridgeHub",
     "rpcs": {
       "IBP2": "wss://bridge-hub-paseo.dotters.network"
     },
@@ -55,7 +55,7 @@
   },
   {
     "id": "paseo_core_time",
-    "display": "Coretime",
+    "display": "Paseo Coretime",
     "rpcs": {
       "IBP2": "wss://coretime-paseo.dotters.network",
       "ParaNodes": "wss://paseo-coretime.paranodes.io"
@@ -73,7 +73,7 @@
   },
   {
     "id": "paseo_people_chain",
-    "display": "People",
+    "display": "Paseo People",
     "rpcs": {
       "Amforc": "wss://people-paseo.rpc.amforc.com",
       "IBP2": "wss://people-paseo.dotters.network"
