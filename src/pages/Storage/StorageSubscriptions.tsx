@@ -84,20 +84,22 @@ const StorageSubscriptionBox: FC<{ subscription: string }> = ({
           </button>
         </div>
       </div>
-      <ResultDisplay
-        storageSubscription={storageSubscription}
-        subscriptionKey={subscription}
-        mode={mode}
-      />
+      {mode === "decoded" ? (
+        <DecodedResultDisplay
+          storageSubscription={storageSubscription}
+          subscriptionKey={subscription}
+        />
+      ) : (
+        <JsonResultDisplay storageSubscription={storageSubscription} />
+      )}
     </li>
   )
 }
 
-const ResultDisplay: FC<{
+const DecodedResultDisplay: FC<{
   storageSubscription: StorageSubscription
   subscriptionKey: string
-  mode: "json" | "decoded"
-}> = ({ storageSubscription, subscriptionKey, mode }) => {
+}> = ({ storageSubscription, subscriptionKey }) => {
   if (!("result" in storageSubscription)) {
     return <div className="text-sm text-foreground/50">Loading…</div>
   }
@@ -107,7 +109,7 @@ const ResultDisplay: FC<{
       <div className="max-h-[60svh] overflow-auto">
         <PathsRoot.Provider value={subscriptionKey}>
           <ValueDisplay
-            mode={mode}
+            mode="decoded"
             type={storageSubscription.type}
             value={storageSubscription.result}
             title={"Result"}
@@ -122,16 +124,16 @@ const ResultDisplay: FC<{
     value: unknown
   }>
 
-  const renderItem = (keyArgs: unknown[], value: unknown) => {
+  const renderItem = (keyArgs: unknown[], value: unknown, idx: number) => {
     const title = keyArgs
       .slice(storageSubscription.args?.length ?? 0)
       .map(stringifyArg)
       .join(", ")
     return (
-      <div key={title} className={itemClasses}>
-        <PathsRoot.Provider value={`${subscriptionKey}-${title}`}>
+      <div key={idx} className={itemClasses}>
+        <PathsRoot.Provider value={`${subscriptionKey}-${idx}`}>
           <ValueDisplay
-            mode={mode}
+            mode="decoded"
             title={title}
             value={value}
             type={storageSubscription.type}
@@ -147,7 +149,7 @@ const ResultDisplay: FC<{
         style={{ height: "60svh" }}
         totalCount={values.length}
         itemContent={(i) =>
-          values[i] && renderItem(values[i].keyArgs, values[i].value)
+          values[i] && renderItem(values[i].keyArgs, values[i].value, i)
         }
         components={{ Item: VirtuosoItem }}
       />
@@ -156,10 +158,25 @@ const ResultDisplay: FC<{
 
   return (
     <div className="max-h-[60svh] overflow-auto">
-      {values.map(({ keyArgs, value }) => renderItem(keyArgs, value))}
+      {values.map(({ keyArgs, value }, i) => renderItem(keyArgs, value, i))}
     </div>
   )
 }
+
+const JsonResultDisplay: FC<{
+  storageSubscription: StorageSubscription
+}> = ({ storageSubscription }) => {
+  if (!("result" in storageSubscription)) {
+    return <div className="text-sm text-foreground/50">Loading…</div>
+  }
+
+  return (
+    <div className="max-h-[60svh] overflow-auto">
+      <JsonDisplay src={storageSubscription.result} />
+    </div>
+  )
+}
+
 const itemClasses = "py-2 border-b first:pt-0 last:pb-0 last:border-b-0"
 const VirtuosoItem: FC = (props) => <div {...props} className={itemClasses} />
 
