@@ -1,5 +1,4 @@
 import { JsonRpcProvider } from "@polkadot-api/substrate-client"
-import { withLogsRecorder } from "polkadot-api/logs-provider"
 import { getSmProvider } from "polkadot-api/sm-provider"
 import { Chain } from "polkadot-api/smoldot"
 import { startFromWorker } from "polkadot-api/smoldot/from-worker"
@@ -13,7 +12,11 @@ const [dotChainSpec, ksmChainSpec, paseoChainSpec, westendChainSpec] = [
 ].map((x) => x.then((y) => y.chainSpec))
 const smoldot = startFromWorker(new SmWorker(), {
   logCallback: (level, target, message) => {
-    console.debug("smoldot[%s(%s)] %s", target, level, message)
+    const lvl: keyof typeof console =
+      level <= 1 ? "error" : level == 2 ? "warn" : "debug"
+    if (import.meta.env.DEV || level <= 2) {
+      console[lvl]("smoldot[%s(%s)] %s", target, level, message)
+    }
   },
   forbidWs: true,
 })
@@ -80,8 +83,5 @@ export function getSmoldotProvider(source: SmoldotSource): JsonRpcProvider {
         chainSpec: source.value.chainSpec,
       })
 
-  return withLogsRecorder(
-    (v) => v.includes("initialized") && console.debug(v),
-    getSmProvider(chain),
-  )
+  return getSmProvider(chain)
 }

@@ -1,10 +1,13 @@
 import { FC } from "react"
 import {
   LinkProps,
-  Path,
+  NavigateFunction,
+  NavigateOptions,
   Link as RouterLink,
   Location as RouterLocation,
+  To,
   useLocation,
+  useNavigate as useRouterNavigate,
 } from "react-router-dom"
 
 export const getHashParams = (location?: Location | RouterLocation) => {
@@ -29,9 +32,8 @@ export const setHashParams = (
 }
 
 const persistingKeys = ["networkId", "endpoint"]
-export const Link: FC<LinkProps & React.RefAttributes<HTMLAnchorElement>> = (
-  props,
-) => {
+
+const usePersistKeys = () => {
   const location = useLocation()
   const originalParams = getHashParams(location)
 
@@ -46,7 +48,7 @@ export const Link: FC<LinkProps & React.RefAttributes<HTMLAnchorElement>> = (
     return "#" + parsedParams.toString()
   }
 
-  const persistKeys = (to: Partial<Path> | string): Partial<Path> | string => {
+  return (to: To): To => {
     if (typeof to === "string") {
       const idx = to.indexOf("#")
       return (idx < 0 ? to : to.slice(0, idx)) + appendParams(to.slice(idx))
@@ -59,5 +61,24 @@ export const Link: FC<LinkProps & React.RefAttributes<HTMLAnchorElement>> = (
         }
       : to
   }
+}
+
+export const Link: FC<LinkProps & React.RefAttributes<HTMLAnchorElement>> = (
+  props,
+) => {
+  const persistKeys = usePersistKeys()
+
   return <RouterLink {...props} to={persistKeys(props.to)} />
+}
+
+export const useNavigate = (): NavigateFunction => {
+  const persistKeys = usePersistKeys()
+  const navigate = useRouterNavigate()
+
+  return (toOrDelta: number | To, options?: NavigateOptions) => {
+    if (typeof toOrDelta === "number") {
+      return navigate(toOrDelta)
+    }
+    return navigate(persistKeys(toOrDelta), options)
+  }
 }

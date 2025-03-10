@@ -183,6 +183,11 @@ const NetworkSwitchDialogContent: FC<{
                   <CommandItem
                     key={network.id}
                     onSelect={() => handleNetworkSelect(network)}
+                    value={
+                      network.display.includes(category.name)
+                        ? network.display
+                        : `${category.name} ${network.display}`
+                    }
                   >
                     <Check
                       className={`mr-2 h-4 w-4 ${

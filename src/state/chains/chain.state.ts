@@ -51,15 +51,24 @@ export const getChainSource = ({
   endpoint === "light-client"
     ? createSmoldotSource(id, relayChain)
     : createWebsocketSource(id, endpoint)
+
+const setRpcLogsEnabled = (enabled: boolean) =>
+  localStorage.setItem("rpc-logs", String(enabled))
+const getRpcLogsEnabled = () => localStorage.getItem("rpc-logs") === "true"
+console.log("You can enable JSON-RPC logs by calling `setRpcLogsEnabled(true)`")
+;(window as any).setRpcLogsEnabled = setRpcLogsEnabled
+
 export const getProvider = (source: ChainSource) => {
   const provider =
     source.type === "websocket"
       ? getWebsocketProvider(source)
       : getSmoldotProvider(source)
 
-  return import.meta.env.DEV
-    ? withLogsRecorder(console.debug, provider)
-    : provider
+  return withLogsRecorder((msg) => {
+    if (import.meta.env.DEV || getRpcLogsEnabled()) {
+      console.debug(msg)
+    }
+  }, provider)
 }
 
 export const [selectedChainChanged$, onChangeChain] =

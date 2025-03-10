@@ -11,6 +11,7 @@ import { StorageQuery } from "./StorageQuery"
 import { StorageSubscriptions } from "./StorageSubscriptions"
 import { DocsRenderer } from "@/components/DocsRenderer"
 import { LoadingMetadata } from "@/components/Loading"
+import { useHashState } from "@/lib/externalState"
 
 const metadataStorage$ = state(
   lookup$.pipe(
@@ -33,8 +34,8 @@ const metadataStorage$ = state(
 export const Storage = withSubscribe(
   () => {
     const { lookup, entries } = useStateObservable(metadataStorage$)
-    const [pallet, setPallet] = useState<string | null>("System")
-    const [entry, setEntry] = useState<string | null>("Account")
+    const [pallet, setPallet] = useHashState("pallet", "System")
+    const [entry, setEntry] = useHashState("entry", "Account")
     const selectedEntry = useStateObservable(selectedEntry$)
 
     const selectedPallet =
@@ -131,12 +132,12 @@ export const Storage = withSubscribe(
             </label>
           )}
         </div>
-        {selectedEntry?.docs.length && (
+        {selectedEntry?.docs.length ? (
           <div className="w-full">
             Docs
             <DocsRenderer docs={selectedEntry.docs} />
           </div>
-        )}
+        ) : null}
         <StorageEntry />
         <StorageSubscriptions />
       </div>

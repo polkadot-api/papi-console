@@ -92,7 +92,7 @@
   },
   {
     "id": "kusama_people",
-    "display": "People",
+    "display": "Kusama People",
     "rpcs": {
       "Dwellir": "wss://people-kusama-rpc.dwellir.com",
       "IBP1": "wss://sys.ibp.network/people-kusama",

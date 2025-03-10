@@ -235,7 +235,10 @@ const GenericLookupNode: FC<PropsWithChildren<{ entry: V14Entry }>> = ({
     <div className="flex flex-col gap-2 w-full py-2">
       <div>
         <div className="flex gap-2 items-center">
-          <Link to={`editor/${entry.id}`} className="hover:text-polkadot-400">
+          <Link
+            to={`/metadata/lookup/editor/${entry.id}`}
+            className="hover:text-polkadot-400"
+          >
             <Edit size={20} />
           </Link>
           <h4 className="font-bold">Type: {entry.def.tag}</h4>
