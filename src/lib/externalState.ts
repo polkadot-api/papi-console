@@ -31,13 +31,14 @@ const createExternalStateHook = (externalState: ExternalState) => {
       parse: (value) => value as T,
     },
   ) {
-    const state = externalState.hasValue(key)
-      ? parser.parse(externalState.getValue(key))
-      : defaultValue
-    const [_state, _setState] = useState(state)
+    const [_state, _setState] = useState(() =>
+      externalState.hasValue(key)
+        ? parser.parse(externalState.getValue(key))
+        : defaultValue,
+    )
 
     return [
-      state,
+      _state,
       (newValue: ValueOrReducer<T>) => {
         _setState((prev) => {
           const value: T =
