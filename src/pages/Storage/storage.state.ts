@@ -123,5 +123,5 @@ export const stringifyArg = (value: unknown) => {
     }
     return "arg"
   }
-  return JSON.stringify(value)
+  return String(value)
 }
