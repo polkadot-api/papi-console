@@ -10,7 +10,7 @@ import { fromEvent, map } from "rxjs"
 
 const getCurrentMedia = (): "light" | "dark" =>
   window.matchMedia
-    ? window.matchMedia("(prefers-color-scheme: dark)")
+    ? window.matchMedia("(prefers-color-scheme: dark)").matches
       ? "dark"
       : "light"
     : "dark"
