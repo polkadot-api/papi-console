@@ -40,16 +40,19 @@ const transactions$ = mergeWithKey({ signedTx$, unsignedTx$ }).pipe(
       tap((e) => {
         txHash = e.txHash
       }),
-      catchError((err) =>
-        of({
+      catchError((err) => {
+        console.log(err)
+        console.log(tx.payload, client.getFinalizedBlock())
+
+        return of({
           type:
             err instanceof InvalidTxError
               ? ("invalid" as const)
               : ("error" as const),
           txHash,
           value: err,
-        }),
-      ),
+        })
+      }),
       takeUntil(dismissTransaction$.pipe(filter((v) => v === txHash))),
     )
   }),
