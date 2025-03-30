@@ -18,9 +18,10 @@ import {
   walletConnectAccounts$,
   walletConnectStatus$,
 } from "@/state/walletconnect.state"
+import { mapObject, toHex } from "@polkadot-api/utils"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
-import { InjectedExtension } from "polkadot-api/pjs-signer"
+import { InjectedExtension, PolkadotSigner } from "polkadot-api/pjs-signer"
 import React from "react"
 import {
   combineLatest,
@@ -82,6 +83,32 @@ const selectedValue$ = state(
   null,
 )
 
+const withSignerLogs = (input: PolkadotSigner) => {
+  const signTx: PolkadotSigner["signTx"] = (
+    callData,
+    signedExtensions,
+    ...rest
+  ) => {
+    console.log("signing transaction...")
+    console.log({
+      publicKey: toHex(input.publicKey),
+      callData: toHex(callData),
+      signedExtensions: mapObject(
+        signedExtensions,
+        ({ identifier, value, additionalSigned }) => ({
+          identifier,
+          value: toHex(value),
+          additionalSigned: toHex(additionalSigned),
+        }),
+      ),
+    })
+
+    return input.signTx(callData, signedExtensions, ...rest)
+  }
+
+  return { ...input, signTx }
+}
+
 export const selectedAccount$ = state(
   combineLatest([
     selectedValue$,
@@ -106,6 +133,11 @@ export const selectedAccount$ = state(
       return accounts.find((account) => account.address === address) ?? null
     }),
     distinctUntilChanged(),
+    map((x) => {
+      if (!x) return x
+      x.polkadotSigner = withSignerLogs(x.polkadotSigner)
+      return x
+    }),
   ),
   null,
 )

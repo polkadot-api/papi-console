@@ -162,6 +162,13 @@ export const extensionAccounts$ = state(
     extension$(name).pipe(
       switchMap((x) => {
         if (x.type !== ConnectStatus.Connected) return of([])
+        ;(window as any).injectedWeb3[name].enable().then((x: any) => {
+          const original = x.signer.signPayoad.bind(x.signer)
+          x.signer.signPayoad = (...args: any[]) => {
+            console.log("signPayload", ...args)
+            return original(...args)
+          }
+        })
         return new Observable<InjectedPolkadotAccount[]>((observer) =>
           x.extension.subscribe((accounts) => {
             observer.next(accounts)
