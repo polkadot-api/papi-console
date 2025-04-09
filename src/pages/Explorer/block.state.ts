@@ -78,7 +78,7 @@ export const [blockInfo$, recordedBlocks$] = partitionByKey(
                 const blockNumbers: Record<string, number> = {}
                 evt.finalizedBlockHashes.forEach((hash, i) => {
                   const parent = blockNumbers[evt.finalizedBlockHashes[i - 1]]
-                  blockNumbers[hash] = parent ? parent + 1 : evt.number
+                  blockNumbers[hash] = parent != null ? parent + 1 : evt.number
                 })
                 return {
                   value: evt.finalizedBlockHashes.map((hash, i) => ({
