@@ -146,9 +146,7 @@ export const chainClient$ = state(
     sinkSuspense(),
   ),
 )
-export const chainHead$ = state(
-  chainClient$.pipe(map(({ chainHead }) => chainHead)),
-)
+export const client$ = state(chainClient$.pipe(map(({ client }) => client)))
 
 export const unsafeApi$ = chainClient$.pipeState(
   map(({ client }) => client.getUnsafeApi()),

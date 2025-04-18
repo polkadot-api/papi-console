@@ -5,9 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
-  '@polkadot-api/observable-client':
-    hash: yt5j7n7pjv3zmjoyaujivi24au
-    path: patches/@polkadot-api__observable-client.patch
   react18-json-view:
     hash: wimveejfkp4taxhbk5eqzbey3q
     path: patches/react18-json-view.patch
@@ -33,7 +30,7 @@ importers:
         version: 0.10.2
       '@polkadot-api/observable-client':
         specifier: ^0.8.5
-        version: 0.8.5(patch_hash=yt5j7n7pjv3zmjoyaujivi24au)(@polkadot-api/substrate-client@0.3.0)(rxjs@7.8.2)
+        version: 0.8.5(@polkadot-api/substrate-client@0.3.0)(rxjs@7.8.2)
       '@polkadot-api/react-builder':
         specifier: 0.2.5
         version: 0.2.5(react@19.1.0)
@@ -3708,7 +3705,7 @@ snapshots:
       '@polkadot-api/json-rpc-provider': 0.0.4
       '@polkadot-api/known-chains': 0.7.2
       '@polkadot-api/metadata-compatibility': 0.1.16
-      '@polkadot-api/observable-client': 0.8.5(patch_hash=yt5j7n7pjv3zmjoyaujivi24au)(@polkadot-api/substrate-client@0.3.0)(rxjs@7.8.2)
+      '@polkadot-api/observable-client': 0.8.5(@polkadot-api/substrate-client@0.3.0)(rxjs@7.8.2)
       '@polkadot-api/polkadot-sdk-compat': 2.3.2
       '@polkadot-api/sm-provider': 0.1.7(@polkadot-api/smoldot@0.3.8)
       '@polkadot-api/smoldot': 0.3.8
@@ -3792,7 +3789,7 @@ snapshots:
       '@polkadot-api/metadata-builders': 0.10.2
       '@polkadot-api/substrate-bindings': 0.11.1
 
-  '@polkadot-api/observable-client@0.8.5(patch_hash=yt5j7n7pjv3zmjoyaujivi24au)(@polkadot-api/substrate-client@0.3.0)(rxjs@7.8.2)':
+  '@polkadot-api/observable-client@0.8.5(@polkadot-api/substrate-client@0.3.0)(rxjs@7.8.2)':
     dependencies:
       '@polkadot-api/metadata-builders': 0.10.2
       '@polkadot-api/substrate-bindings': 0.11.1
@@ -5811,7 +5808,7 @@ snapshots:
       '@polkadot-api/logs-provider': 0.0.6
       '@polkadot-api/metadata-builders': 0.10.2
       '@polkadot-api/metadata-compatibility': 0.1.16
-      '@polkadot-api/observable-client': 0.8.5(patch_hash=yt5j7n7pjv3zmjoyaujivi24au)(@polkadot-api/substrate-client@0.3.0)(rxjs@7.8.2)
+      '@polkadot-api/observable-client': 0.8.5(@polkadot-api/substrate-client@0.3.0)(rxjs@7.8.2)
       '@polkadot-api/pjs-signer': 0.6.5
       '@polkadot-api/polkadot-sdk-compat': 2.3.2
       '@polkadot-api/polkadot-signer': 0.1.6

@@ -1,5 +1,5 @@
-import { chainHead$ } from "@/state/chains/chain.state"
 import { CircularProgress } from "@/components/CircularProgress"
+import { client$ } from "@/state/chains/chain.state"
 import { state, useStateObservable } from "@react-rxjs/core"
 import {
   animationFrames,
@@ -10,7 +10,9 @@ import {
 } from "rxjs"
 import { targetBlockTime$ } from "./blockTime.state"
 
-const best$ = chainHead$.pipeState(switchMap((chainHead) => chainHead.best$))
+const best$ = client$.pipeState(
+  switchMap((client) => client.bestBlocks$.pipe(map(([best]) => best))),
+)
 const bestBlockTime$ = best$.pipeState(
   // Only count when increasing height
   map((block) => block.number),
