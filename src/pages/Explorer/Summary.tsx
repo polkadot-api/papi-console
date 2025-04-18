@@ -1,18 +1,18 @@
-import { chainHead$, runtimeCtx$ } from "@/state/chains/chain.state"
+import { client$, runtimeCtx$ } from "@/state/chains/chain.state"
+import { useStateObservable, withDefault } from "@react-rxjs/core"
 import { FC, PropsWithChildren } from "react"
 import { map, switchMap } from "rxjs"
 import { twMerge } from "tailwind-merge"
 import { BlockTime } from "./BlockTime"
 import { EpochRemainingTime } from "./EpochTime"
-import { useStateObservable, withDefault } from "@react-rxjs/core"
 
-const finalized$ = chainHead$.pipeState(
-  switchMap((chainHead) => chainHead.finalized$),
+const finalized$ = client$.pipeState(
+  switchMap((chainHead) => chainHead.finalizedBlock$),
   map((v) => v.number.toLocaleString()),
 )
-const best$ = chainHead$.pipeState(
-  switchMap((chainHead) => chainHead.best$),
-  map((v) => v.number.toLocaleString()),
+const best$ = client$.pipeState(
+  switchMap((chainHead) => chainHead.bestBlocks$),
+  map(([v]) => v.number.toLocaleString()),
 )
 
 // epoch is only available for relay chains

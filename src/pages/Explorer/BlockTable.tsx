@@ -1,7 +1,7 @@
 import { CopyText } from "@/components/Copy"
 import { Popover } from "@/components/Popover"
 import { Link } from "@/hashParams"
-import { chainHead$ } from "@/state/chains/chain.state"
+import { client$ } from "@/state/chains/chain.state"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { FC } from "react"
 import { combineLatest, debounceTime, map, switchMap } from "rxjs"
@@ -10,7 +10,9 @@ import { BlockInfo, blocksByHeight$, finalized$ } from "./block.state"
 import { BlockPopover } from "./BlockPopover"
 import * as Finalizing from "./FinalizingTable"
 
-const best$ = chainHead$.pipeState(switchMap((chainHead) => chainHead.best$))
+const best$ = client$.pipeState(
+  switchMap((client) => client.bestBlocks$.pipe(map(([best]) => best))),
+)
 
 interface PositionedBlock {
   block: BlockInfo
