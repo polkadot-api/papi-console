@@ -72,7 +72,7 @@ export const [blockInfo$, recordedBlocks$] = partitionByKey(
               hash: of(hash),
               parent: of(parent),
               number: of(number),
-              body: from(client.getBlockBody(hash)).pipe(
+              body: client.watchBlockBody(hash).pipe(
                 startWith(null),
                 catchError((err) => {
                   console.error("fetch body failed", err)
