@@ -80,7 +80,7 @@ const Empty: React.FC<{
     }
   }, [enteredText, isValid])
   return isValid ? (
-    <div className="relative flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[selected='true']:bg-accent data-[selected=true]:text-accent-foreground data-[disabled=true]:opacity-50">
+    <div className="relative flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden data-[disabled=true]:pointer-events-none data-[selected='true']:bg-accent data-[selected=true]:text-accent-foreground data-[disabled=true]:opacity-50">
       <Check className="mr-2 h-4 w-4 opacity-100" />
       {enteredText}
     </div>

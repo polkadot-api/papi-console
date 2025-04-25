@@ -5,8 +5,8 @@ import { twMerge } from "tailwind-merge"
 import { NetworkSwitcher } from "./Network/Network"
 
 export const Header = () => (
-  <div className="flex-shrink-0 border-b">
-    <div className="flex p-4 pb-2 items-center gap-2 max-w-screen-lg m-auto">
+  <div className="shrink-0 border-b">
+    <div className="flex p-4 pb-2 items-center gap-2 max-w-(--breakpoint-lg) m-auto">
       <div className="flex flex-1 items-center flex-row gap-2 relative">
         <img
           className="w-14 min-w-14 hidden dark:inline-block"
@@ -47,7 +47,7 @@ const NavLink: FC<PropsWithChildren<{ to: string }>> = ({ to, children }) => {
       to={to}
       className={twMerge(
         "transition-colors text-foreground/75 hover:text-foreground cursor-pointer px-3 py-1 rounded",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
         active && "text-foreground font-bold",
       )}
     >

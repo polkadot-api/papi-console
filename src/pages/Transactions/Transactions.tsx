@@ -28,7 +28,7 @@ export function Transactions() {
   return !nTxs ? null : (
     <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
       <Dialog.Trigger asChild>
-        <button className="fixed bottom-4 right-4 bg-primary/90 text-primary-foreground px-4 py-2 rounded-full shadow-lg hover:bg-primary hover:font-bold focus:outline-none focus:ring-2 focus:ring-ring focus:ring-opacity-50 flex items-center space-x-2">
+        <button className="fixed bottom-4 right-4 bg-primary/90 text-primary-foreground px-4 py-2 rounded-full shadow-lg hover:bg-primary hover:font-bold focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-opacity-50 flex items-center space-x-2">
           {nOngoing > 0 && (
             <>
               <Loader2 className="animate-spin" size={20} />
@@ -40,7 +40,7 @@ export function Transactions() {
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-        <Dialog.Content className="fixed bottom-0 border-t border-x border-border right-0 w-full sm:w-96 h-96 bg-card text-card-foreground rounded-t-xl shadow-xl focus:outline-none">
+        <Dialog.Content className="fixed bottom-0 border-t border-x border-border right-0 w-full sm:w-96 h-96 bg-card text-card-foreground rounded-t-xl shadow-xl focus:outline-hidden">
           <div className="flex justify-between items-center p-4 border-b border-border">
             <Dialog.Title className="text-lg font-semibold">
               Transactions

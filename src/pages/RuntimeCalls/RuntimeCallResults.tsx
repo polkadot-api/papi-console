@@ -41,7 +41,7 @@ const RuntimeCallResultBox: FC<{ subscription: string }> = ({
         <h3 className="overflow-hidden text-ellipsis whitespace-nowrap">
           {runtimeCallResult.name}
         </h3>
-        <div className="flex items-center flex-shrink-0 gap-2">
+        <div className="flex items-center shrink-0 gap-2">
           <ButtonGroup
             value={mode}
             onValueChange={setMode as any}

@@ -88,7 +88,7 @@ export const BlockBody: FC<{
         value={effectiveTab}
         onValueChange={(t) => setSelectedTab(t as any)}
       >
-        <Tabs.List className="flex-shrink-0 flex border-b border-polkadot-200">
+        <Tabs.List className="shrink-0 flex border-b border-polkadot-200">
           <Tabs.Trigger
             className={twMerge(
               "bg-secondary text-secondary-foreground/80 px-4 py-2 hover:text-polkadot-500 border-t border-x rounded-tl border-polkadot-200",

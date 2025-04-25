@@ -314,7 +314,7 @@ const KeyDisplay: FC = () => {
 
   return (
     <div className="flex w-full overflow-hidden border border-card-foreground/60 px-3 p-2 gap-2 items-center bg-card text-card-foreground">
-      <div className="flex-shrink-0 text-sm font-bold">Encoded key:</div>
+      <div className="shrink-0 text-sm font-bold">Encoded key:</div>
       <div
         className={twMerge(
           "flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-sm tabular-nums",

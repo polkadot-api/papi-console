@@ -13,7 +13,7 @@ export default function App() {
     <div className="w-full h-screen bg-background flex flex-col">
       <Header />
       <div className="flex-1 overflow-auto relative">
-        <div className="max-w-screen-lg m-auto">
+        <div className="max-w-(--breakpoint-lg) m-auto">
           <Routes>
             <Route path="explorer/*" element={<Explorer />} />
             <Route path="extrinsics/*" element={<Extrinsics />} />

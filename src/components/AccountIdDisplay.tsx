@@ -19,7 +19,7 @@ export const AccountIdDisplay: FC<{
   return (
     <div className={twMerge("flex items-center gap-2", className)}>
       <PolkadotIdenticon
-        className="flex-shrink-0"
+        className="shrink-0"
         publicKey={getPublicKey(value)}
         size={28}
       />
