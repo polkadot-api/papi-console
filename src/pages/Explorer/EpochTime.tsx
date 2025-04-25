@@ -1,4 +1,6 @@
 import { CircularProgress } from "@/components/CircularProgress"
+import { groupBy } from "@/lib/groupBy"
+import { chainClient$, client$, runtimeCtx$ } from "@/state/chains/chain.state"
 import { state, useStateObservable } from "@react-rxjs/core"
 import {
   catchError,
@@ -11,17 +13,11 @@ import {
   withLatestFrom,
 } from "rxjs"
 import { targetBlockTime$ } from "./blockTime.state"
-import {
-  chainClient$,
-  chainHead$,
-  runtimeCtx$,
-} from "@/state/chains/chain.state"
-import { groupBy } from "@/lib/groupBy"
 
-const bestBlock$ = chainHead$.pipeState(
+const bestBlock$ = client$.pipeState(
   // Only count when increasing height
-  switchMap((chainHead) => chainHead.best$),
-  map((block) => block.number),
+  switchMap((client) => client.bestBlocks$),
+  map(([block]) => block.number),
   distinctUntilChanged((prev, current) => prev >= current),
 )
 
