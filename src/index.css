@@ -26,6 +26,10 @@
     @apply bg-transparent;
   }
 
+  dialog {
+    margin: auto;
+  }
+
   .karla-400 {
     font-family: 'Karla', sans-serif;
     font-optical-sizing: auto;
