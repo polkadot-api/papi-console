@@ -72,7 +72,7 @@ export const CResult: EditResult = ({ value, inner }) => (
 )
 
 export const ItemMarker = () => (
-  <span className="w-[0.77rem] border-t border-treeBorder"></span>
+  <span className="w-[0.77rem] border-t border-tree-border"></span>
 )
 
 export const TitleContext = createContext<HTMLElement | null>(null)
@@ -153,7 +153,7 @@ export const ItemTitle: FC<
       >
         <span
           className={twMerge(
-            "hover:text-primary flex-shrink-0 flex items-center",
+            "hover:text-primary shrink-0 flex items-center",
             onNavigate && "cursor-pointer",
           )}
           onClick={onNavigate}

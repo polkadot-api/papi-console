@@ -99,7 +99,7 @@ export const EventDisplay: FC<{
     <li
       className={twMerge(
         "px-2 py-1",
-        expanded && "py-2 bg-white bg-opacity-10 rounded overflow-auto",
+        expanded && "py-2 bg-foreground/5 rounded overflow-auto",
       )}
       ref={ref}
     >

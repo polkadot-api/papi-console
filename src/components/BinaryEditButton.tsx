@@ -168,7 +168,7 @@ const BinaryEditModalContent: FC<
         <textarea
           className={twMerge(
             "bg-white rounded w-full min-h-20 text-slate-950 p-1 tabular-nums border-2",
-            !isValid && "border-red-600 outline-none",
+            !isValid && "border-red-600 outline-hidden",
           )}
           value={textareaValue}
           onChange={(e) => setInputValue(e.target.value)}

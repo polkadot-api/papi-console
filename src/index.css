@@ -1,39 +1,63 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-input,
-dialog {
-  @apply bg-transparent;
+@config '../tailwind.config.js';
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
 }
 
-.karla-400 {
-  font-family: "Karla", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;
-}
+@layer utilities {
+  input,
+  dialog {
+    @apply bg-transparent;
+  }
 
-.poppins-extralight {
-  font-family: "Poppins", sans-serif;
-  font-weight: 200;
-  font-style: normal;
-}
+  dialog {
+    margin: auto;
+  }
 
-.poppins-regular {
-  font-family: "Poppins", sans-serif;
-  font-weight: 400;
-  font-style: normal;
-}
+  .karla-400 {
+    font-family: 'Karla', sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+  }
 
-.visible_when_parent_hover {
-  opacity: 0;
-  pointer-events: none;
-  transition: 0.2s opacity;
-}
-*:hover > .visible_when_parent_hover {
-  opacity: 1;
-  pointer-events: all;
+  .poppins-extralight {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 200;
+    font-style: normal;
+  }
+
+  .poppins-regular {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  .visible_when_parent_hover {
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.2s opacity;
+  }
+  *:hover > .visible_when_parent_hover {
+    opacity: 1;
+    pointer-events: all;
+  }
 }
 
 @layer base {

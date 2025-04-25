@@ -107,7 +107,7 @@ export const CAccountId: EditAccountId = ({ value, onValueChanged }) => {
           ) : (
             <span className="opacity-80">Select…</span>
           )}
-          <ChevronsUpDown size={14} className="opacity-50 flex-shrink-0" />
+          <ChevronsUpDown size={14} className="opacity-50 shrink-0" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-0">
@@ -181,7 +181,7 @@ const AccountOption: FC<{
       <Check
         size={12}
         className={cn(
-          "ml-auto flex-shrink-0",
+          "ml-auto shrink-0",
           selected ? "opacity-100" : "opacity-0",
         )}
       />

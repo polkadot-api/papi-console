@@ -127,11 +127,11 @@ const ModalContent: FC<
   }>
 > = ({ title, onClose, children, className }) => (
   <>
-    <div className="px-2 py-1 border-b flex overflow-hidden min-w-[10rem] flex-shrink-0">
+    <div className="px-2 py-1 border-b flex overflow-hidden min-w-[10rem] shrink-0">
       <div className="flex-1 flex font-bold">{title}</div>
       <button
         type="button"
-        className="flex-shrink-0 text-card-foreground/70 "
+        className="shrink-0 text-card-foreground/70 "
         onClick={onClose}
       >
         <XSquare />

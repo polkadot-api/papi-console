@@ -64,7 +64,7 @@ export const BinaryInput: React.FC<{
         setLocalInput(v)
       }}
       placeholder={placeholder}
-      className="min-w-80 border-none p-0 outline-none bg-transparent flex-1"
+      className="min-w-80 border-none p-0 outline-hidden bg-transparent flex-1"
       warn={warn}
       error={uploadError}
     >

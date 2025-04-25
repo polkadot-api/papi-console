@@ -25,7 +25,7 @@ export const CEnum: EditEnum = ({
 }) => {
   const pathId = useContext(PathsRoot)
   const className =
-    "text-slate-500 hover:text-polkadot-500 cursor-pointer whitespace-nowrap [&:not(:first-child)]:ml-1"
+    "text-slate-500 hover:text-polkadot-500 cursor-pointer whitespace-nowrap not-first:ml-1"
 
   const titleContainer = useContext(TitleContext)
   const titleElement = useAppendTitle(titleContainer, className)
@@ -75,7 +75,7 @@ export const CEnum: EditEnum = ({
     innerShape.type === "lookupEntry" ? innerShape.value : innerShape
   const innerIsComplex = isComplex(innerEntry.type)
   return (
-    <div className="before:absolute before:border-l before:h-4 before:border-treeBorder">
+    <div className="before:absolute before:border-l before:h-4 before:border-tree-border">
       <ItemTitle
         icon={Enum}
         path={path.join(".")}
