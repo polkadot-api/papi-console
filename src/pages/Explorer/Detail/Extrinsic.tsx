@@ -16,11 +16,13 @@ export type ApplyExtrinsicEvent = SystemEvent & {
 }
 export const Extrinsic: FC<{
   extrinsic: DecodedExtrinsic
-  highlightedEvent: ApplyExtrinsicEvent | null
+  highlightedEvent: SystemEvent | null
   events: ApplyExtrinsicEvent[]
 }> = ({ extrinsic, events, highlightedEvent }) => {
   const [expanded, setExpanded] = useState(
-    (highlightedEvent && events.includes(highlightedEvent)) ?? false,
+    (highlightedEvent &&
+      events.includes(highlightedEvent as ApplyExtrinsicEvent)) ??
+      false,
   )
 
   return (

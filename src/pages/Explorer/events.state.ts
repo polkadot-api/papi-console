@@ -9,6 +9,7 @@ const blackList = new Set([
   "System.*",
   "Balances.Deposit",
   "Treasury.Deposit",
+  "Treasury.UpdatedInactive",
   "ParaInclusion.*",
   "Balances.Withdraw",
   "Balances.Endowed",
@@ -27,12 +28,12 @@ export interface EventInfo {
   hash: string
   number: number
   event: SystemEvent["event"]
-  extrinsicNumber: number
+  extrinsicNumber: number | "i" | "f"
   index: number
 }
 interface EventEllipsis {
   number: number
-  extrinsicNumber: number
+  extrinsicNumber: number | "i" | "f"
   length: number
   hash: string
   index: number
@@ -61,12 +62,16 @@ export const recentEvents$ = state(
         number: block.number,
         events: block.events
           ?.map((evt, index) => ({ ...evt, index }))
-          .filter((evt) => evt.phase.type === "ApplyExtrinsic")
           .filter(filterEvt)
           .map((evt) => ({
             index: evt.index,
             event: evt.event,
-            extrinsicNumber: (evt.phase as any).value as number,
+            extrinsicNumber:
+              evt.phase.type === "ApplyExtrinsic"
+                ? evt.phase.value
+                : evt.phase.type === "Initialization"
+                  ? ("i" as const)
+                  : ("f" as const),
           })),
       })),
       takeWhile(

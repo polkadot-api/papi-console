@@ -43,9 +43,7 @@ export const BlockBody: FC<{
   const hashParams = new URLSearchParams(location.hash.slice(1))
   const eventParam = hashParams.get("event")
   const defaultEventOpen =
-    eventParam && block.events
-      ? (block.events[Number(eventParam)] as ApplyExtrinsicEvent)
-      : null
+    eventParam && block.events ? block.events[Number(eventParam)] : null
   const eventsByExtrinsic = block.events
     ? groupBy(
         block.events.filter(
@@ -65,10 +63,12 @@ export const BlockBody: FC<{
 
   // This is done separately in case the extrinsics/events have not fully loaded yet.
   const getDefaultTab = (): Tab => {
-    if (defaultEventOpen?.phase.type === "ApplyExtrinsic") {
-      return extrinsics[defaultEventOpen.phase.value]?.signed
-        ? "signed"
-        : "unsigned"
+    if (defaultEventOpen) {
+      return defaultEventOpen.phase.type === "ApplyExtrinsic"
+        ? extrinsics[defaultEventOpen.phase.value].signed
+          ? "signed"
+          : "unsigned"
+        : "events"
     }
     if (groupedExtrinsics.signed?.length) {
       return "signed"
@@ -147,7 +147,7 @@ export const BlockBody: FC<{
           </ol>
         </Tabs.Content>
         <Tabs.Content value="events" className="py-2">
-          <BlockEvents block={block} />
+          <BlockEvents block={block} highlightedEvent={defaultEventOpen} />
         </Tabs.Content>
       </Tabs.Root>
     </div>
