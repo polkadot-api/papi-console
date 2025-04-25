@@ -122,10 +122,7 @@ export const LookupLink: FC<{ id: number }> = ({ id }) => {
 
   return (
     <div
-      className={twMerge(
-        "border rounded p-2",
-        expanded && "bg-slate-400 bg-opacity-10",
-      )}
+      className={twMerge("border rounded p-2", expanded && "bg-slate-400/5")}
     >
       <button
         onClick={() => setExpanded((e) => !e)}
