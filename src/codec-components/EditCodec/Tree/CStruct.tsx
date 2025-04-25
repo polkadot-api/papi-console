@@ -28,7 +28,7 @@ const StructField: FC<
   const isCollapsed = useStateObservable(isCollapsedRoot$(path))
 
   return (
-    <div className="flex flex-col text-left border-l border-treeBorder last:border-0 last:before:block last:before:absolute last:before:border-l last:before:h-4 last:before:border-treeBorder">
+    <div className="flex flex-col text-left border-l border-tree-border last:border-0 last:before:block last:before:absolute last:before:border-l last:before:h-4 last:before:border-tree-border">
       <ItemTitle
         icon={Icon}
         path={path}

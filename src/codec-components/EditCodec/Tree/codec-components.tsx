@@ -72,7 +72,7 @@ export const CResult: EditResult = ({ value, inner }) => (
 )
 
 export const ItemMarker = () => (
-  <span className="w-[0.77rem] border-t border-treeBorder"></span>
+  <span className="w-[0.77rem] border-t border-tree-border"></span>
 )
 
 export const TitleContext = createContext<HTMLElement | null>(null)
