@@ -7,7 +7,8 @@ import { ExpandBtn } from "@/components/Expand"
 
 export const BlockEvents: FC<{
   block: BlockInfo
-}> = ({ block }) => {
+  highlightedEvent: SystemEvent | null
+}> = ({ block, highlightedEvent }) => {
   const groups = groupBy(block.events ?? [], (v) => v.phase.type)
 
   return (
@@ -15,12 +16,18 @@ export const BlockEvents: FC<{
       <EventGroup
         title="Initialization"
         group={groups.Initialization}
+        highlightedEvent={highlightedEvent}
         defaultExpanded
       />
-      <EventGroup title="Apply Extrinsic" group={groups.ApplyExtrinsic} />
+      <EventGroup
+        title="Apply Extrinsic"
+        group={groups.ApplyExtrinsic}
+        highlightedEvent={highlightedEvent}
+      />
       <EventGroup
         title="Finalization"
         group={groups.Finalization}
+        highlightedEvent={highlightedEvent}
         defaultExpanded
       />
     </div>
@@ -30,8 +37,9 @@ export const BlockEvents: FC<{
 const EventGroup: FC<{
   title: string
   group: SystemEvent[] | undefined
+  highlightedEvent: SystemEvent | null
   defaultExpanded?: boolean
-}> = ({ title, group, defaultExpanded }) => {
+}> = ({ title, group, highlightedEvent, defaultExpanded }) => {
   const [expanded, setExpanded] = useState(defaultExpanded ?? !group?.length)
 
   return (
@@ -49,7 +57,12 @@ const EventGroup: FC<{
         group?.length ? (
           <ol className="px-2 pb-2">
             {group.map((evt, index) => (
-              <EventDisplay key={index} index={index} evt={evt} />
+              <EventDisplay
+                key={index}
+                index={index}
+                evt={evt}
+                defaultOpen={highlightedEvent === evt}
+              />
             ))}
           </ol>
         ) : (
