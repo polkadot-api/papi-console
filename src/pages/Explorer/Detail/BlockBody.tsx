@@ -65,7 +65,7 @@ export const BlockBody: FC<{
   const getDefaultTab = (): Tab => {
     if (defaultEventOpen) {
       return defaultEventOpen.phase.type === "ApplyExtrinsic"
-        ? extrinsics[defaultEventOpen.phase.value].signed
+        ? extrinsics[defaultEventOpen.phase.value]?.signed
           ? "signed"
           : "unsigned"
         : "events"
