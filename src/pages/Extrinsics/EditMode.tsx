@@ -11,13 +11,13 @@ import { FocusPath } from "@/codec-components/LookupTypeEdit"
 import {
   CodecComponentUpdate,
   CodecComponentValue,
-  MetadataType,
 } from "@polkadot-api/react-builder"
+import { UnifiedMetadata } from "@polkadot-api/substrate-bindings"
 import { useEffect, useRef, useState } from "react"
 
 export const EditMode: React.FC<{
   codecType: number
-  metadata: MetadataType
+  metadata: UnifiedMetadata
   value: CodecComponentValue
   onUpdate: (value: CodecComponentUpdate) => void
 }> = (props) => {

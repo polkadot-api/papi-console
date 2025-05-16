@@ -63,12 +63,12 @@ const MetadataExplorer = () => {
           {
             id: "outerEnums",
             label: "Outer Enums",
-            element: <OuterEnums metadata={metadata} />,
+            element: <OuterEnums outerEnums={metadata.outerEnums} />,
           },
           {
             id: "custom",
             label: "Custom",
-            element: <Custom metadata={metadata} />,
+            element: <Custom custom={metadata.custom} />,
             disabled: metadata.custom.length === 0,
           },
         ]
