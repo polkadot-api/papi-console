@@ -1,10 +1,10 @@
 import { SearchableSelect } from "@/components/Select"
-import { V14, V15 } from "@polkadot-api/substrate-bindings"
+import { UnifiedMetadata } from "@polkadot-api/substrate-bindings"
 import { FC, useEffect, useState } from "react"
 import { LookupLink } from "./Lookup"
 import { CopyText } from "@/components/Copy"
 
-type Pallet = (V14 | V15)["pallets"][number]
+type Pallet = UnifiedMetadata["pallets"][number]
 export const Pallets: FC<{ pallets: Array<Pallet> }> = ({ pallets }) => {
   const [pallet, setPallet] = useState<Pallet | null>(null)
 
@@ -39,19 +39,19 @@ export const Pallets: FC<{ pallets: Array<Pallet> }> = ({ pallets }) => {
           {pallet.calls != null && (
             <div>
               <h4>Calls</h4>
-              <LookupLink id={pallet.calls} />
+              <LookupLink id={pallet.calls.type} />
             </div>
           )}
           {pallet.events != null && (
             <div>
               <h4>Events</h4>
-              <LookupLink id={pallet.events} />
+              <LookupLink id={pallet.events.type} />
             </div>
           )}
           {pallet.errors != null && (
             <div>
               <h4>Errors</h4>
-              <LookupLink id={pallet.errors} />
+              <LookupLink id={pallet.errors.type} />
             </div>
           )}
         </>

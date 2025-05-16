@@ -3,14 +3,13 @@ import {
   MetadataLookup,
 } from "@polkadot-api/metadata-builders"
 import {
-  _void,
   AccountId,
   Bytes,
-  compact,
   enhanceDecoder,
   Enum,
   HexString,
   SS58String,
+  StringRecord,
   Struct,
   u8,
   Variant,
@@ -50,21 +49,14 @@ export const createExtrinsicCodec = (
           lookup.metadata.extrinsic.signature,
         ) as typeof v14Signature)
       : v14Signature
-  const extra =
-    "extra" in lookup.metadata.extrinsic
-      ? (dynamicBuilder.buildDefinition(
-          lookup.metadata.extrinsic.extra,
-        ) as Codec<unknown[]>)
-      : Struct({
-          mortality: Variant({
-            Immortal: _void,
-            ...Object.fromEntries(
-              new Array(255).fill(0).map((_, i) => [`Mortal${i}`, u8]),
-            ),
-          }),
-          nonce: compact,
-          tip: compact,
-        })
+  const extra = Struct(
+    Object.fromEntries(
+      lookup.metadata.extrinsic.signedExtensions.map((ext) => [
+        ext.identifier,
+        dynamicBuilder.buildDefinition(ext.type),
+      ]),
+    ) as StringRecord<Codec<any>>,
+  )
   const call = dynamicBuilder.buildDefinition(
     "call" in lookup.metadata.extrinsic
       ? lookup.metadata.extrinsic.call

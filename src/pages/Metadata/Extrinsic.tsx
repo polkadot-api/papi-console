@@ -1,9 +1,9 @@
-import { V14, V15 } from "@polkadot-api/substrate-bindings"
+import { SearchableSelect } from "@/components/Select"
+import { UnifiedMetadata } from "@polkadot-api/substrate-bindings"
 import { FC, useState } from "react"
 import { LookupLink } from "./Lookup"
-import { SearchableSelect } from "@/components/Select"
 
-type ExtrinsicDescriptor = (V14 | V15)["extrinsic"]
+type ExtrinsicDescriptor = UnifiedMetadata["extrinsic"]
 export const Extrinsic: FC<{ extrinsic: ExtrinsicDescriptor }> = ({
   extrinsic,
 }) => {
@@ -20,12 +20,6 @@ export const Extrinsic: FC<{ extrinsic: ExtrinsicDescriptor }> = ({
         <div>
           <h4>Call</h4>
           <LookupLink id={extrinsic.call} />
-        </div>
-      )}
-      {"extra" in extrinsic && (
-        <div>
-          <h4>Extra</h4>
-          <LookupLink id={extrinsic.extra} />
         </div>
       )}
       {"signature" in extrinsic && (
