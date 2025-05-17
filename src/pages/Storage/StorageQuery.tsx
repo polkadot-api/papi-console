@@ -129,7 +129,9 @@ const isReady$ = state(
   false,
 )
 
-const StorageKeysInput: FC = () => {
+export const StorageKeysInput: FC<{
+  disableToggle?: boolean
+}> = ({ disableToggle }) => {
   const keys = useStateObservable(keys$)
   const keysEnabled = useStateObservable(keysEnabled$)
 
@@ -137,10 +139,12 @@ const StorageKeysInput: FC = () => {
     <ol className="flex flex-col gap-2">
       {keys.map((type, idx) => (
         <li key={idx} className="flex flex-row gap-2 items-center">
-          <SliderToggle
-            isToggled={keysEnabled > idx}
-            toggle={() => toggleKey(idx)}
-          />
+          {disableToggle ? null : (
+            <SliderToggle
+              isToggled={keysEnabled > idx}
+              toggle={() => toggleKey(idx)}
+            />
+          )}
           <StorageKeyInput
             idx={idx}
             type={type}
@@ -271,7 +275,7 @@ const StorageKeyInput: FC<{ idx: number; type: number; disabled: boolean }> = ({
   )
 }
 
-const encodedKey$ = state(
+export const encodedKey$ = state(
   combineLatest([
     dynamicBuilder$,
     selectedEntry$,
@@ -301,7 +305,8 @@ const encodedKey$ = state(
   ),
   null,
 )
-const KeyDisplay: FC = () => {
+
+export const KeyDisplay: FC = () => {
   const key = useStateObservable(encodedKey$)
   const builder = useStateObservable(builderState$)
   const selectedEntry = useStateObservable(selectedEntry$)

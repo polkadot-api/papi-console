@@ -1,8 +1,8 @@
-import { chopsticksInstance$ } from "@/chopsticks/chopsticks"
+import { chopsticksInstance$, isChopsticks$ } from "@/chopsticks/chopsticks"
 import { Chopsticks } from "@/components/Icons"
 import { Button } from "@/components/ui/button"
 import { client$, runtimeCtx$ } from "@/state/chains/chain.state"
-import { state, useStateObservable, withDefault } from "@react-rxjs/core"
+import { useStateObservable, withDefault } from "@react-rxjs/core"
 import { FC, PropsWithChildren, ReactElement, useEffect, useState } from "react"
 import { firstValueFrom, map, switchMap } from "rxjs"
 import { twMerge } from "tailwind-merge"
@@ -31,10 +31,9 @@ const hasEpoch$ = runtimeCtx$.pipeState(
   withDefault(false),
 )
 
-const canJump$ = state(chopsticksInstance$.pipe(map((v) => !!v)), false)
 export const Summary: FC = () => {
   const hasEpoch = useStateObservable(hasEpoch$)
-  const canJump = useStateObservable(canJump$)
+  const canJump = useStateObservable(isChopsticks$)
 
   return (
     <div className="flex gap-4 items-center py-2">

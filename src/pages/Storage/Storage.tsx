@@ -1,17 +1,20 @@
-import { lookup$ } from "@/state/chains/chain.state"
+import { isChopsticks$ } from "@/chopsticks/chopsticks"
 import { ButtonGroup } from "@/components/ButtonGroup"
+import { DocsRenderer } from "@/components/DocsRenderer"
+import { Chopsticks } from "@/components/Icons"
+import { LoadingMetadata } from "@/components/Loading"
 import { SearchableSelect } from "@/components/Select"
 import { withSubscribe } from "@/components/withSuspense"
+import { useHashState } from "@/lib/externalState"
+import { lookup$ } from "@/state/chains/chain.state"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { FC, useEffect, useState } from "react"
 import { map } from "rxjs"
 import { selectedEntry$, setSelectedEntry } from "./storage.state"
 import { StorageDecode } from "./StorageDecode"
 import { StorageQuery } from "./StorageQuery"
+import { StorageSet } from "./StorageSet"
 import { StorageSubscriptions } from "./StorageSubscriptions"
-import { DocsRenderer } from "@/components/DocsRenderer"
-import { LoadingMetadata } from "@/components/Loading"
-import { useHashState } from "@/lib/externalState"
 
 const metadataStorage$ = state(
   lookup$.pipe(
@@ -150,7 +153,8 @@ export const Storage = withSubscribe(
 
 const StorageEntry: FC = () => {
   const selectedEntry = useStateObservable(selectedEntry$)
-  const [mode, setMode] = useState<"query" | "decode">("query")
+  const canSetStorage = useStateObservable(isChopsticks$) || true
+  const [mode, setMode] = useState<"query" | "decode" | "set">("query")
 
   if (!selectedEntry) return null
 
@@ -168,9 +172,31 @@ const StorageEntry: FC = () => {
             value: "decode",
             content: "Decode",
           },
+          ...(canSetStorage
+            ? [
+                {
+                  value: "set",
+                  content: (
+                    <>
+                      Set
+                      <Chopsticks
+                        className="inline-block align-middle ml-2"
+                        size={20}
+                      />
+                    </>
+                  ),
+                },
+              ]
+            : []),
         ]}
       />
-      {mode === "query" ? <StorageQuery /> : <StorageDecode />}
+      {mode === "query" ? (
+        <StorageQuery />
+      ) : mode === "decode" ? (
+        <StorageDecode />
+      ) : (
+        <StorageSet />
+      )}
     </>
   )
 }
