@@ -14,8 +14,10 @@
     "semi": false
   },
   "dependencies": {
+    "@acala-network/chopsticks-core": "^1.0.5",
     "@noble/hashes": "^1.8.0",
     "@polkadot-api/descriptors": "file:.papi/descriptors",
+    "@polkadot-api/json-rpc-provider-proxy": "^0.2.4",
     "@polkadot-api/metadata-builders": "^0.12.0",
     "@polkadot-api/observable-client": "^0.10.0",
     "@polkadot-api/react-builder": "0.2.7",

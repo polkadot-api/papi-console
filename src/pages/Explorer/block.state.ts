@@ -1,3 +1,4 @@
+import { chopsticksInstance$ } from "@/chopsticks/chopsticks"
 import { chainClient$, client$ } from "@/state/chains/chain.state"
 import { SystemEvent } from "@polkadot-api/observable-client"
 import { state } from "@react-rxjs/core"
@@ -30,6 +31,7 @@ import {
   takeWhile,
   tap,
   timer,
+  toArray,
   withLatestFrom,
 } from "rxjs"
 
@@ -57,6 +59,7 @@ export interface BlockInfo {
     digests: unknown[]
   } | null
   status: BlockState
+  diff: Record<string, [string | null, string | null]> | null
 }
 export const [blockInfo$, recordedBlocks$] = partitionByKey(
   client$.pipe(switchMap((client) => client.blocks$)),
@@ -98,6 +101,7 @@ export const [blockInfo$, recordedBlocks$] = partitionByKey(
                 }),
               ),
               status: getBlockStatus$(client, hash, number),
+              diff: getBlockDiff$(parent, hash),
             }),
             NEVER,
           ),
@@ -159,6 +163,7 @@ const getUnpinnedBlockInfo$ = (hash: string): Observable<BlockInfo> => {
         },
         number: Number(header.number),
         status: BlockState.Finalized,
+        diff: null,
       }),
     ),
     tap((v) => disconnectedBlocks$.next(v)),
@@ -264,4 +269,52 @@ const getBlockStatus$ = (
       (v) => v !== BlockState.Finalized && v !== BlockState.Pruned,
       true,
     ),
+  )
+
+const getBlockDiff$ = (
+  parent: string,
+  hash: string,
+): Observable<Record<string, [string | null, string | null]> | null> =>
+  chopsticksInstance$.pipe(
+    take(1),
+    switchMap((chain) => (chain ? chain.getBlock(hash as any) : [null])),
+    switchMap((block) => (block ? block.storageDiff() : [null])),
+    map((v) =>
+      v && Object.keys(v).length > 0
+        ? (v as Record<string, string | null>)
+        : null,
+    ),
+    startWith(null),
+    withLatestFrom(chainClient$),
+    switchMap(([diff, { chainHead }]) => {
+      if (!diff) return [null]
+
+      return chainHead
+        .storageQueries$(
+          parent,
+          Object.keys(diff).map((key) => ({
+            key,
+            type: "value",
+          })),
+        )
+        .pipe(
+          toArray(),
+          map((v) => Object.fromEntries(v.map((v) => [v.key, v.value]))),
+          map(
+            (previousResults): Record<string, [string | null, string | null]> =>
+              Object.fromEntries(
+                Object.entries(diff)
+                  .map(([key, newValue]) => [
+                    key,
+                    [previousResults[key] ?? null, newValue],
+                  ])
+                  .filter(([, [prevVal, newVal]]) => prevVal !== newVal),
+              ),
+          ),
+          catchError((ex) => {
+            console.error(ex)
+            return [null]
+          }),
+        )
+    }),
   )

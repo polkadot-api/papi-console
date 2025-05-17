@@ -1,9 +1,5 @@
-import { ReactSVG, Props } from "react-svg"
-import focusSvg from "./icons/focus.svg"
-import enumSvg from "./icons/enum.svg"
-import binarySvg from "./icons/binary.svg"
-import walletConnectSvg from "./icons/walletConnect.svg"
-import { useEffect, useRef } from "react"
+import { useTheme } from "@/ThemeProvider"
+import { LookupEntry } from "@polkadot-api/metadata-builders"
 import {
   Ban,
   Binary,
@@ -16,38 +12,57 @@ import {
   LucideProps,
   User,
 } from "lucide-react"
-import { LookupEntry } from "@polkadot-api/metadata-builders"
+import { FC, useEffect, useRef } from "react"
+import { Props, ReactSVG } from "react-svg"
 import { twMerge } from "tailwind-merge"
+import binarySvg from "./icons/binary.svg"
+import chopsticksLogoDark from "./icons/chopsticks_dark.svg"
+import chopsticksLogoLight from "./icons/chopsticks_light.svg"
+import enumSvg from "./icons/enum.svg"
+import focusSvg from "./icons/focus.svg"
+import walletConnectSvg from "./icons/walletConnect.svg"
 
 type CustomIconProps = Omit<Props, "ref" | "src"> & { size?: number }
-const customIcon =
-  (url: string) =>
-  ({ size = 16, ...props }: CustomIconProps) => {
-    const ref = useRef<SVGSVGElement | null>(null)
-
-    useEffect(() => {
-      if (!ref.current) return
-      ref.current.setAttribute("width", String(size))
-      ref.current.setAttribute("height", String(size))
-    }, [size])
-
-    return (
-      <ReactSVG
-        {...props}
-        src={url}
-        beforeInjection={(svg) => {
-          ref.current = svg
-          svg.setAttribute("width", String(size))
-          svg.setAttribute("height", String(size))
-        }}
-      />
-    )
+const CustomIcon: FC<
+  CustomIconProps & {
+    url: string
   }
+> = ({ size = 16, url, ...props }) => {
+  const ref = useRef<SVGSVGElement | null>(null)
+
+  useEffect(() => {
+    if (!ref.current) return
+    ref.current.setAttribute("width", String(size))
+    ref.current.setAttribute("height", String(size))
+  }, [size])
+
+  return (
+    <ReactSVG
+      {...props}
+      src={url}
+      beforeInjection={(svg) => {
+        ref.current = svg
+        svg.setAttribute("width", String(size))
+        svg.setAttribute("height", String(size))
+      }}
+    />
+  )
+}
+
+const customIcon = (url: string) => (props: CustomIconProps) => (
+  <CustomIcon url={url} {...props} />
+)
+
+const themeIcon = (light: string, dark: string) => (props: CustomIconProps) => {
+  const theme = useTheme()
+  return <CustomIcon url={theme === "light" ? light : dark} {...props} />
+}
 
 export const Focus = customIcon(focusSvg)
 export const Enum = customIcon(enumSvg)
 export const BinaryEdit = customIcon(binarySvg)
 export const WalletConnect = customIcon(walletConnectSvg)
+export const Chopsticks = themeIcon(chopsticksLogoLight, chopsticksLogoDark)
 
 export const Spinner = (props: LucideProps) => (
   <LoaderCircle

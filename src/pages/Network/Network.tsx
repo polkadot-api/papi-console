@@ -1,15 +1,12 @@
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
+import { CommandPopover } from "@/components/CommandPopover"
+import { CopyText } from "@/components/Copy"
+import { Chopsticks } from "@/components/Icons"
+import SliderToggle from "@/components/Toggle"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
@@ -33,61 +30,8 @@ import {
 } from "@/state/chains/chain.state"
 import { addCustomNetwork, getCustomNetwork } from "@/state/chains/networks"
 import { useStateObservable } from "@react-rxjs/core"
-import { useCommandState } from "cmdk"
 import { Check, ChevronDown } from "lucide-react"
-import { FC, useEffect, useRef, useState } from "react"
-
-const EmptyOption: React.FC<{
-  enteredText: string
-  selectedNetwork: Network
-  selectedRpc: string
-  setSelectedNetwork: React.Dispatch<React.SetStateAction<Network>>
-  setSelectedRpc: React.Dispatch<React.SetStateAction<string>>
-}> = (props) =>
-  useCommandState((x) => x.filtered.count) ? null : <Empty {...props} />
-
-const Empty: React.FC<{
-  enteredText: string
-  selectedNetwork: Network
-  selectedRpc: string
-  setSelectedNetwork: React.Dispatch<React.SetStateAction<Network>>
-  setSelectedRpc: React.Dispatch<React.SetStateAction<string>>
-}> = ({
-  enteredText,
-  selectedNetwork,
-  selectedRpc,
-  setSelectedNetwork,
-  setSelectedRpc,
-}) => {
-  const initialValue = useRef({
-    selectedNetwork,
-    selectedRpc,
-  })
-  const isValid = isValidUri(enteredText)
-  useEffect(() => {
-    setSelectedNetwork({
-      id: "custom-network",
-      lightclient: false,
-      endpoints: { custom: enteredText },
-      display: enteredText,
-    })
-    setSelectedRpc(isValid ? enteredText : "")
-    return () => {
-      if (!isValid) {
-        setSelectedNetwork(initialValue.current.selectedNetwork)
-        setSelectedRpc(initialValue.current.selectedRpc)
-      }
-    }
-  }, [enteredText, isValid])
-  return isValid ? (
-    <div className="relative flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden data-[disabled=true]:pointer-events-none data-[selected='true']:bg-accent data-[selected=true]:text-accent-foreground data-[disabled=true]:opacity-50">
-      <Check className="mr-2 h-4 w-4 opacity-100" />
-      {enteredText}
-    </div>
-  ) : (
-    <CommandEmpty>No networks found.</CommandEmpty>
-  )
-}
+import { FC, useState } from "react"
 
 export function NetworkSwitcher() {
   const [open, setOpen] = useState(false)
@@ -125,10 +69,14 @@ const NetworkSwitchDialogContent: FC<{
   const currentRpc = selectedChain.endpoint ?? "light-client"
   const [selectedRpc, setSelectedRpc] = useState<string>(currentRpc)
   const [enteredText, setEnteredText] = useState<string>("")
+  const [withChopsticks, setWithChopsticks] = useState(
+    selectedChain.withChopsticks ?? false,
+  )
 
   const hasChanged =
     selectedNetwork.id !== selectedChain.network.id ||
-    selectedRpc !== currentRpc
+    selectedRpc !== currentRpc ||
+    selectedChain.withChopsticks !== withChopsticks
 
   const handleNetworkSelect = (network: Network) => {
     if (network === selectedNetwork) return
@@ -142,107 +90,156 @@ const NetworkSwitchDialogContent: FC<{
   }
 
   const handleConfirm = () => {
+    const chopsticksEnabled = selectedRpc !== "light-client" && withChopsticks
     if (selectedNetwork.id === "custom-network") {
       addCustomNetwork(selectedRpc)
-      onChangeChain({ network: getCustomNetwork(), endpoint: selectedRpc })
+      onChangeChain({
+        network: getCustomNetwork(),
+        endpoint: selectedRpc,
+        withChopsticks: chopsticksEnabled,
+      })
       setEnteredText("")
     } else {
       onChangeChain({
         network: selectedNetwork,
         endpoint: selectedRpc,
+        withChopsticks: chopsticksEnabled,
       })
     }
     onClose()
   }
 
   return (
-    <DialogContent className="sm:max-w-[425px]">
+    <DialogContent
+      className="sm:max-w-[425px] min-h-[450px] max-h-full flex flex-col"
+      onEscapeKeyDown={(evt) => {
+        if (
+          evt.target instanceof HTMLElement &&
+          (evt.target.tagName === "INPUT" ||
+            evt.target.attributes.getNamedItem("cmdk-list"))
+        ) {
+          evt.preventDefault()
+        }
+      }}
+    >
       <DialogHeader>
         <DialogTitle>Switch Network</DialogTitle>
       </DialogHeader>
-      <Command className="rounded-lg border shadow-md">
-        <CommandInput
+      <div className="h-full grow flex flex-col">
+        <CommandPopover
           placeholder="Search or enter a custom URI"
           value={enteredText}
           onValueChange={setEnteredText}
-        />
-        <CommandList>
-          <EmptyOption
-            {...{
-              enteredText,
-              selectedNetwork,
-              selectedRpc,
-              setSelectedRpc,
-              setSelectedNetwork,
-            }}
-          />
-          <ScrollArea className="h-[260px]">
-            {networkCategories.map((category) => (
-              <CommandGroup key={category.name} heading={category.name}>
-                {category.networks.map((network) => (
-                  <CommandItem
-                    key={network.id}
-                    onSelect={() => handleNetworkSelect(network)}
-                    value={
-                      network.display.includes(category.name)
-                        ? network.display
-                        : `${category.name} ${network.display}`
-                    }
-                  >
-                    <Check
-                      className={`mr-2 h-4 w-4 ${
-                        selectedNetwork.id === network.id
-                          ? "opacity-100"
-                          : "opacity-0"
-                      }`}
-                    />
-                    {network.display}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            ))}
-          </ScrollArea>
-        </CommandList>
-      </Command>
-      {selectedNetwork && selectedNetwork.id !== "custom-network" && (
-        <Accordion type="single" collapsible className="w-full -mt-3">
-          <AccordionItem value="connection-options">
-            <AccordionTrigger>Connection Options</AccordionTrigger>
-            <AccordionContent>
-              <ScrollArea className="h-[155px] rounded-lg border p-2">
-                <RadioGroup>
-                  {selectedNetwork.lightclient ? (
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem
-                        value="light-client"
-                        id="light-client"
-                        checked={selectedRpc === "light-client"}
-                        onClick={() => setSelectedRpc("light-client")}
+          selectedValue={selectedNetwork.id}
+        >
+          <CommandList>
+            <CommandEmpty>
+              <div className="text-foreground/50">No networks found.</div>
+            </CommandEmpty>
+            <ScrollArea className="h-[260px]">
+              {networkCategories.map((category) => (
+                <CommandGroup key={category.name} heading={category.name}>
+                  {category.networks.map((network) => (
+                    <CommandItem
+                      key={network.id}
+                      onSelect={() => handleNetworkSelect(network)}
+                      value={
+                        network.display.includes(category.name)
+                          ? network.display
+                          : `${category.name} ${network.display}`
+                      }
+                    >
+                      <Check
+                        className={`mr-2 h-4 w-4 ${
+                          selectedNetwork.id === network.id
+                            ? "opacity-100"
+                            : "opacity-0"
+                        }`}
                       />
-                      <Label htmlFor="light-client">
-                        Light Client (smoldot)
-                      </Label>
-                    </div>
+                      {network.display}
+                    </CommandItem>
+                  ))}
+                  {category.name === "Custom" && isValidUri(enteredText) ? (
+                    <CommandItem
+                      value={enteredText}
+                      onSelect={() => {
+                        handleNetworkSelect({
+                          id: "custom-network",
+                          lightclient: false,
+                          endpoints: { custom: enteredText },
+                          display: enteredText,
+                        })
+                      }}
+                    >
+                      <Check
+                        className={`mr-2 h-4 w-4 ${
+                          selectedNetwork.id === "custom-network"
+                            ? "opacity-100"
+                            : "opacity-0"
+                        }`}
+                      />
+                      {enteredText}
+                    </CommandItem>
+                  ) : null}
+                </CommandGroup>
+              ))}
+            </ScrollArea>
+          </CommandList>
+        </CommandPopover>
+        <div className="h-[50vh] flex flex-col gap-2">
+          {selectedNetwork ? (
+            <div className="grow-1 overflow-hidden flex flex-col">
+              <p className="py-2">Network: {selectedNetwork.display}</p>
+              <div className="overflow-auto">
+                <RadioGroup value={selectedRpc} onValueChange={setSelectedRpc}>
+                  {selectedNetwork.lightclient ? (
+                    <ConnectionOption
+                      value="light-client"
+                      isSelected={selectedRpc === "light-client"}
+                      name="Smoldot"
+                      type="light"
+                    />
                   ) : null}
                   {Object.entries(selectedNetwork.endpoints).map(
                     ([rpcName, url]) => (
-                      <div key={url} className="flex items-center space-x-2">
-                        <RadioGroupItem
-                          value={url}
-                          id={url}
-                          checked={selectedRpc === url}
-                          onClick={() => setSelectedRpc(url)}
-                        />
-                        <Label htmlFor={url}>{rpcName}</Label>
-                      </div>
+                      <ConnectionOption
+                        value={url}
+                        isSelected={selectedRpc === url}
+                        name={rpcName}
+                        type="rpc"
+                        url={url}
+                      />
                     ),
                   )}
                 </RadioGroup>
-              </ScrollArea>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      )}
+              </div>
+            </div>
+          ) : null}
+          {selectedRpc && selectedRpc !== "light-client" && (
+            <div className="mt-4 p-3 border rounded-md bg-muted/30">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Chopsticks size={20} />
+                  <Label
+                    htmlFor="use-chopsticks"
+                    className="font-medium cursor-pointer"
+                  >
+                    Fork with Chopsticks
+                  </Label>
+                </div>
+                <SliderToggle
+                  id="use-chopsticks"
+                  isToggled={withChopsticks}
+                  toggle={() => setWithChopsticks(!withChopsticks)}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1 ml-6">
+                Create a local fork of this chain
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
       <Button
         onClick={handleConfirm}
         disabled={
@@ -256,3 +253,54 @@ const NetworkSwitchDialogContent: FC<{
     </DialogContent>
   )
 }
+
+const ConnectionOption: FC<{
+  isSelected: boolean
+  value: string
+  name: string
+  type: "light" | "rpc"
+  url?: string
+}> = ({ isSelected, value, name, type, url }) => (
+  <div
+    className={`overflow-hidden p-3 border rounded-md ${isSelected ? "border-primary bg-primary/5" : "border-border"}`}
+  >
+    <div className="flex items-start space-x-2">
+      <RadioGroupItem value={value} id={`chain-${value}`} className="mt-1" />
+      <div className="grid gap-0.5 flex-grow">
+        <Label htmlFor={`chain-${value}`} className="font-medium">
+          {name}
+          {type === "light" ? (
+            <Badge variant="outline" className="ml-2 text-xs">
+              Light Client
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="ml-2 text-xs">
+              RPC
+            </Badge>
+          )}
+          <p className="text-xs text-muted-foreground">
+            {type === "light"
+              ? "Light client for a decentralized experience"
+              : url?.includes("127.0.0.1")
+                ? "Local RPC node"
+                : "Remote RPC node"}
+          </p>
+        </Label>
+      </div>
+    </div>
+
+    {/* Show URL for RPC endpoints */}
+    {url ? (
+      <div className="mt-2 pt-2 border-t">
+        <div className="flex items-center justify-between gap-1">
+          <div className="flex-1 overflow-hidden">
+            <code className="text-xs bg-muted p-1 rounded block overflow-hidden text-ellipsis whitespace-nowrap">
+              {url}
+            </code>
+          </div>
+          <CopyText text={url} />
+        </div>
+      </div>
+    ) : null}
+  </div>
+)

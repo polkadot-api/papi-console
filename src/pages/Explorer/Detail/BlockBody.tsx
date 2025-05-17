@@ -1,3 +1,4 @@
+import { Chopsticks } from "@/components/Icons"
 import { Loading } from "@/components/Loading"
 import { groupBy } from "@/lib/groupBy"
 import { runtimeCtx$ } from "@/state/chains/chain.state"
@@ -8,9 +9,10 @@ import { useLocation, useParams } from "react-router-dom"
 import { combineLatest, distinctUntilChanged, filter, map, take } from "rxjs"
 import { twMerge } from "tailwind-merge"
 import { BlockInfo, blockInfoState$ } from "../block.state"
+import { BlockEvents } from "./BlockEvents"
+import { BlockStorageDiff } from "./BlockStorageDiff"
 import { ApplyExtrinsicEvent, Extrinsic } from "./Extrinsic"
 import { createExtrinsicCodec, DecodedExtrinsic } from "./extrinsicDecoder"
-import { BlockEvents } from "./BlockEvents"
 
 const blockExtrinsics$ = state((hash: string) => {
   const decoder$ = runtimeCtx$.pipe(
@@ -32,13 +34,14 @@ const blockExtrinsics$ = state((hash: string) => {
   )
 }, [])
 
-type Tab = "signed" | "unsigned" | "events"
+type Tab = "signed" | "unsigned" | "events" | "diff"
 export const BlockBody: FC<{
   block: BlockInfo
 }> = ({ block }) => {
   const { hash } = useParams()
   const [selectedTab, setSelectedTab] = useState<Tab | null>(null)
   const extrinsics = useStateObservable(blockExtrinsics$(hash ?? ""))
+
   const location = useLocation()
   const hashParams = new URLSearchParams(location.hash.slice(1))
   const eventParam = hashParams.get("event")
@@ -102,7 +105,7 @@ export const BlockBody: FC<{
           </Tabs.Trigger>
           <Tabs.Trigger
             className={twMerge(
-              "bg-secondary text-secondary-foreground/80 px-4 py-2 hover:text-polkadot-500 border-t border-r rounded-tr border-polkadot-200",
+              "bg-secondary text-secondary-foreground/80 px-4 py-2 hover:text-polkadot-500 border-t border-r border-polkadot-200",
               "disabled:text-secondary-foreground/50 disabled:pointer-events-none",
               "data-[state=active]:font-bold data-[state=active]:text-secondary-foreground",
             )}
@@ -113,7 +116,7 @@ export const BlockBody: FC<{
           </Tabs.Trigger>
           <Tabs.Trigger
             className={twMerge(
-              "bg-secondary text-secondary-foreground/80 px-4 py-2 hover:text-polkadot-500 border-t border-r rounded-tr border-polkadot-200",
+              "bg-secondary text-secondary-foreground/80 px-4 py-2 hover:text-polkadot-500 border-t border-r last:rounded-tr border-polkadot-200",
               "disabled:text-secondary-foreground/50 disabled:pointer-events-none",
               "data-[state=active]:font-bold data-[state=active]:text-secondary-foreground",
             )}
@@ -121,6 +124,22 @@ export const BlockBody: FC<{
           >
             Events
           </Tabs.Trigger>
+          {block.diff && (
+            <Tabs.Trigger
+              className={twMerge(
+                "bg-secondary text-secondary-foreground/80 px-4 py-2 hover:text-polkadot-500 border-t border-r rounded-tr border-polkadot-200",
+                "disabled:text-secondary-foreground/50 disabled:bg-secondary/50 disabled:pointer-events-none",
+                "data-[state=active]:font-bold data-[state=active]:text-secondary-foreground",
+              )}
+              value="diff"
+            >
+              Diff
+              <Chopsticks
+                className="inline-block align-middle ml-2"
+                size={20}
+              />
+            </Tabs.Trigger>
+          )}
         </Tabs.List>
         <Tabs.Content value="signed" className="py-2">
           <ol>
@@ -148,6 +167,9 @@ export const BlockBody: FC<{
         </Tabs.Content>
         <Tabs.Content value="events" className="py-2">
           <BlockEvents block={block} highlightedEvent={defaultEventOpen} />
+        </Tabs.Content>
+        <Tabs.Content value="diff" className="py-2">
+          <BlockStorageDiff block={block} />
         </Tabs.Content>
       </Tabs.Root>
     </div>
