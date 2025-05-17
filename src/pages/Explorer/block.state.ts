@@ -284,6 +284,7 @@ const getBlockDiff$ = (
         ? (v as Record<string, string | null>)
         : null,
     ),
+    startWith(null),
     withLatestFrom(chainClient$),
     switchMap(([diff, { chainHead }]) => {
       if (!diff) return [null]
@@ -298,13 +299,14 @@ const getBlockDiff$ = (
         )
         .pipe(
           toArray(),
+          map((v) => Object.fromEntries(v.map((v) => [v.key, v.value]))),
           map(
             (previousResults): Record<string, [string | null, string | null]> =>
               Object.fromEntries(
-                previousResults
-                  .map((result) => [
-                    result.key,
-                    [result.value ?? null, diff[result.key]],
+                Object.entries(diff)
+                  .map(([key, newValue]) => [
+                    key,
+                    [previousResults[key] ?? null, newValue],
                   ])
                   .filter(([, [prevVal, newVal]]) => prevVal !== newVal),
               ),
