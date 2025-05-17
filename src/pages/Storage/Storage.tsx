@@ -153,7 +153,7 @@ export const Storage = withSubscribe(
 
 const StorageEntry: FC = () => {
   const selectedEntry = useStateObservable(selectedEntry$)
-  const canSetStorage = useStateObservable(isChopsticks$) || true
+  const canSetStorage = useStateObservable(isChopsticks$)
   const [mode, setMode] = useState<"query" | "decode" | "set">("query")
 
   if (!selectedEntry) return null

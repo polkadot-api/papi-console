@@ -37,7 +37,10 @@ import {
 } from "./websocket"
 import { getHashParams, setHashParams } from "@/hashParams"
 import { withLogsRecorder } from "polkadot-api/logs-provider"
-import { createChopsticksProvider } from "@/chopsticks/chopsticks"
+import {
+  chopsticksInstance$,
+  createChopsticksProvider,
+} from "@/chopsticks/chopsticks"
 
 export type ChainSource = WebsocketSource | SmoldotSource
 
@@ -62,6 +65,9 @@ console.log("You can enable JSON-RPC logs by calling `setRpcLogsEnabled(true)`")
 ;(window as any).setRpcLogsEnabled = setRpcLogsEnabled
 
 export const getProvider = (source: ChainSource) => {
+  // TODO bug: provider is not getting disconnected
+  chopsticksInstance$.next(null)
+
   const provider =
     source.type === "websocket"
       ? source.withChopsticks

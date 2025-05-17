@@ -1,6 +1,7 @@
 import { CommandPopover } from "@/components/CommandPopover"
 import { CopyText } from "@/components/Copy"
 import { Chopsticks } from "@/components/Icons"
+import SliderToggle from "@/components/Toggle"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -19,7 +20,6 @@ import {
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Switch } from "@/components/ui/switch"
 import {
   isValidUri,
   Network,
@@ -227,10 +227,10 @@ const NetworkSwitchDialogContent: FC<{
                     Fork with Chopsticks
                   </Label>
                 </div>
-                <Switch
+                <SliderToggle
                   id="use-chopsticks"
-                  checked={withChopsticks}
-                  onCheckedChange={() => setWithChopsticks(!withChopsticks)}
+                  isToggled={withChopsticks}
+                  toggle={() => setWithChopsticks(!withChopsticks)}
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-1 ml-6">
