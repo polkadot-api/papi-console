@@ -1,15 +1,19 @@
+import { chopsticksInstance$ } from "@/chopsticks/chopsticks"
+import { Chopsticks } from "@/components/Icons"
+import { Button } from "@/components/ui/button"
 import { client$, runtimeCtx$ } from "@/state/chains/chain.state"
-import { useStateObservable, withDefault } from "@react-rxjs/core"
-import { FC, PropsWithChildren } from "react"
-import { map, switchMap } from "rxjs"
+import { state, useStateObservable, withDefault } from "@react-rxjs/core"
+import { FC, PropsWithChildren, ReactElement, useEffect, useState } from "react"
+import { firstValueFrom, map, switchMap } from "rxjs"
 import { twMerge } from "tailwind-merge"
 import { BlockTime } from "./BlockTime"
 import { EpochRemainingTime } from "./EpochTime"
 
-const finalized$ = client$.pipeState(
+const finalizedNum$ = client$.pipeState(
   switchMap((chainHead) => chainHead.finalizedBlock$),
-  map((v) => v.number.toLocaleString()),
+  map((v) => v.number),
 )
+const finalized$ = finalizedNum$.pipeState(map((v) => v.toLocaleString()))
 const best$ = client$.pipeState(
   switchMap((chainHead) => chainHead.bestBlocks$),
   map(([v]) => v.number.toLocaleString()),
@@ -27,13 +31,20 @@ const hasEpoch$ = runtimeCtx$.pipeState(
   withDefault(false),
 )
 
+const canJump$ = state(chopsticksInstance$.pipe(map((v) => !!v)), false)
 export const Summary: FC = () => {
   const hasEpoch = useStateObservable(hasEpoch$)
+  const canJump = useStateObservable(canJump$)
+
   return (
     <div className="flex gap-4 items-center py-2">
-      <SummaryItem title="Block Time" className="bg-card/0 border-none">
-        <BlockTime />
-      </SummaryItem>
+      {canJump ? (
+        <Jump />
+      ) : (
+        <SummaryItem title="Block Time" className="bg-card/0 border-none">
+          <BlockTime />
+        </SummaryItem>
+      )}
       {hasEpoch ? (
         <SummaryItem title="Epoch" className="bg-card/0 border-none">
           <EpochRemainingTime />
@@ -47,7 +58,7 @@ export const Summary: FC = () => {
 }
 
 const SummaryItem: FC<
-  PropsWithChildren<{ title: string; className?: string }>
+  PropsWithChildren<{ title: string | ReactElement; className?: string }>
 > = ({ title, className, children }) => {
   return (
     <div
@@ -61,5 +72,53 @@ const SummaryItem: FC<
         {children}
       </div>
     </div>
+  )
+}
+
+const Jump = () => {
+  const finalized = useStateObservable(finalizedNum$)
+  const [value, setValue] = useState(finalized + 1)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    setValue((v) => Math.max(v, finalized + 1))
+  }, [finalized])
+
+  return (
+    <SummaryItem title="" className="bg-card/0 border-none text-center">
+      <div className="text-left">
+        <span className="text-sm">New Height</span>
+        <input
+          className="block border rounded p-1"
+          type="number"
+          value={value}
+          onChange={(evt) => setValue(evt.target.valueAsNumber)}
+        />
+      </div>
+      <Button
+        size="sm"
+        variant="secondary"
+        className="py-1 h-auto mt-2"
+        onClick={async () => {
+          setLoading(true)
+          try {
+            const chop = await firstValueFrom(chopsticksInstance$)
+            await chop?.newBlock(
+              value !== finalized + 1
+                ? {
+                    unsafeBlockHeight: value,
+                  }
+                : {},
+            )
+          } finally {
+            setLoading(false)
+          }
+        }}
+        disabled={loading}
+      >
+        New Block{" "}
+        <Chopsticks className="inline-block align-middle ml-1" size={20} />
+      </Button>
+    </SummaryItem>
   )
 }
