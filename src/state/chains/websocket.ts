@@ -6,13 +6,15 @@ export interface WebsocketSource {
   type: "websocket"
   id: string
   endpoint: string
+  withChopsticks: boolean
 }
 
 export async function createWebsocketSource(
   id: string,
   endpoint: string,
+  withChopsticks: boolean,
 ): Promise<WebsocketSource> {
-  return { type: "websocket", id, endpoint }
+  return { type: "websocket", id, endpoint, withChopsticks }
 }
 
 export function getWebsocketProvider(source: WebsocketSource): JsonRpcProvider {

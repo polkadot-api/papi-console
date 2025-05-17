@@ -19,6 +19,7 @@ import { EditCodec } from "../EditCodec"
 import { TreeCodec } from "../EditCodec/Tree"
 import { BinaryDisplay } from "./BinaryDisplay"
 import { FocusPath } from "./FocusPath"
+import { twMerge } from "tailwind-merge"
 
 const editTypeMetadataProps$ = state(
   runtimeCtx$.pipe(
@@ -35,7 +36,8 @@ export const LookupTypeEdit: FC<{
   value: Uint8Array | "partial" | null
   onValueChange: (value: Uint8Array | "partial" | null) => void
   tree?: boolean
-}> = ({ type, value, onValueChange, tree = true }) => {
+  className?: string
+}> = ({ type, value, onValueChange, tree = true, className }) => {
   const treeRef = useRef<HTMLDivElement | null>(null)
   const listRef = useRef<HTMLDivElement | null>(null)
   const [focusingSubtree, setFocusingSubtree] = useState<string[] | null>(null)
@@ -50,7 +52,12 @@ export const LookupTypeEdit: FC<{
   if (!codecProps) return null
 
   return (
-    <div className="flex flex-col items-start overflow-hidden">
+    <div
+      className={twMerge(
+        "flex flex-col items-start overflow-hidden",
+        className,
+      )}
+    >
       <BinaryDisplay {...codecProps} className="pb-2" />
       {tree && (
         <FocusPath

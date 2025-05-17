@@ -3,9 +3,11 @@ import * as Toggle from "@radix-ui/react-toggle"
 const SliderToggle: React.FC<{
   isToggled: boolean
   toggle: () => void
-}> = ({ isToggled, toggle }) => {
+  id?: string
+}> = ({ isToggled, toggle, id }) => {
   return (
     <Toggle.Root
+      id={id}
       pressed={isToggled}
       onPressedChange={() => toggle()}
       className={

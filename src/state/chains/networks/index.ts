@@ -40,11 +40,13 @@ const networks = {
   Westend,
   Custom: [
     {
-      id: "custom",
-      display: "Custom",
+      id: "localhost",
+      display: "Localhost",
       lightclient: false,
       endpoints: {
-        "ws://127.0.0.1:9944": "ws://127.0.0.1:9944",
+        "Port 9944": "ws://127.0.0.1:9944",
+        "Port 3000": "ws://127.0.0.1:3000",
+        "Port 8132": "ws://127.0.0.1:8132",
       },
     } as Network,
   ],
