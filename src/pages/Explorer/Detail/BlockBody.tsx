@@ -1,4 +1,4 @@
-import { chopsticksInstance$ } from "@/chopsticks/chopsticks"
+import { Chopsticks } from "@/components/Icons"
 import { Loading } from "@/components/Loading"
 import { groupBy } from "@/lib/groupBy"
 import { runtimeCtx$ } from "@/state/chains/chain.state"
@@ -6,21 +6,13 @@ import * as Tabs from "@radix-ui/react-tabs"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { FC, useState } from "react"
 import { useLocation, useParams } from "react-router-dom"
-import {
-  combineLatest,
-  distinctUntilChanged,
-  filter,
-  map,
-  switchMap,
-  take,
-} from "rxjs"
+import { combineLatest, distinctUntilChanged, filter, map, take } from "rxjs"
 import { twMerge } from "tailwind-merge"
 import { BlockInfo, blockInfoState$ } from "../block.state"
 import { BlockEvents } from "./BlockEvents"
 import { BlockStorageDiff } from "./BlockStorageDiff"
 import { ApplyExtrinsicEvent, Extrinsic } from "./Extrinsic"
 import { createExtrinsicCodec, DecodedExtrinsic } from "./extrinsicDecoder"
-import { Chopsticks } from "@/components/Icons"
 
 const blockExtrinsics$ = state((hash: string) => {
   const decoder$ = runtimeCtx$.pipe(
@@ -42,23 +34,6 @@ const blockExtrinsics$ = state((hash: string) => {
   )
 }, [])
 
-const blockHasDiff$ = state(
-  (hash: string) =>
-    chopsticksInstance$.pipe(
-      switchMap((chain) => {
-        if (!chain) return [null]
-
-        return chain.getBlock(hash as any)
-      }),
-      switchMap((block) => {
-        if (!block) return [null]
-        return block.storageDiff()
-      }),
-      map((v) => Boolean(v && Object.keys(v).length > 0)),
-    ),
-  false,
-)
-
 type Tab = "signed" | "unsigned" | "events" | "diff"
 export const BlockBody: FC<{
   block: BlockInfo
@@ -66,7 +41,6 @@ export const BlockBody: FC<{
   const { hash } = useParams()
   const [selectedTab, setSelectedTab] = useState<Tab | null>(null)
   const extrinsics = useStateObservable(blockExtrinsics$(hash ?? ""))
-  const diff = useStateObservable(blockHasDiff$(hash ?? ""))
 
   const location = useLocation()
   const hashParams = new URLSearchParams(location.hash.slice(1))
@@ -150,7 +124,7 @@ export const BlockBody: FC<{
           >
             Events
           </Tabs.Trigger>
-          {diff && (
+          {block.diff && (
             <Tabs.Trigger
               className={twMerge(
                 "bg-secondary text-secondary-foreground/80 px-4 py-2 hover:text-polkadot-500 border-t border-r rounded-tr border-polkadot-200",

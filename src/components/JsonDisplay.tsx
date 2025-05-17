@@ -9,7 +9,7 @@ import { useTheme } from "@/ThemeProvider"
 
 export const JsonDisplay: FC<{
   src: unknown
-  collapsed?: boolean
+  collapsed?: boolean | number
 }> = ({ src, ...props }) => {
   const theme = useTheme()
 

@@ -1,6 +1,14 @@
-import { FC } from "react"
-import { BlockInfo } from "../block.state"
-import { Binary, Codec } from "polkadot-api"
+import { bytesToString } from "@/components/BinaryInput"
+import { CopyText } from "@/components/Copy"
+import { JsonDisplay } from "@/components/JsonDisplay"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { groupBy } from "@/lib/groupBy"
+import { dynamicBuilder$, lookup$ } from "@/state/chains/chain.state"
 import {
   HexString,
   Struct,
@@ -11,49 +19,21 @@ import {
   u8,
   Vector,
 } from "@polkadot-api/substrate-bindings"
-import { state, useStateObservable } from "@react-rxjs/core"
-import { dynamicBuilder$, lookup$ } from "@/state/chains/chain.state"
-import { chopsticksInstance$ } from "@/chopsticks/chopsticks"
-import { switchMap, map, combineLatest } from "rxjs"
 import { toHex } from "@polkadot-api/utils"
-import { groupBy } from "@/lib/groupBy"
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
-import { bytesToString } from "@/components/BinaryInput"
-import { CopyText } from "@/components/Copy"
-import { JsonDisplay } from "@/components/JsonDisplay"
-
-const storageDiff$ = (hash: string) =>
-  chopsticksInstance$.pipe(
-    switchMap((chain) => {
-      if (!chain) return [null]
-
-      return chain.getBlock(hash as any)
-    }),
-    switchMap((block) => {
-      if (!block) return [null]
-      return block.storageDiff()
-    }),
-    map((v) =>
-      v && Object.keys(v).length > 0
-        ? (v as Record<string, string | null>)
-        : null,
-    ),
-    // map((v) => v ?? testDiff),
-  )
+import { state, useStateObservable } from "@react-rxjs/core"
+import { Binary, Codec } from "polkadot-api"
+import { FC } from "react"
+import { combineLatest, map } from "rxjs"
+import { BlockInfo, blockInfo$ } from "../block.state"
 
 const TWOX128_LEN = 32
 
 const blockDiff$ = state(
   (hash: string) =>
     // TODO for current block
-    combineLatest([lookup$, dynamicBuilder$, storageDiff$(hash)]).pipe(
-      map(([lookup, dynamicBuilder, diff]) => {
-        if (!diff) return null
+    combineLatest([lookup$, dynamicBuilder$, blockInfo$(hash)]).pipe(
+      map(([lookup, dynamicBuilder, block]) => {
+        if (!block.diff) return null
 
         const palletKeys = Object.fromEntries(
           lookup.metadata.pallets.map((pallet) => [
@@ -70,22 +50,29 @@ const blockDiff$ = state(
           ]),
         )
 
-        return Object.entries(diff)
-          .filter(([, newValue]) => newValue !== null)
+        return Object.entries(block.diff)
           .map(
-            ([key, newValue]): {
+            ([key, [prevValue, newValue]]): {
               key: HexString
               decodedKey: [string, ...unknown[]]
-              newValue: HexString
+              prevValue: HexString | null
+              decodedPrevValue: unknown
+              newValue: HexString | null
               decodedNewValue: unknown
             } | null => {
               try {
                 if (wellKnownKeys[key]) {
                   return {
                     key,
-                    newValue: newValue!,
+                    prevValue,
+                    newValue,
                     decodedKey: [wellKnownKeys[key].name],
-                    decodedNewValue: wellKnownKeys[key].codec.dec(newValue!),
+                    decodedNewValue: newValue
+                      ? wellKnownKeys[key].codec.dec(newValue)
+                      : null,
+                    decodedPrevValue: prevValue
+                      ? wellKnownKeys[key].codec.dec(prevValue)
+                      : null,
                   }
                 }
                 const pallet = palletKeys[key.slice(2, 2 + TWOX128_LEN)]
@@ -99,13 +86,19 @@ const blockDiff$ = state(
                   if (storageCodec) {
                     return {
                       key,
-                      newValue: newValue!,
+                      prevValue,
+                      newValue,
                       decodedKey: [
                         pallet.name,
                         entry,
                         ...storageCodec.keys.dec(key),
                       ],
-                      decodedNewValue: storageCodec.value.dec(newValue!),
+                      decodedNewValue: newValue
+                        ? storageCodec.value.dec(newValue)
+                        : null,
+                      decodedPrevValue: prevValue
+                        ? storageCodec.value.dec(prevValue)
+                        : null,
                     }
                   }
                 }
@@ -164,7 +157,16 @@ export const BlockStorageDiff: FC<{
                     )
                     .join(".")}
                 </div>
-                <JsonDisplay collapsed src={change.decodedNewValue} />
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="overflow-auto">
+                    <div className="text-muted-foreground">Previous Value</div>
+                    <JsonDisplay collapsed={1} src={change.decodedPrevValue} />
+                  </div>
+                  <div className="overflow-auto">
+                    <div className="text-muted-foreground">New Value</div>
+                    <JsonDisplay collapsed={1} src={change.decodedNewValue} />
+                  </div>
+                </div>
               </div>
             ))}
           </AccordionContent>
