@@ -37,20 +37,23 @@ import {
 } from "./websocket"
 import { getHashParams, setHashParams } from "@/hashParams"
 import { withLogsRecorder } from "polkadot-api/logs-provider"
+import { createChopsticksProvider } from "@/chopsticks/chopsticks"
 
 export type ChainSource = WebsocketSource | SmoldotSource
 
 export type SelectedChain = {
   network: Network
   endpoint: string
+  withChopsticks: boolean
 }
 export const getChainSource = ({
   endpoint,
   network: { id, relayChain },
+  withChopsticks,
 }: SelectedChain) =>
   endpoint === "light-client"
     ? createSmoldotSource(id, relayChain)
-    : createWebsocketSource(id, endpoint)
+    : createWebsocketSource(id, endpoint, withChopsticks)
 
 const setRpcLogsEnabled = (enabled: boolean) =>
   localStorage.setItem("rpc-logs", String(enabled))
@@ -61,7 +64,9 @@ console.log("You can enable JSON-RPC logs by calling `setRpcLogsEnabled(true)`")
 export const getProvider = (source: ChainSource) => {
   const provider =
     source.type === "websocket"
-      ? getWebsocketProvider(source)
+      ? source.withChopsticks
+        ? createChopsticksProvider(source.endpoint)
+        : getWebsocketProvider(source)
       : getSmoldotProvider(source)
 
   return withLogsRecorder((msg) => {
@@ -96,22 +101,25 @@ export const isValidUri = (input: string): boolean => {
 const defaultSelectedChain: SelectedChain = {
   network: defaultNetwork,
   endpoint: "light-client",
+  withChopsticks: false,
 }
 const getDefaultChain = (): SelectedChain => {
   const hashParams = getHashParams()
   if (hashParams.has("networkId") && hashParams.has("endpoint")) {
     const networkId = hashParams.get("networkId")!
     const endpoint = hashParams.get("endpoint")!
+
     if (networkId === "custom") {
       if (!isValidUri(endpoint)) return defaultSelectedChain
       addCustomNetwork(endpoint)
       return {
         network: getCustomNetwork(),
         endpoint,
+        withChopsticks: false,
       }
     }
     const network = findNetwork(networkId)
-    if (network) return { network, endpoint }
+    if (network) return { network, endpoint, withChopsticks: false }
   }
 
   return defaultSelectedChain

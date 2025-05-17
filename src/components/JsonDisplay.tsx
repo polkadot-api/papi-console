@@ -9,7 +9,8 @@ import { useTheme } from "@/ThemeProvider"
 
 export const JsonDisplay: FC<{
   src: unknown
-}> = ({ src }) => {
+  collapsed?: boolean
+}> = ({ src, ...props }) => {
   const theme = useTheme()
 
   return (
@@ -30,6 +31,7 @@ export const JsonDisplay: FC<{
           2,
         )
       }
+      {...props}
     />
   )
 }

@@ -1,5 +1,6 @@
 import { CommandPopover } from "@/components/CommandPopover"
 import { CopyText } from "@/components/Copy"
+import { Chopsticks } from "@/components/Icons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -29,7 +30,7 @@ import {
 } from "@/state/chains/chain.state"
 import { addCustomNetwork, getCustomNetwork } from "@/state/chains/networks"
 import { useStateObservable } from "@react-rxjs/core"
-import { Check, ChevronDown, Server } from "lucide-react"
+import { Check, ChevronDown } from "lucide-react"
 import { FC, useState } from "react"
 
 export function NetworkSwitcher() {
@@ -68,10 +69,14 @@ const NetworkSwitchDialogContent: FC<{
   const currentRpc = selectedChain.endpoint ?? "light-client"
   const [selectedRpc, setSelectedRpc] = useState<string>(currentRpc)
   const [enteredText, setEnteredText] = useState<string>("")
+  const [withChopsticks, setWithChopsticks] = useState(
+    selectedChain.withChopsticks ?? false,
+  )
 
   const hasChanged =
     selectedNetwork.id !== selectedChain.network.id ||
-    selectedRpc !== currentRpc
+    selectedRpc !== currentRpc ||
+    selectedChain.withChopsticks !== withChopsticks
 
   const handleNetworkSelect = (network: Network) => {
     if (network === selectedNetwork) return
@@ -85,14 +90,20 @@ const NetworkSwitchDialogContent: FC<{
   }
 
   const handleConfirm = () => {
+    const chopsticksEnabled = selectedRpc !== "light-client" && withChopsticks
     if (selectedNetwork.id === "custom-network") {
       addCustomNetwork(selectedRpc)
-      onChangeChain({ network: getCustomNetwork(), endpoint: selectedRpc })
+      onChangeChain({
+        network: getCustomNetwork(),
+        endpoint: selectedRpc,
+        withChopsticks: chopsticksEnabled,
+      })
       setEnteredText("")
     } else {
       onChangeChain({
         network: selectedNetwork,
         endpoint: selectedRpc,
+        withChopsticks: chopsticksEnabled,
       })
     }
     onClose()
@@ -185,7 +196,7 @@ const NetworkSwitchDialogContent: FC<{
                     <ConnectionOption
                       value="light-client"
                       isSelected={selectedRpc === "light-client"}
-                      name="Light Client (smoldot)"
+                      name="Smoldot"
                       type="light"
                     />
                   ) : null}
@@ -208,7 +219,7 @@ const NetworkSwitchDialogContent: FC<{
             <div className="mt-4 p-3 border rounded-md bg-muted/30">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <Server className="h-4 w-4 text-muted-foreground" />
+                  <Chopsticks size={20} />
                   <Label
                     htmlFor="use-chopsticks"
                     className="font-medium cursor-pointer"
@@ -216,10 +227,14 @@ const NetworkSwitchDialogContent: FC<{
                     Fork with Chopsticks
                   </Label>
                 </div>
-                <Switch id="use-chopsticks" />
+                <Switch
+                  id="use-chopsticks"
+                  checked={withChopsticks}
+                  onCheckedChange={() => setWithChopsticks(!withChopsticks)}
+                />
               </div>
               <p className="text-xs text-muted-foreground mt-1 ml-6">
-                Create a local development fork of this chain
+                Create a local fork of this chain
               </p>
             </div>
           )}
@@ -265,7 +280,7 @@ const ConnectionOption: FC<{
           )}
           <p className="text-xs text-muted-foreground">
             {type === "light"
-              ? "Browser light client"
+              ? "Light client for a decentralized experience"
               : url?.includes("127.0.0.1")
                 ? "Local RPC node"
                 : "Remote RPC node"}
