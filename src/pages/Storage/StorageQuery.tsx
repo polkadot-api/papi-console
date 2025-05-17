@@ -103,7 +103,7 @@ const [keyValueChange$, setKeyValue] = createSignal<{
   idx: number
   value: unknown | NOTIN
 }>()
-const keyValues$ = keys$.pipeState(
+export const keyValues$ = keys$.pipeState(
   switchMap((keys) => {
     const values: unknown[] = keys.map(() => NOTIN)
     return keyValueChange$.pipe(
