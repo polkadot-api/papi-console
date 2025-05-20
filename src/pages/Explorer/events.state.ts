@@ -86,12 +86,12 @@ export const recentEvents$ = state(
   ).pipe(
     map((events) =>
       [...events.values()]
-        .reverse()
         .filter(
           (evt) =>
             evt.status === BlockState.Best ||
             evt.status === BlockState.Finalized,
         )
+        .sort((a, b) => a.number - b.number)
         .flatMap(
           ({
             status,
@@ -142,7 +142,8 @@ export const recentEvents$ = state(
                 : groupedEvents.flat()
             return rows.slice(0, MAX_LENGTH)
           },
-        ),
+        )
+        .reverse(),
     ),
   ),
   [],
