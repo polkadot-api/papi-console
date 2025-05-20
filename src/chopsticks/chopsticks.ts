@@ -1,4 +1,4 @@
-import { Blockchain } from "@acala-network/chopsticks-core"
+import type { Blockchain } from "@acala-network/chopsticks-core"
 import { getSyncProvider } from "@polkadot-api/json-rpc-provider-proxy"
 import { blockHeader } from "@polkadot-api/substrate-bindings"
 import { state } from "@react-rxjs/core"

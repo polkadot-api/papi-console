@@ -4,7 +4,6 @@ import { Chopsticks } from "@/components/Icons"
 import { Button } from "@/components/ui/button"
 import { chainClient$, lookup$ } from "@/state/chains/chain.state"
 import { getTypeComplexity } from "@/utils"
-import { setStorage } from "@acala-network/chopsticks-core"
 import { toHex } from "@polkadot-api/utils"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
@@ -112,7 +111,9 @@ export const StorageSet: FC = () => {
                 )
                   return false
 
-                await setStorage(chopsticks, [
+                await (
+                  await import("@acala-network/chopsticks-core")
+                ).setStorage(chopsticks, [
                   [currentValue.encodedKey, toHex(currentValue.value)],
                 ])
                 await chopsticks.newBlock()
