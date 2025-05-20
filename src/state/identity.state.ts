@@ -8,7 +8,6 @@ import { state } from "@react-rxjs/core"
 import { Binary, createClient, SS58String } from "polkadot-api"
 import { catchError, from, of, tap } from "rxjs"
 import { getProvider } from "./chains/chain.state"
-import { chainSpec } from "./chains/chainspecs/polkadot_people"
 
 export interface Identity {
   displayName: string
@@ -26,21 +25,24 @@ const cache = localStorageSubject<Record<string, Identity>>(
   {},
 )
 
-const client = createClient(
-  getProvider({
-    id: "polkadot_people",
-    type: "chainSpec",
-    value: {
-      chainSpec,
-      relayChain: "polkadot",
-    },
-  }),
+const apiProm = import("./chains/chainspecs/polkadot_people").then(
+  ({ chainSpec }) =>
+    createClient(
+      getProvider({
+        id: "polkadot_people",
+        type: "chainSpec",
+        value: {
+          chainSpec,
+          relayChain: "polkadot",
+        },
+      }),
+    ).getTypedApi(polkadot_people),
 )
-const typedApi = client.getTypedApi(polkadot_people)
 
 export const getAddressName = async (
   addr: string,
 ): Promise<Identity | null> => {
+  const typedApi = await apiProm
   let id = await typedApi.query.Identity.IdentityOf.getValue(addr)
 
   let subIdStr = ""
