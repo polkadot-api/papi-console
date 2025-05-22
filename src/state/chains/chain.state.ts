@@ -169,7 +169,7 @@ const setMetadataFactory =
     // remove if there has been a runtime upgrade
     if (old) cached.delete(old[0])
     cached.set(codeHash, { id, time: Date.now(), data: toHex(data) })
-    if (cached.size > 4) {
+    if (cached.size > 3) {
       const oldest = [...cached.entries()].reduce((a, b) =>
         a[1].time < b[1].time ? a : b,
       )[0]
