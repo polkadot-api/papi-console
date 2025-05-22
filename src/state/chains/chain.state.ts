@@ -1,8 +1,12 @@
 import { getDynamicBuilder, getLookupFn } from "@polkadot-api/metadata-builders"
 import { getObservableClient } from "@polkadot-api/observable-client"
-import { decAnyMetadata, HexString } from "@polkadot-api/substrate-bindings"
+import {
+  decAnyMetadata,
+  HexString,
+  unifyMetadata,
+} from "@polkadot-api/substrate-bindings"
 import { createClient as createSubstrateClient } from "@polkadot-api/substrate-client"
-import { toHex } from "@polkadot-api/utils"
+import { fromHex, toHex } from "@polkadot-api/utils"
 import { sinkSuspense, state, SUSPENSE } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
 import { createClient } from "polkadot-api"
@@ -11,12 +15,12 @@ import {
   EMPTY,
   filter,
   finalize,
+  firstValueFrom,
   map,
   NEVER,
   of,
   startWith,
   switchMap,
-  tap,
 } from "rxjs"
 import {
   addCustomNetwork,
@@ -137,14 +141,58 @@ export const selectedChain$ = state<SelectedChain>(
 
 const selectedSource$ = selectedChain$.pipe(switchMap(getChainSource))
 
+const getMetadataCache = () => {
+  const cached = localStorage.getItem(`metadata-cache`)
+  return new Map<string, { id: string; time: number; data: HexString }>(
+    cached ? JSON.parse(cached) : [],
+  )
+}
+const setMetadataCache = (
+  cache: Map<string, { id: string; time: number; data: HexString }>,
+) => {
+  localStorage.setItem("metadata-cache", JSON.stringify([...cache.entries()]))
+}
+
+const getMetadata = (codeHash: string) => {
+  const cache = getMetadataCache()
+  const metadata = cache.get(codeHash)
+  if (!metadata) return of(null)
+  // update usage time
+  metadata.time = Date.now()
+  setMetadataCache(cache)
+  return of(fromHex(metadata.data))
+}
+const setMetadataFactory =
+  (id: string) => (codeHash: string, data: Uint8Array) => {
+    const cached = getMetadataCache()
+    const old = [...cached.entries()].find(([, v]) => v.id === id)
+    // remove if there has been a runtime upgrade
+    if (old) cached.delete(old[0])
+    cached.set(codeHash, { id, time: Date.now(), data: toHex(data) })
+    if (cached.size > 4) {
+      const oldest = [...cached.entries()].reduce((a, b) =>
+        a[1].time < b[1].time ? a : b,
+      )[0]
+      cached.delete(oldest)
+    }
+    setMetadataCache(cached)
+  }
+
 export const chainClient$ = state(
   selectedSource$.pipe(
     map((src) => [src.id, getProvider(src)] as const),
     switchMap(([id, provider], i) => {
+      const setMetadata = setMetadataFactory(id)
       const substrateClient = createSubstrateClient(provider)
-      const observableClient = getObservableClient(substrateClient)
+      const observableClient = getObservableClient(substrateClient, {
+        getMetadata,
+        setMetadata,
+      })
       const chainHead = observableClient.chainHead$(2)
-      const client = createClient(provider)
+      const client = createClient(provider, {
+        getMetadata: (id) => firstValueFrom(getMetadata(id)),
+        setMetadata,
+      })
       return concat(
         i === 0 ? EMPTY : of(SUSPENSE),
         of({ id, client, substrateClient, observableClient, chainHead }),
@@ -171,48 +219,25 @@ const uncachedRuntimeCtx$ = chainClient$.pipeState(
   filter((v) => !!v),
 )
 
-const getMetadataCache = () => {
-  const cached = localStorage.getItem(`metadata-cache`)
-  return new Map<string, { time: number; data: HexString }>(
-    cached ? JSON.parse(cached) : [],
-  )
-}
-const getCachedMetadata = (id: string) =>
-  getMetadataCache().get(id)?.data ?? null
-const setCachedMetadata = (id: string, data: HexString) => {
-  const cached = getMetadataCache()
-  cached.set(id, { time: Date.now(), data })
-  if (cached.size > 3) {
-    const oldest = [...cached.entries()].reduce((a, b) =>
-      a[1].time < b[1].time ? a : b,
-    )[0]
-    cached.delete(oldest)
-  }
-  localStorage.setItem("metadata-cache", JSON.stringify([...cached.entries()]))
-}
 export const runtimeCtx$ = chainClient$.pipeState(
   switchMap(({ id }) => {
-    const cached = getCachedMetadata(id)
-
-    const realCtx$ = uncachedRuntimeCtx$.pipe(
-      tap((v) => {
-        setCachedMetadata(id, toHex(v.metadataRaw))
-      }),
+    const cached = [...getMetadataCache().entries()].find(
+      ([, v]) => v.id === id,
     )
 
     if (cached) {
-      const metadata = decAnyMetadata(cached)
-      const lookup = getLookupFn(metadata.metadata.value as any)
+      const metadata = unifyMetadata(decAnyMetadata(cached[1].data))
+      const lookup = getLookupFn(metadata)
       const dynamicBuilder = getDynamicBuilder(lookup)
 
-      return realCtx$.pipe(
+      return uncachedRuntimeCtx$.pipe(
         startWith({
           lookup,
           dynamicBuilder,
         }),
       )
     }
-    return realCtx$
+    return uncachedRuntimeCtx$
   }),
 )
 
