@@ -3,6 +3,7 @@ import {
   IdentityData,
   IdentityJudgement,
   polkadot_people,
+  getMetadata,
 } from "@polkadot-api/descriptors"
 import { state } from "@react-rxjs/core"
 import { Binary, createClient, SS58String } from "polkadot-api"
@@ -36,6 +37,7 @@ const apiProm = import("./chains/chainspecs/polkadot_people").then(
           relayChain: "polkadot",
         },
       }),
+      { getMetadata },
     ).getTypedApi(polkadot_people),
 )
 
