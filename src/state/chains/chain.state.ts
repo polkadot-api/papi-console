@@ -1,3 +1,4 @@
+import { get, update } from "idb-keyval"
 import { getDynamicBuilder, getLookupFn } from "@polkadot-api/metadata-builders"
 import { getObservableClient } from "@polkadot-api/observable-client"
 import {
@@ -16,6 +17,7 @@ import {
   filter,
   finalize,
   firstValueFrom,
+  from,
   map,
   NEVER,
   of,
@@ -141,41 +143,54 @@ export const selectedChain$ = state<SelectedChain>(
 
 const selectedSource$ = selectedChain$.pipe(switchMap(getChainSource))
 
-const getMetadataCache = () => {
-  const cached = localStorage.getItem(`metadata-cache`)
-  return new Map<string, { id: string; time: number; data: HexString }>(
-    cached ? JSON.parse(cached) : [],
-  )
-}
-const setMetadataCache = (
-  cache: Map<string, { id: string; time: number; data: HexString }>,
-) => {
-  localStorage.setItem("metadata-cache", JSON.stringify([...cache.entries()]))
-}
+// TODO: 2025-05-27
+// remove old localStorage clear after a while
+localStorage.removeItem("metadata-cache")
 
-const getMetadata = (codeHash: string) => {
-  const cache = getMetadataCache()
-  const metadata = cache.get(codeHash)
-  if (!metadata) return of(null)
-  // update usage time
-  metadata.time = Date.now()
-  setMetadataCache(cache)
-  return of(fromHex(metadata.data))
-}
-const setMetadataFactory =
-  (id: string) => (codeHash: string, data: Uint8Array) => {
-    const cached = getMetadataCache()
-    const old = [...cached.entries()].find(([, v]) => v.id === id)
-    // remove if there has been a runtime upgrade
+type MetadataCache = Map<string, { id: string; time: number; data: HexString }>
+const IDB_KEY = "metadata-cache"
+const MAX_CACHE_ENTRIES = 3
+
+const addEntryToCache = (
+  codeHash: string,
+  entry: { id: string; time: number; data: HexString },
+) =>
+  update<MetadataCache>(IDB_KEY, (cached) => {
+    cached ??= new Map()
+    const old = [...cached.entries()].find(([, v]) => v.id === entry.id)
     if (old) cached.delete(old[0])
-    cached.set(codeHash, { id, time: Date.now(), data: toHex(data) })
-    if (cached.size > 3) {
-      const oldest = [...cached.entries()].reduce((a, b) =>
-        a[1].time < b[1].time ? a : b,
-      )[0]
-      cached.delete(oldest)
-    }
-    setMetadataCache(cached)
+    cached.set(codeHash, entry)
+    ;[...cached.entries()]
+      .sort(([, a], [, b]) => b.time - a.time)
+      .slice(MAX_CACHE_ENTRIES)
+      .forEach(([k]) => {
+        cached.delete(k)
+      })
+    return cached
+  })
+
+// TODO: ATM chopsticks hash is not implemented
+// avoid cache in this situation
+// remove `| null` when it is
+const getMetadata = (codeHash: string | null) =>
+  codeHash
+    ? from(get<MetadataCache>(IDB_KEY)).pipe(
+        map((cache) => {
+          const entry = cache?.get(codeHash)
+          if (!entry) return null
+          addEntryToCache(codeHash, { ...entry, time: Date.now() })
+          return fromHex(entry.data)
+        }),
+      )
+    : of(null)
+
+// TODO: ATM chopsticks hash is not implemented
+// avoid cache in this situation
+// remove `| null` when it is
+const setMetadataFactory =
+  (id: string) => (codeHash: string | null, data: Uint8Array) => {
+    if (codeHash)
+      addEntryToCache(codeHash, { id, time: Date.now(), data: toHex(data) })
   }
 
 export const chainClient$ = state(
@@ -220,11 +235,12 @@ const uncachedRuntimeCtx$ = chainClient$.pipeState(
 )
 
 export const runtimeCtx$ = chainClient$.pipeState(
-  switchMap(({ id }) => {
-    const cached = [...getMetadataCache().entries()].find(
-      ([, v]) => v.id === id,
-    )
-
+  switchMap(({ id }) =>
+    get<MetadataCache>(IDB_KEY).then((cache) =>
+      cache ? [...cache.entries()].find(([, v]) => v.id === id) : undefined,
+    ),
+  ),
+  switchMap((cached) => {
     if (cached) {
       const metadata = unifyMetadata(decAnyMetadata(cached[1].data))
       const lookup = getLookupFn(metadata)
