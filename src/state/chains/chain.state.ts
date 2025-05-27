@@ -169,19 +169,28 @@ const addEntryToCache = (
     return cached
   })
 
-const getMetadata = (codeHash: string) =>
-  from(get<MetadataCache>(IDB_KEY)).pipe(
-    map((cache) => {
-      const entry = cache?.get(codeHash)
-      if (!entry) return null
-      addEntryToCache(codeHash, { ...entry, time: Date.now() })
-      return fromHex(entry.data)
-    }),
-  )
+// TODO: ATM chopsticks hash is not implemented
+// avoid cache in this situation
+// remove `| null` when it is
+const getMetadata = (codeHash: string | null) =>
+  codeHash
+    ? from(get<MetadataCache>(IDB_KEY)).pipe(
+        map((cache) => {
+          const entry = cache?.get(codeHash)
+          if (!entry) return null
+          addEntryToCache(codeHash, { ...entry, time: Date.now() })
+          return fromHex(entry.data)
+        }),
+      )
+    : of(null)
 
+// TODO: ATM chopsticks hash is not implemented
+// avoid cache in this situation
+// remove `| null` when it is
 const setMetadataFactory =
-  (id: string) => (codeHash: string, data: Uint8Array) => {
-    addEntryToCache(codeHash, { id, time: Date.now(), data: toHex(data) })
+  (id: string) => (codeHash: string | null, data: Uint8Array) => {
+    if (codeHash)
+      addEntryToCache(codeHash, { id, time: Date.now(), data: toHex(data) })
   }
 
 export const chainClient$ = state(
