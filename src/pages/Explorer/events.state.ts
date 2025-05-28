@@ -24,6 +24,7 @@ export const filterEvt = (evt: SystemEvent) =>
     !blackList.has(`${evt.event.type}.${evt.event.value.type}`))
 
 export interface EventInfo {
+  type: "event"
   status: BlockState
   hash: string
   number: number
@@ -31,21 +32,26 @@ export interface EventInfo {
   extrinsicNumber: number | "i" | "f"
   index: number
 }
-interface EventEllipsis {
+export interface EventEllipsis {
+  type: "event-ellipsis"
   number: number
   extrinsicNumber: number | "i" | "f"
   length: number
   hash: string
-  index: number
 }
-interface BlockEllipsis {
+export interface BlockEllipsis {
+  type: "block-ellipsis"
   number: number
   length: number
   hash: string
 }
 
 export const eventKey = (evt?: EventInfo | EventEllipsis | BlockEllipsis) =>
-  `${evt?.number.toLocaleString()}-${evt ? ("extrinsicNumber" in evt ? evt.extrinsicNumber : "block_ellipsis") : "N/A"}`
+  evt
+    ? evt.type === "block-ellipsis"
+      ? evt.number.toLocaleString()
+      : `${evt.number.toLocaleString()}-${evt.extrinsicNumber}`
+    : ""
 
 // Maximum events per extrinsic
 const MAX_GROUP_LENGTH = 7
@@ -84,12 +90,12 @@ export const recentEvents$ = state(
       filter((result) => Boolean(result.events?.length)),
     ),
   ).pipe(
-    map((events) =>
-      [...events.values()]
+    map((blocks) =>
+      [...blocks.values()]
         .filter(
-          (evt) =>
-            evt.status === BlockState.Best ||
-            evt.status === BlockState.Finalized,
+          (block) =>
+            block.status === BlockState.Best ||
+            block.status === BlockState.Finalized,
         )
         .sort((a, b) => a.number - b.number)
         .flatMap(
@@ -101,6 +107,7 @@ export const recentEvents$ = state(
           }): Array<EventInfo | EventEllipsis | BlockEllipsis> => {
             const eventInfo = events!.map(
               ({ event, extrinsicNumber, index }): EventInfo => ({
+                type: "event",
                 status,
                 hash,
                 number,
@@ -115,13 +122,13 @@ export const recentEvents$ = state(
               (group) => {
                 if (group.length > MAX_GROUP_LENGTH) {
                   const ellipsis: EventEllipsis = {
+                    type: "event-ellipsis",
                     length: group.length - MAX_GROUP_LENGTH + 1,
                     extrinsicNumber: group[0].extrinsicNumber,
                     number,
                     hash,
-                    index: group.length,
                   }
-                  return [...group.slice(0, MAX_GROUP_LENGTH - 1), ellipsis]
+                  return [ellipsis, ...group.slice(0, MAX_GROUP_LENGTH - 1)]
                 }
                 return group
               },
@@ -133,10 +140,11 @@ export const recentEvents$ = state(
                     ...groupedEvents.slice(0, MAX_BLOCK_LENGTH - 1),
                     [
                       {
+                        type: "block-ellipsis",
                         hash,
                         length: groupedEvents.length - MAX_BLOCK_LENGTH + 1,
                         number,
-                      },
+                      } satisfies BlockEllipsis,
                     ],
                   ].flat()
                 : groupedEvents.flat()
