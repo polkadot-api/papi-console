@@ -32,10 +32,10 @@ export const Events = () => {
           const key = eventKey(evt)
           const span = numberSpan(idx)
 
-          if (!("extrinsicNumber" in evt)) {
+          if (evt.type === "block-ellipsis") {
             return (
               <Finalizing.Row
-                key={key}
+                key={`block-${key}`}
                 number={events.length - idx}
                 finalized={events.length - finalizedIdx}
                 idx={idx}
@@ -60,13 +60,13 @@ export const Events = () => {
 
           return (
             <Finalizing.Row
-              key={`${key}-${evt.index}`}
+              key={`${key}-${evt.type == "event-ellipsis" ? "ellipsis" : evt.index}`}
               number={events.length - idx}
               finalized={events.length - finalizedIdx}
               idx={idx}
               firstInGroup={isFirstInGroup}
             >
-              {isFirstInGroup && (
+              {isFirstInGroup && evt.type !== "event-ellipsis" && (
                 <td
                   className={twMerge(
                     "p-2 whitespace-nowrap",
