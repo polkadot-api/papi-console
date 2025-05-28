@@ -119,7 +119,7 @@ export const recentEvents$ = state(
                     extrinsicNumber: group[0].extrinsicNumber,
                     number,
                     hash,
-                    index: group.length,
+                    index: MAX_GROUP_LENGTH,
                   }
                   return [...group.slice(0, MAX_GROUP_LENGTH - 1), ellipsis]
                 }
