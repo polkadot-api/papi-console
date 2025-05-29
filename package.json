@@ -23,6 +23,7 @@
     "@polkadot-api/react-builder": "0.2.8",
     "@polkadot-api/substrate-bindings": "^0.13.0",
     "@polkadot-api/substrate-client": "^0.3.0",
+    "@polkadot-api/tx-utils": "^0.0.13",
     "@polkadot-api/utils": "^0.1.2",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-dialog": "^1.1.14",
@@ -83,6 +84,17 @@
   },
   "packageManager": "pnpm@9.12.2+sha512.22721b3a11f81661ae1ec68ce1a7b879425a1ca5b991c975b074ac220b187ce56c708fe5db69f4c962c989452eee76c82877f4ee80f474cebd61ee13461b6228",
   "pnpm": {
+    "overrides": {
+      "@polkadot-api/json-rpc-provider-proxy": "link:../polkadot-api/packages/json-rpc/json-rpc-provider-proxy",
+      "@polkadot-api/metadata-builders": "link:../polkadot-api/packages/metadata-builders",
+      "@polkadot-api/observable-client": "link:../polkadot-api/packages/observable-client",
+      "@polkadot-api/react-builder": "link:../polkadot-api/packages/react-builder",
+      "@polkadot-api/substrate-bindings": "link:../polkadot-api/packages/substrate-bindings",
+      "@polkadot-api/substrate-client": "link:../polkadot-api/packages/substrate-client",
+      "@polkadot-api/tx-utils": "link:../polkadot-api/packages/tx-utils",
+      "@polkadot-api/utils": "link:../polkadot-api/packages/utils",
+      "polkadot-api": "link:../polkadot-api/packages/client"
+    },
     "patchedDependencies": {
       "react18-json-view": "patches/react18-json-view.patch"
     }
