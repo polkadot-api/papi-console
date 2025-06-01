@@ -98,7 +98,7 @@
     "hasChainSpecs": true
   },
   {
-    "id": "polkadot_core_time",
+    "id": "polkadot_coretime",
     "display": "Coretime",
     "rpcs": {
       "IBP2": "wss://coretime-polkadot.dotters.network",
@@ -113,7 +113,7 @@
       "symbol": "DOT",
       "decimals": 10
     },
-    "hasChainSpecs": false
+    "hasChainSpecs": true
   },
   {
     "id": "polkadot_people",

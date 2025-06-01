@@ -69,7 +69,7 @@
     "hasChainSpecs": false
   },
   {
-    "id": "kusama_core_time",
+    "id": "kusama_coretime",
     "display": "Kusama Coretime",
     "rpcs": {
       "Dwellir": "wss://coretime-kusama-rpc.dwellir.com",
@@ -88,7 +88,7 @@
       "symbol": "KSM",
       "decimals": 12
     },
-    "hasChainSpecs": false
+    "hasChainSpecs": true
   },
   {
     "id": "kusama_people",
