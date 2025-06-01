@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   react18-json-view:
-    hash: wimveejfkp4taxhbk5eqzbey3q
+    hash: 18eb0a02f9279644adf5cb880895a0c85bd6a84bb945850a7d29833aa7c4c00c
     path: patches/react18-json-view.patch
 
 importers:
@@ -21,28 +21,28 @@ importers:
         version: 1.8.0
       '@polkadot-api/descriptors':
         specifier: file:.papi/descriptors
-        version: file:.papi/descriptors(polkadot-api@1.12.2(jiti@2.4.2)(postcss@8.5.3)(rxjs@7.8.2)(yaml@2.6.1))
+        version: file:.papi/descriptors(polkadot-api@1.13.0(jiti@2.4.2)(postcss@8.5.4)(rxjs@7.8.2)(yaml@2.6.1))
       '@polkadot-api/json-rpc-provider-proxy':
         specifier: ^0.2.4
         version: 0.2.4
       '@polkadot-api/metadata-builders':
-        specifier: ^0.12.1
-        version: 0.12.1
+        specifier: ^0.12.2
+        version: 0.12.2
       '@polkadot-api/observable-client':
-        specifier: ^0.11.0
-        version: 0.11.0(@polkadot-api/substrate-client@0.3.0)(rxjs@7.8.2)
+        specifier: ^0.11.1
+        version: 0.11.1(@polkadot-api/substrate-client@0.4.0)(rxjs@7.8.2)
       '@polkadot-api/react-builder':
-        specifier: 0.2.8
-        version: 0.2.8(react@19.1.0)
+        specifier: 0.2.9
+        version: 0.2.9(react@19.1.0)
       '@polkadot-api/substrate-bindings':
-        specifier: ^0.13.0
-        version: 0.13.0
+        specifier: ^0.14.0
+        version: 0.14.0
       '@polkadot-api/substrate-client':
-        specifier: ^0.3.0
-        version: 0.3.0
+        specifier: ^0.4.0
+        version: 0.4.0
       '@polkadot-api/utils':
-        specifier: ^0.1.2
-        version: 0.1.2
+        specifier: ^0.2.0
+        version: 0.2.0
       '@radix-ui/react-accordion':
         specifier: ^1.2.11
         version: 1.2.11(@types/react-dom@19.1.5(@types/react@19.1.6))(@types/react@19.1.6)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -89,11 +89,11 @@ importers:
         specifier: ^2.7.0
         version: 2.7.0(@types/react@19.1.6)(react@19.1.0)
       '@walletconnect/universal-provider':
-        specifier: ^2.20.3
-        version: 2.20.3(typescript@5.8.3)(zod@3.25.32)
+        specifier: ^2.21.0
+        version: 2.21.0(typescript@5.8.3)(zod@3.25.46)
       '@walletconnect/utils':
-        specifier: ^2.20.3
-        version: 2.20.3(typescript@5.8.3)(zod@3.25.32)
+        specifier: ^2.21.0
+        version: 2.21.0(typescript@5.8.3)(zod@3.25.46)
       buffer:
         specifier: ^6.0.3
         version: 6.0.3
@@ -113,8 +113,8 @@ importers:
         specifier: ^0.511.0
         version: 0.511.0(react@19.1.0)
       polkadot-api:
-        specifier: ^1.12.2
-        version: 1.12.2(jiti@2.4.2)(postcss@8.5.3)(rxjs@7.8.2)(yaml@2.6.1)
+        specifier: ^1.13.0
+        version: 1.13.0(jiti@2.4.2)(postcss@8.5.4)(rxjs@7.8.2)(yaml@2.6.1)
       react:
         specifier: ^19.1.0
         version: 19.1.0
@@ -131,11 +131,11 @@ importers:
         specifier: ^16.3.0
         version: 16.3.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-virtuoso:
-        specifier: ^4.12.7
-        version: 4.12.7(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: ^4.12.8
+        version: 4.12.8(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react18-json-view:
         specifier: ^0.2.9
-        version: 0.2.9(patch_hash=wimveejfkp4taxhbk5eqzbey3q)(react@19.1.0)
+        version: 0.2.9(patch_hash=18eb0a02f9279644adf5cb880895a0c85bd6a84bb945850a7d29833aa7c4c00c)(react@19.1.0)
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
@@ -147,20 +147,20 @@ importers:
         version: 3.3.0
       tailwindcss-animate:
         specifier: ^1.0.7
-        version: 1.0.7(tailwindcss@4.1.7)
+        version: 1.0.7(tailwindcss@4.1.8)
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
     devDependencies:
       '@eslint/js':
-        specifier: ^9.27.0
-        version: 9.27.0
+        specifier: ^9.28.0
+        version: 9.28.0
       '@tailwindcss/vite':
-        specifier: ^4.1.7
-        version: 4.1.7(vite@6.3.5(@types/node@22.15.23)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.6.1))
+        specifier: ^4.1.8
+        version: 4.1.8(vite@6.3.5(@types/node@22.15.29)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.6.1))
       '@types/node':
-        specifier: ^22.15.23
-        version: 22.15.23
+        specifier: ^22.15.29
+        version: 22.15.29
       '@types/react':
         specifier: ^19.1.6
         version: 19.1.6
@@ -175,19 +175,19 @@ importers:
         version: 10.0.0
       '@vitejs/plugin-react':
         specifier: ^4.5.0
-        version: 4.5.0(vite@6.3.5(@types/node@22.15.23)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.6.1))
+        version: 4.5.0(vite@6.3.5(@types/node@22.15.29)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.6.1))
       '@walletconnect/types':
-        specifier: ^2.20.3
-        version: 2.20.3
+        specifier: ^2.21.0
+        version: 2.21.0
       eslint:
-        specifier: ^9.27.0
-        version: 9.27.0(jiti@2.4.2)
+        specifier: ^9.28.0
+        version: 9.28.0(jiti@2.4.2)
       eslint-plugin-react-hooks:
         specifier: 5.2.0
-        version: 5.2.0(eslint@9.27.0(jiti@2.4.2))
+        version: 5.2.0(eslint@9.28.0(jiti@2.4.2))
       eslint-plugin-react-refresh:
         specifier: ^0.4.20
-        version: 0.4.20(eslint@9.27.0(jiti@2.4.2))
+        version: 0.4.20(eslint@9.28.0(jiti@2.4.2))
       globals:
         specifier: ^16.2.0
         version: 16.2.0
@@ -195,17 +195,17 @@ importers:
         specifier: ^3.5.3
         version: 3.5.3
       tailwindcss:
-        specifier: ^4.1.7
-        version: 4.1.7
+        specifier: ^4.1.8
+        version: 4.1.8
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
       typescript-eslint:
         specifier: ^8.33.0
-        version: 8.33.0(eslint@9.27.0(jiti@2.4.2))(typescript@5.8.3)
+        version: 8.33.0(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3)
       vite:
         specifier: ^6.3.5
-        version: 6.3.5(@types/node@22.15.23)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.6.1)
+        version: 6.3.5(@types/node@22.15.29)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.6.1)
 
 packages:
 
@@ -231,8 +231,8 @@ packages:
     resolution: {integrity: sha512-V42wFfx1ymFte+ecf6iXghnnP8kWTO+ZLXIyZq+1LAXHHvTZdVxicn4yiVYdYMGaCO3tmqub11AorKkv+iodqw==}
     engines: {node: '>=6.9.0'}
 
-  '@babel/core@7.27.3':
-    resolution: {integrity: sha512-hyrN8ivxfvJ4i0fIJuV4EOlV0WDMz5Ui4StRTgVaAvWeiRCilXgwVvxJKtFQ3TKtHgJscB2YiXKGNJuVwhQMtA==}
+  '@babel/core@7.27.4':
+    resolution: {integrity: sha512-bXYxrXFubeYdvB0NhD/NBB3Qi6aZeV20GOWVI47t2dkecCEoneR4NPVcb7abpXDEvejgrUfFtG6vG/zxAKmg+g==}
     engines: {node: '>=6.9.0'}
 
   '@babel/generator@7.27.3':
@@ -269,12 +269,12 @@ packages:
     resolution: {integrity: sha512-YvjJow9FxbhFFKDSuFnVCe2WxXk1zWc22fFePVNEaWJEu8IrZVlda6N0uHwzZrUM1il7NC9Mlp4MaJYbYd9JSg==}
     engines: {node: '>=6.9.0'}
 
-  '@babel/helpers@7.27.3':
-    resolution: {integrity: sha512-h/eKy9agOya1IGuLaZ9tEUgz+uIRXcbtOhRtUyyMf8JFmn1iT13vnl/IGVWSkdOCG/pC57U4S1jnAabAavTMwg==}
+  '@babel/helpers@7.27.4':
+    resolution: {integrity: sha512-Y+bO6U+I7ZKaM5G5rDUZiYfUvQPUibYmAFe7EnKdnKBbVXDZxvp+MWOH5gYciY0EPk4EScsuFMQBbEfpdRKSCQ==}
     engines: {node: '>=6.9.0'}
 
-  '@babel/parser@7.27.3':
-    resolution: {integrity: sha512-xyYxRj6+tLNDTWi0KCBcZ9V7yg3/lwL9DWh9Uwh/RIVlIfFidggcgxKX3GCXwCiswwcGRawBKbEg2LG/Y8eJhw==}
+  '@babel/parser@7.27.4':
+    resolution: {integrity: sha512-BRmLHGwpUqLFR2jzx9orBuX/ABDkj2jLKOXrHDTN2aOKL+jFDDKaRNo9nyYsIl9h/UE/7lMKdDjKQQyxKKDZ7g==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -290,16 +290,16 @@ packages:
     peerDependencies:
       '@babel/core': ^7.0.0-0
 
-  '@babel/runtime@7.27.3':
-    resolution: {integrity: sha512-7EYtGezsdiDMyY80+65EzwiGmcJqpmcZCojSXaRgdrBaGtWTgDZKq69cPIVped6MkIM78cTQ2GOiEYjwOlG4xw==}
+  '@babel/runtime@7.27.4':
+    resolution: {integrity: sha512-t3yaEOuGu9NlIZ+hIeGbBjFtZT7j2cb2tg0fuaJKeGotchRjjLfrBA9Kwf8quhpP1EUuxModQg04q/mBwyg8uA==}
     engines: {node: '>=6.9.0'}
 
   '@babel/template@7.27.2':
     resolution: {integrity: sha512-LPDZ85aEJyYSd18/DkjNh4/y1ntkE5KwUHWTiqgRxruuZL2F1yuHligVHLvcHY2vMHXttKFpJn6LwfI7cw7ODw==}
     engines: {node: '>=6.9.0'}
 
-  '@babel/traverse@7.27.3':
-    resolution: {integrity: sha512-lId/IfN/Ye1CIu8xG7oKBHXd2iNb2aW1ilPszzGcJug6M8RCKfVNcYhpI5+bMvFYjK7lXIM0R+a+6r8xhHp2FQ==}
+  '@babel/traverse@7.27.4':
+    resolution: {integrity: sha512-oNcu2QbHqts9BtOWJosOVJapWjBDSxGCpFvikNR5TGDYDQf3JwpIoMzIKrvfoti93cLfPJEG4tH9SPVeyCGgdA==}
     engines: {node: '>=6.9.0'}
 
   '@babel/types@7.27.3':
@@ -487,8 +487,8 @@ packages:
     resolution: {integrity: sha512-gtF186CXhIl1p4pJNGZw8Yc6RlshoePRvE0X91oPGb3vZ8pM3qOS9W9NGPat9LziaBV7XrJWGylNQXkGcnM3IQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@eslint/js@9.27.0':
-    resolution: {integrity: sha512-G5JD9Tu5HJEu4z2Uo4aHY2sLV64B7CDMXxFzqzjl3NKd6RVzSXNoE80jk7Y0lJkTTkjiIhBAqmlYwjuBY3tvpA==}
+  '@eslint/js@9.28.0':
+    resolution: {integrity: sha512-fnqSjGWd/CoIp4EXIxWVK/sHA6DOHN4+8Ix2cX5ycOY7LG0UY8nHCU5pIp2eaE1Mc7Qd8kHspYNzYXT2ojPLzg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@eslint/object-schema@2.1.6':
@@ -635,20 +635,20 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@polkadot-api/cli@0.13.2':
-    resolution: {integrity: sha512-pET+N8SekRtDu+SCGFqERlO/F02gvPNFMqelWQluxE5sqwNXRCa2a6nuLVA3FWQnL8BW4D23KQBapHy1+A8iYA==}
+  '@polkadot-api/cli@0.13.3':
+    resolution: {integrity: sha512-n8p/B/itueSlDHe9ByfpyDftJSHouraAFcwUY5MJByInn9V2QwgQhvuwy/WSjdJbIanF1XpFYe/L1SiBaSxr4g==}
     hasBin: true
 
-  '@polkadot-api/codegen@0.16.1':
-    resolution: {integrity: sha512-3TGcaAZ8dqzBynCWN9BUAWrbFkaMyTK6VM088tGQBgIJltlgh+qgSai7E6ivvCJ4nnZp+MS+I3yFx7+vtisXdw==}
+  '@polkadot-api/codegen@0.16.2':
+    resolution: {integrity: sha512-s7nj2L1oBuPg7JOZqCXmYT+9euAmec79lZ9W1gIUKYmBQ1TTjUn4/QrKzXb5avDhBAmLDQF19ZlrFx7zDl4yiA==}
 
   '@polkadot-api/descriptors@file:.papi/descriptors':
     resolution: {directory: .papi/descriptors, type: directory}
     peerDependencies:
       polkadot-api: '>=1.11.2'
 
-  '@polkadot-api/ink-contracts@0.3.3':
-    resolution: {integrity: sha512-GdDzr/iAQ+h60IzwWJWsVHR/ovVubutNEDVwnH2s8A4kmee5yytn+XlABr3i2RlFuB8FwWOWQwuG2+6Hi2NnFQ==}
+  '@polkadot-api/ink-contracts@0.3.4':
+    resolution: {integrity: sha512-JnCIX3GCV47u9h9poUJUJMcZ+wr1/2wCbg6NftmpqeQfin5BsWYOnKSkrMY7SEWpXC4EfACK8ucub9oo2rv/jg==}
 
   '@polkadot-api/json-rpc-provider-proxy@0.1.0':
     resolution: {integrity: sha512-8GSFE5+EF73MCuLQm8tjrbCqlgclcHBSRaswvXziJ0ZW7iw3UEMsKkkKvELayWyBuOPa2T5i1nj6gFOeIsqvrg==}
@@ -662,28 +662,28 @@ packages:
   '@polkadot-api/json-rpc-provider@0.0.4':
     resolution: {integrity: sha512-9cDijLIxzHOBuq6yHqpqjJ9jBmXrctjc1OFqU+tQrS96adQze3mTIH6DTgfb/0LMrqxzxffz1HQGrIlEH00WrA==}
 
-  '@polkadot-api/known-chains@0.7.7':
-    resolution: {integrity: sha512-F8Q5DQN39xVMf6cMFfVDpGsOTjb902LhLRSK/yiWK8ZEqHRH6C/SeWxJaLFnh8tPK/2/wi+BIvWZ0JkszES6ig==}
+  '@polkadot-api/known-chains@0.8.0':
+    resolution: {integrity: sha512-XrYxKWMH+AEE3PioQj3K/2UnF18ASW9QJ5kG9mVCxSNrpxaBOM7GfEsJVfNoMRetgyWHMQ0W0Mw1DiXUSXEkyg==}
 
   '@polkadot-api/logs-provider@0.0.6':
     resolution: {integrity: sha512-4WgHlvy+xee1ADaaVf6+MlK/+jGMtsMgAzvbQOJZnP4PfQuagoTqaeayk8HYKxXGphogLlPbD06tANxcb+nvAg==}
 
-  '@polkadot-api/merkleize-metadata@1.1.17':
-    resolution: {integrity: sha512-3wlLrYjpBluN5l8M1H9zgXlFHfJhqIXYvSVXTvkBYcEVKxZt0PO0f43Zgskeabg29Lx83OiPINcEHFWF8ndAzg==}
+  '@polkadot-api/merkleize-metadata@1.1.18':
+    resolution: {integrity: sha512-WKP4urGv6YDO9rGeCLX+I/I0uJCXunytNzyPfBMOK9dwJD48UpX+oHf2aNnWvP4j9zQImY/oaBQQ9Sp89ABZOw==}
 
-  '@polkadot-api/metadata-builders@0.12.1':
-    resolution: {integrity: sha512-heGt+WgcxrS1CqMm9XwD2DC+fI6azMKJf2ToMP+H12yw6FAy++nijASDZ3MlV/0ZpA/QGZpuZmgQmxKh6jbxVg==}
+  '@polkadot-api/metadata-builders@0.12.2':
+    resolution: {integrity: sha512-Mmivj1YZve1fCkM90eIIo73B0jkiqMA3zwhFcqYaBfuAu4x5t0rt+Ucfx76t4qxJOhG8wXp/tmdbzWIrWG909A==}
 
   '@polkadot-api/metadata-builders@0.3.2':
     resolution: {integrity: sha512-TKpfoT6vTb+513KDzMBTfCb/ORdgRnsS3TDFpOhAhZ08ikvK+hjHMt5plPiAX/OWkm1Wc9I3+K6W0hX5Ab7MVg==}
 
-  '@polkadot-api/metadata-compatibility@0.2.3':
-    resolution: {integrity: sha512-rtym491RA2yl8qGdEDJVujiCya+DK0CW5AwB6InSo85Um04/WWMq7oboRiXQZmspwLkfm2vYBusl/Q9k4Rxshw==}
+  '@polkadot-api/metadata-compatibility@0.2.4':
+    resolution: {integrity: sha512-35rJ7Zq9zkqFbGsZsmeUad06cDANzPo1OrhD3EZXZ2FVCw/jzFFbnU1ZIPqTuSXBoF8MiSbchofGSPgH8ppZXw==}
 
-  '@polkadot-api/observable-client@0.11.0':
-    resolution: {integrity: sha512-cyXyih+RI73vPcUQ6GxyMelm1Z3bGDvBIow8W3MqBdpUy4mZ87QGQXGpyBC0Op/qnIxrUFP1cLyT38fUe0i6KQ==}
+  '@polkadot-api/observable-client@0.11.1':
+    resolution: {integrity: sha512-g9ZsYacJRphDvBFe8u4U/PuaEcdo8n2rYujftlxq2KYESGTTG7sqCPqSXN9KVLG+wvenffqyjgiX/er2fDyBPw==}
     peerDependencies:
-      '@polkadot-api/substrate-client': 0.3.0
+      '@polkadot-api/substrate-client': 0.4.0
       rxjs: '>=7.8.0'
 
   '@polkadot-api/observable-client@0.3.2':
@@ -692,8 +692,8 @@ packages:
       '@polkadot-api/substrate-client': 0.1.4
       rxjs: '>=7.8.0'
 
-  '@polkadot-api/pjs-signer@0.6.8':
-    resolution: {integrity: sha512-YBp+uF2mPZFH4VjT5xgIU462EXbdLrFz09D6vY4SgoS2FRbPV7ktnqiNK2BykKJPGV4TiqpEjNB4OtX6ZLzafg==}
+  '@polkadot-api/pjs-signer@0.6.9':
+    resolution: {integrity: sha512-WXWiIbYnN2N9VgUlGT5M1qKJBHB2EvrxPo/eHm9gjwsTwWU/x0RvInAE4P1lcNztCtyqZL41FiwEyYZnNzh1CQ==}
 
   '@polkadot-api/polkadot-sdk-compat@2.3.2':
     resolution: {integrity: sha512-rLCveP3a6Xd0r218yRqVY34lJ8bXVmE12cArbU4JFp9p8e8Jbb6xdqOdu7bQtjlZUsahhcmfIHYQSXKziST7PA==}
@@ -701,16 +701,16 @@ packages:
   '@polkadot-api/polkadot-signer@0.1.6':
     resolution: {integrity: sha512-X7ghAa4r7doETtjAPTb50IpfGtrBmy3BJM5WCfNKa1saK04VFY9w+vDn+hwEcM4p0PcDHt66Ts74hzvHq54d9A==}
 
-  '@polkadot-api/react-builder@0.2.8':
-    resolution: {integrity: sha512-RHmiVHEmA37sXKBhwcQkLa5d+XFbqGOKvGwiyr07o8u9aytRtrJSWVwn8FyL1vS2NPB7L6+j0j+GpdQPvCldgQ==}
+  '@polkadot-api/react-builder@0.2.9':
+    resolution: {integrity: sha512-w8rtRZvPrRgLfBAlM0wWiNGb1DKrK8klQsNJh4hz2KxHj7KgaCcMGk7VlOyDBHfw72KHLUffcfccCMEvNTH5pA==}
     peerDependencies:
       react: '>=18'
 
-  '@polkadot-api/signer@0.2.1':
-    resolution: {integrity: sha512-z3BPDIglLh/hghQExQVVHR3xgIijjEVcIA2P+xLan5vO4cglGm4U6vIBXgKBuU2oxKlG494ixH8BkXSv5F79zw==}
+  '@polkadot-api/signer@0.2.2':
+    resolution: {integrity: sha512-COIOOCgnwHwcwVle4eBmHNHbrqjIL7Bff94GZQlOMaOULlY1ajSthVGOZQ2b04rda6r3mlhNE+sAoDBPXPpq7w==}
 
-  '@polkadot-api/signers-common@0.1.9':
-    resolution: {integrity: sha512-eOAPfnNpa0kJrtM/OPHOt+jlFP97c4CWZmzfcPzOqfrLUgyyLzVCFzgBipffpzPXNPQsToM6FM+7DQEgQmoDuA==}
+  '@polkadot-api/signers-common@0.1.10':
+    resolution: {integrity: sha512-Or2wTrbnc6FXHbjPDf8OU2mPoFYdkcr3tx35W4FYML4OTsSnDORX+h3Q6cGbWSHdWp0VeT6QcEj6ewfaTuLREA==}
 
   '@polkadot-api/sm-provider@0.1.7':
     resolution: {integrity: sha512-BhNKVeIFZdawpPVadXszLl8IP4EDjcLHe/GchfRRFkvoNFuwS2nNv/npYIqCviXV+dd2R8VnEELxwScsf380Og==}
@@ -720,8 +720,8 @@ packages:
   '@polkadot-api/smoldot@0.3.9':
     resolution: {integrity: sha512-4t8KHDwnIfTf0wMWx5glubX1zQc32JdDkb3GpIEjo1miuSvDtmSDPqMhfSZXX/hjg9t3B6uX78O1uiPwPy1pKg==}
 
-  '@polkadot-api/substrate-bindings@0.13.0':
-    resolution: {integrity: sha512-M/60lXtHr4flwx4K7L4xv2jLk44EhD8UB4jvah+jbZM195I89nZGXKo2JOkgyR5DHoLj//TAoBkLedZmaaAiaQ==}
+  '@polkadot-api/substrate-bindings@0.14.0':
+    resolution: {integrity: sha512-ZmZnw4IbxCXIqI1thEtQ83WrXwsvkqnbo0S6GRzbmrfZFh2JyVxGckPrMMLPH3ScqGgNJJkEdGGU/jSFffqTCA==}
 
   '@polkadot-api/substrate-bindings@0.6.0':
     resolution: {integrity: sha512-lGuhE74NA1/PqdN7fKFdE5C1gNYX357j1tWzdlPXI0kQ7h3kN0zfxNOpPUN7dIrPcOFZ6C0tRRVrBylXkI6xPw==}
@@ -729,14 +729,14 @@ packages:
   '@polkadot-api/substrate-client@0.1.4':
     resolution: {integrity: sha512-MljrPobN0ZWTpn++da9vOvt+Ex+NlqTlr/XT7zi9sqPtDJiQcYl+d29hFAgpaeTqbeQKZwz3WDE9xcEfLE8c5A==}
 
-  '@polkadot-api/substrate-client@0.3.0':
-    resolution: {integrity: sha512-0hEvQLKH2zhaFzE8DPkWehvJilec8u2O2wbIEUStm0OJ8jIFtJ40MFjXQfB01dXBWUz1KaVBqS6xd3sZA90Dpw==}
+  '@polkadot-api/substrate-client@0.4.0':
+    resolution: {integrity: sha512-a6aTv2aUyvbkd2kxQavWoG9B83cfFxDf11p2K1+mivJYU4NL8KTOXhW5mK449XWdZInAvPvveizGaXxF7ZUDiw==}
 
   '@polkadot-api/utils@0.1.0':
     resolution: {integrity: sha512-MXzWZeuGxKizPx2Xf/47wx9sr/uxKw39bVJUptTJdsaQn/TGq+z310mHzf1RCGvC1diHM8f593KrnDgc9oNbJA==}
 
-  '@polkadot-api/utils@0.1.2':
-    resolution: {integrity: sha512-yhs5k2a8N1SBJcz7EthZoazzLQUkZxbf+0271Xzu42C5AEM9K9uFLbsB+ojzHEM72O5X8lPtSwGKNmS7WQyDyg==}
+  '@polkadot-api/utils@0.2.0':
+    resolution: {integrity: sha512-nY3i5fQJoAxU4n3bD7Fs208/KR2J95SGfVc58kDjbRYN5a84kWaGEqzjBNtP9oqht49POM8Bm9mbIrkvC1Bzuw==}
 
   '@polkadot-api/wasm-executor@0.1.2':
     resolution: {integrity: sha512-a5wGenltB3EFPdf72u8ewi6HsUg2qubUAf3ekJprZf24lTK3+w8a/GUF/y6r08LJF35MALZ32SAtLqtVTIOGnQ==}
@@ -1405,8 +1405,8 @@ packages:
     peerDependencies:
       rxjs: '>=7'
 
-  '@scure/base@1.2.5':
-    resolution: {integrity: sha512-9rE6EOVeIQzt5TSu4v+K523F8u6DhBsoZWPGKlnCshhlDhy0kJzUX4V+tr2dWmzF1GdekvThABoEQBGBQI7xZw==}
+  '@scure/base@1.2.6':
+    resolution: {integrity: sha512-g/nm5FgUa//MCj1gV09zTJTaM6KBAHqLN907YVQqf7zC49+DcO4B1so4ZX07Ef10Twr6nuqYEH9GEggFXA4Fmg==}
 
   '@scure/bip32@1.6.2':
     resolution: {integrity: sha512-t96EPDMbtGgtb7onKKqxRLfE5g05k7uHnHRM2xdE6BP/ZmxaLtPek4J4KfVn/90IQNrU1IOAqMgiDtUdtbe3nw==}
@@ -1439,65 +1439,65 @@ packages:
   '@substrate/ss58-registry@1.51.0':
     resolution: {integrity: sha512-TWDurLiPxndFgKjVavCniytBIw+t4ViOi7TYp9h/D0NMmkEc9klFTo+827eyEJ0lELpqO207Ey7uGxUa+BS1jQ==}
 
-  '@tailwindcss/node@4.1.7':
-    resolution: {integrity: sha512-9rsOpdY9idRI2NH6CL4wORFY0+Q6fnx9XP9Ju+iq/0wJwGD5IByIgFmwVbyy4ymuyprj8Qh4ErxMKTUL4uNh3g==}
+  '@tailwindcss/node@4.1.8':
+    resolution: {integrity: sha512-OWwBsbC9BFAJelmnNcrKuf+bka2ZxCE2A4Ft53Tkg4uoiE67r/PMEYwCsourC26E+kmxfwE0hVzMdxqeW+xu7Q==}
 
-  '@tailwindcss/oxide-android-arm64@4.1.7':
-    resolution: {integrity: sha512-IWA410JZ8fF7kACus6BrUwY2Z1t1hm0+ZWNEzykKmMNM09wQooOcN/VXr0p/WJdtHZ90PvJf2AIBS/Ceqx1emg==}
+  '@tailwindcss/oxide-android-arm64@4.1.8':
+    resolution: {integrity: sha512-Fbz7qni62uKYceWYvUjRqhGfZKwhZDQhlrJKGtnZfuNtHFqa8wmr+Wn74CTWERiW2hn3mN5gTpOoxWKk0jRxjg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [android]
 
-  '@tailwindcss/oxide-darwin-arm64@4.1.7':
-    resolution: {integrity: sha512-81jUw9To7fimGGkuJ2W5h3/oGonTOZKZ8C2ghm/TTxbwvfSiFSDPd6/A/KE2N7Jp4mv3Ps9OFqg2fEKgZFfsvg==}
+  '@tailwindcss/oxide-darwin-arm64@4.1.8':
+    resolution: {integrity: sha512-RdRvedGsT0vwVVDztvyXhKpsU2ark/BjgG0huo4+2BluxdXo8NDgzl77qh0T1nUxmM11eXwR8jA39ibvSTbi7A==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
 
-  '@tailwindcss/oxide-darwin-x64@4.1.7':
-    resolution: {integrity: sha512-q77rWjEyGHV4PdDBtrzO0tgBBPlQWKY7wZK0cUok/HaGgbNKecegNxCGikuPJn5wFAlIywC3v+WMBt0PEBtwGw==}
+  '@tailwindcss/oxide-darwin-x64@4.1.8':
+    resolution: {integrity: sha512-t6PgxjEMLp5Ovf7uMb2OFmb3kqzVTPPakWpBIFzppk4JE4ix0yEtbtSjPbU8+PZETpaYMtXvss2Sdkx8Vs4XRw==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
 
-  '@tailwindcss/oxide-freebsd-x64@4.1.7':
-    resolution: {integrity: sha512-RfmdbbK6G6ptgF4qqbzoxmH+PKfP4KSVs7SRlTwcbRgBwezJkAO3Qta/7gDy10Q2DcUVkKxFLXUQO6J3CRvBGw==}
+  '@tailwindcss/oxide-freebsd-x64@4.1.8':
+    resolution: {integrity: sha512-g8C8eGEyhHTqwPStSwZNSrOlyx0bhK/V/+zX0Y+n7DoRUzyS8eMbVshVOLJTDDC+Qn9IJnilYbIKzpB9n4aBsg==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [freebsd]
 
-  '@tailwindcss/oxide-linux-arm-gnueabihf@4.1.7':
-    resolution: {integrity: sha512-OZqsGvpwOa13lVd1z6JVwQXadEobmesxQ4AxhrwRiPuE04quvZHWn/LnihMg7/XkN+dTioXp/VMu/p6A5eZP3g==}
+  '@tailwindcss/oxide-linux-arm-gnueabihf@4.1.8':
+    resolution: {integrity: sha512-Jmzr3FA4S2tHhaC6yCjac3rGf7hG9R6Gf2z9i9JFcuyy0u79HfQsh/thifbYTF2ic82KJovKKkIB6Z9TdNhCXQ==}
     engines: {node: '>= 10'}
     cpu: [arm]
     os: [linux]
 
-  '@tailwindcss/oxide-linux-arm64-gnu@4.1.7':
-    resolution: {integrity: sha512-voMvBTnJSfKecJxGkoeAyW/2XRToLZ227LxswLAwKY7YslG/Xkw9/tJNH+3IVh5bdYzYE7DfiaPbRkSHFxY1xA==}
+  '@tailwindcss/oxide-linux-arm64-gnu@4.1.8':
+    resolution: {integrity: sha512-qq7jXtO1+UEtCmCeBBIRDrPFIVI4ilEQ97qgBGdwXAARrUqSn/L9fUrkb1XP/mvVtoVeR2bt/0L77xx53bPZ/Q==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
 
-  '@tailwindcss/oxide-linux-arm64-musl@4.1.7':
-    resolution: {integrity: sha512-PjGuNNmJeKHnP58M7XyjJyla8LPo+RmwHQpBI+W/OxqrwojyuCQ+GUtygu7jUqTEexejZHr/z3nBc/gTiXBj4A==}
+  '@tailwindcss/oxide-linux-arm64-musl@4.1.8':
+    resolution: {integrity: sha512-O6b8QesPbJCRshsNApsOIpzKt3ztG35gfX9tEf4arD7mwNinsoCKxkj8TgEE0YRjmjtO3r9FlJnT/ENd9EVefQ==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
 
-  '@tailwindcss/oxide-linux-x64-gnu@4.1.7':
-    resolution: {integrity: sha512-HMs+Va+ZR3gC3mLZE00gXxtBo3JoSQxtu9lobbZd+DmfkIxR54NO7Z+UQNPsa0P/ITn1TevtFxXTpsRU7qEvWg==}
+  '@tailwindcss/oxide-linux-x64-gnu@4.1.8':
+    resolution: {integrity: sha512-32iEXX/pXwikshNOGnERAFwFSfiltmijMIAbUhnNyjFr3tmWmMJWQKU2vNcFX0DACSXJ3ZWcSkzNbaKTdngH6g==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@tailwindcss/oxide-linux-x64-musl@4.1.7':
-    resolution: {integrity: sha512-MHZ6jyNlutdHH8rd+YTdr3QbXrHXqwIhHw9e7yXEBcQdluGwhpQY2Eku8UZK6ReLaWtQ4gijIv5QoM5eE+qlsA==}
+  '@tailwindcss/oxide-linux-x64-musl@4.1.8':
+    resolution: {integrity: sha512-s+VSSD+TfZeMEsCaFaHTaY5YNj3Dri8rST09gMvYQKwPphacRG7wbuQ5ZJMIJXN/puxPcg/nU+ucvWguPpvBDg==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@tailwindcss/oxide-wasm32-wasi@4.1.7':
-    resolution: {integrity: sha512-ANaSKt74ZRzE2TvJmUcbFQ8zS201cIPxUDm5qez5rLEwWkie2SkGtA4P+GPTj+u8N6JbPrC8MtY8RmJA35Oo+A==}
+  '@tailwindcss/oxide-wasm32-wasi@4.1.8':
+    resolution: {integrity: sha512-CXBPVFkpDjM67sS1psWohZ6g/2/cd+cq56vPxK4JeawelxwK4YECgl9Y9TjkE2qfF+9/s1tHHJqrC4SS6cVvSg==}
     engines: {node: '>=14.0.0'}
     cpu: [wasm32]
     bundledDependencies:
@@ -1508,24 +1508,24 @@ packages:
       - '@emnapi/wasi-threads'
       - tslib
 
-  '@tailwindcss/oxide-win32-arm64-msvc@4.1.7':
-    resolution: {integrity: sha512-HUiSiXQ9gLJBAPCMVRk2RT1ZrBjto7WvqsPBwUrNK2BcdSxMnk19h4pjZjI7zgPhDxlAbJSumTC4ljeA9y0tEw==}
+  '@tailwindcss/oxide-win32-arm64-msvc@4.1.8':
+    resolution: {integrity: sha512-7GmYk1n28teDHUjPlIx4Z6Z4hHEgvP5ZW2QS9ygnDAdI/myh3HTHjDqtSqgu1BpRoI4OiLx+fThAyA1JePoENA==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [win32]
 
-  '@tailwindcss/oxide-win32-x64-msvc@4.1.7':
-    resolution: {integrity: sha512-rYHGmvoHiLJ8hWucSfSOEmdCBIGZIq7SpkPRSqLsH2Ab2YUNgKeAPT1Fi2cx3+hnYOrAb0jp9cRyode3bBW4mQ==}
+  '@tailwindcss/oxide-win32-x64-msvc@4.1.8':
+    resolution: {integrity: sha512-fou+U20j+Jl0EHwK92spoWISON2OBnCazIc038Xj2TdweYV33ZRkS9nwqiUi2d/Wba5xg5UoHfvynnb/UB49cQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
 
-  '@tailwindcss/oxide@4.1.7':
-    resolution: {integrity: sha512-5SF95Ctm9DFiUyjUPnDGkoKItPX/k+xifcQhcqX5RA85m50jw1pT/KzjdvlqxRja45Y52nR4MR9fD1JYd7f8NQ==}
+  '@tailwindcss/oxide@4.1.8':
+    resolution: {integrity: sha512-d7qvv9PsM5N3VNKhwVUhpK6r4h9wtLkJ6lz9ZY9aeZgrUWk1Z8VPyqyDT9MZlem7GTGseRQHkeB1j3tC7W1P+A==}
     engines: {node: '>= 10'}
 
-  '@tailwindcss/vite@4.1.7':
-    resolution: {integrity: sha512-tYa2fO3zDe41I7WqijyVbRd8oWT0aEID1Eokz5hMT6wShLIHj3yvwj9XbfuloHP9glZ6H+aG2AN/+ZrxJ1Y5RQ==}
+  '@tailwindcss/vite@4.1.8':
+    resolution: {integrity: sha512-CQ+I8yxNV5/6uGaJjiuymgw0kEQiNKRinYbZXPdx1fk5WgiyReG0VaUx/Xq6aVNSUNJFzxm6o8FNKS5aMaim5A==}
     peerDependencies:
       vite: ^5.2.0 || ^6
 
@@ -1553,8 +1553,8 @@ packages:
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
-  '@types/node@22.15.23':
-    resolution: {integrity: sha512-7Ec1zaFPF4RJ0eXu1YT/xgiebqwqoJz8rYPDi/O2BcZ++Wpt0Kq9cl0eg6NN6bYbPnR67ZLo7St5Q3UK0SnARw==}
+  '@types/node@22.15.29':
+    resolution: {integrity: sha512-LNdjOkUDlU1RZb8e1kOIUpN1qQUlzGkEtbVNo53vbrwDg5om6oduhm4SiUaPW5ASTXhAiP0jInWG8Qx9fVlOeQ==}
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
@@ -1642,8 +1642,8 @@ packages:
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0
 
-  '@walletconnect/core@2.20.3':
-    resolution: {integrity: sha512-2xMopmR6Inx4d4PIwChnfQxdpb828WAwXWj+DodcDpt1aqusknVfkoDtx/PL1+KyqEbyiUdlW09krjnRvT82KQ==}
+  '@walletconnect/core@2.21.0':
+    resolution: {integrity: sha512-o6R7Ua4myxR8aRUAJ1z3gT9nM+jd2B2mfamu6arzy1Cc6vi10fIwFWb6vg3bC8xJ6o9H3n/cN5TOW3aA9Y1XVw==}
     engines: {node: '>=18'}
 
   '@walletconnect/environment@1.0.1':
@@ -1700,20 +1700,20 @@ packages:
   '@walletconnect/safe-json@1.0.2':
     resolution: {integrity: sha512-Ogb7I27kZ3LPC3ibn8ldyUr5544t3/STow9+lzz7Sfo808YD7SBWk7SAsdBFlYgP2zDRy2hS3sKRcuSRM0OTmA==}
 
-  '@walletconnect/sign-client@2.20.3':
-    resolution: {integrity: sha512-78nW9UCRRvXgcp0M8lpbRBuu301LZb+jAGeFYIhVat0JGOzxHPVl+Wu+ruVrA6e4a8JYns7V1443r3qEc3Pj2Q==}
+  '@walletconnect/sign-client@2.21.0':
+    resolution: {integrity: sha512-z7h+PeLa5Au2R591d/8ZlziE0stJvdzP9jNFzFolf2RG/OiXulgFKum8PrIyXy+Rg2q95U9nRVUF9fWcn78yBA==}
 
   '@walletconnect/time@1.0.2':
     resolution: {integrity: sha512-uzdd9woDcJ1AaBZRhqy5rNC9laqWGErfc4dxA9a87mPdKOgWMD85mcFo9dIYIts/Jwocfwn07EC6EzclKubk/g==}
 
-  '@walletconnect/types@2.20.3':
-    resolution: {integrity: sha512-Onco0uRzXnyK8zcwygjrip2CuWqJ7NhuRDPqoNQEjKma9CNdWxOhHu6a+iV+4nJ/gQrpZYSaEfJLVw+UdUPxKA==}
+  '@walletconnect/types@2.21.0':
+    resolution: {integrity: sha512-ll+9upzqt95ZBWcfkOszXZkfnpbJJ2CmxMfGgE5GmhdxxxCcO5bGhXkI+x8OpiS555RJ/v/sXJYMSOLkmu4fFw==}
 
-  '@walletconnect/universal-provider@2.20.3':
-    resolution: {integrity: sha512-w1FoD1adYuCPZRL5sKmm8mFx82lMb9cIouO+mo4qJ3si23OiFou0t9da9OyziWJtkKyhC2kxHaJXcUvxVzM3Qw==}
+  '@walletconnect/universal-provider@2.21.0':
+    resolution: {integrity: sha512-mtUQvewt+X0VBQay/xOJBvxsB3Xsm1lTwFjZ6WUwSOTR1X+FNb71hSApnV5kbsdDIpYPXeQUbGt2se1n5E5UBg==}
 
-  '@walletconnect/utils@2.20.3':
-    resolution: {integrity: sha512-16/5UpR60lKWsyIMP9XeYup3XCOIxgPDOqxCRhm9iAT2XMFGqzBi8CL8U8AEreJelNZ0map4McgLKNaGZCU1NA==}
+  '@walletconnect/utils@2.21.0':
+    resolution: {integrity: sha512-zfHLiUoBrQ8rP57HTPXW7rQMnYxYI4gT9yTACxVW6LhIFROTF6/ytm5SKNoIvi4a5nX5dfXG4D9XwQUCu8Ilig==}
 
   '@walletconnect/window-getters@1.0.1':
     resolution: {integrity: sha512-vHp+HqzGxORPAN8gY03qnbTMnhqIwjeRJNOMOAzePRg4xVEEE2WvYsI9G2NMjOknA8hnuYbU3/hwLcKbjhc8+Q==}
@@ -1805,8 +1805,8 @@ packages:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
 
-  browserslist@4.24.5:
-    resolution: {integrity: sha512-FDToo4Wo82hIdgc1CQ+NQD0hEhmpPjrZ3hiUgwgOG6IuTdlpr8jdjyG24P6cNP1yJpTLzS5OcGgSw0xmDU1/Tw==}
+  browserslist@4.25.0:
+    resolution: {integrity: sha512-PJ8gYKeS5e/whHBh8xrwYK+dAvEj7JXtz6uTucnMRB8OiGTsKccFekoRrjajPBHV8oOY+2tI4uxeceSimKwMFA==}
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
 
@@ -1834,8 +1834,8 @@ packages:
     resolution: {integrity: sha512-L28STB170nwWS63UjtlEOE3dldQApaJXZkOI1uMFfzf3rRuPegHaHesyee+YxQ+W6SvRDQV6UrdOdRiR153wJg==}
     engines: {node: '>=6'}
 
-  caniuse-lite@1.0.30001718:
-    resolution: {integrity: sha512-AflseV1ahcSunK53NfEs9gFWgOEmzr0f+kaMFA4xiLZlr9Hzt7HxcSpIFcnNCUkz6R6dWKa54rUz3HUmI3nVcw==}
+  caniuse-lite@1.0.30001720:
+    resolution: {integrity: sha512-Ec/2yV2nNPwb4DnTANEV99ZWwm3ZWfdlfkQbWSDDt+PsXEVYwlhPH8tdMaPunYTKKmz7AnHi2oNEi1GcmKCD8g==}
 
   chai@5.2.0:
     resolution: {integrity: sha512-mCuXncKXk5iCLhfhwTc0izo0gtEmpz5CtG2y8GiOINBlMVS6v8TMRc5TaLWKS6692m9+dVVfzgeVxR5UxWHTYw==}
@@ -2010,8 +2010,8 @@ packages:
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
 
-  electron-to-chromium@1.5.159:
-    resolution: {integrity: sha512-CEvHptWAMV5p6GJ0Lq8aheyvVbfzVrv5mmidu1D3pidoVNkB3tTBsTMVtPJ+rzRK5oV229mCLz9Zj/hNvU8GBA==}
+  electron-to-chromium@1.5.161:
+    resolution: {integrity: sha512-hwtetwfKNZo/UlwHIVBlKZVdy7o8bIZxxKs0Mv/ROPiQQQmDgdm5a+KvKtBsxM8ZjFzTaCeLoodZ8jiBE3o9rA==}
 
   emoji-regex@10.4.0:
     resolution: {integrity: sha512-EC+0oUMY1Rqm4O6LLrgjtYDvcVYTy7chDnM4Q7030tP4Kwj3u/pR6gP9ygnp2CJMK5Gq+9Q2oqmrFJAz01DXjw==}
@@ -2071,8 +2071,8 @@ packages:
     resolution: {integrity: sha512-UyLnSehNt62FFhSwjZlHmeokpRK59rcz29j+F1/aDgbkbRTk7wIc9XzdoasMUbRNKDM0qQt/+BJ4BrpFeABemw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  eslint@9.27.0:
-    resolution: {integrity: sha512-ixRawFQuMB9DZ7fjU3iGGganFDp3+45bPOdaRurcFHSXO1e/sYwUX/FtQZpLZJR6SjMoJH8hR2pPEAfDyCoU2Q==}
+  eslint@9.28.0:
+    resolution: {integrity: sha512-ocgh41VhRlf9+fVpe7QKzwLj9c92fDiqOj8Y3Sd4/ZmVA4Btx4PlUYPq4pp9JDyupkf1upbEXecxL2mwNV7jPQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     hasBin: true
     peerDependencies:
@@ -2281,8 +2281,8 @@ packages:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
     engines: {node: '>= 4'}
 
-  ignore@7.0.4:
-    resolution: {integrity: sha512-gJzzk+PQNznz8ysRrC0aOkBNVRBDtE1n53IqyqEf3PXrYwomFs5q4pGMizBMJF+ykh03insJ27hB8gSrD2Hn8A==}
+  ignore@7.0.5:
+    resolution: {integrity: sha512-Hs59xBNfUIunMFgWAbGX5cq6893IbWg4KnrjbYwX3tx0ztorVgTDA6B2sxf8ejHJ4wz8BqGUMYlnzNBer5NvGg==}
     engines: {node: '>= 4'}
 
   import-fresh@3.3.1:
@@ -2773,8 +2773,8 @@ packages:
     resolution: {integrity: sha512-40QW5YalBNfQo5yRYmiw7Yz6TKKVr3h6970B2YE+3fQpsWcrbj1PzJgxeJ19DRQjhMbKPIuMY8rFaXc8moolVw==}
     engines: {node: '>=10.13.0'}
 
-  polkadot-api@1.12.2:
-    resolution: {integrity: sha512-Qk8l/hI2anp7ulvj1bqenIfzpPFdHPqyiraYM+oNhWb5QdyOCpwRdDlen1zqHKK1zltkXEQjA62OyCRO5WW/Sg==}
+  polkadot-api@1.13.0:
+    resolution: {integrity: sha512-kMlmxkv3ijHRa5DiPr9Ihknzjx6HFuFls0G59kwpChf+vwP44/j5g/SkPFdMF5r+ox0/h8ubuRLje3g8XAJS/Q==}
     hasBin: true
     peerDependencies:
       rxjs: '>=7.8.0'
@@ -2797,8 +2797,8 @@ packages:
       yaml:
         optional: true
 
-  postcss@8.5.3:
-    resolution: {integrity: sha512-dle9A3yYxlBSrt8Fu+IpjGT8SY8hN0mlaA6GY8t0P5PjIOZemULz/E2Bnm/2dcUOena75OTNkHI76uZBNUUq3A==}
+  postcss@8.5.4:
+    resolution: {integrity: sha512-QSa9EBe+uwlGTFmHsPKokv3B/oEMQZxfqW0QqNCyhpa6mB1afzulwn8hihglqAb2pOw+BJgNlmXQ8la2VeHB7w==}
     engines: {node: ^10 || ^12 || >=14}
 
   prelude-ls@1.2.1:
@@ -2883,8 +2883,8 @@ packages:
       '@types/react':
         optional: true
 
-  react-remove-scroll@2.7.0:
-    resolution: {integrity: sha512-sGsQtcjMqdQyijAHytfGEELB8FufGbfXIsvUTe+NLx1GDRJCXtCFLBLUI1eyZCKXXvbEU2C6gai0PZKoIE9Vbg==}
+  react-remove-scroll@2.7.1:
+    resolution: {integrity: sha512-HpMh8+oahmIdOuS5aFKKY6Pyog+FNaZV/XyJOq7b4YFwsFHe5yYfdbIalI4k3vU2nSDql7YskmUseHsRrJqIPA==}
     engines: {node: '>=10'}
     peerDependencies:
       '@types/react': '*'
@@ -2926,8 +2926,8 @@ packages:
       react: ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  react-virtuoso@4.12.7:
-    resolution: {integrity: sha512-njJp764he6Fi1p89PUW0k2kbyWu9w/y+MwdxmwK2kvdwwzVDbz2c2wMj5xdSruBFVgFTsI7Z85hxZR7aSHBrbQ==}
+  react-virtuoso@4.12.8:
+    resolution: {integrity: sha512-NMMKfDBr/+xZZqCQF3tN1SZsh6FwOJkYgThlfnsPLkaEhdyQo0EuWUzu3ix6qjnI7rYwJhMwRGoJBi+aiDfGsA==}
     peerDependencies:
       react: '>=16 || >=17 || >= 18 || >= 19'
       react-dom: '>=16 || >=17 || >= 18 || >=19'
@@ -3144,8 +3144,8 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders'
 
-  tailwindcss@4.1.7:
-    resolution: {integrity: sha512-kr1o/ErIdNhTz8uzAYL7TpaUuzKIE6QPQ4qmSdxnoX/lo+5wmUHQA6h3L5yIqEImSRnAAURDirLu/BgiXGPAhg==}
+  tailwindcss@4.1.8:
+    resolution: {integrity: sha512-kjeW8gjdxasbmFKpVGrGd5T4i40mV5J2Rasw48QARfYeQ8YS9x02ON9SFWax3Qf616rt4Cp3nVNIj6Hd1mP3og==}
 
   tapable@2.2.2:
     resolution: {integrity: sha512-Re10+NauLTMCudc7T5WLFLAwDhQ0JWdrMK+9B2M8zR5hRExKmsRDCBA7/aV/pNJFltmBFO5BAMlQFi/vq3nKOg==}
@@ -3562,8 +3562,8 @@ packages:
     resolution: {integrity: sha512-GQHQqAopRhwU8Kt1DDM8NjibDXHC8eoh1erhGAJPEyveY9qqVeXvVikNKrDz69sHowPMorbPUrH/mx8c50eiBQ==}
     engines: {node: '>=18'}
 
-  zod@3.25.32:
-    resolution: {integrity: sha512-OSm2xTIRfW8CV5/QKgngwmQW/8aPfGdaQFlrGoErlgg/Epm7cjb6K6VEyExfe65a3VybUOnu381edLb0dfJl0g==}
+  zod@3.25.46:
+    resolution: {integrity: sha512-IqRxcHEIjqLd4LNS/zKffB3Jzg3NwqJxQQ0Ns7pdrvgGkwQsEBdEQcOHaBVqvvZArShRzI39+aMST3FBGmTrLQ==}
 
 snapshots:
 
@@ -3583,7 +3583,7 @@ snapshots:
       pino: 9.7.0
       pino-pretty: 13.0.0
       rxjs: 7.8.2
-      zod: 3.25.32
+      zod: 3.25.46
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -3609,17 +3609,17 @@ snapshots:
 
   '@babel/compat-data@7.27.3': {}
 
-  '@babel/core@7.27.3':
+  '@babel/core@7.27.4':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@babel/code-frame': 7.27.1
       '@babel/generator': 7.27.3
       '@babel/helper-compilation-targets': 7.27.2
-      '@babel/helper-module-transforms': 7.27.3(@babel/core@7.27.3)
-      '@babel/helpers': 7.27.3
-      '@babel/parser': 7.27.3
+      '@babel/helper-module-transforms': 7.27.3(@babel/core@7.27.4)
+      '@babel/helpers': 7.27.4
+      '@babel/parser': 7.27.4
       '@babel/template': 7.27.2
-      '@babel/traverse': 7.27.3
+      '@babel/traverse': 7.27.4
       '@babel/types': 7.27.3
       convert-source-map: 2.0.0
       debug: 4.4.1
@@ -3631,7 +3631,7 @@ snapshots:
 
   '@babel/generator@7.27.3':
     dependencies:
-      '@babel/parser': 7.27.3
+      '@babel/parser': 7.27.4
       '@babel/types': 7.27.3
       '@jridgewell/gen-mapping': 0.3.8
       '@jridgewell/trace-mapping': 0.3.25
@@ -3641,23 +3641,23 @@ snapshots:
     dependencies:
       '@babel/compat-data': 7.27.3
       '@babel/helper-validator-option': 7.27.1
-      browserslist: 4.24.5
+      browserslist: 4.25.0
       lru-cache: 5.1.1
       semver: 6.3.1
 
   '@babel/helper-module-imports@7.27.1':
     dependencies:
-      '@babel/traverse': 7.27.3
+      '@babel/traverse': 7.27.4
       '@babel/types': 7.27.3
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/helper-module-transforms@7.27.3(@babel/core@7.27.3)':
+  '@babel/helper-module-transforms@7.27.3(@babel/core@7.27.4)':
     dependencies:
-      '@babel/core': 7.27.3
+      '@babel/core': 7.27.4
       '@babel/helper-module-imports': 7.27.1
       '@babel/helper-validator-identifier': 7.27.1
-      '@babel/traverse': 7.27.3
+      '@babel/traverse': 7.27.4
     transitivePeerDependencies:
       - supports-color
 
@@ -3669,38 +3669,38 @@ snapshots:
 
   '@babel/helper-validator-option@7.27.1': {}
 
-  '@babel/helpers@7.27.3':
+  '@babel/helpers@7.27.4':
     dependencies:
       '@babel/template': 7.27.2
       '@babel/types': 7.27.3
 
-  '@babel/parser@7.27.3':
+  '@babel/parser@7.27.4':
     dependencies:
       '@babel/types': 7.27.3
 
-  '@babel/plugin-transform-react-jsx-self@7.27.1(@babel/core@7.27.3)':
+  '@babel/plugin-transform-react-jsx-self@7.27.1(@babel/core@7.27.4)':
     dependencies:
-      '@babel/core': 7.27.3
+      '@babel/core': 7.27.4
       '@babel/helper-plugin-utils': 7.27.1
 
-  '@babel/plugin-transform-react-jsx-source@7.27.1(@babel/core@7.27.3)':
+  '@babel/plugin-transform-react-jsx-source@7.27.1(@babel/core@7.27.4)':
     dependencies:
-      '@babel/core': 7.27.3
+      '@babel/core': 7.27.4
       '@babel/helper-plugin-utils': 7.27.1
 
-  '@babel/runtime@7.27.3': {}
+  '@babel/runtime@7.27.4': {}
 
   '@babel/template@7.27.2':
     dependencies:
       '@babel/code-frame': 7.27.1
-      '@babel/parser': 7.27.3
+      '@babel/parser': 7.27.4
       '@babel/types': 7.27.3
 
-  '@babel/traverse@7.27.3':
+  '@babel/traverse@7.27.4':
     dependencies:
       '@babel/code-frame': 7.27.1
       '@babel/generator': 7.27.3
-      '@babel/parser': 7.27.3
+      '@babel/parser': 7.27.4
       '@babel/template': 7.27.2
       '@babel/types': 7.27.3
       debug: 4.4.1
@@ -3792,9 +3792,9 @@ snapshots:
   '@esbuild/win32-x64@0.25.5':
     optional: true
 
-  '@eslint-community/eslint-utils@4.7.0(eslint@9.27.0(jiti@2.4.2))':
+  '@eslint-community/eslint-utils@4.7.0(eslint@9.28.0(jiti@2.4.2))':
     dependencies:
-      eslint: 9.27.0(jiti@2.4.2)
+      eslint: 9.28.0(jiti@2.4.2)
       eslint-visitor-keys: 3.4.3
 
   '@eslint-community/regexpp@4.12.1': {}
@@ -3827,7 +3827,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@eslint/js@9.27.0': {}
+  '@eslint/js@9.28.0': {}
 
   '@eslint/object-schema@2.1.6': {}
 
@@ -3982,24 +3982,24 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@polkadot-api/cli@0.13.2(jiti@2.4.2)(postcss@8.5.3)(yaml@2.6.1)':
+  '@polkadot-api/cli@0.13.3(jiti@2.4.2)(postcss@8.5.4)(yaml@2.6.1)':
     dependencies:
       '@commander-js/extra-typings': 14.0.0(commander@14.0.0)
-      '@polkadot-api/codegen': 0.16.1
-      '@polkadot-api/ink-contracts': 0.3.3
+      '@polkadot-api/codegen': 0.16.2
+      '@polkadot-api/ink-contracts': 0.3.4
       '@polkadot-api/json-rpc-provider': 0.0.4
-      '@polkadot-api/known-chains': 0.7.7
-      '@polkadot-api/metadata-compatibility': 0.2.3
-      '@polkadot-api/observable-client': 0.11.0(@polkadot-api/substrate-client@0.3.0)(rxjs@7.8.2)
+      '@polkadot-api/known-chains': 0.8.0
+      '@polkadot-api/metadata-compatibility': 0.2.4
+      '@polkadot-api/observable-client': 0.11.1(@polkadot-api/substrate-client@0.4.0)(rxjs@7.8.2)
       '@polkadot-api/polkadot-sdk-compat': 2.3.2
       '@polkadot-api/sm-provider': 0.1.7(@polkadot-api/smoldot@0.3.9)
       '@polkadot-api/smoldot': 0.3.9
-      '@polkadot-api/substrate-bindings': 0.13.0
-      '@polkadot-api/substrate-client': 0.3.0
-      '@polkadot-api/utils': 0.1.2
+      '@polkadot-api/substrate-bindings': 0.14.0
+      '@polkadot-api/substrate-client': 0.4.0
+      '@polkadot-api/utils': 0.2.0
       '@polkadot-api/wasm-executor': 0.1.2
       '@polkadot-api/ws-provider': 0.4.0
-      '@types/node': 22.15.23
+      '@types/node': 22.15.29
       commander: 14.0.0
       execa: 9.6.0
       fs.promises.exists: 1.1.4
@@ -4007,7 +4007,7 @@ snapshots:
       read-pkg: 9.0.1
       rxjs: 7.8.2
       tsc-prog: 2.3.0(typescript@5.8.3)
-      tsup: 8.5.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.3)(yaml@2.6.1)
+      tsup: 8.5.0(jiti@2.4.2)(postcss@8.5.4)(typescript@5.8.3)(yaml@2.6.1)
       typescript: 5.8.3
       write-package: 7.1.0
     transitivePeerDependencies:
@@ -4021,23 +4021,23 @@ snapshots:
       - utf-8-validate
       - yaml
 
-  '@polkadot-api/codegen@0.16.1':
+  '@polkadot-api/codegen@0.16.2':
     dependencies:
-      '@polkadot-api/ink-contracts': 0.3.3
-      '@polkadot-api/metadata-builders': 0.12.1
-      '@polkadot-api/metadata-compatibility': 0.2.3
-      '@polkadot-api/substrate-bindings': 0.13.0
-      '@polkadot-api/utils': 0.1.2
+      '@polkadot-api/ink-contracts': 0.3.4
+      '@polkadot-api/metadata-builders': 0.12.2
+      '@polkadot-api/metadata-compatibility': 0.2.4
+      '@polkadot-api/substrate-bindings': 0.14.0
+      '@polkadot-api/utils': 0.2.0
 
-  '@polkadot-api/descriptors@file:.papi/descriptors(polkadot-api@1.12.2(jiti@2.4.2)(postcss@8.5.3)(rxjs@7.8.2)(yaml@2.6.1))':
+  '@polkadot-api/descriptors@file:.papi/descriptors(polkadot-api@1.13.0(jiti@2.4.2)(postcss@8.5.4)(rxjs@7.8.2)(yaml@2.6.1))':
     dependencies:
-      polkadot-api: 1.12.2(jiti@2.4.2)(postcss@8.5.3)(rxjs@7.8.2)(yaml@2.6.1)
+      polkadot-api: 1.13.0(jiti@2.4.2)(postcss@8.5.4)(rxjs@7.8.2)(yaml@2.6.1)
 
-  '@polkadot-api/ink-contracts@0.3.3':
+  '@polkadot-api/ink-contracts@0.3.4':
     dependencies:
-      '@polkadot-api/metadata-builders': 0.12.1
-      '@polkadot-api/substrate-bindings': 0.13.0
-      '@polkadot-api/utils': 0.1.2
+      '@polkadot-api/metadata-builders': 0.12.2
+      '@polkadot-api/substrate-bindings': 0.14.0
+      '@polkadot-api/utils': 0.2.0
 
   '@polkadot-api/json-rpc-provider-proxy@0.1.0':
     optional: true
@@ -4049,22 +4049,22 @@ snapshots:
 
   '@polkadot-api/json-rpc-provider@0.0.4': {}
 
-  '@polkadot-api/known-chains@0.7.7': {}
+  '@polkadot-api/known-chains@0.8.0': {}
 
   '@polkadot-api/logs-provider@0.0.6':
     dependencies:
       '@polkadot-api/json-rpc-provider': 0.0.4
 
-  '@polkadot-api/merkleize-metadata@1.1.17':
+  '@polkadot-api/merkleize-metadata@1.1.18':
     dependencies:
-      '@polkadot-api/metadata-builders': 0.12.1
-      '@polkadot-api/substrate-bindings': 0.13.0
-      '@polkadot-api/utils': 0.1.2
+      '@polkadot-api/metadata-builders': 0.12.2
+      '@polkadot-api/substrate-bindings': 0.14.0
+      '@polkadot-api/utils': 0.2.0
 
-  '@polkadot-api/metadata-builders@0.12.1':
+  '@polkadot-api/metadata-builders@0.12.2':
     dependencies:
-      '@polkadot-api/substrate-bindings': 0.13.0
-      '@polkadot-api/utils': 0.1.2
+      '@polkadot-api/substrate-bindings': 0.14.0
+      '@polkadot-api/utils': 0.2.0
 
   '@polkadot-api/metadata-builders@0.3.2':
     dependencies:
@@ -4072,17 +4072,17 @@ snapshots:
       '@polkadot-api/utils': 0.1.0
     optional: true
 
-  '@polkadot-api/metadata-compatibility@0.2.3':
+  '@polkadot-api/metadata-compatibility@0.2.4':
     dependencies:
-      '@polkadot-api/metadata-builders': 0.12.1
-      '@polkadot-api/substrate-bindings': 0.13.0
+      '@polkadot-api/metadata-builders': 0.12.2
+      '@polkadot-api/substrate-bindings': 0.14.0
 
-  '@polkadot-api/observable-client@0.11.0(@polkadot-api/substrate-client@0.3.0)(rxjs@7.8.2)':
+  '@polkadot-api/observable-client@0.11.1(@polkadot-api/substrate-client@0.4.0)(rxjs@7.8.2)':
     dependencies:
-      '@polkadot-api/metadata-builders': 0.12.1
-      '@polkadot-api/substrate-bindings': 0.13.0
-      '@polkadot-api/substrate-client': 0.3.0
-      '@polkadot-api/utils': 0.1.2
+      '@polkadot-api/metadata-builders': 0.12.2
+      '@polkadot-api/substrate-bindings': 0.14.0
+      '@polkadot-api/substrate-client': 0.4.0
+      '@polkadot-api/utils': 0.2.0
       rxjs: 7.8.2
 
   '@polkadot-api/observable-client@0.3.2(@polkadot-api/substrate-client@0.1.4)(rxjs@7.8.2)':
@@ -4094,13 +4094,13 @@ snapshots:
       rxjs: 7.8.2
     optional: true
 
-  '@polkadot-api/pjs-signer@0.6.8':
+  '@polkadot-api/pjs-signer@0.6.9':
     dependencies:
-      '@polkadot-api/metadata-builders': 0.12.1
+      '@polkadot-api/metadata-builders': 0.12.2
       '@polkadot-api/polkadot-signer': 0.1.6
-      '@polkadot-api/signers-common': 0.1.9
-      '@polkadot-api/substrate-bindings': 0.13.0
-      '@polkadot-api/utils': 0.1.2
+      '@polkadot-api/signers-common': 0.1.10
+      '@polkadot-api/substrate-bindings': 0.14.0
+      '@polkadot-api/utils': 0.2.0
 
   '@polkadot-api/polkadot-sdk-compat@2.3.2':
     dependencies:
@@ -4108,28 +4108,28 @@ snapshots:
 
   '@polkadot-api/polkadot-signer@0.1.6': {}
 
-  '@polkadot-api/react-builder@0.2.8(react@19.1.0)':
+  '@polkadot-api/react-builder@0.2.9(react@19.1.0)':
     dependencies:
-      '@polkadot-api/metadata-builders': 0.12.1
-      '@polkadot-api/substrate-bindings': 0.13.0
-      '@polkadot-api/utils': 0.1.2
+      '@polkadot-api/metadata-builders': 0.12.2
+      '@polkadot-api/substrate-bindings': 0.14.0
+      '@polkadot-api/utils': 0.2.0
       react: 19.1.0
 
-  '@polkadot-api/signer@0.2.1':
+  '@polkadot-api/signer@0.2.2':
     dependencies:
       '@noble/hashes': 1.8.0
-      '@polkadot-api/merkleize-metadata': 1.1.17
+      '@polkadot-api/merkleize-metadata': 1.1.18
       '@polkadot-api/polkadot-signer': 0.1.6
-      '@polkadot-api/signers-common': 0.1.9
-      '@polkadot-api/substrate-bindings': 0.13.0
-      '@polkadot-api/utils': 0.1.2
+      '@polkadot-api/signers-common': 0.1.10
+      '@polkadot-api/substrate-bindings': 0.14.0
+      '@polkadot-api/utils': 0.2.0
 
-  '@polkadot-api/signers-common@0.1.9':
+  '@polkadot-api/signers-common@0.1.10':
     dependencies:
-      '@polkadot-api/metadata-builders': 0.12.1
+      '@polkadot-api/metadata-builders': 0.12.2
       '@polkadot-api/polkadot-signer': 0.1.6
-      '@polkadot-api/substrate-bindings': 0.13.0
-      '@polkadot-api/utils': 0.1.2
+      '@polkadot-api/substrate-bindings': 0.14.0
+      '@polkadot-api/utils': 0.2.0
 
   '@polkadot-api/sm-provider@0.1.7(@polkadot-api/smoldot@0.3.9)':
     dependencies:
@@ -4139,24 +4139,24 @@ snapshots:
 
   '@polkadot-api/smoldot@0.3.9':
     dependencies:
-      '@types/node': 22.15.23
+      '@types/node': 22.15.29
       smoldot: 2.0.35
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@polkadot-api/substrate-bindings@0.13.0':
+  '@polkadot-api/substrate-bindings@0.14.0':
     dependencies:
       '@noble/hashes': 1.8.0
-      '@polkadot-api/utils': 0.1.2
-      '@scure/base': 1.2.5
+      '@polkadot-api/utils': 0.2.0
+      '@scure/base': 1.2.6
       scale-ts: 1.6.1
 
   '@polkadot-api/substrate-bindings@0.6.0':
     dependencies:
       '@noble/hashes': 1.8.0
       '@polkadot-api/utils': 0.1.0
-      '@scure/base': 1.2.5
+      '@scure/base': 1.2.6
       scale-ts: 1.6.1
     optional: true
 
@@ -4166,15 +4166,15 @@ snapshots:
       '@polkadot-api/utils': 0.1.0
     optional: true
 
-  '@polkadot-api/substrate-client@0.3.0':
+  '@polkadot-api/substrate-client@0.4.0':
     dependencies:
       '@polkadot-api/json-rpc-provider': 0.0.4
-      '@polkadot-api/utils': 0.1.2
+      '@polkadot-api/utils': 0.2.0
 
   '@polkadot-api/utils@0.1.0':
     optional: true
 
-  '@polkadot-api/utils@0.1.2': {}
+  '@polkadot-api/utils@0.2.0': {}
 
   '@polkadot-api/wasm-executor@0.1.2': {}
 
@@ -4274,7 +4274,7 @@ snapshots:
       '@polkadot/wasm-util': 7.4.1(@polkadot/util@13.5.1)
       '@polkadot/x-bigint': 13.5.1
       '@polkadot/x-randomvalues': 13.5.1(@polkadot/util@13.5.1)(@polkadot/wasm-util@7.4.1(@polkadot/util@13.5.1))
-      '@scure/base': 1.2.5
+      '@scure/base': 1.2.6
       tslib: 2.8.1
 
   '@polkadot/util@13.5.1':
@@ -4459,7 +4459,7 @@ snapshots:
       aria-hidden: 1.2.6
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
-      react-remove-scroll: 2.7.0(@types/react@19.1.6)(react@19.1.0)
+      react-remove-scroll: 2.7.1(@types/react@19.1.6)(react@19.1.0)
     optionalDependencies:
       '@types/react': 19.1.6
       '@types/react-dom': 19.1.5(@types/react@19.1.6)
@@ -4534,7 +4534,7 @@ snapshots:
       aria-hidden: 1.2.6
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
-      react-remove-scroll: 2.7.0(@types/react@19.1.6)(react@19.1.0)
+      react-remove-scroll: 2.7.1(@types/react@19.1.6)(react@19.1.0)
     optionalDependencies:
       '@types/react': 19.1.6
       '@types/react-dom': 19.1.5(@types/react@19.1.6)
@@ -4662,7 +4662,7 @@ snapshots:
       aria-hidden: 1.2.6
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
-      react-remove-scroll: 2.7.0(@types/react@19.1.6)(react@19.1.0)
+      react-remove-scroll: 2.7.1(@types/react@19.1.6)(react@19.1.0)
     optionalDependencies:
       '@types/react': 19.1.6
       '@types/react-dom': 19.1.5(@types/react@19.1.6)
@@ -4880,18 +4880,18 @@ snapshots:
     dependencies:
       rxjs: 7.8.2
 
-  '@scure/base@1.2.5': {}
+  '@scure/base@1.2.6': {}
 
   '@scure/bip32@1.6.2':
     dependencies:
       '@noble/curves': 1.8.1
       '@noble/hashes': 1.7.1
-      '@scure/base': 1.2.5
+      '@scure/base': 1.2.6
 
   '@scure/bip39@1.5.4':
     dependencies:
       '@noble/hashes': 1.7.1
-      '@scure/base': 1.2.5
+      '@scure/base': 1.2.6
 
   '@sec-ant/readable-stream@0.4.1': {}
 
@@ -4928,7 +4928,7 @@ snapshots:
 
   '@substrate/ss58-registry@1.51.0': {}
 
-  '@tailwindcss/node@4.1.7':
+  '@tailwindcss/node@4.1.8':
     dependencies:
       '@ampproject/remapping': 2.3.0
       enhanced-resolve: 5.18.1
@@ -4936,78 +4936,78 @@ snapshots:
       lightningcss: 1.30.1
       magic-string: 0.30.17
       source-map-js: 1.2.1
-      tailwindcss: 4.1.7
+      tailwindcss: 4.1.8
 
-  '@tailwindcss/oxide-android-arm64@4.1.7':
+  '@tailwindcss/oxide-android-arm64@4.1.8':
     optional: true
 
-  '@tailwindcss/oxide-darwin-arm64@4.1.7':
+  '@tailwindcss/oxide-darwin-arm64@4.1.8':
     optional: true
 
-  '@tailwindcss/oxide-darwin-x64@4.1.7':
+  '@tailwindcss/oxide-darwin-x64@4.1.8':
     optional: true
 
-  '@tailwindcss/oxide-freebsd-x64@4.1.7':
+  '@tailwindcss/oxide-freebsd-x64@4.1.8':
     optional: true
 
-  '@tailwindcss/oxide-linux-arm-gnueabihf@4.1.7':
+  '@tailwindcss/oxide-linux-arm-gnueabihf@4.1.8':
     optional: true
 
-  '@tailwindcss/oxide-linux-arm64-gnu@4.1.7':
+  '@tailwindcss/oxide-linux-arm64-gnu@4.1.8':
     optional: true
 
-  '@tailwindcss/oxide-linux-arm64-musl@4.1.7':
+  '@tailwindcss/oxide-linux-arm64-musl@4.1.8':
     optional: true
 
-  '@tailwindcss/oxide-linux-x64-gnu@4.1.7':
+  '@tailwindcss/oxide-linux-x64-gnu@4.1.8':
     optional: true
 
-  '@tailwindcss/oxide-linux-x64-musl@4.1.7':
+  '@tailwindcss/oxide-linux-x64-musl@4.1.8':
     optional: true
 
-  '@tailwindcss/oxide-wasm32-wasi@4.1.7':
+  '@tailwindcss/oxide-wasm32-wasi@4.1.8':
     optional: true
 
-  '@tailwindcss/oxide-win32-arm64-msvc@4.1.7':
+  '@tailwindcss/oxide-win32-arm64-msvc@4.1.8':
     optional: true
 
-  '@tailwindcss/oxide-win32-x64-msvc@4.1.7':
+  '@tailwindcss/oxide-win32-x64-msvc@4.1.8':
     optional: true
 
-  '@tailwindcss/oxide@4.1.7':
+  '@tailwindcss/oxide@4.1.8':
     dependencies:
       detect-libc: 2.0.4
       tar: 7.4.3
     optionalDependencies:
-      '@tailwindcss/oxide-android-arm64': 4.1.7
-      '@tailwindcss/oxide-darwin-arm64': 4.1.7
-      '@tailwindcss/oxide-darwin-x64': 4.1.7
-      '@tailwindcss/oxide-freebsd-x64': 4.1.7
-      '@tailwindcss/oxide-linux-arm-gnueabihf': 4.1.7
-      '@tailwindcss/oxide-linux-arm64-gnu': 4.1.7
-      '@tailwindcss/oxide-linux-arm64-musl': 4.1.7
-      '@tailwindcss/oxide-linux-x64-gnu': 4.1.7
-      '@tailwindcss/oxide-linux-x64-musl': 4.1.7
-      '@tailwindcss/oxide-wasm32-wasi': 4.1.7
-      '@tailwindcss/oxide-win32-arm64-msvc': 4.1.7
-      '@tailwindcss/oxide-win32-x64-msvc': 4.1.7
+      '@tailwindcss/oxide-android-arm64': 4.1.8
+      '@tailwindcss/oxide-darwin-arm64': 4.1.8
+      '@tailwindcss/oxide-darwin-x64': 4.1.8
+      '@tailwindcss/oxide-freebsd-x64': 4.1.8
+      '@tailwindcss/oxide-linux-arm-gnueabihf': 4.1.8
+      '@tailwindcss/oxide-linux-arm64-gnu': 4.1.8
+      '@tailwindcss/oxide-linux-arm64-musl': 4.1.8
+      '@tailwindcss/oxide-linux-x64-gnu': 4.1.8
+      '@tailwindcss/oxide-linux-x64-musl': 4.1.8
+      '@tailwindcss/oxide-wasm32-wasi': 4.1.8
+      '@tailwindcss/oxide-win32-arm64-msvc': 4.1.8
+      '@tailwindcss/oxide-win32-x64-msvc': 4.1.8
 
-  '@tailwindcss/vite@4.1.7(vite@6.3.5(@types/node@22.15.23)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.6.1))':
+  '@tailwindcss/vite@4.1.8(vite@6.3.5(@types/node@22.15.29)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.6.1))':
     dependencies:
-      '@tailwindcss/node': 4.1.7
-      '@tailwindcss/oxide': 4.1.7
-      tailwindcss: 4.1.7
-      vite: 6.3.5(@types/node@22.15.23)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.6.1)
+      '@tailwindcss/node': 4.1.8
+      '@tailwindcss/oxide': 4.1.8
+      tailwindcss: 4.1.8
+      vite: 6.3.5(@types/node@22.15.29)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.6.1)
 
   '@tanem/svg-injector@10.1.68':
     dependencies:
-      '@babel/runtime': 7.27.3
+      '@babel/runtime': 7.27.4
       content-type: 1.0.5
       tslib: 2.8.1
 
   '@types/babel__core@7.20.5':
     dependencies:
-      '@babel/parser': 7.27.3
+      '@babel/parser': 7.27.4
       '@babel/types': 7.27.3
       '@types/babel__generator': 7.27.0
       '@types/babel__template': 7.4.4
@@ -5019,7 +5019,7 @@ snapshots:
 
   '@types/babel__template@7.4.4':
     dependencies:
-      '@babel/parser': 7.27.3
+      '@babel/parser': 7.27.4
       '@babel/types': 7.27.3
 
   '@types/babel__traverse@7.20.7':
@@ -5028,13 +5028,13 @@ snapshots:
 
   '@types/bn.js@5.1.6':
     dependencies:
-      '@types/node': 22.15.23
+      '@types/node': 22.15.29
 
   '@types/estree@1.0.7': {}
 
   '@types/json-schema@7.0.15': {}
 
-  '@types/node@22.15.23':
+  '@types/node@22.15.29':
     dependencies:
       undici-types: 6.21.0
 
@@ -5058,31 +5058,31 @@ snapshots:
 
   '@types/uuid@10.0.0': {}
 
-  '@typescript-eslint/eslint-plugin@8.33.0(@typescript-eslint/parser@8.33.0(eslint@9.27.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.27.0(jiti@2.4.2))(typescript@5.8.3)':
+  '@typescript-eslint/eslint-plugin@8.33.0(@typescript-eslint/parser@8.33.0(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.1
-      '@typescript-eslint/parser': 8.33.0(eslint@9.27.0(jiti@2.4.2))(typescript@5.8.3)
+      '@typescript-eslint/parser': 8.33.0(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3)
       '@typescript-eslint/scope-manager': 8.33.0
-      '@typescript-eslint/type-utils': 8.33.0(eslint@9.27.0(jiti@2.4.2))(typescript@5.8.3)
-      '@typescript-eslint/utils': 8.33.0(eslint@9.27.0(jiti@2.4.2))(typescript@5.8.3)
+      '@typescript-eslint/type-utils': 8.33.0(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3)
+      '@typescript-eslint/utils': 8.33.0(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3)
       '@typescript-eslint/visitor-keys': 8.33.0
-      eslint: 9.27.0(jiti@2.4.2)
+      eslint: 9.28.0(jiti@2.4.2)
       graphemer: 1.4.0
-      ignore: 7.0.4
+      ignore: 7.0.5
       natural-compare: 1.4.0
       ts-api-utils: 2.1.0(typescript@5.8.3)
       typescript: 5.8.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.33.0(eslint@9.27.0(jiti@2.4.2))(typescript@5.8.3)':
+  '@typescript-eslint/parser@8.33.0(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3)':
     dependencies:
       '@typescript-eslint/scope-manager': 8.33.0
       '@typescript-eslint/types': 8.33.0
       '@typescript-eslint/typescript-estree': 8.33.0(typescript@5.8.3)
       '@typescript-eslint/visitor-keys': 8.33.0
       debug: 4.4.1
-      eslint: 9.27.0(jiti@2.4.2)
+      eslint: 9.28.0(jiti@2.4.2)
       typescript: 5.8.3
     transitivePeerDependencies:
       - supports-color
@@ -5105,12 +5105,12 @@ snapshots:
     dependencies:
       typescript: 5.8.3
 
-  '@typescript-eslint/type-utils@8.33.0(eslint@9.27.0(jiti@2.4.2))(typescript@5.8.3)':
+  '@typescript-eslint/type-utils@8.33.0(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3)':
     dependencies:
       '@typescript-eslint/typescript-estree': 8.33.0(typescript@5.8.3)
-      '@typescript-eslint/utils': 8.33.0(eslint@9.27.0(jiti@2.4.2))(typescript@5.8.3)
+      '@typescript-eslint/utils': 8.33.0(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3)
       debug: 4.4.1
-      eslint: 9.27.0(jiti@2.4.2)
+      eslint: 9.28.0(jiti@2.4.2)
       ts-api-utils: 2.1.0(typescript@5.8.3)
       typescript: 5.8.3
     transitivePeerDependencies:
@@ -5134,13 +5134,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.33.0(eslint@9.27.0(jiti@2.4.2))(typescript@5.8.3)':
+  '@typescript-eslint/utils@8.33.0(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3)':
     dependencies:
-      '@eslint-community/eslint-utils': 4.7.0(eslint@9.27.0(jiti@2.4.2))
+      '@eslint-community/eslint-utils': 4.7.0(eslint@9.28.0(jiti@2.4.2))
       '@typescript-eslint/scope-manager': 8.33.0
       '@typescript-eslint/types': 8.33.0
       '@typescript-eslint/typescript-estree': 8.33.0(typescript@5.8.3)
-      eslint: 9.27.0(jiti@2.4.2)
+      eslint: 9.28.0(jiti@2.4.2)
       typescript: 5.8.3
     transitivePeerDependencies:
       - supports-color
@@ -5150,19 +5150,19 @@ snapshots:
       '@typescript-eslint/types': 8.33.0
       eslint-visitor-keys: 4.2.0
 
-  '@vitejs/plugin-react@4.5.0(vite@6.3.5(@types/node@22.15.23)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.6.1))':
+  '@vitejs/plugin-react@4.5.0(vite@6.3.5(@types/node@22.15.29)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.6.1))':
     dependencies:
-      '@babel/core': 7.27.3
-      '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.27.3)
-      '@babel/plugin-transform-react-jsx-source': 7.27.1(@babel/core@7.27.3)
+      '@babel/core': 7.27.4
+      '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.27.4)
+      '@babel/plugin-transform-react-jsx-source': 7.27.1(@babel/core@7.27.4)
       '@rolldown/pluginutils': 1.0.0-beta.9
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 6.3.5(@types/node@22.15.23)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.6.1)
+      vite: 6.3.5(@types/node@22.15.29)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.6.1)
     transitivePeerDependencies:
       - supports-color
 
-  '@walletconnect/core@2.20.3(typescript@5.8.3)(zod@3.25.32)':
+  '@walletconnect/core@2.21.0(typescript@5.8.3)(zod@3.25.46)':
     dependencies:
       '@walletconnect/heartbeat': 1.2.2
       '@walletconnect/jsonrpc-provider': 1.0.14
@@ -5175,8 +5175,8 @@ snapshots:
       '@walletconnect/relay-auth': 1.1.0
       '@walletconnect/safe-json': 1.0.2
       '@walletconnect/time': 1.0.2
-      '@walletconnect/types': 2.20.3
-      '@walletconnect/utils': 2.20.3(typescript@5.8.3)(zod@3.25.32)
+      '@walletconnect/types': 2.21.0
+      '@walletconnect/utils': 2.21.0(typescript@5.8.3)(zod@3.25.46)
       '@walletconnect/window-getters': 1.0.1
       es-toolkit: 1.33.0
       events: 3.3.0
@@ -5326,16 +5326,16 @@ snapshots:
     dependencies:
       tslib: 1.14.1
 
-  '@walletconnect/sign-client@2.20.3(typescript@5.8.3)(zod@3.25.32)':
+  '@walletconnect/sign-client@2.21.0(typescript@5.8.3)(zod@3.25.46)':
     dependencies:
-      '@walletconnect/core': 2.20.3(typescript@5.8.3)(zod@3.25.32)
+      '@walletconnect/core': 2.21.0(typescript@5.8.3)(zod@3.25.46)
       '@walletconnect/events': 1.0.1
       '@walletconnect/heartbeat': 1.2.2
       '@walletconnect/jsonrpc-utils': 1.0.8
       '@walletconnect/logger': 2.1.2
       '@walletconnect/time': 1.0.2
-      '@walletconnect/types': 2.20.3
-      '@walletconnect/utils': 2.20.3(typescript@5.8.3)(zod@3.25.32)
+      '@walletconnect/types': 2.21.0
+      '@walletconnect/utils': 2.21.0(typescript@5.8.3)(zod@3.25.46)
       events: 3.3.0
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -5365,7 +5365,7 @@ snapshots:
     dependencies:
       tslib: 1.14.1
 
-  '@walletconnect/types@2.20.3':
+  '@walletconnect/types@2.21.0':
     dependencies:
       '@walletconnect/events': 1.0.1
       '@walletconnect/heartbeat': 1.2.2
@@ -5393,7 +5393,7 @@ snapshots:
       - ioredis
       - uploadthing
 
-  '@walletconnect/universal-provider@2.20.3(typescript@5.8.3)(zod@3.25.32)':
+  '@walletconnect/universal-provider@2.21.0(typescript@5.8.3)(zod@3.25.46)':
     dependencies:
       '@walletconnect/events': 1.0.1
       '@walletconnect/jsonrpc-http-connection': 1.0.8
@@ -5402,9 +5402,9 @@ snapshots:
       '@walletconnect/jsonrpc-utils': 1.0.8
       '@walletconnect/keyvaluestorage': 1.1.1
       '@walletconnect/logger': 2.1.2
-      '@walletconnect/sign-client': 2.20.3(typescript@5.8.3)(zod@3.25.32)
-      '@walletconnect/types': 2.20.3
-      '@walletconnect/utils': 2.20.3(typescript@5.8.3)(zod@3.25.32)
+      '@walletconnect/sign-client': 2.21.0(typescript@5.8.3)(zod@3.25.46)
+      '@walletconnect/types': 2.21.0
+      '@walletconnect/utils': 2.21.0(typescript@5.8.3)(zod@3.25.46)
       es-toolkit: 1.33.0
       events: 3.3.0
     transitivePeerDependencies:
@@ -5432,7 +5432,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@walletconnect/utils@2.20.3(typescript@5.8.3)(zod@3.25.32)':
+  '@walletconnect/utils@2.21.0(typescript@5.8.3)(zod@3.25.46)':
     dependencies:
       '@noble/ciphers': 1.2.1
       '@noble/curves': 1.8.1
@@ -5443,14 +5443,14 @@ snapshots:
       '@walletconnect/relay-auth': 1.1.0
       '@walletconnect/safe-json': 1.0.2
       '@walletconnect/time': 1.0.2
-      '@walletconnect/types': 2.20.3
+      '@walletconnect/types': 2.21.0
       '@walletconnect/window-getters': 1.0.1
       '@walletconnect/window-metadata': 1.0.1
       bs58: 6.0.0
       detect-browser: 5.3.0
       query-string: 7.1.3
       uint8arrays: 3.1.0
-      viem: 2.23.2(typescript@5.8.3)(zod@3.25.32)
+      viem: 2.23.2(typescript@5.8.3)(zod@3.25.46)
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -5484,10 +5484,10 @@ snapshots:
       '@walletconnect/window-getters': 1.0.1
       tslib: 1.14.1
 
-  abitype@1.0.8(typescript@5.8.3)(zod@3.25.32):
+  abitype@1.0.8(typescript@5.8.3)(zod@3.25.46):
     optionalDependencies:
       typescript: 5.8.3
-      zod: 3.25.32
+      zod: 3.25.46
 
   acorn-jsx@5.3.2(acorn@8.14.1):
     dependencies:
@@ -5550,12 +5550,12 @@ snapshots:
     dependencies:
       fill-range: 7.1.1
 
-  browserslist@4.24.5:
+  browserslist@4.25.0:
     dependencies:
-      caniuse-lite: 1.0.30001718
-      electron-to-chromium: 1.5.159
+      caniuse-lite: 1.0.30001720
+      electron-to-chromium: 1.5.161
       node-releases: 2.0.19
-      update-browserslist-db: 1.1.3(browserslist@4.24.5)
+      update-browserslist-db: 1.1.3(browserslist@4.25.0)
 
   bs58@6.0.0:
     dependencies:
@@ -5577,7 +5577,7 @@ snapshots:
 
   camelcase@5.3.1: {}
 
-  caniuse-lite@1.0.30001718: {}
+  caniuse-lite@1.0.30001720: {}
 
   chai@5.2.0:
     dependencies:
@@ -5723,7 +5723,7 @@ snapshots:
 
   eastasianwidth@0.2.0: {}
 
-  electron-to-chromium@1.5.159: {}
+  electron-to-chromium@1.5.161: {}
 
   emoji-regex@10.4.0: {}
 
@@ -5776,13 +5776,13 @@ snapshots:
 
   escape-string-regexp@4.0.0: {}
 
-  eslint-plugin-react-hooks@5.2.0(eslint@9.27.0(jiti@2.4.2)):
+  eslint-plugin-react-hooks@5.2.0(eslint@9.28.0(jiti@2.4.2)):
     dependencies:
-      eslint: 9.27.0(jiti@2.4.2)
+      eslint: 9.28.0(jiti@2.4.2)
 
-  eslint-plugin-react-refresh@0.4.20(eslint@9.27.0(jiti@2.4.2)):
+  eslint-plugin-react-refresh@0.4.20(eslint@9.28.0(jiti@2.4.2)):
     dependencies:
-      eslint: 9.27.0(jiti@2.4.2)
+      eslint: 9.28.0(jiti@2.4.2)
 
   eslint-scope@8.3.0:
     dependencies:
@@ -5793,15 +5793,15 @@ snapshots:
 
   eslint-visitor-keys@4.2.0: {}
 
-  eslint@9.27.0(jiti@2.4.2):
+  eslint@9.28.0(jiti@2.4.2):
     dependencies:
-      '@eslint-community/eslint-utils': 4.7.0(eslint@9.27.0(jiti@2.4.2))
+      '@eslint-community/eslint-utils': 4.7.0(eslint@9.28.0(jiti@2.4.2))
       '@eslint-community/regexpp': 4.12.1
       '@eslint/config-array': 0.20.0
       '@eslint/config-helpers': 0.2.2
       '@eslint/core': 0.14.0
       '@eslint/eslintrc': 3.3.1
-      '@eslint/js': 9.27.0
+      '@eslint/js': 9.28.0
       '@eslint/plugin-kit': 0.3.1
       '@humanfs/node': 0.16.6
       '@humanwhocodes/module-importer': 1.0.1
@@ -6026,7 +6026,7 @@ snapshots:
 
   ignore@5.3.2: {}
 
-  ignore@7.0.4: {}
+  ignore@7.0.5: {}
 
   import-fresh@3.3.1:
     dependencies:
@@ -6353,14 +6353,14 @@ snapshots:
       string-width: 7.2.0
       strip-ansi: 7.1.0
 
-  ox@0.6.7(typescript@5.8.3)(zod@3.25.32):
+  ox@0.6.7(typescript@5.8.3)(zod@3.25.46):
     dependencies:
       '@adraffy/ens-normalize': 1.11.0
-      '@noble/curves': 1.9.1
+      '@noble/curves': 1.8.1
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.6.2
       '@scure/bip39': 1.5.4
-      abitype: 1.0.8(typescript@5.8.3)(zod@3.25.32)
+      abitype: 1.0.8(typescript@5.8.3)(zod@3.25.46)
       eventemitter3: 5.0.1
     optionalDependencies:
       typescript: 5.8.3
@@ -6487,25 +6487,25 @@ snapshots:
 
   pngjs@5.0.0: {}
 
-  polkadot-api@1.12.2(jiti@2.4.2)(postcss@8.5.3)(rxjs@7.8.2)(yaml@2.6.1):
+  polkadot-api@1.13.0(jiti@2.4.2)(postcss@8.5.4)(rxjs@7.8.2)(yaml@2.6.1):
     dependencies:
-      '@polkadot-api/cli': 0.13.2(jiti@2.4.2)(postcss@8.5.3)(yaml@2.6.1)
-      '@polkadot-api/ink-contracts': 0.3.3
+      '@polkadot-api/cli': 0.13.3(jiti@2.4.2)(postcss@8.5.4)(yaml@2.6.1)
+      '@polkadot-api/ink-contracts': 0.3.4
       '@polkadot-api/json-rpc-provider': 0.0.4
-      '@polkadot-api/known-chains': 0.7.7
+      '@polkadot-api/known-chains': 0.8.0
       '@polkadot-api/logs-provider': 0.0.6
-      '@polkadot-api/metadata-builders': 0.12.1
-      '@polkadot-api/metadata-compatibility': 0.2.3
-      '@polkadot-api/observable-client': 0.11.0(@polkadot-api/substrate-client@0.3.0)(rxjs@7.8.2)
-      '@polkadot-api/pjs-signer': 0.6.8
+      '@polkadot-api/metadata-builders': 0.12.2
+      '@polkadot-api/metadata-compatibility': 0.2.4
+      '@polkadot-api/observable-client': 0.11.1(@polkadot-api/substrate-client@0.4.0)(rxjs@7.8.2)
+      '@polkadot-api/pjs-signer': 0.6.9
       '@polkadot-api/polkadot-sdk-compat': 2.3.2
       '@polkadot-api/polkadot-signer': 0.1.6
-      '@polkadot-api/signer': 0.2.1
+      '@polkadot-api/signer': 0.2.2
       '@polkadot-api/sm-provider': 0.1.7(@polkadot-api/smoldot@0.3.9)
       '@polkadot-api/smoldot': 0.3.9
-      '@polkadot-api/substrate-bindings': 0.13.0
-      '@polkadot-api/substrate-client': 0.3.0
-      '@polkadot-api/utils': 0.1.2
+      '@polkadot-api/substrate-bindings': 0.14.0
+      '@polkadot-api/substrate-client': 0.4.0
+      '@polkadot-api/utils': 0.2.0
       '@polkadot-api/ws-provider': 0.4.0
       '@rx-state/core': 0.1.4(rxjs@7.8.2)
       rxjs: 7.8.2
@@ -6520,15 +6520,15 @@ snapshots:
       - utf-8-validate
       - yaml
 
-  postcss-load-config@6.0.1(jiti@2.4.2)(postcss@8.5.3)(yaml@2.6.1):
+  postcss-load-config@6.0.1(jiti@2.4.2)(postcss@8.5.4)(yaml@2.6.1):
     dependencies:
       lilconfig: 3.1.3
     optionalDependencies:
       jiti: 2.4.2
-      postcss: 8.5.3
+      postcss: 8.5.4
       yaml: 2.6.1
 
-  postcss@8.5.3:
+  postcss@8.5.4:
     dependencies:
       nanoid: 3.3.11
       picocolors: 1.1.1
@@ -6606,7 +6606,7 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.1.6
 
-  react-remove-scroll@2.7.0(@types/react@19.1.6)(react@19.1.0):
+  react-remove-scroll@2.7.1(@types/react@19.1.6)(react@19.1.0):
     dependencies:
       react: 19.1.0
       react-remove-scroll-bar: 2.3.8(@types/react@19.1.6)(react@19.1.0)
@@ -6641,19 +6641,19 @@ snapshots:
 
   react-svg@16.3.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
-      '@babel/runtime': 7.27.3
+      '@babel/runtime': 7.27.4
       '@tanem/svg-injector': 10.1.68
       '@types/prop-types': 15.7.14
       prop-types: 15.8.1
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
 
-  react-virtuoso@4.12.7(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  react-virtuoso@4.12.8(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
 
-  react18-json-view@0.2.9(patch_hash=wimveejfkp4taxhbk5eqzbey3q)(react@19.1.0):
+  react18-json-view@0.2.9(patch_hash=18eb0a02f9279644adf5cb880895a0c85bd6a84bb945850a7d29833aa7c4c00c)(react@19.1.0):
     dependencies:
       copy-to-clipboard: 3.3.3
       react: 19.1.0
@@ -6866,11 +6866,11 @@ snapshots:
 
   tailwind-merge@3.3.0: {}
 
-  tailwindcss-animate@1.0.7(tailwindcss@4.1.7):
+  tailwindcss-animate@1.0.7(tailwindcss@4.1.8):
     dependencies:
-      tailwindcss: 4.1.7
+      tailwindcss: 4.1.8
 
-  tailwindcss@4.1.7: {}
+  tailwindcss@4.1.8: {}
 
   tapable@2.2.2: {}
 
@@ -6934,7 +6934,7 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  tsup@8.5.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.3)(yaml@2.6.1):
+  tsup@8.5.0(jiti@2.4.2)(postcss@8.5.4)(typescript@5.8.3)(yaml@2.6.1):
     dependencies:
       bundle-require: 5.1.0(esbuild@0.25.5)
       cac: 6.7.14
@@ -6945,7 +6945,7 @@ snapshots:
       fix-dts-default-cjs-exports: 1.0.1
       joycon: 3.1.1
       picocolors: 1.1.1
-      postcss-load-config: 6.0.1(jiti@2.4.2)(postcss@8.5.3)(yaml@2.6.1)
+      postcss-load-config: 6.0.1(jiti@2.4.2)(postcss@8.5.4)(yaml@2.6.1)
       resolve-from: 5.0.0
       rollup: 4.41.1
       source-map: 0.8.0-beta.0
@@ -6954,7 +6954,7 @@ snapshots:
       tinyglobby: 0.2.14
       tree-kill: 1.2.2
     optionalDependencies:
-      postcss: 8.5.3
+      postcss: 8.5.4
       typescript: 5.8.3
     transitivePeerDependencies:
       - jiti
@@ -6968,12 +6968,12 @@ snapshots:
 
   type-fest@4.41.0: {}
 
-  typescript-eslint@8.33.0(eslint@9.27.0(jiti@2.4.2))(typescript@5.8.3):
+  typescript-eslint@8.33.0(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3):
     dependencies:
-      '@typescript-eslint/eslint-plugin': 8.33.0(@typescript-eslint/parser@8.33.0(eslint@9.27.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.27.0(jiti@2.4.2))(typescript@5.8.3)
-      '@typescript-eslint/parser': 8.33.0(eslint@9.27.0(jiti@2.4.2))(typescript@5.8.3)
-      '@typescript-eslint/utils': 8.33.0(eslint@9.27.0(jiti@2.4.2))(typescript@5.8.3)
-      eslint: 9.27.0(jiti@2.4.2)
+      '@typescript-eslint/eslint-plugin': 8.33.0(@typescript-eslint/parser@8.33.0(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3)
+      '@typescript-eslint/parser': 8.33.0(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3)
+      '@typescript-eslint/utils': 8.33.0(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3)
+      eslint: 9.28.0(jiti@2.4.2)
       typescript: 5.8.3
     transitivePeerDependencies:
       - supports-color
@@ -7007,9 +7007,9 @@ snapshots:
     optionalDependencies:
       idb-keyval: 6.2.2
 
-  update-browserslist-db@1.1.3(browserslist@4.24.5):
+  update-browserslist-db@1.1.3(browserslist@4.25.0):
     dependencies:
-      browserslist: 4.24.5
+      browserslist: 4.25.0
       escalade: 3.2.0
       picocolors: 1.1.1
 
@@ -7057,15 +7057,15 @@ snapshots:
       '@types/react': 19.1.6
       react: 19.1.0
 
-  viem@2.23.2(typescript@5.8.3)(zod@3.25.32):
+  viem@2.23.2(typescript@5.8.3)(zod@3.25.46):
     dependencies:
       '@noble/curves': 1.8.1
       '@noble/hashes': 1.7.1
       '@scure/bip32': 1.6.2
       '@scure/bip39': 1.5.4
-      abitype: 1.0.8(typescript@5.8.3)(zod@3.25.32)
+      abitype: 1.0.8(typescript@5.8.3)(zod@3.25.46)
       isows: 1.0.6(ws@8.18.0)
-      ox: 0.6.7(typescript@5.8.3)(zod@3.25.32)
+      ox: 0.6.7(typescript@5.8.3)(zod@3.25.46)
       ws: 8.18.0
     optionalDependencies:
       typescript: 5.8.3
@@ -7074,16 +7074,16 @@ snapshots:
       - utf-8-validate
       - zod
 
-  vite@6.3.5(@types/node@22.15.23)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.6.1):
+  vite@6.3.5(@types/node@22.15.29)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.6.1):
     dependencies:
       esbuild: 0.25.5
       fdir: 6.4.5(picomatch@4.0.2)
       picomatch: 4.0.2
-      postcss: 8.5.3
+      postcss: 8.5.4
       rollup: 4.41.1
       tinyglobby: 0.2.14
     optionalDependencies:
-      '@types/node': 22.15.23
+      '@types/node': 22.15.29
       fsevents: 2.3.3
       jiti: 2.4.2
       lightningcss: 1.30.1
@@ -7192,4 +7192,4 @@ snapshots:
 
   yoctocolors@2.1.1: {}
 
-  zod@3.25.32: {}
+  zod@3.25.46: {}
