@@ -58,11 +58,11 @@ export const getAddressName = async (
     if (!id) return null
   }
 
-  const displayName = readIdentityData(id[0].info.display)?.asText()
+  const displayName = readIdentityData(id.info.display)?.asText()
   return displayName
     ? {
         displayName: `${displayName}${subIdStr}`,
-        judgments: id[0].judgements.map(([registrar, judgement]) => ({
+        judgments: id.judgements.map(([registrar, judgement]) => ({
           registrar,
           judgement: judgement.type,
         })),
