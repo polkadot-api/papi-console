@@ -5,6 +5,7 @@ import { TxBroadcastEvent } from "polkadot-api"
 import * as React from "react"
 import { dismissTransaction, onGoingEvents } from "./transactions.state"
 import { Trash2 } from "lucide-react"
+import { jsonPrint } from "@polkadot-api/utils"
 
 export const Transaction: React.FC<{
   event:
@@ -22,12 +23,7 @@ export const Transaction: React.FC<{
       case "error":
         return <span>There was an unexpected error.</span>
       case "invalid":
-        return (
-          <span>
-            Invalid transaction.{" "}
-            {JSON.stringify(event.value, bigintReplacer, 2)}
-          </span>
-        )
+        return <span>Invalid transaction. {jsonPrint(event.value)}</span>
       case "txBestBlocksState": {
         return event.found ? (
           <span>
@@ -62,7 +58,7 @@ export const Transaction: React.FC<{
             </Link>
             {event.ok
               ? "."
-              : `, but it failed: ${JSON.stringify(event.dispatchError, bigintReplacer, 2)}.`}
+              : `, but it failed: ${jsonPrint(event.dispatchError)}.`}
           </span>
         )
     }
@@ -95,6 +91,3 @@ export const Transaction: React.FC<{
     </div>
   )
 }
-
-const bigintReplacer = (_key: string, value: any) =>
-  typeof value === "bigint" ? value.toString() : value
