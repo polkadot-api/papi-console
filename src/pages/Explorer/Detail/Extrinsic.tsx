@@ -1,15 +1,14 @@
 import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
 import { AccountIdDisplay } from "@/components/AccountIdDisplay"
+import { EthAccountDisplay } from "@/components/EthAccountDisplay"
 import { ExpandBtn } from "@/components/Expand"
 import { JsonDisplay } from "@/components/JsonDisplay"
 import { Link } from "@/hashParams"
 import { SystemEvent } from "@polkadot-api/observable-client"
-import { toHex } from "@polkadot-api/utils"
+import { DecodedExtrinsic } from "@polkadot-api/tx-utils"
 import { Edit } from "lucide-react"
-import { Enum, HexString, SS58String } from "polkadot-api"
 import { FC, useEffect, useRef, useState } from "react"
 import { twMerge } from "tailwind-merge"
-import { DecodedExtrinsic } from "./extrinsicDecoder"
 
 export type ApplyExtrinsicEvent = SystemEvent & {
   phase: { type: "ApplyExtrinsic" }
@@ -36,13 +35,13 @@ export const Extrinsic: FC<{
           {extrinsic.call.type}.{extrinsic.call.value.type}
         </button>
         <div className="flex gap-2 items-center">
-          <CopyBinary value={extrinsic.callData} />
-          {extrinsic.callData.length > 1024 ? (
+          <CopyBinary value={extrinsic.callData.asBytes()} />
+          {extrinsic.callData.asBytes().length > 1024 ? (
             <span className="opacity-50">
               <Edit size={14} />
             </span>
           ) : (
-            <Link to={"/extrinsics#data=" + toHex(extrinsic.callData)}>
+            <Link to={"/extrinsics#data=" + extrinsic.callData.asHex()}>
               <Edit size={14} />
             </Link>
           )}
@@ -50,9 +49,13 @@ export const Extrinsic: FC<{
       </div>
       {expanded ? (
         <div className="overflow-hidden">
-          {extrinsic.signed && (
+          {extrinsic.type === "signed" && (
             <div>
-              <Sender sender={extrinsic.sender} />
+              <Sender sender={extrinsic.address} />
+            </div>
+          )}
+          {"extra" in extrinsic && (
+            <div>
               <SignedExtensions extra={extrinsic.extra} />
             </div>
           )}
@@ -119,7 +122,7 @@ export const EventDisplay: FC<{
 }
 
 const Sender: React.FC<{
-  sender: Enum<{ Id: SS58String }> | SS58String | HexString
+  sender: any
 }> = ({ sender }) => {
   const value: string | null =
     typeof sender === "string"
@@ -131,7 +134,11 @@ const Sender: React.FC<{
     value && (
       <div className="flex gap-2 items-center py-2">
         Signer:
-        <AccountIdDisplay value={value} />
+        {value.startsWith("0x") ? (
+          <EthAccountDisplay value={value} />
+        ) : (
+          <AccountIdDisplay value={value} />
+        )}
       </div>
     )
   )
