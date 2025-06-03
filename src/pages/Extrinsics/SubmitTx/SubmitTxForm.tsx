@@ -53,11 +53,11 @@ const SubmitUnsigned: FC<{ callData: string; onClose: () => void }> = ({
     <ActionButton
       onClick={() => {
         const data = fromHex(callData)
-        const unsignedTx = mergeUint8(
+        const unsignedTx = mergeUint8([
           compactNumber.enc(data.length + 1),
           new Uint8Array([4]),
           data,
-        )
+        ])
         trackUnsignedTx(toHex(unsignedTx))
         onClose()
       }}
