@@ -258,6 +258,7 @@ export const runtimeCtx$ = chainClient$.pipeState(
 
       return uncachedRuntimeCtx$.pipe(
         startWith({
+          metadataRaw: fromHex(cached[1].data),
           lookup,
           dynamicBuilder,
         }),
