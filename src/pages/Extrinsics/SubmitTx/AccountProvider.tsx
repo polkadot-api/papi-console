@@ -1,4 +1,5 @@
 import { AccountIdDisplay } from "@/components/AccountIdDisplay"
+import { EthAccountDisplay } from "@/components/EthAccountDisplay"
 import { WalletConnect } from "@/components/Icons"
 import {
   Select,
@@ -45,7 +46,11 @@ const Accounts: React.FC<{ extension: InjectedExtension }> = ({
           key={account.address}
           value={account.address + "-" + extension.name}
         >
-          <AccountIdDisplay value={account.address} />
+          {account.address.startsWith("0x") ? (
+            <EthAccountDisplay value={account.address} />
+          ) : (
+            <AccountIdDisplay value={account.address} />
+          )}
         </SelectItem>
       ))}
     </SelectGroup>
@@ -64,7 +69,11 @@ const WalletConnectAccounts = () => {
       </SelectLabel>
       {Object.keys(accounts).map((address) => (
         <SelectItem key={address} value={address + "-" + "wallet_connect"}>
-          <AccountIdDisplay value={address} />
+          {address.startsWith("0x") ? (
+            <EthAccountDisplay value={address} />
+          ) : (
+            <AccountIdDisplay value={address} />
+          )}
         </SelectItem>
       ))}
     </SelectGroup>

@@ -10,6 +10,7 @@ import { Enum, HexString, SS58String } from "polkadot-api"
 import { FC, useEffect, useRef, useState } from "react"
 import { twMerge } from "tailwind-merge"
 import { DecodedExtrinsic } from "./extrinsicDecoder"
+import { EthAccountDisplay } from "@/components/EthAccountDisplay"
 
 export type ApplyExtrinsicEvent = SystemEvent & {
   phase: { type: "ApplyExtrinsic" }
@@ -131,7 +132,11 @@ const Sender: React.FC<{
     value && (
       <div className="flex gap-2 items-center py-2">
         Signer:
-        <AccountIdDisplay value={value} />
+        {value.startsWith("0x") ? (
+          <EthAccountDisplay value={value} />
+        ) : (
+          <AccountIdDisplay value={value} />
+        )}
       </div>
     )
   )
