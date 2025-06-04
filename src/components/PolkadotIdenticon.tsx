@@ -1,6 +1,6 @@
 // Based from https://github.com/paritytech/oo7/blob/251ba2b7c45503b68eab4320c270b5afa9bccb60/packages/polkadot-identicon/src/index.jsx
 
-import { blake2b } from "@noble/hashes/blake2b"
+import { blake2b } from "@noble/hashes/blake2"
 import { FC, SVGAttributes } from "react"
 
 export const PolkadotIdenticon: FC<
