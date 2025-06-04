@@ -120,7 +120,7 @@ export const EventDisplay: FC<{
 }
 
 const Sender: React.FC<{
-  sender: any
+  sender: Enum<{ Id: SS58String }> | SS58String | HexString
 }> = ({ sender }) => {
   const value: string | null =
     typeof sender === "string"
