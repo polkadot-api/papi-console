@@ -9,7 +9,10 @@ export const Extrinsic: FC<{ extrinsic: ExtrinsicDescriptor }> = ({
 }) => {
   return (
     <div className="border rounded p-2 flex flex-col gap-2">
-      <p>Version: {extrinsic.version}</p>
+      <p>
+        Version{extrinsic.version.length > 1 ? "s" : ""}:{" "}
+        {extrinsic.version.join(", ")}
+      </p>
       {"type" in extrinsic && (
         <div>
           <h4>Type</h4>
