@@ -61,6 +61,7 @@ export interface BlockInfo {
   status: BlockState
   diff: Record<string, [string | null, string | null]> | null
 }
+
 export const [blockInfo$, recordedBlocks$] = partitionByKey(
   client$.pipe(switchMap((client) => client.blocks$)),
   (v) => v.hash,
@@ -117,31 +118,56 @@ export const [blockInfo$, recordedBlocks$] = partitionByKey(
     ),
 )
 
-const getUnpinnedBlockInfo$ = (hash: string): Observable<BlockInfo> => {
-  const throughRpc$ = chainClient$.pipe(
+const getUnpinnedBlockInfo$ = (hash: string): Observable<BlockInfo> =>
+  client$.pipe(
     switchMap((client) =>
-      defer(() =>
-        client.client._request<
-          {
-            block: {
-              extrinsics: HexString[]
-              header: {
-                digest: { logs: Array<unknown> }
-                extrinsicsRoot: string
-                number: HexString
-                parentHash: HexString
-                stateRoot: HexString
-              }
-            }
-          } | null,
-          [string]
-        >("chain_getBlock", [hash]),
-      ).pipe(
-        repeat({
-          delay: 1000,
+      combineLatest({
+        header: client.getBlockHeader(hash),
+        body: client.watchBlockBody(hash),
+        events: client.getUnsafeApi().query.System.Events.getValue({
+          at: hash,
         }),
+      }).pipe(
+        map(({ header, body, events }) => ({
+          hash: hash,
+          parent: header.parentHash,
+          number: header.number,
+          body,
+          events,
+          header,
+          status: BlockState.Finalized,
+          diff: null,
+        })),
+        catchError(() => getUnpinnedBlockInfoFallback$(hash, client)),
+        tap((v) => disconnectedBlocks$.next(v)),
       ),
     ),
+  )
+
+const getUnpinnedBlockInfoFallback$ = (
+  hash: string,
+  client: PolkadotClient,
+): Observable<BlockInfo> => {
+  const throughRpc$ = defer(() =>
+    client._request<
+      {
+        block: {
+          extrinsics: HexString[]
+          header: {
+            digest: { logs: Array<unknown> }
+            extrinsicsRoot: string
+            number: HexString
+            parentHash: HexString
+            stateRoot: HexString
+          }
+        }
+      } | null,
+      [string]
+    >("chain_getBlock", [hash]),
+  ).pipe(
+    repeat({
+      delay: 1000,
+    }),
     filter((v) => !!v),
     take(1),
     catchError(() => EMPTY),
@@ -166,7 +192,6 @@ const getUnpinnedBlockInfo$ = (hash: string): Observable<BlockInfo> => {
         diff: null,
       }),
     ),
-    tap((v) => disconnectedBlocks$.next(v)),
   )
 }
 
