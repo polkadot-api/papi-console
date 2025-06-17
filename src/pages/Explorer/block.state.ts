@@ -121,23 +121,23 @@ export const [blockInfo$, recordedBlocks$] = partitionByKey(
 const getUnpinnedBlockInfo$ = (hash: string): Observable<BlockInfo> =>
   client$.pipe(
     switchMap((client) =>
-      from(client.getBlockHeader(hash)).pipe(
-        mergeMap((header) =>
-          combineLatest({
-            hash: of(hash),
-            parent: of(header.parentHash),
-            number: of(header.number),
-            body: client.watchBlockBody(hash),
-            events: from(
-              client.getUnsafeApi().query.System.Events.getValue({
-                at: hash,
-              }),
-            ),
-            header: from(client.getBlockHeader(hash)),
-            status: of(BlockState.Finalized),
-            diff: of(null),
-          }),
-        ),
+      combineLatest({
+        header: client.getBlockHeader(hash),
+        body: client.watchBlockBody(hash),
+        events: client.getUnsafeApi().query.System.Events.getValue({
+          at: hash,
+        }),
+      }).pipe(
+        map(({ header, body, events }) => ({
+          hash: hash,
+          parent: header.parentHash,
+          number: header.number,
+          body,
+          events,
+          header,
+          status: BlockState.Finalized,
+          diff: null,
+        })),
         catchError(() => getUnpinnedBlockInfoFallback$(hash, client)),
         tap((v) => disconnectedBlocks$.next(v)),
       ),
