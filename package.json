@@ -23,6 +23,7 @@
     "@polkadot-api/react-builder": "0.2.9",
     "@polkadot-api/substrate-bindings": "^0.14.0",
     "@polkadot-api/substrate-client": "^0.4.1",
+    "@polkadot-api/tx-utils": "^0.1.0",
     "@polkadot-api/utils": "^0.2.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-dialog": "^1.1.14",
