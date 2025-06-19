@@ -6,8 +6,9 @@ import {
 } from "@polkadot-api/react-builder"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { Codec } from "polkadot-api"
-import { ComponentProps, FC, useEffect, useRef, useState } from "react"
+import { ComponentProps, FC, useEffect, useState } from "react"
 import { map } from "rxjs"
+import { twMerge } from "tailwind-merge"
 import {
   Marker,
   MarkersContextProvider,
@@ -19,7 +20,6 @@ import { EditCodec } from "../EditCodec"
 import { TreeCodec } from "../EditCodec/Tree"
 import { BinaryDisplay } from "./BinaryDisplay"
 import { FocusPath } from "./FocusPath"
-import { twMerge } from "tailwind-merge"
 
 const editTypeMetadataProps$ = state(
   runtimeCtx$.pipe(
@@ -38,14 +38,14 @@ export const LookupTypeEdit: FC<{
   tree?: boolean
   className?: string
 }> = ({ type, value, onValueChange, tree = true, className }) => {
-  const treeRef = useRef<HTMLDivElement | null>(null)
-  const listRef = useRef<HTMLDivElement | null>(null)
+  const [treeRef, setTreeRef] = useState<HTMLDivElement | null>(null)
+  const [listRef, setListRef] = useState<HTMLDivElement | null>(null)
   const [focusingSubtree, setFocusingSubtree] = useState<string[] | null>(null)
 
   useEffect(() => {
-    if (!listRef.current || !treeRef.current) return
-    return synchronizeScroll(listRef.current, treeRef.current)
-  }, [])
+    if (!listRef || !treeRef) return
+    return synchronizeScroll(listRef, treeRef)
+  }, [listRef, treeRef])
 
   const codecProps = useCodecProps(type, value, onValueChange)
 
@@ -72,12 +72,12 @@ export const LookupTypeEdit: FC<{
       >
         <MarkersContextProvider>
           <div
-            ref={listRef}
+            ref={setListRef}
             className="flex flex-row overflow-auto w-full gap-2"
           >
             {tree && (
               <div
-                ref={treeRef}
+                ref={setTreeRef}
                 className="w-96 sticky top-0 pl-2 pb-16 leading-loose overflow-hidden max-sm:hidden"
               >
                 <div className="relative">

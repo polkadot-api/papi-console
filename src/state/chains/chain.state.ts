@@ -12,6 +12,7 @@ import { sinkSuspense, state, SUSPENSE } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
 import { createClient } from "polkadot-api"
 import {
+  catchError,
   concat,
   EMPTY,
   filter,
@@ -224,6 +225,15 @@ export const chainClient$ = state(
   ),
 )
 export const client$ = state(chainClient$.pipe(map(({ client }) => client)))
+
+export const canProduceBlocks$ = state(
+  client$.pipe(
+    switchMap((client) => client._request("rpc_methods", [])),
+    map((response) => response.methods.includes("dev_newBlock")),
+    catchError(() => [false]),
+  ),
+  false,
+)
 
 export const unsafeApi$ = chainClient$.pipeState(
   map(({ client }) => client.getUnsafeApi()),

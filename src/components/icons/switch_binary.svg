@@ -1,0 +1,24 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24" height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+>
+    <text x="2" y="19" font-size="8" font-family="monospace" fill="currentColor" stroke="none">
+    0x
+    </text>
+
+    <text x="14" y="8" font-size="8" font-family="sans-serif" fill="currentColor" stroke="none">
+    Aa
+    </text>
+
+    <path d="M4 11 L4 5 L12 5" />
+    <path d="M10 3 L12 5 L10 7" />
+
+    <path d="M22 10 L22 16 L14 16" />
+    <path d="M16 14 L14 16 L16 18" />
+</svg>

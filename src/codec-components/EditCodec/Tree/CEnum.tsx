@@ -43,23 +43,26 @@ export const CEnum: EditEnum = ({
   const innerPath = [...path, value.type]
   const pathStr = path.join(".")
   if (titleContainer) {
-    return (
+    return titleElement ? (
       <>
-        {titleElement ? (
-          <Portal node={titleElement}>
-            <span
-              onClick={() => scrollToMarker(innerPath)}
-              onMouseEnter={() =>
-                setHovered(pathId, { id: pathStr, hover: true })
-              }
-              onMouseLeave={() =>
-                setHovered(pathId, { id: pathStr, hover: false })
-              }
-            >
-              / {value.type}
-            </span>
-          </Portal>
-        ) : null}
+        <Portal node={titleElement}>
+          <span
+            onClick={() => scrollToMarker(innerPath)}
+            onMouseEnter={() =>
+              setHovered(pathId, { id: pathStr, hover: true })
+            }
+            onMouseLeave={() =>
+              setHovered(pathId, { id: pathStr, hover: false })
+            }
+          >
+            / {value.type}
+          </span>
+        </Portal>
+        {/* It's important not to show the inner elements until this one isn't
+        ready, because elements must be appended in order.
+        Bug was: Utility.Batch(System.remark(whatever)) then refresh page. The
+        enum for the inner call would show up reversed (/remark/System)
+        Be careful, in strict mode (dev) this bug doesn't show up. */}
         <ChildrenProviders
           titleElement={titleContainer ?? newElement}
           onValueChange={() => {}}
@@ -67,7 +70,7 @@ export const CEnum: EditEnum = ({
           {inner}
         </ChildrenProviders>
       </>
-    )
+    ) : null
   }
 
   const innerShape = shape.value[value.type]

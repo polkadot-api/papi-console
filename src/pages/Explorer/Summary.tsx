@@ -1,7 +1,10 @@
-import { chopsticksInstance$, isChopsticks$ } from "@/chopsticks/chopsticks"
 import { Chopsticks } from "@/components/Icons"
 import { Button } from "@/components/ui/button"
-import { client$, runtimeCtx$ } from "@/state/chains/chain.state"
+import {
+  canProduceBlocks$,
+  client$,
+  runtimeCtx$,
+} from "@/state/chains/chain.state"
 import { useStateObservable, withDefault } from "@react-rxjs/core"
 import { FC, PropsWithChildren, ReactElement, useEffect, useState } from "react"
 import { firstValueFrom, map, switchMap } from "rxjs"
@@ -33,7 +36,7 @@ const hasEpoch$ = runtimeCtx$.pipeState(
 
 export const Summary: FC = () => {
   const hasEpoch = useStateObservable(hasEpoch$)
-  const canJump = useStateObservable(isChopsticks$)
+  const canJump = useStateObservable(canProduceBlocks$)
 
   return (
     <div className="flex gap-4 items-center py-2">
@@ -101,13 +104,16 @@ const Jump = () => {
         onClick={async () => {
           setLoading(true)
           try {
-            const chop = await firstValueFrom(chopsticksInstance$)
-            await chop?.newBlock(
-              value !== finalized + 1
-                ? {
-                    unsafeBlockHeight: value,
-                  }
-                : {},
+            const client = await firstValueFrom(client$)
+            await client._request(
+              "dev_newBlock",
+              value === finalized + 1
+                ? []
+                : [
+                    {
+                      unsafeBlockHeight: value,
+                    },
+                  ],
             )
           } finally {
             setLoading(false)

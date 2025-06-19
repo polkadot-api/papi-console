@@ -158,7 +158,11 @@ const DecodedResultDisplay: FC<{
 
   return (
     <div className="max-h-[60svh] overflow-auto">
-      {values.map(({ keyArgs, value }, i) => renderItem(keyArgs, value, i))}
+      {values.length ? (
+        values.map(({ keyArgs, value }, i) => renderItem(keyArgs, value, i))
+      ) : (
+        <span className="text-foreground/60">Empty</span>
+      )}
     </div>
   )
 }

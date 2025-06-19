@@ -71,7 +71,7 @@ export const BinaryInput: React.FC<{
       {(input) => (
         <div
           className={twMerge(
-            "px-4 py-2 border border-border rounded leading-tight focus-within:outline focus-within:outline-1 flex items-center gap-2 bg-input",
+            "px-4 py-2 border border-border rounded leading-tight focus-within:outline flex items-center gap-2 bg-input",
             warn ? "border-orange-400" : null,
             uploadError ? "border-red-600" : null,
           )}
@@ -159,15 +159,22 @@ const serializeValue = (value: Binary): string | Binary => {
 }
 
 const textDecoder = new TextDecoder("utf-8", { fatal: true })
-export const bytesToString = (value: Binary) => {
+export const getBytesFormat = (value: Binary) => {
   try {
     const bytes = value.asBytes()
     if (bytes.slice(0, 5).every((b) => b < 32)) throw null
-    return textDecoder.decode(bytes)
+    return {
+      type: "text",
+      value: textDecoder.decode(bytes),
+    }
   } catch (_) {
-    return value.asHex()
+    return {
+      type: "hex",
+      value: value.asHex(),
+    }
   }
 }
+export const bytesToString = (value: Binary) => getBytesFormat(value).value
 
 export const checkEqualInputBinary = (
   input: string | Binary,
