@@ -1,11 +1,11 @@
 import { bytesToString } from "@/components/BinaryInput"
-import { selectedChainChanged$ } from "@/state/chains/chain.state"
-import { MetadataLookup } from "@polkadot-api/metadata-builders"
-import { UnifiedMetadata } from "@polkadot-api/substrate-bindings"
+import { getHashParams } from "@/hashParams"
+import { runtimeCtx$, selectedChainChanged$ } from "@/state/chains/chain.state"
 import { state } from "@react-rxjs/core"
 import {
   createKeyedSignal,
   createSignal,
+  mergeWithKey,
   partitionByKey,
   toKeySet,
 } from "@react-rxjs/utils"
@@ -24,6 +24,7 @@ import {
   startWith,
   switchMap,
   takeUntil,
+  withLatestFrom,
 } from "rxjs"
 import { v4 as uuid } from "uuid"
 
@@ -35,61 +36,113 @@ export type StorageMetadataEntry = {
   docs: string[]
 }
 
-export const [entryChange$, setSelectedEntry] =
-  createSignal<StorageMetadataEntry | null>()
-export const selectedEntry$ = state(entryChange$, null)
+export const [entryChange$, selectEntry] = createSignal<{
+  pallet?: string | null
+  entry?: string | null
+}>()
 
-export const setSelectEntryFromMetadata = (
-  lookup: MetadataLookup,
-  pallet: string,
-  storageEntry:
-    | NonNullable<
-        UnifiedMetadata["pallets"][number]["storage"]
-      >["items"][number]
-    | null,
-) => {
-  if (!storageEntry) return setSelectedEntry(null)
+const palletEntries$ = runtimeCtx$.pipe(
+  map((ctx) =>
+    Object.fromEntries(
+      ctx.lookup.metadata.pallets.map((p) => [p.name, p.storage?.items ?? []]),
+    ),
+  ),
+)
 
-  const { type, name: entry } = storageEntry
-  if (!type) return setSelectedEntry(null)
+const initialValue$ = palletEntries$.pipe(
+  map(() => {
+    const params = getHashParams()
+    const pallet = params.get("pallet") ?? "System"
+    const entry = params.get("entry") ?? "Account"
+    return { entry, pallet }
+  }),
+)
 
-  if (type.tag === "plain") {
-    return setSelectedEntry({
-      value: type.value,
-      key: [],
-      pallet,
-      entry,
-      docs: storageEntry.docs,
-    })
-  }
-  if (type.value.hashers.length === 1) {
-    return setSelectedEntry({
-      value: type.value.value,
-      key: [type.value.key],
-      pallet,
-      entry,
-      docs: storageEntry.docs,
-    })
-  }
+export const partialEntry$ = state(
+  mergeWithKey({ entryChange$, initialValue$ }).pipe(
+    withLatestFrom(palletEntries$),
+    scan(
+      (acc, [evt, pallets]) => {
+        const newValue =
+          evt.type === "entryChange$"
+            ? { ...acc, ...evt.payload }
+            : {
+                pallet: acc.pallet ?? evt.payload.pallet,
+                entry: acc.entry ?? evt.payload.entry,
+              }
+        const selectedPallet = newValue.pallet ? pallets[newValue.pallet] : null
+        if (!selectedPallet?.find((it) => it.name === newValue.entry)) {
+          newValue.entry = selectedPallet?.[0]?.name ?? null
+        }
+        return newValue
+      },
+      {
+        pallet: null as string | null,
+        entry: null as string | null,
+      },
+    ),
+  ),
+  {
+    pallet: null,
+    entry: null,
+  },
+)
 
-  const keyDef = lookup(type.value.key)
-  const key = (() => {
-    if (keyDef.type === "array") {
-      return new Array(keyDef.len).fill(keyDef.value.id)
-    }
-    if (keyDef.type === "tuple") {
-      return keyDef.value.map((e) => e.id)
-    }
-    throw new Error("Invalid key type " + keyDef.type)
-  })()
-  setSelectedEntry({
-    key,
-    value: type.value.value,
-    pallet,
-    entry,
-    docs: storageEntry.docs,
-  })
-}
+export const selectedEntry$ = state(
+  partialEntry$.pipe(
+    withLatestFrom(palletEntries$, runtimeCtx$),
+    map(([partialEntry, entries, ctx]): StorageMetadataEntry | null => {
+      const entry = partialEntry.pallet
+        ? entries[partialEntry.pallet]?.find(
+            (v) => v.name === partialEntry.entry,
+          )
+        : null
+      if (!entry?.type) return null
+
+      const { type, docs } = entry
+      const pallet = partialEntry.pallet!
+
+      if (type.tag === "plain") {
+        return {
+          value: type.value,
+          key: [],
+          pallet,
+          entry: entry.name,
+          docs,
+        }
+      }
+
+      if (type.value.hashers.length === 1) {
+        return {
+          value: type.value.value,
+          key: [type.value.key],
+          pallet,
+          entry: entry.name,
+          docs,
+        }
+      }
+
+      const keyDef = ctx.lookup(type.value.key)
+      const key = (() => {
+        if (keyDef.type === "array") {
+          return new Array(keyDef.len).fill(keyDef.value.id)
+        }
+        if (keyDef.type === "tuple") {
+          return keyDef.value.map((e) => e.id)
+        }
+        throw new Error("Invalid key type " + keyDef.type)
+      })()
+      return {
+        key,
+        value: type.value.value,
+        pallet,
+        entry: entry.name,
+        docs,
+      }
+    }),
+  ),
+  null,
+)
 
 export const [newStorageSubscription$, addStorageSubscription] = createSignal<{
   name: string

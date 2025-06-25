@@ -29,12 +29,13 @@ import {
   scan,
   startWith,
   switchMap,
+  withLatestFrom,
 } from "rxjs"
 import { twMerge } from "tailwind-merge"
 import {
   addStorageSubscription,
   selectedEntry$,
-  setSelectEntryFromMetadata,
+  selectEntry,
   stringifyArg,
 } from "./storage.state"
 
@@ -169,28 +170,40 @@ const builderState$ = state(
   ),
   null,
 )
+const keysCodec$ = combineLatest([keys$, builderState$]).pipe(
+  map(([keys, builder]) => keys.map((type) => builder?.buildDefinition(type))),
+)
 const keyInputValue$ = state(
   (idx: number) =>
     keyValues$.pipe(
-      map(
-        (v, i): CodecComponentValue =>
-          i === 0
-            ? {
-                type: CodecComponentType.Initial,
-              }
-            : {
-                type: CodecComponentType.Updated,
-                value:
-                  v[idx] === NOTIN
-                    ? {
-                        empty: true,
-                      }
-                    : {
-                        empty: false,
-                        decoded: v[idx],
-                      },
-              },
-      ),
+      withLatestFrom(keysCodec$),
+      map(([v, codecs], i): CodecComponentValue => {
+        if (i === 0) {
+          try {
+            return {
+              type: CodecComponentType.Initial,
+              value: codecs[idx]?.enc(v[idx]),
+            }
+          } catch {
+            return {
+              type: CodecComponentType.Initial,
+            }
+          }
+        }
+
+        return {
+          type: CodecComponentType.Updated,
+          value:
+            v[idx] === NOTIN
+              ? {
+                  empty: true,
+                }
+              : {
+                  empty: false,
+                  decoded: v[idx],
+                },
+        }
+      }),
     ),
   {
     type: CodecComponentType.Initial,
@@ -333,20 +346,18 @@ export const KeyDisplay: FC = () => {
       <BinaryEditButton
         initialValue={key ? Binary.fromHex(key).asBytes() : undefined}
         onValueChange={(value: NonNullable<DecodedKey>) => {
-          console.log(value)
           let newKeysEnabled = keysEnabled
           if (
             value.pallet.name !== selectedEntry.pallet ||
             value.item.name !== selectedEntry.entry
           ) {
-            setSelectEntryFromMetadata(
-              builder.lookup,
-              value.pallet.name,
-              value.item,
-            )
+            selectEntry({
+              pallet: value.pallet.name,
+              entry: value.item.name,
+            })
             newKeysEnabled =
               value.item.type.tag === "plain"
-                ? 1
+                ? 0
                 : value.item.type.value.hashers.length
           }
 
