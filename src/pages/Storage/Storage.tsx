@@ -10,7 +10,7 @@ import { lookup$ } from "@/state/chains/chain.state"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { FC, useEffect, useState } from "react"
 import { map } from "rxjs"
-import { selectedEntry$, setSelectedEntry } from "./storage.state"
+import { selectedEntry$, setSelectEntryFromMetadata } from "./storage.state"
 import { StorageDecode } from "./StorageDecode"
 import { StorageQuery } from "./StorageQuery"
 import { StorageSet } from "./StorageSet"
@@ -61,47 +61,7 @@ export const Storage = withSubscribe(
         (entry &&
           selectedPallet?.storage?.items.find((it) => it.name === entry)) ||
         null
-      const storageEntryType = storageEntry?.type
-      if (!storageEntryType) {
-        return setSelectedEntry(null)
-      }
-
-      if (storageEntryType.tag === "plain") {
-        return setSelectedEntry({
-          value: storageEntryType.value,
-          key: [],
-          pallet: pallet!,
-          entry: entry!,
-          docs: storageEntry.docs,
-        })
-      }
-      if (storageEntryType.value.hashers.length === 1) {
-        return setSelectedEntry({
-          value: storageEntryType.value.value,
-          key: [storageEntryType.value.key],
-          pallet: pallet!,
-          entry: entry!,
-          docs: storageEntry.docs,
-        })
-      }
-
-      const keyDef = lookup(storageEntryType.value.key)
-      const key = (() => {
-        if (keyDef.type === "array") {
-          return new Array(keyDef.len).fill(keyDef.value.id)
-        }
-        if (keyDef.type === "tuple") {
-          return keyDef.value.map((e) => e.id)
-        }
-        throw new Error("Invalid key type " + keyDef.type)
-      })()
-      setSelectedEntry({
-        key,
-        value: storageEntryType.value.value,
-        pallet: pallet!,
-        entry: entry!,
-        docs: storageEntry.docs,
-      })
+      setSelectEntryFromMetadata(lookup, pallet!, storageEntry)
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedPallet, entry])
 
@@ -170,7 +130,7 @@ const StorageEntry: FC = () => {
           },
           {
             value: "decode",
-            content: "Decode",
+            content: "Decode Value",
           },
           ...(canSetStorage
             ? [

@@ -1,5 +1,7 @@
 import { bytesToString } from "@/components/BinaryInput"
 import { selectedChainChanged$ } from "@/state/chains/chain.state"
+import { MetadataLookup } from "@polkadot-api/metadata-builders"
+import { UnifiedMetadata } from "@polkadot-api/substrate-bindings"
 import { state } from "@react-rxjs/core"
 import {
   createKeyedSignal,
@@ -36,6 +38,58 @@ export type StorageMetadataEntry = {
 export const [entryChange$, setSelectedEntry] =
   createSignal<StorageMetadataEntry | null>()
 export const selectedEntry$ = state(entryChange$, null)
+
+export const setSelectEntryFromMetadata = (
+  lookup: MetadataLookup,
+  pallet: string,
+  storageEntry:
+    | NonNullable<
+        UnifiedMetadata["pallets"][number]["storage"]
+      >["items"][number]
+    | null,
+) => {
+  if (!storageEntry) return setSelectedEntry(null)
+
+  const { type, name: entry } = storageEntry
+  if (!type) return setSelectedEntry(null)
+
+  if (type.tag === "plain") {
+    return setSelectedEntry({
+      value: type.value,
+      key: [],
+      pallet,
+      entry,
+      docs: storageEntry.docs,
+    })
+  }
+  if (type.value.hashers.length === 1) {
+    return setSelectedEntry({
+      value: type.value.value,
+      key: [type.value.key],
+      pallet,
+      entry,
+      docs: storageEntry.docs,
+    })
+  }
+
+  const keyDef = lookup(type.value.key)
+  const key = (() => {
+    if (keyDef.type === "array") {
+      return new Array(keyDef.len).fill(keyDef.value.id)
+    }
+    if (keyDef.type === "tuple") {
+      return keyDef.value.map((e) => e.id)
+    }
+    throw new Error("Invalid key type " + keyDef.type)
+  })()
+  setSelectedEntry({
+    key,
+    value: type.value.value,
+    pallet,
+    entry,
+    docs: storageEntry.docs,
+  })
+}
 
 export const [newStorageSubscription$, addStorageSubscription] = createSignal<{
   name: string

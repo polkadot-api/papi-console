@@ -1,18 +1,20 @@
-import {
-  dynamicBuilder$,
-  runtimeCtx$,
-  unsafeApi$,
-} from "@/state/chains/chain.state"
 import { EditCodec } from "@/codec-components/EditCodec"
 import { ActionButton } from "@/components/ActionButton"
 import { BinaryEditButton } from "@/components/BinaryEditButton"
 import { CopyText } from "@/components/Copy"
 import SliderToggle from "@/components/Toggle"
 import {
+  dynamicBuilder$,
+  runtimeCtx$,
+  unsafeApi$,
+} from "@/state/chains/chain.state"
+import {
   CodecComponentType,
   CodecComponentValue,
   NOTIN,
 } from "@polkadot-api/react-builder"
+import { Twox128 } from "@polkadot-api/substrate-bindings"
+import { toHex } from "@polkadot-api/utils"
 import { state, useStateObservable, withDefault } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
 import { Binary } from "polkadot-api"
@@ -23,6 +25,7 @@ import {
   firstValueFrom,
   from,
   map,
+  ObservedValueOf,
   scan,
   startWith,
   switchMap,
@@ -31,6 +34,7 @@ import { twMerge } from "tailwind-merge"
 import {
   addStorageSubscription,
   selectedEntry$,
+  setSelectEntryFromMetadata,
   stringifyArg,
 } from "./storage.state"
 
@@ -310,12 +314,9 @@ export const KeyDisplay: FC = () => {
   const key = useStateObservable(encodedKey$)
   const builder = useStateObservable(builderState$)
   const selectedEntry = useStateObservable(selectedEntry$)
-  const keys = useStateObservable(keys$)
   const keysEnabled = useStateObservable(keysEnabled$)
 
   if (!builder || !selectedEntry) return null
-
-  const codec = builder.buildStorage(selectedEntry.pallet, selectedEntry.entry)
 
   return (
     <div className="flex w-full overflow-hidden border border-card-foreground/60 px-3 p-2 gap-2 items-center bg-card text-card-foreground">
@@ -329,19 +330,119 @@ export const KeyDisplay: FC = () => {
         {key ?? "Fill in all the storage keys to calculate the encoded key"}
       </div>
       <CopyText text={key ?? ""} disabled={key === null} binary />
-      {keys.length === keysEnabled && (
-        <BinaryEditButton
-          initialValue={key ? Binary.fromHex(key).asBytes() : undefined}
-          onValueChange={(value: unknown[]) => {
-            value.forEach((value, idx) => setKeyValue({ idx, value }))
-          }}
-          decode={(v) =>
-            codec.keys.dec(
-              typeof v === "string" ? v : Binary.fromBytes(v).asHex(),
+      <BinaryEditButton
+        initialValue={key ? Binary.fromHex(key).asBytes() : undefined}
+        onValueChange={(value: NonNullable<DecodedKey>) => {
+          console.log(value)
+          let newKeysEnabled = keysEnabled
+          if (
+            value.pallet.name !== selectedEntry.pallet ||
+            value.item.name !== selectedEntry.entry
+          ) {
+            setSelectEntryFromMetadata(
+              builder.lookup,
+              value.pallet.name,
+              value.item,
             )
+            newKeysEnabled =
+              value.item.type.tag === "plain"
+                ? 1
+                : value.item.type.value.hashers.length
           }
-        />
-      )}
+
+          if (value.args.length !== newKeysEnabled) {
+            if (value.args.length > newKeysEnabled) {
+              toggleKey(value.args.length - 1)
+            } else {
+              toggleKey(value.args.length)
+            }
+          }
+
+          value.args.forEach((value, idx) =>
+            setKeyValue({
+              idx,
+              value,
+            }),
+          )
+        }}
+        decode={(v) => {
+          const decoded = decodeKey(builder, v)
+          if (!decoded) throw null
+          return decoded
+        }}
+      />
     </div>
   )
 }
+
+const textEncoder = new TextEncoder()
+const hashersToLength: Record<string, number> = {
+  Identity: 0,
+  Twox64Concat: 8,
+  Blake2128Concat: 16,
+  Blake2128: -16,
+  Blake2256: -32,
+  Twox128: -16,
+  Twox256: -32,
+}
+
+const decodeKey = (
+  builder: NonNullable<ObservedValueOf<typeof builderState$>>,
+  key: Uint8Array,
+) => {
+  const twoxHash = (v: string) => toHex(Twox128(textEncoder.encode(v)))
+
+  const keyHex = toHex(key)
+  const pallet = builder.lookup.metadata.pallets.find(
+    (p) => p.storage && keyHex.startsWith(twoxHash(p.storage.prefix)),
+  )
+  if (!pallet) return null
+
+  const keyRemaining = keyHex.replace(twoxHash(pallet.storage!.prefix), "0x")
+  const item = pallet.storage!.items.find((v) =>
+    keyRemaining.startsWith(twoxHash(v.name)),
+  )
+  if (!item) return null
+
+  const codec = builder.buildStorage(pallet.name, item.name)
+  const hasherLengths =
+    item.type.tag === "plain"
+      ? []
+      : item.type.value.hashers.map((x) => hashersToLength[x.tag])
+
+  let argsRemaining = Binary.fromHex(
+    keyRemaining.replace(twoxHash(item.name), "0x"),
+  ).asBytes()
+
+  const args: any[] = []
+  const argsLen = codec.args.inner.length
+  for (let i = 0; i < argsLen && argsRemaining.length; i++) {
+    const hashLength = hasherLengths[i]
+
+    if (argsRemaining.length < Math.abs(hashLength)) return null
+    argsRemaining = argsRemaining.slice(Math.abs(hashLength))
+
+    if (hashLength < 0) {
+      // Signals a non-reversible hasher
+      args.push(null)
+    } else {
+      const argCodec = codec.args.inner[i]
+      try {
+        const value = argCodec.dec(argsRemaining)
+        // This is needed not just for the length, but see case AccountId: Can decode 0x, but then can't re-encode back. <- TODO bug?
+        const reEnc = argCodec.enc(value)
+        argsRemaining = argsRemaining.slice(reEnc.length)
+        args.push(value)
+      } catch {
+        return null
+      }
+    }
+  }
+
+  return {
+    pallet,
+    item,
+    args,
+  }
+}
+type DecodedKey = ReturnType<typeof decodeKey>
