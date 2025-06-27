@@ -32,8 +32,13 @@ import { addCustomNetwork, getCustomNetwork } from "@/state/chains/networks"
 import { useStateObservable } from "@react-rxjs/core"
 import { Check, ChevronDown } from "lucide-react"
 import { FC, useState } from "react"
+import { twMerge } from "tailwind-merge"
 
-export function NetworkSwitcher() {
+export function NetworkSwitcher({
+  forSmallScreen,
+}: {
+  forSmallScreen?: boolean
+}) {
   const [open, setOpen] = useState(false)
   const selectedChain = useStateObservable(selectedChain$)
 
@@ -42,7 +47,10 @@ export function NetworkSwitcher() {
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="w-[200px] flex gap-0 justify-between text-base px-3 border border-border bg-input"
+          className={twMerge(
+            "w-[200px] gap-0 justify-between text-base px-3 border border-border bg-input self-center",
+            forSmallScreen ? "flex md:hidden" : "hidden md:flex",
+          )}
         >
           <span className="overflow-hidden text-ellipsis">
             {selectedChain.network.display}
