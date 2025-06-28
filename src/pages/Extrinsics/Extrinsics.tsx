@@ -71,7 +71,7 @@ export const Extrinsics = withSubscribe(
         className={twMerge(
           "flex flex-col overflow-hidden gap-2 p-4 pb-0",
           // Bypassing top-level scroll area, since we need a specific scroll area for the tree view
-          "absolute w-full h-full max-w-(--breakpoint-lg)",
+          "absolute w-full h-full max-w-(--breakpoint-xl)",
         )}
       >
         <BinaryDisplay

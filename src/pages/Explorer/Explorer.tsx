@@ -13,7 +13,7 @@ export const Explorer = withSubscribe(
       <Route
         path="*"
         element={
-          <div className="p-4 pb-0">
+          <div className="p-4 pb-0 max-w-(--breakpoint-lg) m-auto">
             <Summary />
             <div className="flex gap-2 items-start flex-wrap lg:flex-nowrap">
               <BlockTable />

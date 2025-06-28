@@ -10,23 +10,64 @@ import {
   CommandList,
 } from "./ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+import { twMerge } from "tailwind-merge"
 
 export const SearchableSelect = <T,>({
   value,
   setValue,
   options,
+  className,
+  contentClassName,
+  allowCustomValue,
 }: {
   value: T | null
   setValue: (val: T | null) => void
   options: { value: T; text: string }[]
+  className?: string
+  contentClassName?: string
+  // only for T=string
+  allowCustomValue?: boolean
 }) => {
   const [open, setOpen] = useState(false)
+  const [filterValue, setFilterValue] = useState("")
 
   const onTriggerKeyDown = (evt: React.KeyboardEvent) => {
     if (evt.key.length === 1) {
       setOpen(true)
     }
   }
+
+  const lowerCaseFilter = filterValue.toLocaleLowerCase()
+  const hasExactMatch = options.some((v) => v.value === filterValue)
+  const filteredOptions = allowCustomValue
+    ? [
+        ...options
+          .filter(({ text }) =>
+            text.toLocaleLowerCase().includes(lowerCaseFilter),
+          )
+          .sort((a, b) => {
+            const aLowerCase = a.text.toLocaleLowerCase()
+            if (aLowerCase === lowerCaseFilter) return -1
+            const bLowerCase = b.text.toLocaleLowerCase()
+            if (bLowerCase === lowerCaseFilter) return 1
+
+            const aScore = aLowerCase.startsWith(lowerCaseFilter) ? 1 : 0
+            const bScore = bLowerCase.startsWith(lowerCaseFilter) ? 1 : 0
+            if (aScore != bScore) {
+              return bScore - aScore
+            }
+            return aLowerCase.localeCompare(bLowerCase)
+          }),
+        ...(hasExactMatch || !filterValue
+          ? []
+          : [
+              {
+                value: filterValue as T,
+                text: filterValue,
+              },
+            ]),
+      ]
+    : options
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -35,11 +76,15 @@ export const SearchableSelect = <T,>({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="flex w-52 justify-between overflow-hidden bg-input border border-border"
+          className={twMerge(
+            "flex w-52 justify-between overflow-hidden bg-input border border-border",
+            className,
+          )}
         >
           {value ? (
             <span className="text-ellipsis overflow-hidden">
-              {options.find((option) => option.value === value)?.text}
+              {options.find((option) => option.value === value)?.text ??
+                (allowCustomValue ? filterValue : null)}
             </span>
           ) : (
             <span className="opacity-80">Select…</span>
@@ -47,12 +92,12 @@ export const SearchableSelect = <T,>({
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
-        <Command>
-          <CommandInput placeholder="Filter…" />
+      <PopoverContent className={twMerge("w-[200px] p-0", contentClassName)}>
+        <Command shouldFilter={false}>
+          <CommandInput placeholder="Filter…" onValueChange={setFilterValue} />
           <CommandList>
             <CommandGroup>
-              {options.map((option, i) => (
+              {filteredOptions.map((option, i) => (
                 <CommandItem
                   key={i}
                   value={option.text}
