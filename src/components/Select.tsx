@@ -93,7 +93,7 @@ export const SearchableSelect = <T,>({
         </Button>
       </PopoverTrigger>
       <PopoverContent className={twMerge("w-[200px] p-0", contentClassName)}>
-        <Command shouldFilter={false}>
+        <Command shouldFilter={!allowCustomValue}>
           <CommandInput placeholder="Filter…" onValueChange={setFilterValue} />
           <CommandList>
             <CommandGroup>
