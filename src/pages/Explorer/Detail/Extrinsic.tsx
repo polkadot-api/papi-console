@@ -4,26 +4,30 @@ import { ExpandBtn } from "@/components/Expand"
 import { JsonDisplay } from "@/components/JsonDisplay"
 import { Link } from "@/hashParams"
 import { SystemEvent } from "@polkadot-api/observable-client"
-import { toHex } from "@polkadot-api/utils"
+import { DecodedExtrinsic } from "@polkadot-api/tx-utils"
 import { Edit } from "lucide-react"
 import { Enum, HexString, SS58String } from "polkadot-api"
 import { FC, useEffect, useRef, useState } from "react"
 import { twMerge } from "tailwind-merge"
-import { DecodedExtrinsic } from "./extrinsicDecoder"
 import { EthAccountDisplay } from "@/components/EthAccountDisplay"
+import { CopyText } from "@/components/Copy"
+import { shortStr } from "@/utils"
 
 export type ApplyExtrinsicEvent = SystemEvent & {
   phase: { type: "ApplyExtrinsic" }
 }
 export const Extrinsic: FC<{
-  extrinsic: DecodedExtrinsic
+  extrinsic: DecodedExtrinsic & { idx: number; hash: HexString }
   highlightedEvent: SystemEvent | null
   events: ApplyExtrinsicEvent[]
-}> = ({ extrinsic, events, highlightedEvent }) => {
+  isOpen?: boolean
+}> = ({ extrinsic, isOpen, events, highlightedEvent }) => {
   const [expanded, setExpanded] = useState(
-    (highlightedEvent &&
-      events.includes(highlightedEvent as ApplyExtrinsicEvent)) ??
-      false,
+    !!(
+      isOpen ||
+      (highlightedEvent &&
+        events.includes(highlightedEvent as ApplyExtrinsicEvent))
+    ),
   )
 
   return (
@@ -34,16 +38,16 @@ export const Extrinsic: FC<{
           className="flex gap-1 items-center"
         >
           <ExpandBtn expanded={expanded} />
-          {extrinsic.call.type}.{extrinsic.call.value.type}
+          {extrinsic.idx}. {extrinsic.call.type}.{extrinsic.call.value.type}
         </button>
         <div className="flex gap-2 items-center">
-          <CopyBinary value={extrinsic.callData} />
-          {extrinsic.callData.length > 1024 ? (
+          <CopyBinary value={extrinsic.callData.asBytes()} />
+          {extrinsic.callData.asBytes().length > 1024 ? (
             <span className="opacity-50">
               <Edit size={14} />
             </span>
           ) : (
-            <Link to={"/extrinsics#data=" + toHex(extrinsic.callData)}>
+            <Link to={"/extrinsics#data=" + extrinsic.callData.asHex()}>
               <Edit size={14} />
             </Link>
           )}
@@ -51,9 +55,18 @@ export const Extrinsic: FC<{
       </div>
       {expanded ? (
         <div className="overflow-hidden">
-          {extrinsic.signed && (
+          <div className="flex gap-2 items-center py-2">
+            Extrinsic Hash: {shortStr(extrinsic.hash, 6)}{" "}
+            <CopyText text={extrinsic.hash} binary />
+          </div>
+
+          {extrinsic.type === "signed" && (
             <div>
-              <Sender sender={extrinsic.sender} />
+              <Sender sender={extrinsic.address} />
+            </div>
+          )}
+          {"extra" in extrinsic && (
+            <div>
               <SignedExtensions extra={extrinsic.extra} />
             </div>
           )}

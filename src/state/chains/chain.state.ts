@@ -48,6 +48,7 @@ import {
   chopsticksInstance$,
   createChopsticksProvider,
 } from "@/chopsticks/chopsticks"
+import { getExtrinsicDecoder } from "@polkadot-api/tx-utils"
 
 export type ChainSource = WebsocketSource | SmoldotSource
 
@@ -258,6 +259,7 @@ export const runtimeCtx$ = chainClient$.pipeState(
 
       return uncachedRuntimeCtx$.pipe(
         startWith({
+          metadataRaw: fromHex(cached[1].data),
           lookup,
           dynamicBuilder,
         }),
@@ -265,6 +267,10 @@ export const runtimeCtx$ = chainClient$.pipeState(
     }
     return uncachedRuntimeCtx$
   }),
+  map((ctx) => ({
+    ...ctx,
+    txDecoder: getExtrinsicDecoder(ctx.metadataRaw),
+  })),
 )
 
 export const lookup$ = runtimeCtx$.pipeState(map((ctx) => ctx.lookup))

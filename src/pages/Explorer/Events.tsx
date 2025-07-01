@@ -81,9 +81,15 @@ export const Events = () => {
                   )}
                   rowSpan={span}
                 >
-                  <Link to={`/explorer/${evt.hash}#tx=${evt.index}`}>
-                    {key}
-                  </Link>
+                  {typeof evt.extrinsicNumber === "number" ? (
+                    <Link
+                      to={`/explorer/${evt.hash}#tx=${evt.extrinsicNumber}`}
+                    >
+                      {key}
+                    </Link>
+                  ) : (
+                    key
+                  )}
                 </td>
               )}
               <td
