@@ -10,19 +10,24 @@ import { Enum, HexString, SS58String } from "polkadot-api"
 import { FC, useEffect, useRef, useState } from "react"
 import { twMerge } from "tailwind-merge"
 import { EthAccountDisplay } from "@/components/EthAccountDisplay"
+import { CopyText } from "@/components/Copy"
+import { shortStr } from "@/utils"
 
 export type ApplyExtrinsicEvent = SystemEvent & {
   phase: { type: "ApplyExtrinsic" }
 }
 export const Extrinsic: FC<{
-  extrinsic: DecodedExtrinsic
+  extrinsic: DecodedExtrinsic & { idx: number; hash: HexString }
   highlightedEvent: SystemEvent | null
   events: ApplyExtrinsicEvent[]
-}> = ({ extrinsic, events, highlightedEvent }) => {
+  isOpen?: boolean
+}> = ({ extrinsic, isOpen, events, highlightedEvent }) => {
   const [expanded, setExpanded] = useState(
-    (highlightedEvent &&
-      events.includes(highlightedEvent as ApplyExtrinsicEvent)) ??
-      false,
+    !!(
+      isOpen ||
+      (highlightedEvent &&
+        events.includes(highlightedEvent as ApplyExtrinsicEvent))
+    ),
   )
 
   return (
@@ -33,7 +38,7 @@ export const Extrinsic: FC<{
           className="flex gap-1 items-center"
         >
           <ExpandBtn expanded={expanded} />
-          {extrinsic.call.type}.{extrinsic.call.value.type}
+          {extrinsic.idx}. {extrinsic.call.type}.{extrinsic.call.value.type}
         </button>
         <div className="flex gap-2 items-center">
           <CopyBinary value={extrinsic.callData.asBytes()} />
@@ -50,6 +55,11 @@ export const Extrinsic: FC<{
       </div>
       {expanded ? (
         <div className="overflow-hidden">
+          <div className="flex gap-2 items-center py-2">
+            Extrinsic Hash: {shortStr(extrinsic.hash, 6)}{" "}
+            <CopyText text={extrinsic.hash} binary />
+          </div>
+
           {extrinsic.type === "signed" && (
             <div>
               <Sender sender={extrinsic.address} />

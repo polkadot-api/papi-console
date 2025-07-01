@@ -12,13 +12,11 @@ import { BlockInfo, blockInfoState$ } from "../block.state"
 import { BlockEvents } from "./BlockEvents"
 import { BlockStorageDiff } from "./BlockStorageDiff"
 import { ApplyExtrinsicEvent, Extrinsic } from "./Extrinsic"
-import { getExtrinsicDecoder } from "@polkadot-api/tx-utils"
 import { getHashParams } from "@/hashParams"
+import { Blake2256 } from "@polkadot-api/substrate-bindings"
+import { fromHex, toHex } from "@polkadot-api/utils"
 
 const blockExtrinsics$ = state((hash: string) => {
-  const decoder$ = runtimeCtx$.pipe(
-    map(({ metadataRaw }) => getExtrinsicDecoder(metadataRaw)),
-  )
   const body$ = blockInfoState$(hash).pipe(
     filter((v) => !!v),
     map((v) => v.body),
@@ -26,10 +24,15 @@ const blockExtrinsics$ = state((hash: string) => {
     distinctUntilChanged(),
   )
 
-  return combineLatest([body$, decoder$]).pipe(
-    map(([body, decoder]) => body.map(decoder)),
-    // Assuming the body or the decoder won't change or won't have any effect.
+  return combineLatest([body$, runtimeCtx$]).pipe(
     take(1),
+    map(([body, { txDecoder }]) =>
+      body.map((raw, idx) => ({
+        idx,
+        hash: toHex(Blake2256(fromHex(raw))),
+        ...txDecoder(raw),
+      })),
+    ),
   )
 }, [])
 
@@ -44,8 +47,11 @@ export const BlockBody: FC<{
   const location = useLocation()
   const hashParams = getHashParams(location)
   const eventParam = hashParams.get("event")
+  const txParam = hashParams.get("tx")
   const defaultEventOpen =
     eventParam && block.events ? block.events[Number(eventParam)] : null
+  let defaultTxOpen = txParam && !defaultEventOpen ? Number(txParam) : null
+  defaultTxOpen = defaultTxOpen! < extrinsics.length ? defaultTxOpen : null
   const eventsByExtrinsic = block.events
     ? groupBy(
         block.events.filter(
@@ -123,6 +129,7 @@ export const BlockBody: FC<{
             {extrinsics.map((extrinsic, idx) => (
               <Extrinsic
                 key={idx}
+                isOpen={defaultTxOpen === idx}
                 extrinsic={extrinsic}
                 highlightedEvent={defaultEventOpen}
                 events={eventsByExtrinsic?.[idx] ?? []}

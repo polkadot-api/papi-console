@@ -11,7 +11,7 @@ import {
 import { Binary } from "@polkadot-api/substrate-bindings"
 import { toHex } from "@polkadot-api/utils"
 import { state, useStateObservable } from "@react-rxjs/core"
-import { useEffect, useState } from "react"
+import { useLayoutEffect, useState } from "react"
 import { useLocation } from "react-router-dom"
 import { map } from "rxjs"
 import { twMerge } from "tailwind-merge"
@@ -53,7 +53,7 @@ export const Extrinsics = withSubscribe(
           ? null
           : componentValue.value.encoded) ?? null
 
-    useEffect(() => {
+    useLayoutEffect(() => {
       if (binaryValue && binaryValue.length < 1024 * 1024) {
         setHashParams({
           data:
