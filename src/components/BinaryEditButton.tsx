@@ -164,7 +164,9 @@ const BinaryEditModalContent: FC<
         </div>
       </div>
       <div>
-        <div className="text-slate-400">Hex data</div>
+        <div className="text-slate-400">
+          Hex data{isValid ? ` (${value.length} bytes)` : ""}
+        </div>
         <textarea
           className={twMerge(
             "bg-white rounded w-full min-h-20 text-slate-950 p-1 tabular-nums border-2",
