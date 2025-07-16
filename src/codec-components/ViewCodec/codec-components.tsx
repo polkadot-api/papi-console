@@ -1,5 +1,6 @@
 import {
   ViewBigNumber,
+  ViewBitSeq,
   ViewBool,
   ViewEthAccount,
   ViewNumber,
@@ -37,6 +38,11 @@ export const CResult: ViewResult = ({ value, inner }) => {
 
 export const CStr: ViewStr = ({ value }) => <div>{value}</div>
 export const CNumber: ViewNumber = ({ value }) => <div>{value}</div>
+export const CBitSeq: ViewBitSeq = ({ value }) => (
+  <div>
+    {value.map((val, idx) => `${val}${idx % 4 === 0 ? "_" : ""}`).join("")}
+  </div>
+)
 export const CBigNumber: ViewBigNumber = ({ value }) => (
   <div>{String(value)}</div>
 )
