@@ -12,7 +12,7 @@
     },
     "nativeToken": {
       "symbol": "PAS",
-      "decimals": 12
+      "decimals": 10
     }
   },
   {
@@ -32,9 +32,27 @@
     },
     "nativeToken": {
       "symbol": "PAS",
-      "decimals": 12
+      "decimals": 10
     },
     "hasChainSpecs": true
+  },
+  {
+    "id": "passet_hub",
+    "display": "PAsset Hub",
+    "rpcs": {
+      "Parity": "wss://testnet-passet-hub.polkadot.io",
+      "IBP1": "wss://passet-hub-paseo.ibp.network"
+    },
+    "relayChainInfo": {
+      "id": "paseo",
+      "isSystem": true,
+      "parachain": 1111
+    },
+    "nativeToken": {
+      "symbol": "PAS",
+      "decimals": 10
+    },
+    "hasChainSpecs": false
   },
   {
     "id": "paseo_bridge_hub",
