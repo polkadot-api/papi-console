@@ -3,6 +3,7 @@ import { BinaryEdit, Focus, TypeIcon, TypeIcons } from "@/components/Icons"
 import {
   EditAccountId,
   EditBigNumber,
+  EditBitSeq,
   EditBool,
   EditBytes,
   EditEthAccount,
@@ -47,6 +48,7 @@ export const CBigNumber: EditBigNumber = CPrimitive
 export const CNumber: EditNumber = CPrimitive
 export const CAccountId: EditAccountId = CPrimitive
 export const CBytes: EditBytes = CPrimitive
+export const CBitSeq: EditBitSeq = CPrimitive
 
 export const COption: EditOption = ({
   value,

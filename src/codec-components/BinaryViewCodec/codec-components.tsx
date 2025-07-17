@@ -1,6 +1,7 @@
 import {
   EditAccountId,
   EditBigNumber,
+  EditBitSeq,
   EditBool,
   EditBytes,
   EditEthAccount,
@@ -44,6 +45,7 @@ export const CBigNumber: EditBigNumber = CPrimitive
 export const CNumber: EditNumber = CPrimitive
 export const CAccountId: EditAccountId = CPrimitive
 export const CBytes: EditBytes = CPrimitive
+export const CBitSeq: EditBitSeq = CPrimitive
 
 export const COption: EditOption = ({ path, value, inner }) => {
   const isActive = useStateObservable(isActive$(path.join(".")))
