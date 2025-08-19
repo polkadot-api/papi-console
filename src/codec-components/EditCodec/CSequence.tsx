@@ -1,5 +1,5 @@
 import { EditSequence, NOTIN } from "@polkadot-api/react-builder"
-import { CirclePlus, Copy } from "lucide-react"
+import { CirclePlus } from "lucide-react"
 import { twMerge as clsx } from "tailwind-merge"
 import { ListItem } from "../common/ListItem"
 import { useSubtreeFocus } from "../common/SubtreeFocus"
