@@ -84,6 +84,12 @@ const keys$ = selectedEntry$.pipeState(
   withDefault([] as number[]),
 )
 
+const hashers$ = selectedEntry$.pipeState(
+  filter((e) => !!e),
+  map((entry) => entry.hashers),
+  withDefault([] as string[]),
+)
+
 const [toggleKey$, toggleKey] = createSignal<number>()
 const keysEnabled$ = keys$.pipeState(
   switchMap((k) =>
@@ -138,6 +144,7 @@ export const StorageKeysInput: FC<{
   disableToggle?: boolean
 }> = ({ disableToggle }) => {
   const keys = useStateObservable(keys$)
+  const hashers = useStateObservable(hashers$)
   const keysEnabled = useStateObservable(keysEnabled$)
 
   return (
@@ -152,6 +159,7 @@ export const StorageKeysInput: FC<{
           )}
           <StorageKeyInput
             idx={idx}
+            hasher={hashers[idx]}
             type={type}
             disabled={keysEnabled <= idx}
           />
@@ -209,11 +217,12 @@ const keyInputValue$ = state(
     type: CodecComponentType.Initial,
   } satisfies CodecComponentValue,
 )
-const StorageKeyInput: FC<{ idx: number; type: number; disabled: boolean }> = ({
-  idx,
-  type,
-  disabled,
-}) => {
+const StorageKeyInput: FC<{
+  idx: number
+  type: number
+  disabled: boolean
+  hasher: string
+}> = ({ idx, type, disabled, hasher }) => {
   const builder = useStateObservable(builderState$)
   const value = useStateObservable(keyInputValue$(idx))
 
@@ -269,7 +278,9 @@ const StorageKeyInput: FC<{ idx: number; type: number; disabled: boolean }> = ({
       )}
     >
       <div className="flex justify-between">
-        <div>{getTypeName()}</div>
+        <div>
+          {getTypeName()} ({hasher})
+        </div>
         <BinaryEditButton
           initialValue={
             typeof binaryValue === "string"
