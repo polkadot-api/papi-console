@@ -67,7 +67,7 @@ export const SearchableSelect = <T,>({
               },
             ]),
       ]
-    : options
+    : [...options].sort((a, b) => a.text.localeCompare(b.text))
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
