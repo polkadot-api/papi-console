@@ -1,5 +1,5 @@
 import { EditSequence, NOTIN } from "@polkadot-api/react-builder"
-import { CirclePlus } from "lucide-react"
+import { CirclePlus, Copy } from "lucide-react"
 import { twMerge as clsx } from "tailwind-merge"
 import { ListItem } from "../common/ListItem"
 import { useSubtreeFocus } from "../common/SubtreeFocus"
@@ -18,7 +18,6 @@ export const CSequence: EditSequence = ({
 
   const addItem = () => {
     const curr = value !== NOTIN ? value.slice() : []
-
     curr.push(NOTIN)
     onValueChanged([...curr])
   }
@@ -29,6 +28,13 @@ export const CSequence: EditSequence = ({
     onValueChanged([...curr])
   }
 
+  const duplicateItem = (idx: number) => {
+    if (value === NOTIN) return
+    const curr = value.slice()
+    curr.splice(idx + 1, 0, curr[idx])
+    onValueChanged([...curr])
+  }
+
   return (
     <div>
       <ul>
@@ -36,9 +42,8 @@ export const CSequence: EditSequence = ({
           <ListItem
             key={idx}
             idx={idx}
-            onDelete={() => {
-              removeItem(idx)
-            }}
+            onDelete={() => removeItem(idx)}
+            onDuplicate={value !== NOTIN ? () => duplicateItem(idx) : undefined}
             path={[...path, String(idx)]}
           >
             {item}
