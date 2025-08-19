@@ -98,7 +98,12 @@ const PalletStorage: FC<{ pallet: Pallet }> = ({ pallet }) => {
         <>
           {key != null && (
             <div>
-              <h4>Key</h4>
+              <h4>
+                Key{" "}
+                {entry && entry.type.tag === "map" ? (
+                  <>({entry.type.value.hashers.map((x) => x.tag).join(", ")})</>
+                ) : null}
+              </h4>
               {acceptsPartialKey && <p>Accepts partial keys</p>}
               <LookupLink id={key} />
             </div>
