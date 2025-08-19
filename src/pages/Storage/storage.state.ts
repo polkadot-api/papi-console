@@ -34,6 +34,7 @@ export type StorageMetadataEntry = {
   key: number[]
   value: number
   docs: string[]
+  hashers: string[]
 }
 
 export const [entryChange$, selectEntry] = createSignal<{
@@ -109,16 +110,19 @@ export const selectedEntry$ = state(
           pallet,
           entry: entry.name,
           docs,
+          hashers: [],
         }
       }
 
-      if (type.value.hashers.length === 1) {
+      const hashers = type.value.hashers.map((x) => x.tag)
+      if (hashers.length === 1) {
         return {
           value: type.value.value,
           key: [type.value.key],
           pallet,
           entry: entry.name,
           docs,
+          hashers,
         }
       }
 
@@ -138,6 +142,7 @@ export const selectedEntry$ = state(
         pallet,
         entry: entry.name,
         docs,
+        hashers,
       }
     }),
   ),
