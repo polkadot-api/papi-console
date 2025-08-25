@@ -128,7 +128,7 @@ const BinaryEditModalContent: FC<
   const downloadDisabled = value.length === 0
   const download = () => {
     saveAs(
-      new Blob([value], {
+      new Blob([value as Uint8Array<ArrayBuffer>], {
         type: "application/octet-stream",
       }),
       `${fileName ?? new Date().toISOString()}.dat`,
