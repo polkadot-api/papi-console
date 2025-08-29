@@ -68,8 +68,10 @@ export const selectedAccount$ = state(
 
 const groupedAccounts$ = allAccounts$.pipeState(
   map((v) =>
-    groupBy(v, (acc) =>
-      acc.type === "extension" ? acc.extensionId : acc.type,
+    groupBy(
+      // Accept only signer accounts for submitting transactions
+      v.filter((v) => "signer" in v),
+      (acc) => (acc.type === "extension" ? acc.extensionId : acc.type),
     ),
   ),
 )

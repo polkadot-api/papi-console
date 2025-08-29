@@ -58,8 +58,9 @@ const AccountCard: FC<{
 }
 
 const sourceColors: Record<AccountSource, string> = {
-  extension: "var(--color-orange-800)",
-  walletconnect: "var(--color-blue-800)",
+  extension: "var(--color-lime-700)",
+  walletconnect: "var(--color-blue-700)",
+  readonly: "var(--color-orange-700)",
 }
 const getExtensionName = (id: string) => knownExtensions[id]?.name ?? id
 
@@ -155,7 +156,7 @@ const Balances: FC<{
 
   return (
     <div className="flex flex-row">
-      <div className="flex flex-col sm:flex-row justify-evenly grow">
+      <div className="flex flex-col sm:flex-row justify-center gap-x-8 grow">
         <div className="flex flex-row sm:flex-col gap-2">
           <div className="text-muted-foreground">Balance</div>
           <div>

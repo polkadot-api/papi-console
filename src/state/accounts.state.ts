@@ -1,13 +1,15 @@
+import { createLocalStorageState } from "@/lib/externalState"
 import { state } from "@react-rxjs/core"
 import type { HexString, PolkadotSigner, SS58String } from "polkadot-api"
 import type { InjectedPolkadotAccount } from "polkadot-api/pjs-signer"
 import { combineLatest, defer, from, map, switchMap } from "rxjs"
 import { accountsByExtension$ } from "./extension-accounts.state"
 
-export type AccountSource = "extension" | "walletconnect"
+export type AccountSource = "extension" | "walletconnect" | "readonly"
 export const accountSourceTypeToName: Record<AccountSource, string> = {
   extension: "Extension",
   walletconnect: "Wallet Connect",
+  readonly: "Read-only",
 }
 
 const lazyWalletConnectAccounts$ = defer(() =>
@@ -69,10 +71,30 @@ export const walletConnectAccounts$ = state(
   [],
 )
 
-export type Account = ExtensionAccount | WalletConnectAccount
-export const accounts$ = state(
-  combineLatest([extensionAccounts$, walletConnectAccounts$]).pipe(
-    map((v): Account[] => v.flat()),
+export interface ReadOnlyAccount extends BaseAccount {
+  type: "readonly"
+}
+export const [readOnlyAddresses$, setAddresses] = createLocalStorageState(
+  "read-only-addr",
+  [] as string[],
+)
+export const readOnlyAccounts$ = readOnlyAddresses$.pipe(
+  map((v) =>
+    v.map(
+      (address): ReadOnlyAccount => ({
+        type: "readonly",
+        accountId: address,
+      }),
+    ),
   ),
+)
+
+export type Account = ExtensionAccount | WalletConnectAccount | ReadOnlyAccount
+export const accounts$ = state(
+  combineLatest([
+    extensionAccounts$,
+    walletConnectAccounts$,
+    readOnlyAccounts$,
+  ]).pipe(map((v): Account[] => v.flat())),
   [],
 )

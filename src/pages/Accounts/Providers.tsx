@@ -1,16 +1,15 @@
 import { Spinner } from "@/components/Icons"
-import { Button } from "@/components/ui/button"
 import {
   availableExtensions$,
   onToggleExtension,
   selectedExtensions$,
 } from "@/state/extension-accounts.state"
-// import { walletConnectStatus$ } from
-import { cn } from "@/utils"
 import { state, useStateObservable } from "@react-rxjs/core"
-import { CircleQuestionMark, Eye } from "lucide-react"
-import { FC, MouseEvent, PropsWithChildren } from "react"
+import { CircleQuestionMark } from "lucide-react"
+import { FC } from "react"
 import { defer, from, switchMap } from "rxjs"
+import { AddressProvider } from "./AddressProvider"
+import { SourceButton } from "./SourceButton"
 
 const lazyWalletConnectStatus$ = state(
   defer(() =>
@@ -58,11 +57,7 @@ export const Providers = () => {
           </li>
         ))}
 
-        {/* <SourceButton label="Address">
-          <div>
-            <Eye className="size-10" />
-          </div>
-        </SourceButton> */}
+        <AddressProvider />
         {/* <SourceButton label="Ledger" disabled>
           <img
             src={import.meta.env.BASE_URL + "providers/ledger.webp"}
@@ -134,26 +129,3 @@ const ExtensionButton: FC<{
     </SourceButton>
   )
 }
-
-const SourceButton: FC<
-  PropsWithChildren<{
-    label: string
-    isSelected?: boolean
-    className?: string
-    onClick?: (evt: MouseEvent) => void
-    disabled?: boolean
-  }>
-> = ({ label, isSelected, onClick, className, children, disabled }) => (
-  <Button
-    variant="outline"
-    className={cn("h-auto min-w-40", isSelected ? "bg-accent" : "")}
-    onClick={onClick}
-    disabled={disabled}
-    forceSvgSize={false}
-  >
-    {children}
-    <div className="text-left">
-      <span className={cn("font-bold", className)}>{label}</span>
-    </div>
-  </Button>
-)
