@@ -39,7 +39,7 @@ export const Lookup: FC = () => {
         <label>
           Id:{" "}
           <input
-            className="text-sm border rounded p-2 border-polkadot-200 leading-tight text-white"
+            className="text-sm border rounded p-2 border-polkadot-200 leading-tight dark:text-white"
             value={id}
             onChange={(evt) => {
               setSearch("")

@@ -27,7 +27,7 @@ export const AccountList = () => {
   const accounts = useStateObservable(accounts$)
 
   return (
-    <div className="p-4">
+    <div className="bg-card p-4 rounded-xl space-y-4">
       <h3 className="text-xl font-bold">Accounts</h3>
       <ul className="space-y-4">
         {accounts.map((account, i) => (
@@ -42,7 +42,7 @@ const AccountCard: FC<{
   account: Account
 }> = ({ account }) => {
   return (
-    <li className="shadow rounded-xl p-4 space-y-4">
+    <li className="shadow border rounded-xl p-4 space-y-4">
       <div className="flex justify-between items-start overflow-hidden">
         <AccountIdDisplay
           value={account.accountId}

@@ -49,7 +49,7 @@ export const Providers = () => {
   const walletConnectStatus = useStateObservable(lazyWalletConnectStatus$)
 
   return (
-    <div className="p-4">
+    <div className="bg-card p-4 rounded-xl">
       <h3 className="text-xl font-bold">Account Providers</h3>
       <ul className="flex gap-2 flex-wrap items-center justify-center">
         {availableExtensions.map((id) => (
@@ -58,25 +58,25 @@ export const Providers = () => {
           </li>
         ))}
 
-        <SourceButton label="Address">
+        {/* <SourceButton label="Address">
           <div>
             <Eye className="size-10" />
           </div>
-        </SourceButton>
-        <SourceButton label="Ledger" disabled>
+        </SourceButton> */}
+        {/* <SourceButton label="Ledger" disabled>
           <img
             src={import.meta.env.BASE_URL + "providers/ledger.webp"}
             alt="Ledger"
             className="h-10 rounded"
           />
-        </SourceButton>
-        <SourceButton label="Vault" disabled>
+        </SourceButton> */}
+        {/* <SourceButton label="Vault" disabled>
           <img
             src={import.meta.env.BASE_URL + "providers/vault.webp"}
             alt="Vault"
             className="h-10 rounded"
           />
-        </SourceButton>
+        </SourceButton> */}
         <SourceButton
           label="Wallet Connect"
           isSelected={walletConnectStatus.type === "connected"}
