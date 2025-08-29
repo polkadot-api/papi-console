@@ -1,4 +1,3 @@
-import { Spinner, WalletConnect } from "@/components/Icons"
 import { Label } from "@/components/ui/label"
 import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -6,16 +5,11 @@ import {
   onToggleExtension,
   selectedExtensions$,
 } from "@/state/extension-accounts.state"
-import {
-  toggleWalletConnect,
-  walletConnectStatus$,
-} from "@/state/walletconnect.state"
 import { useStateObservable } from "@react-rxjs/core"
 
 export const ExtensionProvider: React.FC = () => {
   const availableExtensions = useStateObservable(availableExtensions$)
   const selectedExtensions = useStateObservable(selectedExtensions$)
-  const walletConnectStatus = useStateObservable(walletConnectStatus$)
 
   return (
     <>
@@ -31,18 +25,6 @@ export const ExtensionProvider: React.FC = () => {
             {extensionName}
           </TabsTrigger>
         ))}
-        <TabsTrigger
-          className="mx-1 flex gap-1"
-          onClick={() => toggleWalletConnect()}
-          active={walletConnectStatus.type === "connected"}
-        >
-          {walletConnectStatus.type === "connecting" ? (
-            <Spinner size={16} className="text-sky-500" />
-          ) : (
-            <WalletConnect />
-          )}{" "}
-          Wallet Connect
-        </TabsTrigger>
       </TabsList>
     </>
   )

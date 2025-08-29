@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom"
+import { Accounts } from "./pages/Accounts/Accounts"
 import { Constants } from "./pages/Constants"
 import { Explorer } from "./pages/Explorer"
 import { Extrinsics } from "./pages/Extrinsics"
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="runtimeCalls/*" element={<RuntimeCalls />} />
             <Route path="rpcCalls/*" element={<RpcCalls />} />
             <Route path="metadata/*" element={<Metadata />} />
+            <Route path="accounts/*" element={<Accounts />} />
             <Route path="*" element={<Navigate to="/explorer" replace />} />
           </Routes>
         </div>

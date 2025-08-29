@@ -21,7 +21,6 @@ import chopsticksLogoLight from "./icons/chopsticks_light.svg"
 import enumSvg from "./icons/enum.svg"
 import focusSvg from "./icons/focus.svg"
 import switchBinarySvg from "./icons/switch_binary.svg"
-import walletConnectSvg from "./icons/walletConnect.svg"
 
 type CustomIconProps = Omit<Props, "ref" | "src"> & { size?: number }
 const CustomIcon: FC<
@@ -62,7 +61,6 @@ const themeIcon = (light: string, dark: string) => (props: CustomIconProps) => {
 export const Focus = customIcon(focusSvg)
 export const Enum = customIcon(enumSvg)
 export const BinaryEdit = customIcon(binarySvg)
-export const WalletConnect = customIcon(walletConnectSvg)
 export const SwitchBinary = customIcon(switchBinarySvg)
 export const Chopsticks = themeIcon(chopsticksLogoLight, chopsticksLogoDark)
 
