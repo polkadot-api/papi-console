@@ -118,5 +118,5 @@ export const createLocalStorageState = <T>(
     },
   )
 
-  return [state$(), setValue] as const
+  return [state$, setValue] as const
 }

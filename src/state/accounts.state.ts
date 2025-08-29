@@ -3,7 +3,9 @@ import { state } from "@react-rxjs/core"
 import type { HexString, PolkadotSigner, SS58String } from "polkadot-api"
 import type { InjectedPolkadotAccount } from "polkadot-api/pjs-signer"
 import { combineLatest, defer, from, map, switchMap } from "rxjs"
-import { accountsByExtension$ } from "./extension-accounts.state"
+import { accountsByExtension$, getPublicKey } from "./extension-accounts.state"
+import { getPolkadotSigner } from "polkadot-api/signer"
+import { canSetStorage$ } from "./chains/chain.state"
 
 export type AccountSource = "extension" | "walletconnect" | "readonly"
 export const accountSourceTypeToName: Record<AccountSource, string> = {
@@ -73,20 +75,35 @@ export const walletConnectAccounts$ = state(
 
 export interface ReadOnlyAccount extends BaseAccount {
   type: "readonly"
+  // Chopsticks can fake a signer
+  signer?: PolkadotSigner
 }
-export const [readOnlyAddresses$, setAddresses] = createLocalStorageState(
+const [readOnlyAddresses$, setAddresses] = createLocalStorageState(
   "read-only-addr",
   [] as string[],
 )
-export const readOnlyAccounts$ = readOnlyAddresses$.pipe(
-  map((v) =>
-    v.map(
-      (address): ReadOnlyAccount => ({
-        type: "readonly",
-        accountId: address,
-      }),
+export { setAddresses }
+export const readOnlyAccounts$ = state(
+  combineLatest([defer(readOnlyAddresses$), canSetStorage$]).pipe(
+    map(([v, isChopsticks]) =>
+      v.map(
+        (address): ReadOnlyAccount => ({
+          type: "readonly",
+          accountId: address,
+          signer: isChopsticks
+            ? getPolkadotSigner(getPublicKey(address)!, "Sr25519", () => {
+                // From https://wiki.acala.network/build/sdks/homa
+                const signature = new Uint8Array(64)
+                signature.fill(0xcd)
+                signature.set([0xde, 0xad, 0xbe, 0xef])
+                return signature
+              })
+            : undefined,
+        }),
+      ),
     ),
   ),
+  [],
 )
 
 export type Account = ExtensionAccount | WalletConnectAccount | ReadOnlyAccount

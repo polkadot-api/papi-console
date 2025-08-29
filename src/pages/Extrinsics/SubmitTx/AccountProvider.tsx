@@ -70,7 +70,7 @@ const groupedAccounts$ = allAccounts$.pipeState(
   map((v) =>
     groupBy(
       // Accept only signer accounts for submitting transactions
-      v.filter((v) => "signer" in v),
+      v.filter((v) => v.signer != null),
       (acc) => (acc.type === "extension" ? acc.extensionId : acc.type),
     ),
   ),

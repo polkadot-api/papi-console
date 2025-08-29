@@ -2,7 +2,7 @@ import { AccountIdDisplay } from "@/components/AccountIdDisplay"
 import { AccountIdInput } from "@/components/AccountIdInput"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
-import { readOnlyAddresses$, setAddresses } from "@/state/accounts.state"
+import { readOnlyAccounts$, setAddresses } from "@/state/accounts.state"
 import { useStateObservable } from "@react-rxjs/core"
 import { Eye, Trash2 } from "lucide-react"
 import { SS58String } from "polkadot-api"
@@ -26,7 +26,7 @@ export const AddressProvider = () => (
 
 const ManageAddresses = () => {
   const [addressInput, setAddressInput] = useState<SS58String | null>(null)
-  const readOnlyAddresses = useStateObservable(readOnlyAddresses$)
+  const accounts = useStateObservable(readOnlyAccounts$)
 
   return (
     <div className="space-y-4 overflow-hidden">
@@ -36,7 +36,9 @@ const ManageAddresses = () => {
           if (!addressInput) return
 
           setAddresses([
-            ...readOnlyAddresses.filter((v) => v !== addressInput),
+            ...accounts
+              .map((v) => v.accountId)
+              .filter((v) => v !== addressInput),
             addressInput,
           ])
           setAddressInput(null)
@@ -56,23 +58,27 @@ const ManageAddresses = () => {
           </Button>
         </div>
       </form>
-      {readOnlyAddresses.length ? (
+      {accounts.length ? (
         <div>
           <h3 className="font-medium text-muted-foreground">Added addresses</h3>
           <ul className="space-y-3">
-            {readOnlyAddresses.map((addr) => (
-              <li key={addr} className="flex gap-2 items-center">
+            {accounts.map((account) => (
+              <li key={account.accountId} className="flex gap-2 items-center">
                 <Button
                   variant="outline"
                   className="text-destructive border-destructive"
                   type="button"
                   onClick={() =>
-                    setAddresses(readOnlyAddresses.filter((v) => addr !== v))
+                    setAddresses(
+                      accounts
+                        .map((v) => v.accountId)
+                        .filter((v) => account.accountId !== v),
+                    )
                   }
                 >
                   <Trash2 />
                 </Button>
-                <AccountIdDisplay value={addr} />
+                <AccountIdDisplay value={account.accountId} />
               </li>
             ))}
           </ul>
