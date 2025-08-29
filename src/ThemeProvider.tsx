@@ -1,4 +1,5 @@
 import { state, useStateObservable } from "@react-rxjs/core"
+import { createSignal } from "@react-rxjs/utils"
 import {
   createContext,
   FC,
@@ -6,7 +7,9 @@ import {
   useContext,
   useLayoutEffect,
 } from "react"
-import { fromEvent, map } from "rxjs"
+import { fromEvent, map, merge } from "rxjs"
+
+export const [changeTheme$, changeTheme] = createSignal<"light" | "dark">()
 
 const getCurrentMedia = (): "light" | "dark" =>
   window.matchMedia
@@ -15,17 +18,30 @@ const getCurrentMedia = (): "light" | "dark" =>
       : "light"
     : "dark"
 
-const defaultTheme = getCurrentMedia()
+const prefLSKey = "theme"
+changeTheme$.subscribe((theme) => {
+  if (getCurrentMedia() === theme) {
+    localStorage.removeItem(prefLSKey)
+  } else {
+    localStorage.setItem(prefLSKey, theme)
+  }
+})
+
+const defaultTheme =
+  (localStorage.getItem(prefLSKey) as "light" | "dark") || getCurrentMedia()
 
 const ThemeContext = createContext<"light" | "dark">(defaultTheme)
 
 export const useTheme = () => useContext(ThemeContext)
 
 const theme$ = state(
-  fromEvent<MediaQueryListEvent>(
-    window.matchMedia("(prefers-color-scheme: dark)"),
-    "change",
-  ).pipe(map((evt) => (evt.matches ? "dark" : "light"))),
+  merge(
+    fromEvent<MediaQueryListEvent>(
+      window.matchMedia("(prefers-color-scheme: dark)"),
+      "change",
+    ).pipe(map((evt) => (evt.matches ? "dark" : "light"))),
+    changeTheme$,
+  ),
   defaultTheme,
 )
 

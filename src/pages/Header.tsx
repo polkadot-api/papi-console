@@ -6,6 +6,8 @@ import { FC, PropsWithChildren, useState } from "react"
 import { useLocation } from "react-router-dom"
 import { twMerge } from "tailwind-merge"
 import { NetworkSwitcher } from "./Network/Network"
+import SliderToggle from "@/components/Toggle"
+import { changeTheme, useTheme } from "@/ThemeProvider"
 
 const navigationItems = [
   { path: "/explorer", label: "Explorer", important: true },
@@ -13,7 +15,6 @@ const navigationItems = [
   { path: "/extrinsics", label: "Extrinsics", important: true },
   { path: "/constants", label: "Constants", important: false },
   { path: "/runtimeCalls", label: "Runtime Calls", important: true },
-  { path: "/rpcCalls", label: "RPC Calls", important: false },
   { path: "/metadata", label: "Metadata", important: false },
 ]
 
@@ -61,7 +62,7 @@ export const Header = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden text-foreground hover:bg-accent"
+              className="text-foreground hover:bg-accent"
             >
               <Menu className="h-5 w-5" />
             </Button>
@@ -71,7 +72,7 @@ export const Header = () => {
             className="bg-background border-accent w-64 pt-10"
           >
             <NetworkSwitcher forSmallScreen />
-            <nav className="flex flex-col gap-4">
+            <nav className="flex flex-col gap-4 lg:hidden">
               {navigationItems
                 .filter(({ important }) => !important)
                 .map(({ path, label }) => (
@@ -84,6 +85,23 @@ export const Header = () => {
                   </NavLink>
                 ))}
             </nav>
+            <NavLink to="/rpcCalls" onClick={() => setIsOpen(false)}>
+              RPC Calls
+            </NavLink>
+            <NavLink to="/accounts" onClick={() => setIsOpen(false)}>
+              Accounts
+            </NavLink>
+            <hr />
+            <ThemeToggle />
+            <div className="grow" />
+            <div className="border-t p-2 text-right">
+              <a
+                href="https://github.com/polkadot-api/papi-console"
+                target="_blank"
+              >
+                github
+              </a>
+            </div>
           </SheetContent>
         </Sheet>
       </div>
@@ -110,5 +128,19 @@ const NavLink: FC<
     >
       {children}
     </Link>
+  )
+}
+
+const ThemeToggle = () => {
+  const theme = useTheme()
+
+  return (
+    <label className="flex items-center justify-between px-4">
+      <div>Dark mode</div>
+      <SliderToggle
+        isToggled={theme === "dark"}
+        toggle={() => changeTheme(theme === "dark" ? "light" : "dark")}
+      />
+    </label>
   )
 }
