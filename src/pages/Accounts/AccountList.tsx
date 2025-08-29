@@ -1,7 +1,12 @@
 import { AccountIdDisplay } from "@/components/AccountIdDisplay"
 import { TokenAmount } from "@/components/TokenAmount"
 import { Button } from "@/components/ui/button"
-import { Account, accounts$, AccountSource } from "@/state/accounts.state"
+import {
+  Account,
+  accounts$,
+  AccountSource,
+  accountSourceTypeToName,
+} from "@/state/accounts.state"
 import { chainProperties$ } from "@/state/chain-props.state"
 import { client$ } from "@/state/chains/chain.state"
 import { MultiAddress, polkadot_people } from "@polkadot-api/descriptors"
@@ -56,10 +61,6 @@ const sourceColors: Record<AccountSource, string> = {
   extension: "var(--color-orange-800)",
   walletconnect: "var(--color-blue-800)",
 }
-const typeToName: Record<AccountSource, string> = {
-  extension: "Extension",
-  walletconnect: "Wallet Connect",
-}
 const getExtensionName = (id: string) => knownExtensions[id]?.name ?? id
 
 const SourceTag: FC<{
@@ -75,7 +76,7 @@ const SourceTag: FC<{
     >
       {account.type === "extension"
         ? getExtensionName(account.extensionId)
-        : typeToName[account.type]}
+        : accountSourceTypeToName[account.type]}
     </div>
   )
 }

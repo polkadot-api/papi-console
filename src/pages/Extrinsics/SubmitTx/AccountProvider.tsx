@@ -9,18 +9,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { groupBy } from "@/lib/groupBy"
+import { knownExtensions } from "@/pages/Accounts/Providers"
 import {
-  accountsByExtension$,
-  extensionAccounts$,
-  selectedExtensions$,
-} from "@/state/extension-accounts.state"
-import {
-  walletConnectAccounts$,
-  walletConnectStatus$,
-} from "@/state/walletconnect.state"
-import { state, useStateObservable } from "@react-rxjs/core"
+  Account,
+  accounts$,
+  AccountSource,
+  accountSourceTypeToName,
+} from "@/state/accounts.state"
+import { selectedExtensions$ } from "@/state/extension-accounts.state"
+import { walletConnectStatus$ } from "@/state/walletconnect.state"
+import { state, useStateObservable, withDefault } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
-import { InjectedExtension } from "polkadot-api/pjs-signer"
 import React from "react"
 import {
   combineLatest,
@@ -31,51 +31,6 @@ import {
   of,
   tap,
 } from "rxjs"
-
-const Accounts: React.FC<{ extension: InjectedExtension }> = ({
-  extension,
-}) => {
-  const accounts = useStateObservable(extensionAccounts$(extension.name))
-
-  return (
-    <SelectGroup>
-      <SelectLabel>{extension.name}</SelectLabel>
-      {accounts.map((account) => (
-        <SelectItem
-          key={account.address}
-          value={account.address + "-" + extension.name}
-        >
-          {account.address.startsWith("0x") ? (
-            <EthAccountDisplay value={account.address} />
-          ) : (
-            <AccountIdDisplay value={account.address} />
-          )}
-        </SelectItem>
-      ))}
-    </SelectGroup>
-  )
-}
-
-const WalletConnectAccounts = () => {
-  const accounts = useStateObservable(walletConnectAccounts$)
-
-  if (!Object.keys(accounts).length) return null
-
-  return (
-    <SelectGroup>
-      <SelectLabel className="flex gap-1">Wallet Connect</SelectLabel>
-      {Object.keys(accounts).map((address) => (
-        <SelectItem key={address} value={address + "-" + "wallet_connect"}>
-          {address.startsWith("0x") ? (
-            <EthAccountDisplay value={address} />
-          ) : (
-            <AccountIdDisplay value={address} />
-          )}
-        </SelectItem>
-      ))}
-    </SelectGroup>
-  )
-}
 
 const [valueSelected$, selectValue] = createSignal<string>()
 
@@ -88,54 +43,53 @@ const selectedValue$ = state(
   null,
 )
 
+const allAccounts$ = accounts$.pipeState(
+  map((v) =>
+    v.map((acc) => ({
+      ...acc,
+      id: `${acc.accountId}-${acc.type === "extension" ? acc.extensionId : acc.type}`,
+    })),
+  ),
+  withDefault([]),
+)
+
 export const selectedAccount$ = state(
-  combineLatest([
-    selectedValue$,
-    accountsByExtension$,
-    walletConnectAccounts$,
-  ]).pipe(
-    map(([selectedAccount, accountsByExtension, walletConnectAccounts]) => {
+  combineLatest([selectedValue$, allAccounts$]).pipe(
+    map(([selectedAccount, accounts]): Account | null => {
       if (!selectedAccount) return null
-      const [address, ...rest] = selectedAccount.split("-")
-      const signer = rest.join("-")
+      const account = accounts.find((account) => account.id === selectedAccount)
 
-      if (signer === "wallet_connect") {
-        return address in walletConnectAccounts
-          ? {
-              polkadotSigner: walletConnectAccounts[address],
-            }
-          : null
-      }
-
-      const accounts = accountsByExtension.get(signer)
-      if (!accounts) return null
-      return accounts.find((account) => account.address === address) ?? null
+      return account ?? null
     }),
     distinctUntilChanged(),
   ),
   null,
 )
 
-const allAccounts$ = state(
-  combineLatest([walletConnectAccounts$, accountsByExtension$]).pipe(
-    map(([wcAccounts, accounts]) => [
-      ...Object.keys(wcAccounts).map((account) => `${account}-wallet_connect`),
-      ...[...accounts.entries()].flatMap(([extension, accounts]) =>
-        accounts.map((account) => `${account.address}-${extension}`),
-      ),
-    ]),
+const groupedAccounts$ = allAccounts$.pipeState(
+  map((v) =>
+    groupBy(v, (acc) =>
+      acc.type === "extension" ? acc.extensionId : acc.type,
+    ),
   ),
-  [],
 )
+
+const groupIdToName = (groupId: string) => {
+  if (groupId in knownExtensions) {
+    return knownExtensions[groupId].name
+  }
+  return accountSourceTypeToName[groupId as AccountSource] ?? groupId
+}
 
 export const AccountProvider: React.FC = () => {
   const value = useStateObservable(selectedValue$)
   const extensions = useStateObservable(selectedExtensions$)
   const walletConnect = useStateObservable(walletConnectStatus$)
   const allAccounts = useStateObservable(allAccounts$)
+  const groupedAccounts = useStateObservable(groupedAccounts$)
 
   const activeExtensions = [...extensions.values()].filter((v) => !!v)
-  const valueExists = value && allAccounts.includes(value)
+  const valueExists = value && allAccounts.some((acc) => acc.id === value)
 
   if (!activeExtensions.length && walletConnect.type !== "connected")
     return null
@@ -149,10 +103,22 @@ export const AccountProvider: React.FC = () => {
         <SelectValue placeholder="Select an account" />
       </SelectTrigger>
       <SelectContent>
-        {activeExtensions.map((extension) => (
-          <Accounts key={extension.name} extension={extension} />
+        {Object.entries(groupedAccounts).map(([groupId, accounts]) => (
+          <SelectGroup key={groupId}>
+            <SelectLabel className="flex gap-1">
+              {groupIdToName(groupId)}
+            </SelectLabel>
+            {accounts.map((account) => (
+              <SelectItem key={account.id} value={account.id}>
+                {account.accountId.startsWith("0x") ? (
+                  <EthAccountDisplay value={account.accountId} />
+                ) : (
+                  <AccountIdDisplay value={account.accountId} />
+                )}
+              </SelectItem>
+            ))}
+          </SelectGroup>
         ))}
-        <WalletConnectAccounts />
       </SelectContent>
     </Select>
   )

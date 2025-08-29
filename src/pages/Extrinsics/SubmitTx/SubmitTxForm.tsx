@@ -26,7 +26,7 @@ const SignAndSubmit: FC<{ callData: string; onClose: () => void }> = ({
         try {
           const unsafeApi = await firstValueFrom(unsafeApi$)
           const tx = await unsafeApi.txFromCallData(Binary.fromHex(callData))
-          const signedExtrinsic = await tx.sign(account!.polkadotSigner)
+          const signedExtrinsic = await tx.sign(account!.signer)
           trackSignedTx(signedExtrinsic)
           onClose()
         } catch (ex) {

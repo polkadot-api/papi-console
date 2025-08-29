@@ -5,6 +5,10 @@ import { combineLatest, defer, from, map, switchMap } from "rxjs"
 import { accountsByExtension$ } from "./extension-accounts.state"
 
 export type AccountSource = "extension" | "walletconnect"
+export const accountSourceTypeToName: Record<AccountSource, string> = {
+  extension: "Extension",
+  walletconnect: "Wallet Connect",
+}
 
 const lazyWalletConnectAccounts$ = defer(() =>
   from(import("@/state/walletconnect.state")).pipe(
