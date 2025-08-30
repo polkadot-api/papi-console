@@ -1,11 +1,10 @@
-import { isChopsticks$ } from "@/chopsticks/chopsticks"
 import { ButtonGroup } from "@/components/ButtonGroup"
 import { DocsRenderer } from "@/components/DocsRenderer"
 import { Chopsticks } from "@/components/Icons"
 import { LoadingMetadata } from "@/components/Loading"
 import { SearchableSelect } from "@/components/Select"
 import { withSubscribe } from "@/components/withSuspense"
-import { lookup$ } from "@/state/chains/chain.state"
+import { canSetStorage$, lookup$ } from "@/state/chains/chain.state"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { FC, useState } from "react"
 import { map } from "rxjs"
@@ -87,7 +86,7 @@ export const Storage = withSubscribe(
 
 const StorageEntry: FC = () => {
   const selectedEntry = useStateObservable(selectedEntry$)
-  const canSetStorage = useStateObservable(isChopsticks$)
+  const canSetStorage = useStateObservable(canSetStorage$)
   const [mode, setMode] = useState<"query" | "decode" | "set">("query")
 
   if (!selectedEntry) return null

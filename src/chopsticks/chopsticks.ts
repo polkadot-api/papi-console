@@ -1,15 +1,10 @@
 import type { Blockchain } from "@acala-network/chopsticks-core"
 import { getSyncProvider } from "@polkadot-api/json-rpc-provider-proxy"
 import { blockHeader } from "@polkadot-api/substrate-bindings"
-import { state } from "@react-rxjs/core"
 import { JsonRpcProvider } from "polkadot-api/ws-provider/web"
-import { BehaviorSubject, map } from "rxjs"
+import { BehaviorSubject } from "rxjs"
 
 export const chopsticksInstance$ = new BehaviorSubject<Blockchain | null>(null)
-export const isChopsticks$ = state(
-  chopsticksInstance$.pipe(map((v) => !!v)),
-  false,
-)
 
 export const createChopsticksProvider = (endpoint: string) =>
   withChopsticksEnhancer(

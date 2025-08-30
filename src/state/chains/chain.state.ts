@@ -1,4 +1,8 @@
-import { get, update } from "idb-keyval"
+import {
+  chopsticksInstance$,
+  createChopsticksProvider,
+} from "@/chopsticks/chopsticks"
+import { getHashParams, setHashParams } from "@/hashParams"
 import { getDynamicBuilder, getLookupFn } from "@polkadot-api/metadata-builders"
 import { getObservableClient } from "@polkadot-api/observable-client"
 import {
@@ -7,10 +11,13 @@ import {
   unifyMetadata,
 } from "@polkadot-api/substrate-bindings"
 import { createClient as createSubstrateClient } from "@polkadot-api/substrate-client"
+import { getExtrinsicDecoder } from "@polkadot-api/tx-utils"
 import { fromHex, toHex } from "@polkadot-api/utils"
-import { sinkSuspense, state, SUSPENSE } from "@react-rxjs/core"
+import { liftSuspense, sinkSuspense, state, SUSPENSE } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
+import { get, update } from "idb-keyval"
 import { createClient } from "polkadot-api"
+import { withLogsRecorder } from "polkadot-api/logs-provider"
 import {
   catchError,
   concat,
@@ -42,13 +49,6 @@ import {
   getWebsocketProvider,
   WebsocketSource,
 } from "./websocket"
-import { getHashParams, setHashParams } from "@/hashParams"
-import { withLogsRecorder } from "polkadot-api/logs-provider"
-import {
-  chopsticksInstance$,
-  createChopsticksProvider,
-} from "@/chopsticks/chopsticks"
-import { getExtrinsicDecoder } from "@polkadot-api/tx-utils"
 
 export type ChainSource = WebsocketSource | SmoldotSource
 
@@ -226,12 +226,24 @@ export const chainClient$ = state(
   ),
 )
 export const client$ = state(chainClient$.pipe(map(({ client }) => client)))
-
 export const canProduceBlocks$ = state(
   client$.pipe(
     switchMap((client) => client._request("rpc_methods", [])),
     map((response) => response.methods.includes("dev_newBlock")),
+    liftSuspense(),
     catchError(() => [false]),
+    sinkSuspense(),
+  ),
+  false,
+)
+
+export const canSetStorage$ = state(
+  client$.pipe(
+    switchMap((client) => client._request("rpc_methods", [])),
+    map((response) => response.methods.includes("dev_setStorage")),
+    liftSuspense(),
+    catchError(() => [false]),
+    sinkSuspense(),
   ),
   false,
 )
