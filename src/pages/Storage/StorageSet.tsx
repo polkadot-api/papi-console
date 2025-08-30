@@ -1,12 +1,12 @@
-import { chopsticksInstance$ } from "@/chopsticks/chopsticks"
 import { LookupTypeEdit } from "@/codec-components/LookupTypeEdit"
 import { Chopsticks } from "@/components/Icons"
 import { Button } from "@/components/ui/button"
-import { chainClient$, lookup$ } from "@/state/chains/chain.state"
+import { chainClient$, client$, lookup$ } from "@/state/chains/chain.state"
 import { getTypeComplexity } from "@/utils"
 import { toHex } from "@polkadot-api/utils"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
+import { Binary } from "polkadot-api"
 import { FC, useState } from "react"
 import {
   combineLatest,
@@ -19,7 +19,6 @@ import {
 } from "rxjs"
 import { selectedEntry$ } from "./storage.state"
 import { encodedKey$, KeyDisplay, StorageKeysInput } from "./StorageQuery"
-import { Binary } from "polkadot-api"
 
 const [setValue$, setValue] = createSignal<Uint8Array | "partial" | null>()
 const currentValue$ = state(
@@ -103,20 +102,18 @@ export const StorageSet: FC = () => {
             onClick={async () => {
               setIsLoading(true)
               try {
-                const chopsticks = await firstValueFrom(chopsticksInstance$)
                 if (
-                  !chopsticks ||
                   !currentValue.encodedKey ||
                   !(currentValue.value instanceof Uint8Array)
                 )
                   return false
 
-                await (
-                  await import("@acala-network/chopsticks-core")
-                ).setStorage(chopsticks, [
-                  [currentValue.encodedKey, toHex(currentValue.value)],
+                const client = await firstValueFrom(client$)
+                await client._request("dev_setStorage", [
+                  [[currentValue.encodedKey, toHex(currentValue.value)]],
                 ])
-                await chopsticks.newBlock()
+
+                await client._request("dev_newBlock", [])
               } finally {
                 setIsLoading(false)
               }
