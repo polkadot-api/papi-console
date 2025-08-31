@@ -22,11 +22,13 @@ const SignAndSubmit: FC<{ callData: string; onClose: () => void }> = ({
   return (
     <ActionButton
       onClick={async () => {
+        if (!account?.signer) return
+
         setIsSigning(true)
         try {
           const unsafeApi = await firstValueFrom(unsafeApi$)
           const tx = await unsafeApi.txFromCallData(Binary.fromHex(callData))
-          const signedExtrinsic = await tx.sign(account!.polkadotSigner)
+          const signedExtrinsic = await tx.sign(account.signer)
           trackSignedTx(signedExtrinsic)
           onClose()
         } catch (ex) {

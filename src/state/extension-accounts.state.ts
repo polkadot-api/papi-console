@@ -157,7 +157,7 @@ export const selectedExtensions$ = extensions$.pipeState(
   withDefault(new Map<string, InjectedExtension | null>()),
 )
 
-export const extensionAccounts$ = state(
+const extensionAccounts$ = state(
   (name: string) =>
     extension$(name).pipe(
       switchMap((x) => {
