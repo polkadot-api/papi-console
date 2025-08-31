@@ -15,7 +15,7 @@ const navigationItems = [
   { path: "/extrinsics", label: "Extrinsics", important: true },
   { path: "/constants", label: "Constants", important: false },
   { path: "/runtimeCalls", label: "Runtime Calls", important: true },
-  { path: "/metadata", label: "Metadata", important: false },
+  { path: "/accounts", label: "Accounts", important: false },
 ]
 
 export const Header = () => {
@@ -85,11 +85,11 @@ export const Header = () => {
                   </NavLink>
                 ))}
             </nav>
+            <NavLink to="/metadata" onClick={() => setIsOpen(false)}>
+              Metadata
+            </NavLink>
             <NavLink to="/rpcCalls" onClick={() => setIsOpen(false)}>
               RPC Calls
-            </NavLink>
-            <NavLink to="/accounts" onClick={() => setIsOpen(false)}>
-              Accounts
             </NavLink>
             <hr />
             <ThemeToggle />
