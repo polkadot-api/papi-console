@@ -4,13 +4,11 @@ import {
 } from "@/chopsticks/chopsticks"
 import { getHashParams, setHashParams } from "@/hashParams"
 import { getDynamicBuilder, getLookupFn } from "@polkadot-api/metadata-builders"
-import { getObservableClient } from "@polkadot-api/observable-client"
 import {
   decAnyMetadata,
   HexString,
   unifyMetadata,
 } from "@polkadot-api/substrate-bindings"
-import { createClient as createSubstrateClient } from "@polkadot-api/substrate-client"
 import { getExtrinsicDecoder } from "@polkadot-api/tx-utils"
 import { fromHex, toHex } from "@polkadot-api/utils"
 import { liftSuspense, sinkSuspense, state, SUSPENSE } from "@react-rxjs/core"
@@ -49,6 +47,7 @@ import {
   getWebsocketProvider,
   WebsocketSource,
 } from "./websocket"
+import type { ChainHead$ } from "@polkadot-api/observable-client"
 
 export type ChainSource = WebsocketSource | SmoldotSource
 
@@ -200,25 +199,18 @@ export const chainClient$ = state(
     map((src) => [src.id, getProvider(src)] as const),
     switchMap(([id, provider], i) => {
       const setMetadata = setMetadataFactory(id)
-      const substrateClient = createSubstrateClient(provider)
-      const observableClient = getObservableClient(substrateClient, {
-        getMetadata,
-        setMetadata,
-      })
-      const chainHead = observableClient.chainHead$(2)
       const client = createClient(provider, {
         getMetadata: (id) => firstValueFrom(getMetadata(id)),
         setMetadata,
       })
+      const chainHead: ChainHead$ = (client as any).___INTERNAL_DO_NOT_USE
       return concat(
         i === 0 ? EMPTY : of(SUSPENSE),
-        of({ id, client, substrateClient, observableClient, chainHead }),
+        of({ id, client, chainHead }),
         NEVER,
       ).pipe(
         finalize(() => {
-          chainHead.unfollow()
           client.destroy()
-          observableClient.destroy()
         }),
       )
     }),
@@ -254,7 +246,7 @@ export const unsafeApi$ = chainClient$.pipeState(
 
 const uncachedRuntimeCtx$ = chainClient$.pipeState(
   switchMap(({ chainHead }) => chainHead.runtime$),
-  filter((v) => !!v),
+  filter(Boolean),
 )
 
 export const runtimeCtx$ = chainClient$.pipeState(

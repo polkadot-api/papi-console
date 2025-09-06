@@ -1,8 +1,8 @@
-import { JsonRpcProvider } from "@polkadot-api/substrate-client"
 import { getSmProvider } from "polkadot-api/sm-provider"
 import { Chain } from "polkadot-api/smoldot"
 import { startFromWorker } from "polkadot-api/smoldot/from-worker"
 import SmWorker from "polkadot-api/smoldot/worker?worker"
+import type { JsonRpcProvider } from "polkadot-api/ws-provider/web"
 
 const [dotChainSpec, ksmChainSpec, paseoChainSpec, westendChainSpec] = [
   import("polkadot-api/chains/polkadot"),
@@ -47,7 +47,7 @@ export interface SmoldotSource {
   }
 }
 
-export function createSmoldotSource(
+export async function createSmoldotSource(
   id: string,
   relayChain?: string,
 ): Promise<SmoldotSource> {
@@ -58,17 +58,16 @@ export function createSmoldotSource(
       value: { chainSpec },
     }))
   }
-  return import(`./chainspecs/${id}.ts`).then(({ chainSpec }) => {
-    const parsed = JSON.parse(chainSpec)
-    return {
-      id,
-      type: "chainSpec",
-      value: {
-        chainSpec,
-        relayChain: relayChain || parsed.relayChain || parsed.relay_chain,
-      },
-    }
-  })
+  const { chainSpec } = await import(`./chainspecs/${id}.ts`)
+  const parsed = JSON.parse(chainSpec)
+  return {
+    id,
+    type: "chainSpec",
+    value: {
+      chainSpec,
+      relayChain: relayChain || parsed.relayChain || parsed.relay_chain,
+    },
+  }
 }
 
 export function getSmoldotProvider(source: SmoldotSource): JsonRpcProvider {
