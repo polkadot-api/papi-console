@@ -25,10 +25,13 @@ import {
   firstValueFrom,
   from,
   map,
+  mergeMap,
   NEVER,
+  Observable,
   of,
   startWith,
   switchMap,
+  take,
 } from "rxjs"
 import {
   addCustomNetwork,
@@ -148,13 +151,16 @@ const selectedSource$ = selectedChain$.pipe(switchMap(getChainSource))
 // remove old localStorage clear after a while
 localStorage.removeItem("metadata-cache")
 
-type MetadataCache = Map<string, { id: string; time: number; data: HexString }>
+type MetadataCache = Map<
+  string,
+  { id: string; time: number; data: HexString; codeHash: HexString }
+>
 const IDB_KEY = "metadata-cache"
 const MAX_CACHE_ENTRIES = 3
 
 const addEntryToCache = (
   codeHash: string,
-  entry: { id: string; time: number; data: HexString },
+  entry: { id: string; time: number; data: HexString; codeHash: HexString },
 ) =>
   update<MetadataCache>(IDB_KEY, (cached) => {
     cached ??= new Map()
@@ -191,7 +197,12 @@ const getMetadata = (codeHash: string | null) =>
 const setMetadataFactory =
   (id: string) => (codeHash: string | null, data: Uint8Array) => {
     if (codeHash)
-      addEntryToCache(codeHash, { id, time: Date.now(), data: toHex(data) })
+      addEntryToCache(codeHash, {
+        id,
+        time: Date.now(),
+        data: toHex(data),
+        codeHash,
+      })
   }
 
 export const chainClient$ = state(
@@ -249,6 +260,28 @@ const uncachedRuntimeCtx$ = chainClient$.pipeState(
   filter(Boolean),
 )
 
+const withTxDecoder: <T extends { metadataRaw: Uint8Array }>(
+  input: Observable<T>,
+) => Observable<T & { txDecoder: ReturnType<typeof getExtrinsicDecoder> }> =
+  map((ctx) => ({
+    ...ctx,
+    txDecoder: getExtrinsicDecoder(ctx.metadataRaw),
+  }))
+
+export const runtimeCtxAt$ = state((atBlock: string) =>
+  chainClient$.pipe(
+    take(1),
+    mergeMap((client) => {
+      const pinned = client.chainHead.pinnedBlocks$.state
+      return (
+        pinned.runtimes[pinned.blocks.get(atBlock)?.runtime!]?.runtime ||
+        client.chainHead.getRuntimeContext$(atBlock)
+      )
+    }),
+    withTxDecoder,
+  ),
+)
+
 export const runtimeCtx$ = chainClient$.pipeState(
   switchMap(({ id }) =>
     get<MetadataCache>(IDB_KEY).then((cache) =>
@@ -256,25 +289,20 @@ export const runtimeCtx$ = chainClient$.pipeState(
     ),
   ),
   switchMap((cached) => {
-    if (cached) {
-      const metadata = unifyMetadata(decAnyMetadata(cached[1].data))
-      const lookup = getLookupFn(metadata)
-      const dynamicBuilder = getDynamicBuilder(lookup)
+    if (!cached) return uncachedRuntimeCtx$
+    const metadata = unifyMetadata(decAnyMetadata(cached[1].data))
+    const lookup = getLookupFn(metadata)
+    const dynamicBuilder = getDynamicBuilder(lookup)
 
-      return uncachedRuntimeCtx$.pipe(
-        startWith({
-          metadataRaw: fromHex(cached[1].data),
-          lookup,
-          dynamicBuilder,
-        }),
-      )
-    }
-    return uncachedRuntimeCtx$
+    return uncachedRuntimeCtx$.pipe(
+      startWith({
+        metadataRaw: fromHex(cached[1].data),
+        lookup,
+        dynamicBuilder,
+      }),
+    )
   }),
-  map((ctx) => ({
-    ...ctx,
-    txDecoder: getExtrinsicDecoder(ctx.metadataRaw),
-  })),
+  withTxDecoder,
 )
 
 export const lookup$ = runtimeCtx$.pipeState(map((ctx) => ctx.lookup))

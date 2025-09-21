@@ -1,7 +1,7 @@
 import { Chopsticks } from "@/components/Icons"
 import { Loading } from "@/components/Loading"
 import { groupBy } from "@/lib/groupBy"
-import { runtimeCtx$ } from "@/state/chains/chain.state"
+import { runtimeCtxAt$ } from "@/state/chains/chain.state"
 import * as Tabs from "@radix-ui/react-tabs"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { FC, useState } from "react"
@@ -24,7 +24,7 @@ const blockExtrinsics$ = state((hash: string) => {
     distinctUntilChanged(),
   )
 
-  return combineLatest([body$, runtimeCtx$]).pipe(
+  return combineLatest([body$, runtimeCtxAt$(hash)]).pipe(
     take(1),
     map(([body, { txDecoder }]) =>
       body.map((raw, idx) => ({
