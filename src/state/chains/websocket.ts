@@ -1,5 +1,5 @@
 import { withPolkadotSdkCompat } from "polkadot-api/polkadot-sdk-compat"
-import { getWsProvider, JsonRpcProvider } from "polkadot-api/ws-provider/web"
+import { getWsProvider, JsonRpcProvider } from "polkadot-api/ws-provider"
 
 export interface WebsocketSource {
   type: "websocket"
