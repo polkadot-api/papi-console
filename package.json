@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@acala-network/chopsticks-core": "^1.2.2",
-    "@noble/hashes": "^2.0.0",
+    "@noble/hashes": "^2.0.1",
     "@polkadot-api/descriptors": "file:.papi/descriptors",
     "@polkadot-api/json-rpc-provider-proxy": "^0.2.4",
     "@polkadot-api/metadata-builders": "^0.13.5",
@@ -48,7 +48,7 @@
     "cmdk": "1.1.1",
     "idb-keyval": "^6.2.2",
     "lucide-react": "^0.544.0",
-    "polkadot-api": "^1.18.0",
+    "polkadot-api": "^1.18.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-portal": "^4.3.0",
@@ -74,13 +74,13 @@
     "@walletconnect/types": "^2.21.9",
     "eslint": "^9.36.0",
     "eslint-plugin-react-hooks": "5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.20",
+    "eslint-plugin-react-refresh": "^0.4.21",
     "globals": "^16.4.0",
     "prettier": "^3.6.2",
     "tailwindcss": "^4.1.13",
     "typescript": "^5.9.2",
-    "typescript-eslint": "^8.44.0",
-    "vite": "^7.1.6"
+    "typescript-eslint": "^8.44.1",
+    "vite": "^7.1.7"
   },
   "packageManager": "pnpm@10.15.0+sha512.486ebc259d3e999a4e8691ce03b5cac4a71cbeca39372a9b762cb500cfdf0873e2cb16abe3d951b1ee2cf012503f027b98b6584e4df22524e0c7450d9ec7aa7b",
   "pnpm": {
