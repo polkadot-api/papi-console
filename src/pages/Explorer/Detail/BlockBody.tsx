@@ -1,12 +1,19 @@
 import { Chopsticks } from "@/components/Icons"
 import { Loading } from "@/components/Loading"
 import { groupBy } from "@/lib/groupBy"
-import { runtimeCtxAt$ } from "@/state/chains/chain.state"
+import { runtimeCtx$, runtimeCtxAt$ } from "@/state/chains/chain.state"
 import * as Tabs from "@radix-ui/react-tabs"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { FC, useState } from "react"
 import { useLocation, useParams } from "react-router-dom"
-import { combineLatest, distinctUntilChanged, filter, map, take } from "rxjs"
+import {
+  catchError,
+  combineLatest,
+  distinctUntilChanged,
+  filter,
+  map,
+  take,
+} from "rxjs"
 import { twMerge } from "tailwind-merge"
 import { BlockInfo, blockInfoState$ } from "../block.state"
 import { BlockEvents } from "./BlockEvents"
@@ -24,7 +31,10 @@ const blockExtrinsics$ = state((hash: string) => {
     distinctUntilChanged(),
   )
 
-  return combineLatest([body$, runtimeCtxAt$(hash)]).pipe(
+  return combineLatest([
+    body$,
+    runtimeCtxAt$(hash).pipeState(catchError(() => runtimeCtx$)),
+  ]).pipe(
     take(1),
     map(([body, { txDecoder }]) =>
       body.map((raw, idx) => ({
