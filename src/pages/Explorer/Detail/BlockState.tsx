@@ -3,6 +3,7 @@ import { BlockState } from "../block.state"
 import {
   CircleAlert,
   CircleCheck,
+  CircleQuestionMark,
   CircleX,
   Clock,
   LucideProps,
@@ -14,12 +15,14 @@ const statusIcon: Record<BlockState, ComponentType<LucideProps>> = {
   [BlockState.Fork]: CircleAlert,
   [BlockState.Finalized]: CircleCheck,
   [BlockState.Pruned]: CircleX,
+  [BlockState.Unknown]: CircleQuestionMark,
 }
 const statusClassName: Record<BlockState, string> = {
   [BlockState.Best]: "text-blue-400",
   [BlockState.Fork]: "text-orange-400",
   [BlockState.Finalized]: "text-green-400",
   [BlockState.Pruned]: "text-red-400",
+  [BlockState.Unknown]: "text-orange-400",
 }
 
 export const BlockStatusIcon: FC<
@@ -38,4 +41,5 @@ export const statusText: Record<BlockState, string> = {
   [BlockState.Fork]: "Fork",
   [BlockState.Finalized]: "Finalized",
   [BlockState.Pruned]: "Pruned",
+  [BlockState.Unknown]: "Unknown",
 }

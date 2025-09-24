@@ -101,6 +101,7 @@ const statusValue: Record<BlockState, number> = {
   [BlockState.Best]: 2,
   [BlockState.Fork]: 1,
   [BlockState.Pruned]: 0,
+  [BlockState.Unknown]: -1,
 }
 
 const BlockChildren: FC<{ hash: string }> = ({ hash }) => {

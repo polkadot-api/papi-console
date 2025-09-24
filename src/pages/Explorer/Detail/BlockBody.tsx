@@ -5,15 +5,8 @@ import { runtimeCtx$, runtimeCtxAt$ } from "@/state/chains/chain.state"
 import * as Tabs from "@radix-ui/react-tabs"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { FC, useState } from "react"
-import { useLocation, useParams } from "react-router-dom"
-import {
-  catchError,
-  combineLatest,
-  distinctUntilChanged,
-  filter,
-  map,
-  take,
-} from "rxjs"
+import { useLocation } from "react-router-dom"
+import { catchError, combineLatest, filter, map, take } from "rxjs"
 import { twMerge } from "tailwind-merge"
 import { BlockInfo, blockInfoState$ } from "../block.state"
 import { BlockEvents } from "./BlockEvents"
@@ -25,15 +18,14 @@ import { fromHex, toHex } from "@polkadot-api/utils"
 
 const blockExtrinsics$ = state((hash: string) => {
   const body$ = blockInfoState$(hash).pipe(
-    filter((v) => !!v),
-    map((v) => v.body),
-    filter((v) => !!v),
-    distinctUntilChanged(),
+    filter((x) => !!x?.body),
+    map((v) => v!.body!),
+    take(1),
   )
 
   return combineLatest([
     body$,
-    runtimeCtxAt$(hash).pipeState(catchError(() => runtimeCtx$)),
+    runtimeCtxAt$(hash).pipe(catchError(() => runtimeCtx$)),
   ]).pipe(
     take(1),
     map(([body, { txDecoder }]) =>
@@ -50,9 +42,8 @@ type Tab = "tx" | "events" | "diff"
 export const BlockBody: FC<{
   block: BlockInfo
 }> = ({ block }) => {
-  const { hash } = useParams()
+  const extrinsics = useStateObservable(blockExtrinsics$(block.hash))
   const [selectedTab, setSelectedTab] = useState<Tab | null>(null)
-  const extrinsics = useStateObservable(blockExtrinsics$(hash ?? ""))
 
   const location = useLocation()
   const hashParams = getHashParams(location)
