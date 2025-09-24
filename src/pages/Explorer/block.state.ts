@@ -2,14 +2,13 @@ import { chopsticksInstance$ } from "@/chopsticks/chopsticks"
 import { chainClient$, client$ } from "@/state/chains/chain.state"
 import { SystemEvent } from "@polkadot-api/observable-client"
 import { state } from "@react-rxjs/core"
-import { partitionByKey, toKeySet } from "@react-rxjs/utils"
+import { combineKeys, partitionByKey } from "@react-rxjs/utils"
 import { HexString, PolkadotClient } from "polkadot-api"
 import {
   catchError,
   combineLatest,
   concat,
   defer,
-  distinctUntilChanged,
   EMPTY,
   filter,
   forkJoin,
@@ -34,6 +33,7 @@ import {
   toArray,
   withLatestFrom,
 } from "rxjs"
+import { BlockInfo as RawBlockInfo } from "polkadot-api"
 
 export const finalized$ = client$.pipeState(
   switchMap((client) => client.finalizedBlock$),
@@ -44,6 +44,7 @@ export enum BlockState {
   Best = "best",
   Finalized = "finalized",
   Pruned = "pruned",
+  Unknown = "unknown",
 }
 export interface BlockInfo {
   hash: string
@@ -61,6 +62,22 @@ export interface BlockInfo {
   status: BlockState
   diff: Record<string, [string | null, string | null]> | null
 }
+
+const finalizedBlocks$ = state(
+  client$.pipe(
+    switchMap((client) => {
+      const data = new Map<string, number>()
+      return client.finalizedBlock$.pipe(
+        scan((acc, current: { hash: string; number: number }) => {
+          acc.set(current.hash, current.number)
+          return acc
+        }, data),
+        startWith(data),
+      )
+    }),
+  ),
+)
+finalizedBlocks$.subscribe()
 
 export const [blockInfo$, recordedBlocks$] = partitionByKey(
   client$.pipe(switchMap((client) => client.blocks$)),
@@ -101,7 +118,7 @@ export const [blockInfo$, recordedBlocks$] = partitionByKey(
                   return of(null)
                 }),
               ),
-              status: getBlockStatus$(client, hash, number),
+              status: getBlockStatus$(client, hash, number, parent),
               diff: getBlockDiff$(parent, hash),
             }),
             NEVER,
@@ -122,20 +139,34 @@ const getUnpinnedBlockInfo$ = (hash: string): Observable<BlockInfo> =>
   client$.pipe(
     switchMap((client) =>
       combineLatest({
-        header: client.getBlockHeader(hash),
+        headerAndStatus: from(client.getBlockHeader(hash)).pipe(
+          mergeMap((header) =>
+            getBlockStatus$(
+              client,
+              hash,
+              header.number,
+              header.parentHash,
+            ).pipe(
+              map((status) => ({
+                header,
+                status,
+              })),
+            ),
+          ),
+        ),
         body: client.watchBlockBody(hash),
         events: client.getUnsafeApi().query.System.Events.getValue({
           at: hash,
         }),
       }).pipe(
-        map(({ header, body, events }) => ({
+        map(({ headerAndStatus: { header, status }, body, events }) => ({
           hash: hash,
           parent: header.parentHash,
           number: header.number,
           body,
           events,
           header,
-          status: BlockState.Finalized,
+          status,
           diff: null,
         })),
         catchError(() => getUnpinnedBlockInfoFallback$(hash, client)),
@@ -171,11 +202,22 @@ const getUnpinnedBlockInfoFallback$ = (
     filter((v) => !!v),
     take(1),
     catchError(() => EMPTY),
+    mergeMap((res) => {
+      const header = res.block.header
+      const number = Number(header.number)
+      return getBlockStatus$(client, hash, number, header.parentHash).pipe(
+        map((status) => ({
+          ...res,
+          number,
+          status,
+        })),
+      )
+    }),
   )
 
   return throughRpc$.pipe(
     map(
-      ({ block: { extrinsics, header } }): BlockInfo => ({
+      ({ block: { extrinsics, header }, status, number }): BlockInfo => ({
         hash,
         parent: header.parentHash,
         body: extrinsics,
@@ -183,26 +225,31 @@ const getUnpinnedBlockInfoFallback$ = (
         header: {
           digests: header.digest.logs,
           extrinsicRoot: header.extrinsicsRoot,
-          number: Number(header.number),
+          number,
           parentHash: header.parentHash,
           stateRoot: header.stateRoot,
         },
-        number: Number(header.number),
-        status: BlockState.Finalized,
+        number,
+        status,
         diff: null,
       }),
     ),
   )
 }
 
+export const inMemoryBlocks$ = state(
+  combineKeys(recordedBlocks$, (key) =>
+    blockInfo$(key).pipe(startWith(null)),
+  ).pipe(repeat()),
+)
+inMemoryBlocks$.subscribe()
+
 export const blockInfoState$ = state(
   (hash: string) =>
-    recordedBlocks$.pipe(
-      toKeySet(),
-      map((blocks) => blocks.has(hash)),
-      distinctUntilChanged(),
-      switchMap((exists) =>
-        exists ? blockInfo$(hash) : getUnpinnedBlockInfo$(hash),
+    inMemoryBlocks$.pipe(
+      take(1),
+      switchMap((blocks) =>
+        blocks.has(hash) ? blockInfo$(hash) : getUnpinnedBlockInfo$(hash),
       ),
     ),
   null,
@@ -269,27 +316,39 @@ export const blocksByHeight$ = state(
   ),
 )
 
+const getBlockStatus = (
+  best: Array<RawBlockInfo>,
+  finBlocks: Map<string, number>,
+  number: number,
+  hash: string,
+) => {
+  const finalized = best[best.length - 1]
+  if (finalized.number === number)
+    return finalized.hash === hash ? BlockState.Finalized : BlockState.Pruned
+
+  return finalized.number < number
+    ? best.some((b) => b.hash === hash)
+      ? BlockState.Best
+      : BlockState.Fork
+    : finBlocks.has(hash)
+      ? BlockState.Finalized
+      : BlockState.Unknown
+}
+
 const getBlockStatus$ = (
   client: PolkadotClient,
   hash: string,
   number: number,
+  parent: string,
 ): Observable<BlockState> =>
-  merge(
-    client.finalizedBlock$.pipe(
-      take(1),
-      // If the latest finalized is ahead, assume it is finalized (?)
-      filter((b) => b.number > number),
-      map(() => BlockState.Finalized),
-    ),
-    combineLatest([client.bestBlocks$, client.finalizedBlock$]).pipe(
-      map(([best, finalized]) => {
-        if (finalized.hash === hash) return BlockState.Finalized
-        if (finalized.number === number) return BlockState.Pruned
-        if (best.some((b) => b.hash === hash)) return BlockState.Best
-        return BlockState.Fork
-      }),
-    ),
-  ).pipe(
+  client.bestBlocks$.pipe(
+    withLatestFrom(finalizedBlocks$),
+    map(([best, finBlocks]) => {
+      const status = getBlockStatus(best, finBlocks, number, hash)
+      if (status === BlockState.Finalized && !finBlocks.has(parent))
+        finBlocks.set(parent, number - 1)
+      return status
+    }),
     takeWhile(
       (v) => v !== BlockState.Finalized && v !== BlockState.Pruned,
       true,
