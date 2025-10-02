@@ -3,10 +3,9 @@ import { Chopsticks } from "@/components/Icons"
 import { Button } from "@/components/ui/button"
 import { chainClient$, client$, lookup$ } from "@/state/chains/chain.state"
 import { getTypeComplexity } from "@/utils"
-import { toHex } from "@polkadot-api/utils"
+import { fromHex, toHex } from "@polkadot-api/utils"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
-import { Binary } from "polkadot-api"
 import { FC, useState } from "react"
 import {
   combineLatest,
@@ -25,28 +24,14 @@ const currentValue$ = state(
   merge(
     combineLatest([
       encodedKey$.pipe(filter((v) => v != null)),
-      selectedEntry$.pipe(filter((v) => v != null)),
       chainClient$,
     ]).pipe(
-      switchMap(([key, entry, client]) =>
-        client.chainHead.storage$(
-          null,
-          "value",
-          () => key,
-          null,
-          (data, ctx) => {
-            // We must comply with the original mapper, or the cache will contain a wrong value.
-            const codec = ctx.dynamicBuilder.buildStorage(
-              entry.pallet,
-              entry.entry,
-            )
-            return data === null ? codec.fallback : codec.value.dec(data)
-          },
-        ),
+      switchMap(([key, client]) =>
+        client.chainHead.storage$(null, "value", () => key, null),
       ),
       withLatestFrom(lookup$, selectedEntry$.pipe(filter((v) => v != null))),
       map(([v, lookup, entry]) => {
-        if (v.raw !== null) return v.raw
+        if (v != null) return v
         const pallet = lookup.metadata.pallets.find(
           (p) => p.name == entry.pallet,
         )!
@@ -56,7 +41,7 @@ const currentValue$ = state(
 
         return storageItem.modifier ? storageItem.fallback : null
       }),
-      map((v) => (v != null ? Binary.fromHex(v).asBytes() : v)),
+      map((v) => (v != null ? fromHex(v) : v)),
     ),
     setValue$,
   ).pipe(
