@@ -27,13 +27,7 @@ const currentValue$ = state(
       chainClient$,
     ]).pipe(
       switchMap(([key, client]) =>
-        client.chainHead.storage$(
-          null,
-          "value",
-          () => key,
-          null,
-          (data) => data,
-        ),
+        client.chainHead.storage$(null, "value", () => key, null),
       ),
       withLatestFrom(lookup$, selectedEntry$.pipe(filter((v) => v != null))),
       map(([v, lookup, entry]) => {
