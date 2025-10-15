@@ -100,6 +100,13 @@ const DecodedResultDisplay: FC<{
   storageSubscription: StorageSubscription
   subscriptionKey: string
 }> = ({ storageSubscription, subscriptionKey }) => {
+  if ("error" in storageSubscription) {
+    return (
+      <div className="text-sm text-foreground/50">
+        {storageSubscription.error}
+      </div>
+    )
+  }
   if (!("result" in storageSubscription)) {
     return <div className="text-sm text-foreground/50">Loading…</div>
   }
@@ -170,6 +177,14 @@ const DecodedResultDisplay: FC<{
 const JsonResultDisplay: FC<{
   storageSubscription: StorageSubscription
 }> = ({ storageSubscription }) => {
+  if ("error" in storageSubscription) {
+    return (
+      <div className="text-sm text-foreground/50">
+        {storageSubscription.error}
+      </div>
+    )
+  }
+
   if (!("result" in storageSubscription)) {
     return <div className="text-sm text-foreground/50">Loading…</div>
   }
