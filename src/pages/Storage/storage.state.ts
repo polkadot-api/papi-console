@@ -11,6 +11,7 @@ import {
 } from "@react-rxjs/utils"
 import { Binary } from "polkadot-api"
 import {
+  catchError,
   combineLatest,
   concat,
   distinctUntilChanged,
@@ -168,7 +169,8 @@ export type StorageSubscription = {
   single: boolean
   paused: boolean
   completed: boolean
-} & ({ result: unknown } | {})
+} & ({ result: unknown } | { error: string } | {})
+
 const [getStorageSubscription$, storageSubscriptionKeyChange$] = partitionByKey(
   newStorageSubscription$,
   () => uuid(),
@@ -198,6 +200,18 @@ const [getStorageSubscription$, storageSubscriptionKeyChange$] = partitionByKey(
             paused,
             completed,
           })),
+          catchError((ex) => {
+            console.error(ex)
+            return [
+              {
+                ...props,
+                paused: false,
+                completed: true,
+                error:
+                  ex instanceof Error ? `Error: ${ex.message}` : "(Errored)",
+              } satisfies StorageSubscription,
+            ]
+          }),
         )
       }),
       takeUntil(merge(removeStorageSubscription$(id), selectedChainChanged$)),
