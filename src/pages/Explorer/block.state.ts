@@ -3,7 +3,7 @@ import { chainClient$, client$ } from "@/state/chains/chain.state"
 import { SystemEvent } from "@polkadot-api/observable-client"
 import { state } from "@react-rxjs/core"
 import { combineKeys, partitionByKey } from "@react-rxjs/utils"
-import { HexString, PolkadotClient } from "polkadot-api"
+import { FixedSizeBinary, HexString, PolkadotClient } from "polkadot-api"
 import {
   catchError,
   combineLatest,
@@ -244,13 +244,43 @@ export const inMemoryBlocks$ = state(
 )
 inMemoryBlocks$.subscribe()
 
+const blockHash$ = (hashOrHeight: string) =>
+  hashOrHeight.length > 63
+    ? of(hashOrHeight.startsWith("0x") ? hashOrHeight : `0x${hashOrHeight}`)
+    : client$.pipe(
+        switchMap((client) =>
+          from(
+            client._request<HexString[], [number]>("archive_v1_hashByHeight", [
+              Number(hashOrHeight),
+            ]),
+          ).pipe(
+            map((x) => {
+              if (x.length) return x[0]
+              throw null
+            }),
+            catchError(() =>
+              client
+                .getUnsafeApi()
+                .query.System.BlockHash.getValue(Number(hashOrHeight))
+                .then((x: FixedSizeBinary<32>) => x.asHex()),
+            ),
+          ),
+        ),
+      )
+
 export const blockInfoState$ = state(
-  (hash: string) =>
+  (hashOrHeight: string) =>
     inMemoryBlocks$.pipe(
       take(1),
-      switchMap((blocks) =>
-        blocks.has(hash) ? blockInfo$(hash) : getUnpinnedBlockInfo$(hash),
-      ),
+      switchMap((blocks) => {
+        if (blocks.has(hashOrHeight)) return blockInfo$(hashOrHeight)
+        const potentialHeight = Number(hashOrHeight)
+        const target = Array.from(blocks.values()).find(
+          (x) => x?.number === potentialHeight,
+        )
+        if (target) return blockInfo$(target.hash)
+        return blockHash$(hashOrHeight).pipe(mergeMap(getUnpinnedBlockInfo$))
+      }),
     ),
   null,
 )

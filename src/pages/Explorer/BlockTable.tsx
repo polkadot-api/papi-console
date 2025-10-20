@@ -1,6 +1,6 @@
 import { CopyText } from "@/components/Copy"
 import { Popover } from "@/components/Popover"
-import { Link } from "@/hashParams"
+import { Link, useNavigate } from "@/hashParams"
 import { client$ } from "@/state/chains/chain.state"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { FC } from "react"
@@ -9,6 +9,9 @@ import { twMerge } from "tailwind-merge"
 import { BlockInfo, blocksByHeight$, finalized$ } from "./block.state"
 import { BlockPopover } from "./BlockPopover"
 import * as Finalizing from "./FinalizingTable"
+import { Button } from "@/components/ui/button"
+import { SearchInput } from "@/components/ui/search-input"
+import { Search } from "lucide-react"
 
 const best$ = client$.pipeState(
   switchMap((client) => client.bestBlocks$.pipe(map(([best]) => best))),
@@ -84,6 +87,34 @@ const blockTable$ = state(
   [],
 )
 
+export const BlockInput: FC = () => {
+  const navigate = useNavigate()
+  return (
+    <form
+      className="grow p-0 -my-2 flex"
+      onSubmit={(e) => {
+        const blockTarget = new FormData(e.currentTarget).get("blockTarget") as string
+        const isHex = blockTarget?.match(/^0[xX][0-9a-fA-F]+$/)
+        if (
+          (isHex && blockTarget.length === 66) ||
+          (!isHex && !Number.isNaN(Number(blockTarget)))
+        ) {
+          navigate(blockTarget)
+        }
+        e.preventDefault()
+        e.stopPropagation()
+      }}
+    >
+      <div className="grow">
+        <SearchInput placeholder="Block hash or height" name="blockTarget" />
+      </div>
+      <Button className="grow-0">
+        <Search />{" "}
+      </Button>
+    </form>
+  )
+}
+
 export const BlockTable = () => {
   const rows = useStateObservable(blockTable$)
   const finalized = useStateObservable(finalized$)
@@ -100,7 +131,7 @@ export const BlockTable = () => {
 
   return (
     <Finalizing.Root>
-      <Finalizing.Title>Recent Blocks</Finalizing.Title>
+      <Finalizing.Title search={<BlockInput />}>Recent Blocks</Finalizing.Title>
       <Finalizing.Table>
         {rows.map((row, i) => (
           <Finalizing.Row

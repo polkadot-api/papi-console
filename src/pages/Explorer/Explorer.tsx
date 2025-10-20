@@ -9,7 +9,7 @@ import { Summary } from "./Summary"
 export const Explorer = withSubscribe(
   () => (
     <Routes>
-      <Route path=":hash" element={<BlockDetail />} />
+      <Route path=":hashOrHeight" element={<BlockDetail />} />
       <Route
         path="*"
         element={

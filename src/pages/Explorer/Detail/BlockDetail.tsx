@@ -6,8 +6,8 @@ import { BlockBody } from "./BlockBody"
 import { BlockInfoView } from "./BlockInfo"
 
 export const BlockDetail = () => {
-  const { hash } = useParams()
-  const block = useStateObservable(blockInfoState$(hash ?? ""))
+  const { hashOrHeight } = useParams()
+  const block = useStateObservable(blockInfoState$(hashOrHeight ?? ""))
 
   if (!block) return <Loading>Loading block…</Loading>
 
