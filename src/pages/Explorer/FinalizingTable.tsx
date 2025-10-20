@@ -1,8 +1,14 @@
-import { FC, PropsWithChildren } from "react"
+import { FC, PropsWithChildren, ReactNode } from "react"
 import { twMerge } from "tailwind-merge"
 
-export const Title: FC<PropsWithChildren> = ({ children }) => (
-  <h2 className="font-bold p-2 border-b border-slate-400 mb-2">{children}</h2>
+export const Title: FC<PropsWithChildren<{ search?: ReactNode }>> = ({
+  children,
+  search,
+}) => (
+  <h2 className="font-bold p-2 border-b border-slate-400 mb-2 flex">
+    <span className="grow-0">{children}</span>
+    {search}
+  </h2>
 )
 
 export const Table: FC<PropsWithChildren> = ({ children }) => (
