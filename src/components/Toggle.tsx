@@ -12,7 +12,7 @@ const SliderToggle: React.FC<{
       onPressedChange={() => toggle()}
       className={
         "relative w-8 h-5 rounded-full p-0.5 transition-colors border border-foreground/20" +
-        (isToggled ? " bg-primary" : " bg-primary/20")
+        (isToggled ? " bg-polkadot" : " bg-polkadot/20")
       }
       aria-label="Toggle"
     >

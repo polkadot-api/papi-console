@@ -14,7 +14,7 @@ export const FocusPath: FC<{
 
   return (
     <div className="shrink-0 px-2">
-      <div className="flex max-w-full flex-wrap gap-1 items-center border border-tree-border text-sm px-2 py-1">
+      <div className="flex max-w-full flex-wrap gap-1 items-center border border-border text-sm px-2 py-1">
         {breadcrumbs.map((v, i) => (
           <span key={i} className="whitespace-nowrap flex gap-1 items-center">
             {i > 0 && <span className="text-foreground/50 mx-2">&gt;</span>}

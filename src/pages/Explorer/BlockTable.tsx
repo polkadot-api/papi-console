@@ -93,7 +93,9 @@ export const BlockInput: FC = () => {
     <form
       className="grow p-0 -my-2 flex"
       onSubmit={(e) => {
-        const blockTarget = new FormData(e.currentTarget).get("blockTarget") as string
+        const blockTarget = new FormData(e.currentTarget).get(
+          "blockTarget",
+        ) as string
         const isHex = blockTarget?.match(/^0[xX][0-9a-fA-F]+$/)
         if (
           (isHex && blockTarget.length === 66) ||
@@ -108,7 +110,7 @@ export const BlockInput: FC = () => {
       <div className="grow">
         <SearchInput placeholder="Block hash or height" name="blockTarget" />
       </div>
-      <Button className="grow-0">
+      <Button className="grow-0" variant="secondary">
         <Search />{" "}
       </Button>
     </form>

@@ -74,7 +74,7 @@ export const CResult: EditResult = ({ value, inner }) => (
 )
 
 export const ItemMarker = () => (
-  <span className="w-[0.77rem] border-t border-tree-border"></span>
+  <span className="w-[0.77rem] border-t border-border"></span>
 )
 
 export const TitleContext = createContext<HTMLElement | null>(null)
@@ -172,7 +172,7 @@ export const ItemTitle: FC<
               binaryStatus === undefined && "text-slate-600",
             )}
           />
-          <Icon size={15} className="text-primary mr-2" />
+          <Icon size={15} className="text-polkadot mr-2" />
           {children}
         </span>
         <div
