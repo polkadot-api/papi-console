@@ -2,14 +2,15 @@ import { ActionButton } from "@/components/ActionButton"
 import { Spinner } from "@/components/Icons"
 import { trackSignedTx, trackUnsignedTx } from "@/pages/Transactions"
 import { unsafeApi$ } from "@/state/chains/chain.state"
+import { selectedAccount$ } from "@/state/polkahub"
 import { compactNumber } from "@polkadot-api/substrate-bindings"
 import { fromHex, mergeUint8, toHex } from "@polkadot-api/utils"
 import { useStateObservable } from "@react-rxjs/core"
 import { Binary } from "polkadot-api"
+import { SelectAccountField } from "polkahub"
 import { FC, useState } from "react"
 import { firstValueFrom } from "rxjs"
 import { twMerge } from "tailwind-merge"
-import { AccountProvider, selectedAccount$ } from "./AccountProvider"
 import { ExtensionProvider } from "./ExtensionProvider"
 
 const SignAndSubmit: FC<{ callData: string; onClose: () => void }> = ({
@@ -77,7 +78,7 @@ export default function SubmitTxF(props: {
   return (
     <>
       <ExtensionProvider />
-      <AccountProvider />
+      <SelectAccountField />
       <div className="flex flex-col gap-2">
         <SignAndSubmit {...props} />
         <SubmitUnsigned {...props} />

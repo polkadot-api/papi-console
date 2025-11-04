@@ -1,14 +1,15 @@
-import { PolkadotIdenticon } from "@/components/PolkadotIdenticon"
-import { accountDetail$, getPublicKey } from "@/state/extension-accounts.state"
 import { identity$, isVerified } from "@/state/identity.state"
+import { accountDetail$ } from "@/state/polkahub"
+import { EthIdenticon, PolkadotIdenticon } from "@polkadot-api/react-components"
 import { useStateObservable } from "@react-rxjs/core"
 import { CheckCircle } from "lucide-react"
-import { SS58String } from "polkadot-api"
+import { getSs58AddressInfo } from "polkadot-api"
+import { AccountAddress } from "polkahub"
 import { FC } from "react"
 import { twMerge } from "tailwind-merge"
 
 export const AccountIdDisplay: FC<{
-  value: SS58String
+  value: AccountAddress
   className?: string
 }> = ({ value, className }) => {
   const details = useStateObservable(accountDetail$(value))
@@ -18,11 +19,15 @@ export const AccountIdDisplay: FC<{
 
   return (
     <div className={twMerge("flex items-center gap-2", className)}>
-      <PolkadotIdenticon
-        className="shrink-0"
-        publicKey={getPublicKey(value)}
-        size={28}
-      />
+      {value.startsWith("0x") ? (
+        <EthIdenticon address={value} size={28} className="rounded" />
+      ) : (
+        <PolkadotIdenticon
+          className="shrink-0"
+          publicKey={getPublicKey(value)}
+          size={28}
+        />
+      )}
       <div className="flex flex-col justify-center text-foreground leading-tight overflow-hidden">
         {name && (
           <span className="inline-flex items-center gap-1">
@@ -41,4 +46,8 @@ export const AccountIdDisplay: FC<{
       </div>
     </div>
   )
+}
+const getPublicKey = (address: string) => {
+  const info = getSs58AddressInfo(address)
+  return info.isValid ? info.publicKey : null
 }

@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import "polkahub";
 
 @custom-variant dark (&:is(.dark *));
 

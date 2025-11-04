@@ -13,10 +13,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { groupBy } from "@/lib/groupBy"
-import { accounts$ } from "@/state/accounts.state"
-import { getPublicKey } from "@/state/extension-accounts.state"
 import { identity$, isVerified } from "@/state/identity.state"
+import { addrToAccount$, getPublicKey } from "@/state/polkahub"
 import { cn } from "@/utils/cn"
 import {
   getSs58AddressInfo,
@@ -29,13 +27,15 @@ import { Check, ChevronsUpDown } from "lucide-react"
 import { FC, useState } from "react"
 import { filter, map, switchMap, take } from "rxjs"
 
-const acconutMap$ = accounts$.pipeState(
-  map((accounts) => groupBy(accounts, (acc) => acc.accountId)),
+const acconutMap$ = addrToAccount$.pipeState(
   map((groups) =>
     Object.fromEntries(
       Object.entries(groups)
         .filter(([accountId]) => !accountId.startsWith("0x"))
-        .map(([accountId, [groupRep]]) => [accountId, groupRep]),
+        .map(([accountId, account]) => [
+          toHex(getPublicKey(accountId)),
+          account,
+        ]),
     ),
   ),
 )
@@ -49,9 +49,9 @@ const hintedAccounts$ = state(
         filter((v) => !!v),
         take(1),
         switchMap((details) =>
-          identity$(details.accountId).pipe(
+          identity$(details.address).pipe(
             map((identity) => ({
-              address: details.accountId,
+              address: details.address,
               name: identity?.displayName ?? details.name,
               isVerified: isVerified(identity),
             })),
@@ -113,7 +113,6 @@ export const AccountIdInput: FC<{
             "flex w-64 justify-between overflow-hidden px-2 border border-border bg-input",
             className,
           )}
-          forceSvgSize={false}
         >
           {value !== null ? (
             <AccountIdDisplay value={value} className="overflow-hidden" />
@@ -193,7 +192,6 @@ const AccountOption: FC<{
       value={account + "_" + name}
       onSelect={onSelect}
       className="flex flex-row items-center gap-2 p-1"
-      forceSvgSize={false}
     >
       <AccountIdDisplay value={account} className="overflow-hidden" />
       <Check
