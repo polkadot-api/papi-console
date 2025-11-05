@@ -67,10 +67,7 @@ export const Header = () => {
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent
-            side="right"
-            className="bg-background border-accent w-64 pt-10"
-          >
+          <SheetContent side="right" className="bg-background w-64 pt-10">
             <NetworkSwitcher forSmallScreen />
             <nav className="flex flex-col gap-4 lg:hidden">
               {navigationItems

@@ -57,7 +57,7 @@ export const BlockPopover: FC<{ hash: string }> = ({ hash }) => {
           Block
           <Link
             to={hash}
-            className="font-mono font-normal text-primary/70 hover:text-primary underline"
+            className="font-mono font-normal text-polkadot/70 hover:text-polkadot underline"
           >
             {hash.slice(0, 18)}…
           </Link>

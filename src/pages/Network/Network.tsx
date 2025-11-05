@@ -270,7 +270,7 @@ const ConnectionOption: FC<{
   url?: string
 }> = ({ isSelected, value, name, type, url }) => (
   <div
-    className={`overflow-hidden p-3 border rounded-md ${isSelected ? "border-primary bg-primary/5" : "border-border"}`}
+    className={`overflow-hidden p-3 border rounded-md ${isSelected ? "border-polkadot bg-polkadot/5" : "border-border"}`}
   >
     <div className="flex items-start space-x-2">
       <RadioGroupItem value={value} id={`chain-${value}`} className="mt-1" />

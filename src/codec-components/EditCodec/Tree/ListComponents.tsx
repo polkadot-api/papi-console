@@ -154,7 +154,7 @@ const ListItem: FC<
     <div
       ref={drag ? ref : undefined}
       className={twMerge(
-        "hover:bg-secondary/80 border-l border-tree-border last:border-0 last:before:block last:before:absolute last:before:border-l last:before:h-4 last:before:border-tree-border",
+        "hover:bg-secondary/80 border-l border-border last:border-0 last:before:block last:before:absolute last:before:border-l last:before:h-4 last:before:border-border",
         drag?.rearranging && "relative",
         isDragging &&
           "none select-none z-10 bg-secondary/80 last:border-l last:before:border-0",
