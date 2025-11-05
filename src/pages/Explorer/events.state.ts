@@ -16,6 +16,7 @@ const blackList = new Set([
   "Balances.Locked",
   "TransactionPayment.TransactionFeePaid",
   "Staking.Rewarded",
+  "VoterList.ScoreUpdated",
 ])
 const whitelist = new Set(["System.Remarked"])
 export const filterEvt = (evt: SystemEvent) =>
