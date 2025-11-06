@@ -13,10 +13,10 @@ import {
   knownChains,
   Plugin,
 } from "polkahub"
-import { combineLatest, filter, firstValueFrom, map } from "rxjs"
+import { combineLatest, filter, firstValueFrom, map, switchMap } from "rxjs"
 import { chainProperties$ } from "./chain-props.state"
 import { canSetStorage$, client$ } from "./chains/chain.state"
-import { getAddressName, isVerified } from "./identity.state"
+import { identity$, isVerified } from "./identity.state"
 
 const selectedAccountPlugin = createSelectedAccountPlugin()
 const pjsWalletProvider = createPjsWalletProvider()
@@ -67,34 +67,37 @@ export const polkaHub = createPolkaHub(
     [walletConnectProvider],
   ]).pipe(map((v: (Plugin<any> | null)[]) => v.filter((v) => v != null))),
   {
-    async getIdentity(address) {
-      const res = await getAddressName(address)
-      return res
-        ? {
-            name: res.displayName,
-            verified: isVerified(res) ?? false,
+    getIdentity: (address) =>
+      identity$(address).pipe(
+        map((res) =>
+          res
+            ? {
+                name: res.displayName,
+                verified: isVerified(res) ?? false,
+              }
+            : null,
+        ),
+      ),
+    getBalance: (address) =>
+      client$.pipe(
+        switchMap((client) =>
+          combineLatest([
+            chainProperties$,
+            client
+              .getTypedApi(polkadot_people)
+              .query.System.Account.getValue(address),
+          ]),
+        ),
+        map(([chainProps, balance]) => {
+          if (chainProps?.tokenDecimals == null) return null
+
+          return {
+            value: balance.data.reserved + balance.data.free,
+            decimals: chainProps.tokenDecimals,
+            symbol: chainProps.tokenSymbol,
           }
-        : null
-    },
-    async getBalance(address) {
-      const client = await firstValueFrom(client$)
-      const [chainProps, balance] = await firstValueFrom(
-        combineLatest([
-          chainProperties$,
-          client
-            .getTypedApi(polkadot_people)
-            .query.System.Account.getValue(address),
-        ]),
-      )
-
-      if (chainProps?.tokenDecimals == null) return null
-
-      return {
-        value: balance.data.reserved + balance.data.free,
-        decimals: chainProps.tokenDecimals,
-        symbol: chainProps.tokenSymbol,
-      }
-    },
+        }),
+      ),
   },
 )
 
