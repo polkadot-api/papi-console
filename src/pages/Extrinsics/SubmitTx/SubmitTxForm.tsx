@@ -107,6 +107,10 @@ const SelectAccount: FC<{
   const [account, setAccount] = useSelectedAccount()
 
   const groups = Object.entries(availableAccounts)
+    .map(
+      ([group, accounts]) =>
+        [group, accounts.filter((acc) => acc.signer)] as const,
+    )
     .filter(([, accounts]) => accounts.length > 0)
     .map(([key, accounts]) => ({
       name: groupLabels[key] ?? key,
@@ -128,6 +132,7 @@ const SelectAccount: FC<{
           copyable={false}
         />
       )}
+      disableClear
     />
   )
 }
