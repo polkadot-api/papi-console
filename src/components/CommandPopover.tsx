@@ -78,6 +78,7 @@ export function CommandPopover({
           onClick={() => setOpen(true)}
           placeholder={placeholder}
           className="border-none focus:ring-0"
+          autoFocus
         />
 
         {open && (

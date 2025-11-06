@@ -216,6 +216,7 @@ const NetworkSwitchDialogContent: FC<{
                     {Object.entries(selectedNetwork.endpoints).map(
                       ([rpcName, url]) => (
                         <ConnectionOption
+                          key={rpcName}
                           value={url}
                           isSelected={selectedRpc === url}
                           name={rpcName}

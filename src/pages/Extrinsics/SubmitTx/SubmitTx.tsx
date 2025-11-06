@@ -1,7 +1,9 @@
 import { ActionButton } from "@/components/ActionButton"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
+  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
@@ -30,17 +32,21 @@ export const ExtrinsicModal: React.FC<{
           )
             evt.preventDefault()
         }}
-        className="flex flex-col overflow-hidden"
+        className="flex flex-col overflow-hidden max-w-lg sm:max-w-lg md:max-w-lg"
       >
-        <DialogTitle>Create TX</DialogTitle>
-        <Suspense fallback="Loading…">
-          <SendTransactionForm
-            callData={
-              callData instanceof Uint8Array ? toHex(callData) : callData!
-            }
-            onClose={() => setOpen(false)}
-          />
-        </Suspense>
+        <DialogHeader>
+          <DialogTitle>Create TX</DialogTitle>
+        </DialogHeader>
+        <DialogBody className="flex flex-col gap-2">
+          <Suspense fallback="Loading…">
+            <SendTransactionForm
+              callData={
+                callData instanceof Uint8Array ? toHex(callData) : callData!
+              }
+              onClose={() => setOpen(false)}
+            />
+          </Suspense>
+        </DialogBody>
       </DialogContent>
     </Dialog>
   )
