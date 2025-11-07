@@ -2,14 +2,14 @@ import { Label } from "@/components/ui/label"
 import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   availableExtensions$,
-  onToggleExtension,
   selectedExtensions$,
-} from "@/state/extension-accounts.state"
+  toggleExtension,
+} from "@/state/polkahub"
 import { useStateObservable } from "@react-rxjs/core"
 
 export const ExtensionProvider: React.FC = () => {
   const availableExtensions = useStateObservable(availableExtensions$)
-  const selectedExtensions = useStateObservable(selectedExtensions$)
+  const selectedExtensions = new Set(useStateObservable(selectedExtensions$))
 
   return (
     <>
@@ -18,7 +18,7 @@ export const ExtensionProvider: React.FC = () => {
         {availableExtensions.map((extensionName) => (
           <TabsTrigger
             className="mx-1"
-            onClick={() => onToggleExtension(extensionName)}
+            onClick={() => toggleExtension(extensionName)}
             active={selectedExtensions.has(extensionName)}
             key={extensionName}
           >

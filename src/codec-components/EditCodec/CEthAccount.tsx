@@ -13,7 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { accountDetail$, accounts$ } from "@/state/extension-accounts.state"
+import { accountDetail$, addrToAccount$ } from "@/state/polkahub"
 import { cn } from "@/utils/cn"
 import { EditEthAccount, NOTIN } from "@polkadot-api/react-builder"
 import { ethAccount, HexString } from "@polkadot-api/substrate-bindings"
@@ -25,17 +25,15 @@ import { map, take } from "rxjs"
 
 const hintedAccounts$ = state(
   combineKeys(
-    accounts$.pipe(
+    addrToAccount$.pipe(
       map((accounts) =>
-        [...accounts.entries()]
-          .filter(([, { address }]) => address.startsWith("0x"))
-          .map(([key]) => key),
+        Object.keys(accounts).filter((address) => address.startsWith("0x")),
       ),
     ),
     (account) =>
-      accounts$.pipe(
+      addrToAccount$.pipe(
         map((v) => {
-          const details = v.get(account)!
+          const details = v[account]!
           return {
             address: details.address,
             name: details.name,
@@ -103,7 +101,6 @@ export const CEthAccount: EditEthAccount = ({ value, onValueChanged }) => {
           role="combobox"
           aria-expanded={open}
           className="flex w-64 justify-between overflow-hidden px-2 border border-border bg-input"
-          forceSvgSize={false}
         >
           {value !== NOTIN ? (
             <EthAccountDisplay value={value} className="overflow-hidden" />
@@ -177,7 +174,6 @@ const AccountOption: FC<{
       value={account + "_" + name}
       onSelect={onSelect}
       className="flex flex-row items-center gap-2 p-1"
-      forceSvgSize={false}
     >
       <EthAccountDisplay value={account} className="overflow-hidden" />
       <Check

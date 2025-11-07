@@ -1,12 +1,6 @@
 import { AccountIdDisplay } from "@/components/AccountIdDisplay"
 import { TokenAmount } from "@/components/TokenAmount"
 import { Button } from "@/components/ui/button"
-import {
-  Account,
-  accounts$,
-  AccountSource,
-  accountSourceTypeToName,
-} from "@/state/accounts.state"
 import { chainProperties$ } from "@/state/chain-props.state"
 import { client$ } from "@/state/chains/chain.state"
 import { MultiAddress, polkadot_people } from "@polkadot-api/descriptors"
@@ -18,17 +12,54 @@ import {
 } from "@react-rxjs/core"
 import { Send } from "lucide-react"
 import { CompatibilityLevel, SS58String } from "polkadot-api"
+import {
+  Account,
+  ledgerProviderId,
+  PjsWalletAccount,
+  polkadotVaultProviderId,
+  readOnlyProviderId,
+  useAvailableAccounts,
+  walletConnectProviderId,
+} from "polkahub"
 import { FC } from "react"
 import { Link } from "react-router-dom"
 import { catchError, combineLatest, map, switchMap } from "rxjs"
-import { knownExtensions } from "./Providers"
+
+const knownGroupsNames: Record<string, string> = {
+  "pjs-wallet": "Browser Extensions",
+  [ledgerProviderId]: "Ledger",
+  [readOnlyProviderId]: "Read Only",
+  [polkadotVaultProviderId]: "Polkadot Vault",
+  [walletConnectProviderId]: "Wallet Connect",
+}
+const knownGroupsColors: Record<string, string> = {
+  "pjs-wallet": "var(--color-lime-700)",
+  [readOnlyProviderId]: "var(--color-orange-700)",
+  [walletConnectProviderId]: "var(--color-blue-700)",
+}
 
 export const AccountList = () => {
-  const accounts = useStateObservable(accounts$)
+  const accountGroups = useAvailableAccounts()
 
   return (
     <div className="bg-card p-4 rounded-xl space-y-4">
       <h3 className="text-xl font-bold">Accounts</h3>
+      {Object.entries(accountGroups)
+        .filter(([_, accounts]) => accounts.length > 0)
+        .map(([id, accounts]) => (
+          <AccountGroup key={id} id={id} accounts={accounts} />
+        ))}
+    </div>
+  )
+}
+
+const AccountGroup: FC<{ id: string; accounts: Account[] }> = ({
+  id,
+  accounts,
+}) => {
+  return (
+    <div>
+      <h4>{getGroupName(id)}</h4>
       <ul className="space-y-4">
         {accounts.map((account, i) => (
           <AccountCard key={i} account={account} />
@@ -45,24 +76,25 @@ const AccountCard: FC<{
     <li className="shadow border rounded-xl p-4 space-y-4">
       <div className="flex justify-between items-start overflow-hidden">
         <AccountIdDisplay
-          value={account.accountId}
+          value={account.address}
           className="shrink-1 overflow-hidden"
         />
         <SourceTag account={account} />
       </div>
-      {account.accountId.startsWith("0x") ? null : (
-        <Balances accountId={account.accountId} />
+      {account.address.startsWith("0x") ? null : (
+        <Balances accountId={account.address} />
       )}
     </li>
   )
 }
-
-const sourceColors: Record<AccountSource, string> = {
-  extension: "var(--color-lime-700)",
-  walletconnect: "var(--color-blue-700)",
-  readonly: "var(--color-orange-700)",
+export const knownExtensions: Record<string, string> = {
+  "polkadot-js": "Polkadot JS",
+  "nova-wallet": "Nova Wallet",
+  talisman: "Talisman",
+  "subwallet-js": "Subwallet",
 }
-const getExtensionName = (id: string) => knownExtensions[id]?.name ?? id
+const getExtensionName = (id: string) => knownExtensions[id] ?? id
+const getGroupName = (id: string) => knownGroupsNames[id] ?? id
 
 const SourceTag: FC<{
   account: Account
@@ -70,14 +102,18 @@ const SourceTag: FC<{
   return (
     <div
       className="rounded px-2 shrink-0"
-      style={{
-        color: sourceColors[account.type],
-        backgroundColor: `color-mix(in srgb, ${sourceColors[account.type]}, transparent 90%)`,
-      }}
+      style={
+        account.provider in knownGroupsColors
+          ? {
+              color: knownGroupsColors[account.provider],
+              backgroundColor: `color-mix(in srgb, ${knownGroupsColors[account.provider]}, transparent 90%)`,
+            }
+          : undefined
+      }
     >
-      {account.type === "extension"
-        ? getExtensionName(account.extensionId)
-        : accountSourceTypeToName[account.type]}
+      {account.provider === "pjs-wallet"
+        ? getExtensionName((account as PjsWalletAccount).extensionId)
+        : getGroupName(account.provider)}
     </div>
   )
 }

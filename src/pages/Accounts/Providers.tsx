@@ -1,131 +1,83 @@
-import { Spinner } from "@/components/Icons"
 import {
-  availableExtensions$,
-  onToggleExtension,
-  selectedExtensions$,
-} from "@/state/extension-accounts.state"
-import { state, useStateObservable } from "@react-rxjs/core"
-import { CircleQuestionMark } from "lucide-react"
-import { FC } from "react"
-import { defer, from, switchMap } from "rxjs"
-import { AddressProvider } from "./AddressProvider"
-import { SourceButton } from "./SourceButton"
+  Button,
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@polkahub/ui-components"
+import { ChevronLeft } from "lucide-react"
+import {
+  ManageLedger,
+  ManageReadOnly,
+  ManageVault,
+  ModalContext,
+  PjsWalletButtons,
+  usePolkaHubModalState,
+  WalletConnectButton,
+} from "polkahub"
+import { FC, PropsWithChildren } from "react"
 
-const lazyWalletConnectStatus$ = state(
-  defer(() =>
-    from(import("@/state/walletconnect.state")).pipe(
-      switchMap(({ walletConnectStatus$ }) => walletConnectStatus$),
-    ),
-  ),
-  {
-    type: "disconnected",
-  },
-)
-
-export const knownExtensions: Record<string, { name: string; logo: string }> = {
-  "polkadot-js": {
-    name: "Polkadot JS",
-    logo: import.meta.env.BASE_URL + "providers/polkadotjs.webp",
-  },
-  "nova-wallet": {
-    name: "Nova Wallet",
-    logo: import.meta.env.BASE_URL + "providers/novawallet.webp",
-  },
-  talisman: {
-    name: "Talisman",
-    logo: import.meta.env.BASE_URL + "providers/talisman.webp",
-  },
-  "subwallet-js": {
-    name: "Subwallet",
-    logo: import.meta.env.BASE_URL + "providers/subwallet.webp",
-  },
-}
-
-export const Providers = () => {
-  const availableExtensions = useStateObservable(availableExtensions$).sort(
-    (a, b) => (b in knownExtensions ? 1 : 0) - (a in knownExtensions ? 1 : 0),
-  )
-  const walletConnectStatus = useStateObservable(lazyWalletConnectStatus$)
+const ManageToDialog: FC<PropsWithChildren> = ({ children }) => {
+  const { contentStack, contextValue, setContentStack } =
+    usePolkaHubModalState()
+  const activeContent = contentStack.length
+    ? contentStack[contentStack.length - 1]
+    : null
 
   return (
-    <div className="bg-card p-4 rounded-xl">
-      <h3 className="text-xl font-bold">Account Providers</h3>
-      <ul className="flex gap-2 flex-wrap items-center justify-center">
-        {availableExtensions.map((id) => (
-          <li key={id}>
-            <ExtensionButton id={id} />
-          </li>
-        ))}
-
-        <AddressProvider />
-        {/* <SourceButton label="Ledger" disabled>
-          <img
-            src={import.meta.env.BASE_URL + "providers/ledger.webp"}
-            alt="Ledger"
-            className="h-10 rounded"
-          />
-        </SourceButton> */}
-        {/* <SourceButton label="Vault" disabled>
-          <img
-            src={import.meta.env.BASE_URL + "providers/vault.webp"}
-            alt="Vault"
-            className="h-10 rounded"
-          />
-        </SourceButton> */}
-        <SourceButton
-          label="Wallet Connect"
-          isSelected={walletConnectStatus.type === "connected"}
-          onClick={async () => {
-            const { toggleWalletConnect } = await import(
-              "@/state/walletconnect.state"
-            )
-            toggleWalletConnect()
+    <>
+      <ModalContext value={contextValue}>{children}</ModalContext>
+      <Dialog
+        open={activeContent != null}
+        onOpenChange={() => setContentStack([])}
+      >
+        <DialogContent
+          onEscapeKeyDown={(evt) => {
+            if (
+              evt.target instanceof HTMLElement &&
+              (evt.target.tagName === "INPUT" ||
+                evt.target.attributes.getNamedItem("cmdk-list"))
+            ) {
+              evt.preventDefault()
+            }
           }}
         >
-          {walletConnectStatus.type === "connecting" ? (
-            <Spinner className="size-4 m-3 text-sky-500" />
-          ) : (
-            <img
-              src={import.meta.env.BASE_URL + "providers/walletConnect.svg"}
-              alt="Wallet Connect"
-              className="h-10 rounded"
-            />
-          )}
-        </SourceButton>
+          <DialogHeader className="flex-row items-center">
+            {contentStack.length > 1 ? (
+              <Button
+                className="has-[>svg]:px-1"
+                type="button"
+                variant="ghost"
+                onClick={() => contextValue.popContent()}
+              >
+                <ChevronLeft />
+              </Button>
+            ) : null}
+            <DialogTitle>{activeContent?.title}</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <ModalContext value={contextValue}>
+              {activeContent?.element}
+            </ModalContext>
+          </DialogBody>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
+
+export const Providers = () => (
+  <div className="bg-card p-4 rounded-xl space-y-2">
+    <h3 className="text-xl font-bold">Account Providers</h3>
+    <PjsWalletButtons />
+    <ManageToDialog>
+      <ul className="flex gap-2 flex-wrap items-center justify-center">
+        <ManageReadOnly />
+        <ManageLedger />
+        <ManageVault />
+        <WalletConnectButton />
       </ul>
-    </div>
-  )
-}
-
-const ExtensionButton: FC<{
-  id: string
-}> = ({ id }) => {
-  const knownExtension = knownExtensions[id]
-  const connectedExtensions = Array.from(
-    useStateObservable(selectedExtensions$).keys(),
-  )
-  const isSelected = connectedExtensions.includes(id)
-
-  return (
-    <SourceButton
-      isSelected={isSelected}
-      label={knownExtension?.name ?? id}
-      onClick={() => onToggleExtension(id)}
-    >
-      {knownExtension ? (
-        <img
-          src={knownExtension.logo}
-          alt={knownExtension.name}
-          className="h-10 rounded"
-        />
-      ) : (
-        <div>
-          <CircleQuestionMark
-            className="size-10 text-muted-foreground"
-            strokeWidth={1}
-          />
-        </div>
-      )}
-    </SourceButton>
-  )
-}
+    </ManageToDialog>
+  </div>
+)

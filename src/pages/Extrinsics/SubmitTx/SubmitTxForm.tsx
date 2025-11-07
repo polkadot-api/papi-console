@@ -1,15 +1,22 @@
 import { ActionButton } from "@/components/ActionButton"
 import { Spinner } from "@/components/Icons"
+import { cn } from "@/lib/utils"
 import { trackSignedTx, trackUnsignedTx } from "@/pages/Transactions"
 import { unsafeApi$ } from "@/state/chains/chain.state"
+import { selectedAccount$ } from "@/state/polkahub"
 import { compactNumber } from "@polkadot-api/substrate-bindings"
 import { fromHex, mergeUint8, toHex } from "@polkadot-api/utils"
+import { AccountPicker } from "@polkahub/ui-components"
 import { useStateObservable } from "@react-rxjs/core"
 import { Binary } from "polkadot-api"
+import {
+  AddressIdentity,
+  useAvailableAccounts,
+  useSelectedAccount,
+} from "polkahub"
 import { FC, useState } from "react"
 import { firstValueFrom } from "rxjs"
 import { twMerge } from "tailwind-merge"
-import { AccountProvider, selectedAccount$ } from "./AccountProvider"
 import { ExtensionProvider } from "./ExtensionProvider"
 
 const SignAndSubmit: FC<{ callData: string; onClose: () => void }> = ({
@@ -77,11 +84,55 @@ export default function SubmitTxF(props: {
   return (
     <>
       <ExtensionProvider />
-      <AccountProvider />
+      <SelectAccount />
       <div className="flex flex-col gap-2">
         <SignAndSubmit {...props} />
         <SubmitUnsigned {...props} />
       </div>
     </>
+  )
+}
+
+const groupLabels: Record<string, string> = {
+  ledger: "Ledger",
+  readonly: "Read Only",
+  "polkadot-vault": "Vault",
+  walletconnect: "Wallet Connect",
+}
+
+const SelectAccount: FC<{
+  className?: string
+}> = ({ className }) => {
+  const availableAccounts = useAvailableAccounts()
+  const [account, setAccount] = useSelectedAccount()
+
+  const groups = Object.entries(availableAccounts)
+    .map(
+      ([group, accounts]) =>
+        [group, accounts.filter((acc) => acc.signer)] as const,
+    )
+    .filter(([, accounts]) => accounts.length > 0)
+    .map(([key, accounts]) => ({
+      name: groupLabels[key] ?? key,
+      accounts,
+    }))
+
+  if (!groups.length && !account) return null
+
+  return (
+    <AccountPicker
+      value={account}
+      onChange={setAccount}
+      groups={groups}
+      className={cn(className, "max-w-auto w-full")}
+      renderAddress={(account) => (
+        <AddressIdentity
+          addr={account.address}
+          name={account?.name}
+          copyable={false}
+        />
+      )}
+      disableClear
+    />
   )
 }

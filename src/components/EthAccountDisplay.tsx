@@ -1,9 +1,9 @@
-import { accountDetail$ } from "@/state/extension-accounts.state"
+import { accountDetail$ } from "@/state/polkahub"
+import { EthIdenticon } from "@polkadot-api/react-components"
 import { useStateObservable } from "@react-rxjs/core"
 import { HexString } from "polkadot-api"
 import { FC } from "react"
 import { twMerge } from "tailwind-merge"
-import { EthIdenticon } from "./EthIdenticon"
 
 export const EthAccountDisplay: FC<{
   value: HexString

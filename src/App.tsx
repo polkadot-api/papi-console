@@ -9,6 +9,7 @@ import { RpcCalls } from "./pages/RpcCalls"
 import { RuntimeCalls } from "./pages/RuntimeCalls"
 import { Storage } from "./pages/Storage"
 import { Transactions } from "./pages/Transactions"
+import { VaultTxModal } from "polkahub"
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
         </div>
       </div>
       <Transactions />
+      <VaultTxModal />
     </div>
   )
 }

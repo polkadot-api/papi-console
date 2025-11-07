@@ -1,9 +1,12 @@
-import { AccountIdInput } from "@/components/AccountIdInput"
 import { EditAccountId, NOTIN } from "@polkadot-api/react-builder"
+import { AddressInput } from "polkahub"
 
 export const CAccountId: EditAccountId = ({ value, onValueChanged }) => (
-  <AccountIdInput
+  <AddressInput
+    className="w-64"
+    triggerClassName="h-9 bg-input"
     value={value === NOTIN ? null : value}
-    onValueChanged={(v) => onValueChanged(v === null ? NOTIN : v)}
+    onChange={(v) => onValueChanged(v === null ? NOTIN : v)}
+    disableClear
   />
 )
