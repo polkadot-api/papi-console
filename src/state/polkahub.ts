@@ -1,5 +1,5 @@
 import { polkadot_people } from "@polkadot-api/descriptors"
-import { state, withDefault } from "@react-rxjs/core"
+import { liftSuspense, state, SUSPENSE, withDefault } from "@react-rxjs/core"
 import { AccountId, SS58String } from "polkadot-api"
 import {
   Account,
@@ -13,10 +13,23 @@ import {
   knownChains,
   Plugin,
 } from "polkahub"
-import { combineLatest, filter, firstValueFrom, map, switchMap } from "rxjs"
+import {
+  combineLatest,
+  filter,
+  firstValueFrom,
+  map,
+  pipe,
+  switchMap,
+} from "rxjs"
 import { chainProperties$ } from "./chain-props.state"
 import { canSetStorage$, client$ } from "./chains/chain.state"
 import { identity$, isVerified } from "./identity.state"
+
+const removeSuspense = <T>() =>
+  pipe(
+    liftSuspense<T>(),
+    filter<T | SUSPENSE, T>((v): v is T => v !== SUSPENSE),
+  )
 
 const selectedAccountPlugin = createSelectedAccountPlugin()
 const pjsWalletProvider = createPjsWalletProvider()
@@ -30,17 +43,17 @@ const readOnlyProvider$ = canSetStorage$.pipe(
 )
 const ledgerAccountProvider = createLedgerProvider(
   async () => {
-    const module = await import("@ledgerhq/hw-transport-webhid")
+    const module = await import("@ledgerhq/hw-transport-webusb")
     return module.default.create()
   },
   () =>
     firstValueFrom(
       chainProperties$.pipe(
+        removeSuspense(),
         filter((v) => v != null),
-        map(({ ss58Format, tokenDecimals, tokenSymbol }) => ({
+        map(({ tokenDecimals, tokenSymbol }) => ({
           decimals: tokenDecimals!,
           tokenSymbol: tokenSymbol!,
-          ss58Format: ss58Format!,
         })),
       ),
     ),
@@ -69,6 +82,7 @@ export const polkaHub = createPolkaHub(
   {
     getIdentity: (address) =>
       identity$(address).pipe(
+        removeSuspense(),
         map((res) =>
           res
             ? {
@@ -80,6 +94,7 @@ export const polkaHub = createPolkaHub(
       ),
     getBalance: (address) =>
       client$.pipe(
+        removeSuspense(),
         switchMap((client) =>
           combineLatest([
             chainProperties$,
@@ -98,6 +113,10 @@ export const polkaHub = createPolkaHub(
           }
         }),
       ),
+    ss58Format: chainProperties$.pipe(
+      removeSuspense(),
+      map((v) => v?.ss58Format ?? 42),
+    ),
   },
 )
 

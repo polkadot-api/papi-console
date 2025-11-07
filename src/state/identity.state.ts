@@ -21,7 +21,7 @@ export const isVerified = (identity: Identity | null) =>
   identity?.judgments.some((j) => j.judgement === "Reasonable")
 
 const cache = localStorageSubject<Record<string, Identity>>(
-  "identity-cache",
+  "console-identity-cache",
   JSON,
   {},
 )
