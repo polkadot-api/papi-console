@@ -360,6 +360,7 @@
       "parachain": 2281
     },
     "rpcs": {
+      "Kippu": "wss://kreivo.kippu.rocks/",
       "Virto": "wss://kreivo.io/"
     },
     "nativeToken": {
