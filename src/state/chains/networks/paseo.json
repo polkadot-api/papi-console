@@ -1,21 +1,5 @@
 [
   {
-    "id": "paseo",
-    "display": "Paseo Relay Chain",
-    "hasChainSpecs": true,
-    "rpcs": {
-      "Amforc": "wss://paseo.rpc.amforc.com",
-      "Dwellir": "wss://paseo-rpc.dwellir.com",
-      "IBP1": "wss://rpc.ibp.network/paseo",
-      "IBP2": "wss://paseo.dotters.network",
-      "StakeWorld": "wss://pas-rpc.stakeworld.io"
-    },
-    "nativeToken": {
-      "symbol": "PAS",
-      "decimals": 10
-    }
-  },
-  {
     "id": "paseo_asset_hub",
     "display": "Paseo AssetHub",
     "rpcs": {
@@ -35,6 +19,22 @@
       "decimals": 10
     },
     "hasChainSpecs": true
+  },
+  {
+    "id": "paseo",
+    "display": "Paseo Relay Chain",
+    "hasChainSpecs": true,
+    "rpcs": {
+      "Amforc": "wss://paseo.rpc.amforc.com",
+      "Dwellir": "wss://paseo-rpc.dwellir.com",
+      "IBP1": "wss://rpc.ibp.network/paseo",
+      "IBP2": "wss://paseo.dotters.network",
+      "StakeWorld": "wss://pas-rpc.stakeworld.io"
+    },
+    "nativeToken": {
+      "symbol": "PAS",
+      "decimals": 10
+    }
   },
   {
     "id": "passet_hub",

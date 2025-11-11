@@ -1,26 +1,5 @@
 [
   {
-    "id": "kusama",
-    "display": "Kusama Relay Chain",
-    "hasChainSpecs": true,
-    "rpcs": {
-      "Allnodes": "wss://kusama-rpc.publicnode.com",
-      "Dwellir": "wss://kusama-rpc.dwellir.com",
-      "Dwellir Tunisia": "wss://kusama-rpc-tn.dwellir.com",
-      "IBP1": "wss://rpc.ibp.network/kusama",
-      "IBP2": "wss://kusama.dotters.network",
-      "LuckyFriday": "wss://rpc-kusama.luckyfriday.io",
-      "OnFinality": "wss://kusama.api.onfinality.io/public-ws",
-      "RockX": "wss://rockx-ksm.w3node.com/polka-public-ksm/ws",
-      "Stakeworld": "wss://ksm-rpc.stakeworld.io",
-      "SubQuery": "wss://kusama.rpc.subquery.network/public/ws"
-    },
-    "nativeToken": {
-      "symbol": "KSM",
-      "decimals": 12
-    }
-  },
-  {
     "id": "kusama_asset_hub",
     "display": "Kusama AssetHub",
     "rpcs": {
@@ -43,6 +22,27 @@
       "decimals": 12
     },
     "hasChainSpecs": true
+  },
+  {
+    "id": "kusama",
+    "display": "Kusama Relay Chain",
+    "hasChainSpecs": true,
+    "rpcs": {
+      "Allnodes": "wss://kusama-rpc.publicnode.com",
+      "Dwellir": "wss://kusama-rpc.dwellir.com",
+      "Dwellir Tunisia": "wss://kusama-rpc-tn.dwellir.com",
+      "IBP1": "wss://rpc.ibp.network/kusama",
+      "IBP2": "wss://kusama.dotters.network",
+      "LuckyFriday": "wss://rpc-kusama.luckyfriday.io",
+      "OnFinality": "wss://kusama.api.onfinality.io/public-ws",
+      "RockX": "wss://rockx-ksm.w3node.com/polka-public-ksm/ws",
+      "Stakeworld": "wss://ksm-rpc.stakeworld.io",
+      "SubQuery": "wss://kusama.rpc.subquery.network/public/ws"
+    },
+    "nativeToken": {
+      "symbol": "KSM",
+      "decimals": 12
+    }
   },
   {
     "id": "kusama_bridge_hub",

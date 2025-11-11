@@ -1,28 +1,5 @@
 [
   {
-    "id": "polkadot",
-    "display": "Polkadot Relay Chain",
-    "hasChainSpecs": true,
-    "rpcs": {
-      "Allnodes": "wss://polkadot-rpc.publicnode.com",
-      "Blockops": "wss://polkadot-public-rpc.blockops.network/ws",
-      "Dwellir": "wss://polkadot-rpc.dwellir.com",
-      "Dwellir Tunisia": "wss://polkadot-rpc-tn.dwellir.com",
-      "IBP1": "wss://rpc.ibp.network/polkadot",
-      "IBP2": "wss://polkadot.dotters.network",
-      "LuckyFriday": "wss://rpc-polkadot.luckyfriday.io",
-      "OnFinality": "wss://polkadot.api.onfinality.io/public-ws",
-      "RadiumBlock": "wss://polkadot.public.curie.radiumblock.co/ws",
-      "RockX": "wss://rockx-dot.w3node.com/polka-public-dot/ws",
-      "Stakeworld": "wss://dot-rpc.stakeworld.io",
-      "SubQuery": "wss://polkadot.rpc.subquery.network/public/ws"
-    },
-    "nativeToken": {
-      "symbol": "DOT",
-      "decimals": 10
-    }
-  },
-  {
     "id": "polkadot_asset_hub",
     "display": "AssetHub",
     "rpcs": {
@@ -46,6 +23,29 @@
       "decimals": 10
     },
     "hasChainSpecs": true
+  },
+  {
+    "id": "polkadot",
+    "display": "Polkadot Relay Chain",
+    "hasChainSpecs": true,
+    "rpcs": {
+      "Allnodes": "wss://polkadot-rpc.publicnode.com",
+      "Blockops": "wss://polkadot-public-rpc.blockops.network/ws",
+      "Dwellir": "wss://polkadot-rpc.dwellir.com",
+      "Dwellir Tunisia": "wss://polkadot-rpc-tn.dwellir.com",
+      "IBP1": "wss://rpc.ibp.network/polkadot",
+      "IBP2": "wss://polkadot.dotters.network",
+      "LuckyFriday": "wss://rpc-polkadot.luckyfriday.io",
+      "OnFinality": "wss://polkadot.api.onfinality.io/public-ws",
+      "RadiumBlock": "wss://polkadot.public.curie.radiumblock.co/ws",
+      "RockX": "wss://rockx-dot.w3node.com/polka-public-dot/ws",
+      "Stakeworld": "wss://dot-rpc.stakeworld.io",
+      "SubQuery": "wss://polkadot.rpc.subquery.network/public/ws"
+    },
+    "nativeToken": {
+      "symbol": "DOT",
+      "decimals": 10
+    }
   },
   {
     "id": "polkadot_bridge_hub",
