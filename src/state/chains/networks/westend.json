@@ -1,23 +1,5 @@
 [
   {
-    "id": "westend",
-    "display": "Westend Relay Chain",
-    "hasChainSpecs": true,
-    "rpcs": {
-      "Dwellir": "wss://westend-rpc.dwellir.com",
-      "Dwellir Tunisia": "wss://westend-rpc-tn.dwellir.com",
-      "IBP1": "wss://rpc.ibp.network/westend",
-      "IBP2": "wss://westend.dotters.network",
-      "OnFinality": "wss://westend.api.onfinality.io/public-ws",
-      "Parity": "wss://westend-rpc.polkadot.io",
-      "RadiumBlock": "wss://westend.public.curie.radiumblock.co/ws"
-    },
-    "nativeToken": {
-      "symbol": "WND",
-      "decimals": 12
-    }
-  },
-  {
     "id": "westend_asset_hub",
     "display": "Westend AssetHub",
     "rpcs": {
@@ -37,6 +19,24 @@
       "decimals": 12
     },
     "hasChainSpecs": true
+  },
+  {
+    "id": "westend",
+    "display": "Westend Relay Chain",
+    "hasChainSpecs": true,
+    "rpcs": {
+      "Dwellir": "wss://westend-rpc.dwellir.com",
+      "Dwellir Tunisia": "wss://westend-rpc-tn.dwellir.com",
+      "IBP1": "wss://rpc.ibp.network/westend",
+      "IBP2": "wss://westend.dotters.network",
+      "OnFinality": "wss://westend.api.onfinality.io/public-ws",
+      "Parity": "wss://westend-rpc.polkadot.io",
+      "RadiumBlock": "wss://westend.public.curie.radiumblock.co/ws"
+    },
+    "nativeToken": {
+      "symbol": "WND",
+      "decimals": 12
+    }
   },
   {
     "id": "westend_bridge_hub",
