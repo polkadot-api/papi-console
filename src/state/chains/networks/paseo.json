@@ -244,6 +244,24 @@
     "hasChainSpecs": false
   },
   {
+    "id": "paseo_kreivo",
+    "display": "Kreivo de Paseo - By Virto",
+    "relayChainInfo": {
+      "id": "paseo",
+      "isSystem": false,
+      "parachain": 2281
+    },
+    "rpcs": {
+      "Kippu": "wss://testnet.kreivo.kippu.rocks/",
+      "Virto": "wss://testnet.kreivo.io/"
+    },
+    "nativeToken": {
+      "symbol": "PAS",
+      "decimals": 10
+    },
+    "hasChainSpecs": true
+  },
+  {
     "id": "paseo_laos_sigma",
     "display": "Laos Sigma",
     "relayChainInfo": {
