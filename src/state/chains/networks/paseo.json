@@ -247,7 +247,7 @@
     "id": "paseo_kreivo",
     "display": "Kreivo de Paseo - By Virto",
     "relayChainInfo": {
-      "id": "kusama",
+      "id": "paseo",
       "isSystem": false,
       "parachain": 2281
     },
