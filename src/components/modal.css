@@ -2,6 +2,7 @@
 .modal {
   max-width: calc(100% - 6px - 2em);
   max-height: calc(100% - 6px - 2em);
+  margin: auto;
 }
 
 dialog.modal[open] {
