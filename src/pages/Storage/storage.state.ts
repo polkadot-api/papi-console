@@ -150,10 +150,15 @@ export const selectedEntry$ = state(
   null,
 )
 
+export type KeyCodec = {
+  enc: (...args: any[]) => string
+  dec: (value: string) => any[]
+}
 export const [newStorageSubscription$, addStorageSubscription] = createSignal<{
   name: string
   args: unknown[] | null
   type: number
+  keyCodec?: KeyCodec
   single: boolean
   stream: Observable<unknown>
 }>()
@@ -166,6 +171,7 @@ export type StorageSubscription = {
   name: string
   args: unknown[] | null
   type: number
+  keyCodec?: KeyCodec
   single: boolean
   paused: boolean
   completed: boolean

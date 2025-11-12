@@ -1,22 +1,25 @@
-import { dynamicBuilder$, metadata$ } from "@/state/chains/chain.state"
+import { PathsRoot } from "@/codec-components/common/paths.state"
 import { ViewCodec } from "@/codec-components/ViewCodec"
 import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
 import { ButtonGroup } from "@/components/ButtonGroup"
 import { JsonDisplay } from "@/components/JsonDisplay"
+import { dynamicBuilder$, metadata$ } from "@/state/chains/chain.state"
+import { ViewValue } from "@/ViewValue"
 import { CodecComponentType, NOTIN } from "@polkadot-api/react-builder"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { PauseCircle, PlayCircle, Trash2 } from "lucide-react"
+import { Binary } from "polkadot-api"
 import { FC, useMemo, useState } from "react"
 import { Virtuoso } from "react-virtuoso"
 import {
+  KeyCodec,
   removeStorageSubscription,
   StorageSubscription,
   storageSubscription$,
   storageSubscriptionKeys$,
-  stringifyArg,
   toggleSubscriptionPause,
 } from "./storage.state"
-import { PathsRoot } from "@/codec-components/common/paths.state"
+import { cn } from "@/lib/utils"
 
 export const StorageSubscriptions: FC = () => {
   const keys = useStateObservable(storageSubscriptionKeys$)
@@ -131,24 +134,19 @@ const DecodedResultDisplay: FC<{
     value: unknown
   }>
 
-  const renderItem = (keyArgs: unknown[], value: unknown, idx: number) => {
-    const title = keyArgs
-      .slice(storageSubscription.args?.length ?? 0)
-      .map(stringifyArg)
-      .join(", ")
-    return (
-      <div key={idx} className={itemClasses}>
-        <PathsRoot.Provider value={`${subscriptionKey}-${idx}`}>
-          <ValueDisplay
-            mode="decoded"
-            title={title}
-            value={value}
-            type={storageSubscription.type}
-          />
-        </PathsRoot.Provider>
-      </div>
-    )
-  }
+  const renderItem = (keyArgs: unknown[], value: unknown, idx: number) => (
+    <div key={idx} className={itemClasses}>
+      <PathsRoot.Provider value={`${subscriptionKey}-${idx}`}>
+        <KeyDisplay value={keyArgs} keyCodec={storageSubscription.keyCodec} />
+        <ValueDisplay
+          mode="decoded"
+          title="Value"
+          value={value}
+          type={storageSubscription.type}
+        />
+      </PathsRoot.Provider>
+    </div>
+  )
 
   if (values.length > 10) {
     return (
@@ -248,6 +246,40 @@ export const ValueDisplay: FC<{
       ) : (
         <JsonDisplay src={value} />
       )}
+    </div>
+  )
+}
+
+const KeyDisplay: FC<{
+  value: unknown[]
+  keyCodec?: KeyCodec
+}> = ({ value, keyCodec }) => {
+  const binaryValue = (() => {
+    try {
+      return keyCodec ? Binary.fromHex(keyCodec.enc(...value)).asBytes() : null
+    } catch (_) {
+      return null
+    }
+  })()
+
+  return (
+    <div>
+      <div className="flex flex-1 gap-2 overflow-hidden">
+        {binaryValue ? <CopyBinary value={binaryValue} /> : null}
+        <h3 className="overflow-hidden text-ellipsis">Key</h3>
+      </div>
+      <ol className="leading-tight flex gap-1 items-center flex-wrap">
+        {value.map((v, i) => (
+          <li
+            key={i}
+            className={cn("px-1 py-0.5", {
+              "border rounded": value.length > 1,
+            })}
+          >
+            <ViewValue value={v} />
+          </li>
+        ))}
+      </ol>
     </div>
   )
 }
