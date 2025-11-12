@@ -1,17 +1,17 @@
 import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
 import { AccountIdDisplay } from "@/components/AccountIdDisplay"
+import { CopyText } from "@/components/Copy"
+import { EthAccountDisplay } from "@/components/EthAccountDisplay"
 import { ExpandBtn } from "@/components/Expand"
 import { JsonDisplay } from "@/components/JsonDisplay"
 import { Link } from "@/hashParams"
+import { shortStr } from "@/utils"
 import { SystemEvent } from "@polkadot-api/observable-client"
 import { DecodedExtrinsic } from "@polkadot-api/tx-utils"
-import { Edit } from "lucide-react"
-import { Enum, HexString, SS58String } from "polkadot-api"
+import { Dot, Edit } from "lucide-react"
+import { Binary, Enum, HexString, SS58String } from "polkadot-api"
 import { FC, useEffect, useRef, useState } from "react"
 import { twMerge } from "tailwind-merge"
-import { EthAccountDisplay } from "@/components/EthAccountDisplay"
-import { CopyText } from "@/components/Copy"
-import { shortStr } from "@/utils"
 
 export type ApplyExtrinsicEvent = SystemEvent & {
   phase: { type: "ApplyExtrinsic" }
@@ -65,11 +65,6 @@ export const Extrinsic: FC<{
               <Sender sender={extrinsic.address} />
             </div>
           )}
-          {"extra" in extrinsic && (
-            <div>
-              <SignedExtensions extra={extrinsic.extra} />
-            </div>
-          )}
           <div className="overflow-auto max-h-[80vh] p-2">
             <JsonDisplay src={extrinsic.call.value.value} />
           </div>
@@ -85,15 +80,60 @@ export const Extrinsic: FC<{
               ))}
             </ol>
           </div>
+          {"extra" in extrinsic && (
+            <div className="p-2 overflow-auto max-h-[80vh] border-t">
+              <SignedExtensions extra={extrinsic.extra} />
+            </div>
+          )}
         </div>
       ) : null}
     </li>
   )
 }
 
-const SignedExtensions: FC<{ extra: unknown }> = () => {
-  // TODO maybe?
-  return null
+const SignedExtensions: FC<{ extra: Record<string, unknown> }> = ({
+  extra,
+}) => (
+  <div className="space-y-2">
+    <h3>Signed extensions</h3>
+    <ul className="space-y-2">
+      {Object.entries(extra).map(([key, value]) => (
+        <SignedExtension key={key} id={key} value={value} />
+      ))}
+    </ul>
+  </div>
+)
+
+const SignedExtension: FC<{ id: string; value: unknown }> = ({ id, value }) => {
+  const [expanded, setExpanded] = useState(false)
+  const inlineJson = JSON.stringify(value, (_, v) =>
+    typeof v === "bigint" ? String(v) : v instanceof Binary ? v.asHex() : v,
+  )
+
+  if (!inlineJson || inlineJson.length < 40) {
+    return (
+      <li className="flex items-center flex-wrap gap-1">
+        <div className="flex gap-2 items-center">
+          <Dot size={16} />
+          {id}
+        </div>
+        {inlineJson ? (
+          <div className="whitespace-nowrap">
+            - <span className="font-mono text-sm">{inlineJson}</span>
+          </div>
+        ) : null}
+      </li>
+    )
+  }
+  return (
+    <li className="space-y-2">
+      <div className="flex gap-2 items-center">
+        <ExpandBtn expanded={expanded} onClick={() => setExpanded((e) => !e)} />
+        {id}
+      </div>
+      {expanded && <JsonDisplay src={value} />}
+    </li>
+  )
 }
 
 export const EventDisplay: FC<{

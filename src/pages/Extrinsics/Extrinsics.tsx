@@ -18,6 +18,9 @@ import { twMerge } from "tailwind-merge"
 import { EditMode } from "./EditMode"
 import { JsonMode } from "./JsonMode"
 import { ExtrinsicModal } from "./SubmitTx/SubmitTx"
+import { ActionButton } from "@/components/ActionButton"
+import { Settings } from "lucide-react"
+import { CustomSignedExt, customSignedExtensions$ } from "./CustomSignedExt"
 
 const extrinsicProps$ = state(
   runtimeCtx$.pipe(
@@ -36,9 +39,24 @@ const extrinsicProps$ = state(
   ),
 )
 
+const customExtensionsCount$ = state(
+  customSignedExtensions$.pipe(
+    map((v) => Object.keys(v).length),
+    map((v) =>
+      v ? (
+        <div className="px-1.5 rounded-full bg-chart-1 text-white text-sm">
+          {v}
+        </div>
+      ) : null,
+    ),
+  ),
+  null,
+)
+
 export const Extrinsics = withSubscribe(
   () => {
     const [viewMode, setViewMode] = useState<"edit" | "json">("edit")
+    const [editingExtensions, setEditingExtensions] = useState(false)
     const extrinsicProps = useStateObservable(extrinsicProps$)
     const location = useLocation()
 
@@ -65,6 +83,9 @@ export const Extrinsics = withSubscribe(
         })
       }
     }, [binaryValue])
+
+    if (editingExtensions)
+      return <CustomSignedExt onClose={() => setEditingExtensions(false)} />
 
     return (
       <div
@@ -98,7 +119,16 @@ export const Extrinsics = withSubscribe(
               },
             ]}
           />
-          <ExtrinsicModal callData={binaryValue ?? undefined} />
+          <div className="flex flex-row items-center gap-2">
+            <ActionButton
+              className="text-foreground/70 flex items-center gap-1"
+              onClick={() => setEditingExtensions(true)}
+            >
+              {customExtensionsCount$}
+              <Settings />
+            </ActionButton>
+            <ExtrinsicModal callData={binaryValue ?? undefined} />
+          </div>
         </div>
 
         {viewMode === "edit" ? (

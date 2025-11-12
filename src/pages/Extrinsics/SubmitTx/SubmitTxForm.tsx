@@ -15,8 +15,9 @@ import {
   useSelectedAccount,
 } from "polkahub"
 import { FC, useState } from "react"
-import { firstValueFrom } from "rxjs"
+import { combineLatest, firstValueFrom } from "rxjs"
 import { twMerge } from "tailwind-merge"
+import { customSignedExtensions$ } from "../CustomSignedExt"
 import { ExtensionProvider } from "./ExtensionProvider"
 
 const SignAndSubmit: FC<{ callData: string; onClose: () => void }> = ({
@@ -33,9 +34,13 @@ const SignAndSubmit: FC<{ callData: string; onClose: () => void }> = ({
 
         setIsSigning(true)
         try {
-          const unsafeApi = await firstValueFrom(unsafeApi$)
+          const [unsafeApi, signedExt] = await firstValueFrom(
+            combineLatest([unsafeApi$, customSignedExtensions$]),
+          )
           const tx = await unsafeApi.txFromCallData(Binary.fromHex(callData))
-          const signedExtrinsic = await tx.sign(account.signer)
+          const signedExtrinsic = await tx.sign(account.signer, {
+            customSignedExtensions: signedExt as any,
+          })
           trackSignedTx(signedExtrinsic)
           onClose()
         } catch (ex) {
