@@ -19,6 +19,7 @@ import {
   storageSubscriptionKeys$,
   toggleSubscriptionPause,
 } from "./storage.state"
+import { cn } from "@/lib/utils"
 
 export const StorageSubscriptions: FC = () => {
   const keys = useStateObservable(storageSubscriptionKeys$)
@@ -269,7 +270,12 @@ const KeyDisplay: FC<{
       </div>
       <ol className="leading-tight flex gap-1 items-center flex-wrap">
         {value.map((v, i) => (
-          <li key={i} className="border rounded px-1 py-0.5">
+          <li
+            key={i}
+            className={cn("px-1 py-0.5", {
+              "border rounded": value.length > 1,
+            })}
+          >
             <ViewValue value={v} />
           </li>
         ))}
