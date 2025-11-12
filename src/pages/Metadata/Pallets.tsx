@@ -1,8 +1,8 @@
+import { CopyText } from "@/components/Copy"
 import { SearchableSelect } from "@/components/Select"
 import { UnifiedMetadata } from "@polkadot-api/substrate-bindings"
-import { FC, useEffect, useState } from "react"
+import { FC, Fragment, useState } from "react"
 import { LookupLink } from "./Lookup"
-import { CopyText } from "@/components/Copy"
 
 type Pallet = UnifiedMetadata["pallets"][number]
 export const Pallets: FC<{ pallets: Array<Pallet> }> = ({ pallets }) => {
@@ -22,7 +22,7 @@ export const Pallets: FC<{ pallets: Array<Pallet> }> = ({ pallets }) => {
         />
       </label>
       {pallet && (
-        <>
+        <Fragment key={pallet.name}>
           <p>Index: {pallet.index}</p>
           {pallet.storage && (
             <div>
@@ -34,6 +34,12 @@ export const Pallets: FC<{ pallets: Array<Pallet> }> = ({ pallets }) => {
             <div>
               <h4>Constants</h4>
               <PalletConstants pallet={pallet} />
+            </div>
+          )}
+          {pallet.viewFns.length > 0 && (
+            <div>
+              <h4>View Functions</h4>
+              <PalletViewFns pallet={pallet} />
             </div>
           )}
           {pallet.calls != null && (
@@ -54,7 +60,7 @@ export const Pallets: FC<{ pallets: Array<Pallet> }> = ({ pallets }) => {
               <LookupLink id={pallet.errors.type} />
             </div>
           )}
-        </>
+        </Fragment>
       )}
     </div>
   )
@@ -67,10 +73,6 @@ type StorageEntry = Pallet["storage"] extends
   : never
 const PalletStorage: FC<{ pallet: Pallet }> = ({ pallet }) => {
   const [entry, setEntry] = useState<StorageEntry | null>(null)
-
-  useEffect(() => {
-    setEntry(null)
-  }, [pallet])
 
   if (!pallet.storage) return null
 
@@ -129,10 +131,6 @@ type ConstantEntry = Pallet["constants"] extends Array<infer R> ? R : never
 const PalletConstants: FC<{ pallet: Pallet }> = ({ pallet }) => {
   const [entry, setEntry] = useState<ConstantEntry | null>(null)
 
-  useEffect(() => {
-    setEntry(null)
-  }, [pallet])
-
   if (!pallet.constants.length) return null
 
   return (
@@ -160,6 +158,45 @@ const PalletConstants: FC<{ pallet: Pallet }> = ({ pallet }) => {
               <CopyText text={entry.value} binary className="mr-2" />
               {entry.value}
             </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+type ViewFnEntry = Pallet["viewFns"] extends Array<infer R> ? R : never
+const PalletViewFns: FC<{ pallet: Pallet }> = ({ pallet }) => {
+  const [entry, setEntry] = useState<ViewFnEntry | null>(null)
+
+  if (!pallet.viewFns.length) return null
+
+  return (
+    <div className="flex flex-col p-2 gap-2">
+      <SearchableSelect
+        value={entry}
+        setValue={setEntry}
+        options={pallet.viewFns.map((c) => ({
+          text: c.name,
+          value: c,
+        }))}
+      />
+      {entry && (
+        <>
+          <div>
+            <h4>Inputs</h4>
+            <ol>
+              {entry.inputs.map((input) => (
+                <li key={input.name}>
+                  <div>{input.name}</div>
+                  <LookupLink id={input.type} />
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div>
+            <h4>Output</h4>
+            <LookupLink id={entry.output} />
           </div>
         </>
       )}

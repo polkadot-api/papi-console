@@ -82,6 +82,9 @@ export const Header = () => {
                   </NavLink>
                 ))}
             </nav>
+            <NavLink to="/viewFns" onClick={() => setIsOpen(false)}>
+              View Functions
+            </NavLink>
             <NavLink to="/metadata" onClick={() => setIsOpen(false)}>
               Metadata
             </NavLink>

@@ -1,3 +1,4 @@
+import { VaultTxModal } from "polkahub"
 import { Navigate, Route, Routes } from "react-router-dom"
 import { Accounts } from "./pages/Accounts/Accounts"
 import { Constants } from "./pages/Constants"
@@ -9,7 +10,7 @@ import { RpcCalls } from "./pages/RpcCalls"
 import { RuntimeCalls } from "./pages/RuntimeCalls"
 import { Storage } from "./pages/Storage"
 import { Transactions } from "./pages/Transactions"
-import { VaultTxModal } from "polkahub"
+import { ViewFns } from "./pages/ViewFns"
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
             <Route path="rpcCalls/*" element={<RpcCalls />} />
             <Route path="metadata/*" element={<Metadata />} />
             <Route path="accounts/*" element={<Accounts />} />
+            <Route path="viewFns/*" element={<ViewFns />} />
             <Route path="*" element={<Navigate to="/explorer" replace />} />
           </Routes>
         </div>
