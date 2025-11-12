@@ -18,6 +18,9 @@ import { twMerge } from "tailwind-merge"
 import { EditMode } from "./EditMode"
 import { JsonMode } from "./JsonMode"
 import { ExtrinsicModal } from "./SubmitTx/SubmitTx"
+import { ActionButton } from "@/components/ActionButton"
+import { Settings } from "lucide-react"
+import { CustomSignedExt } from "./CustomSignedExt"
 
 const extrinsicProps$ = state(
   runtimeCtx$.pipe(
@@ -39,6 +42,7 @@ const extrinsicProps$ = state(
 export const Extrinsics = withSubscribe(
   () => {
     const [viewMode, setViewMode] = useState<"edit" | "json">("edit")
+    const [editingExtensions, setEditingExtensions] = useState(false)
     const extrinsicProps = useStateObservable(extrinsicProps$)
     const location = useLocation()
 
@@ -65,6 +69,9 @@ export const Extrinsics = withSubscribe(
         })
       }
     }, [binaryValue])
+
+    if (editingExtensions)
+      return <CustomSignedExt onClose={() => setEditingExtensions(false)} />
 
     return (
       <div
@@ -98,7 +105,15 @@ export const Extrinsics = withSubscribe(
               },
             ]}
           />
-          <ExtrinsicModal callData={binaryValue ?? undefined} />
+          <div className="flex flex-row items-center gap-2">
+            <ActionButton
+              className="text-foreground/70"
+              onClick={() => setEditingExtensions(true)}
+            >
+              <Settings />
+            </ActionButton>
+            <ExtrinsicModal callData={binaryValue ?? undefined} />
+          </div>
         </div>
 
         {viewMode === "edit" ? (
