@@ -20,7 +20,7 @@ import { JsonMode } from "./JsonMode"
 import { ExtrinsicModal } from "./SubmitTx/SubmitTx"
 import { ActionButton } from "@/components/ActionButton"
 import { Settings } from "lucide-react"
-import { CustomSignedExt } from "./CustomSignedExt"
+import { CustomSignedExt, customSignedExtensions$ } from "./CustomSignedExt"
 
 const extrinsicProps$ = state(
   runtimeCtx$.pipe(
@@ -37,6 +37,20 @@ const extrinsicProps$ = state(
       }
     }),
   ),
+)
+
+const customExtensionsCount$ = state(
+  customSignedExtensions$.pipe(
+    map((v) => Object.keys(v).length),
+    map((v) =>
+      v ? (
+        <div className="px-1.5 rounded-full bg-chart-1 text-white text-sm">
+          {v}
+        </div>
+      ) : null,
+    ),
+  ),
+  null,
 )
 
 export const Extrinsics = withSubscribe(
@@ -107,9 +121,10 @@ export const Extrinsics = withSubscribe(
           />
           <div className="flex flex-row items-center gap-2">
             <ActionButton
-              className="text-foreground/70"
+              className="text-foreground/70 flex items-center gap-1"
               onClick={() => setEditingExtensions(true)}
             >
+              {customExtensionsCount$}
               <Settings />
             </ActionButton>
             <ExtrinsicModal callData={binaryValue ?? undefined} />
