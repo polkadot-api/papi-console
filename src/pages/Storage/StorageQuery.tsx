@@ -46,9 +46,16 @@ export const StorageQuery: FC = () => {
   if (!selectedEntry) return null
 
   const submit = async () => {
-    const [entry, unsafeApi, keyValues, keysEnabled] = await firstValueFrom(
-      combineLatest([selectedEntry$, unsafeApi$, keyValues$, keysEnabled$]),
-    )
+    const [entry, unsafeApi, keyValues, keysEnabled, keyCodec] =
+      await firstValueFrom(
+        combineLatest([
+          selectedEntry$,
+          unsafeApi$,
+          keyValues$,
+          keysEnabled$,
+          keyCodec$,
+        ]),
+      )
     const args = keyValues.slice(0, keysEnabled)
     const storageEntry = unsafeApi.query[entry!.pallet][entry!.entry]
     const single = keyValues.length === keysEnabled
@@ -64,6 +71,7 @@ export const StorageQuery: FC = () => {
       single,
       stream,
       type: entry!.value,
+      keyCodec: keyCodec!,
     })
   }
 
@@ -303,29 +311,30 @@ const StorageKeyInput: FC<{
   )
 }
 
+const keyCodec$ = state(
+  combineLatest([dynamicBuilder$, selectedEntry$]).pipe(
+    map(([builder, selectedEntry]) =>
+      selectedEntry
+        ? builder.buildStorage(selectedEntry.pallet, selectedEntry.entry).keys
+        : null,
+    ),
+  ),
+)
+
 export const encodedKey$ = state(
-  combineLatest([
-    dynamicBuilder$,
-    selectedEntry$,
-    keyValues$,
-    keysEnabled$,
-  ]).pipe(
-    map(([builder, selectedEntry, keyValues, keysEnabled]) => {
+  combineLatest([keyCodec$, keyValues$, keysEnabled$]).pipe(
+    map(([codec, keyValues, keysEnabled]) => {
       const args = keyValues.slice(0, keysEnabled)
       if (
         keyValues.length < keysEnabled ||
         !args.every((v) => v !== NOTIN) ||
-        !selectedEntry
+        !codec
       ) {
         return null
       }
 
-      const codec = builder.buildStorage(
-        selectedEntry.pallet,
-        selectedEntry.entry,
-      )
       try {
-        return codec.keys.enc(...args)
+        return codec.enc(...args)
       } catch (_) {
         return null
       }
