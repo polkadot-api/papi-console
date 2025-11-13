@@ -5,7 +5,11 @@ import {
   runtimeCtx$,
   selectedChainChanged$,
 } from "@/state/chains/chain.state"
-import { BlockInfo, concatMapEager } from "@polkadot-api/observable-client"
+import {
+  BlockInfo,
+  concatMapEager,
+  RuntimeContext,
+} from "@polkadot-api/observable-client"
 import { state } from "@react-rxjs/core"
 import {
   createKeyedSignal,
@@ -166,21 +170,26 @@ export type KeyCodec = {
 export const [newStorageSubscription$, addStorageSubscription] = createSignal<{
   name: string
   args: unknown[] | null
-  type: number
   single: boolean
   keyCodec?: (hash: HexString) => Observable<KeyCodec>
   at?: (hash: HexString) => Observable<{
+    type: number
+    ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">
     hash: HexString | null
     value: unknown
   }>
-  value?: unknown
+  value?: Observable<{
+    type: number
+    ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">
+    payload: unknown
+  }>
 }>()
 export const [removeStorageSubscription$, removeStorageSubscription] =
   createKeyedSignal<string>()
 export const [togglePause$, toggleSubscriptionPause] =
   createKeyedSignal<string>()
 
-type StorageSubscriptionValue = {
+export type StorageSubscriptionValue = {
   height: number
   blockHash: HexString
   settled: boolean
@@ -188,6 +197,8 @@ type StorageSubscriptionValue = {
   result: Enum<{
     success: {
       hash: string | null
+      ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">
+      type: number
       value: unknown
     }
     error: string
@@ -196,21 +207,27 @@ type StorageSubscriptionValue = {
 export type StorageSubscription = {
   name: string
   args: unknown[] | null
-  type: number
   single: boolean
   paused: boolean
   completed: boolean
   status: Enum<{
     loading: undefined
-    value: unknown
+    value: {
+      ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">
+      type: number
+      payload: unknown
+    }
     values: Array<StorageSubscriptionValue>
   }>
 }
 
 const getStatus$ = (
-  at: (
-    hash: HexString,
-  ) => Observable<{ hash: HexString | null; value: unknown }>,
+  at: (hash: HexString) => Observable<{
+    type: number
+    ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">
+    hash: HexString | null
+    value: unknown
+  }>,
   single: boolean,
   keyCodec?: (hash: HexString) => Observable<KeyCodec>,
 ): Observable<StorageSubscription["status"]> => {
@@ -249,7 +266,7 @@ const getStatus$ = (
     ? client$.pipe(
         switchMap((client) => client.bestBlocks$),
         filter((v) => v.length > 1),
-        map((blocks) => blocks[blocks.length - 1]),
+        map((blocks) => blocks[0]),
         // We need a concatMapEager here to make sure that overrides work properly
         concatMapEager((block) => queryAt$(block, false)),
       )
@@ -325,7 +342,7 @@ const getStatus$ = (
       ...unsettled.filter((v) => {
         const hash = getValueHash(v)
         // TODO edge case of a finalized value changing in one best block, then resetting on the next one
-        return !hash || settledHashes[hash] === null
+        return !hash || settledHashes[hash] == null
       }),
     ]),
   )
@@ -350,7 +367,7 @@ const [getStorageSubscription$, storageSubscriptionKeyChange$] = partitionByKey(
             startWith(false),
           )
           const status$: Observable<StorageSubscription["status"]> = value
-            ? of(Enum("value", value))
+            ? value.pipe(map((v) => Enum("value", v)))
             : getStatus$(at!, props.single, keyCodec)
           const result$ = status$.pipe(
             map((status) => ({

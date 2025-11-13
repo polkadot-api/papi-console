@@ -1,10 +1,10 @@
 import { ActionButton } from "@/components/ActionButton"
-import { dynamicBuilder$ } from "@/state/chains/chain.state"
+import { dynamicBuilder$, runtimeCtx$ } from "@/state/chains/chain.state"
 import { NOTIN } from "@polkadot-api/react-builder"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
 import { FC } from "react"
-import { combineLatest, firstValueFrom, map } from "rxjs"
+import { combineLatest, firstValueFrom, map, of } from "rxjs"
 import { addStorageSubscription, selectedEntry$ } from "./storage.state"
 
 const [valueChange, setValue] = createSignal<string>()
@@ -34,14 +34,19 @@ export const StorageDecode: FC = () => {
   const decoded = useStateObservable(decodedValue$)
 
   const submit = async () => {
-    const entry = await firstValueFrom(selectedEntry$)
+    const [entry, ctx] = await firstValueFrom(
+      combineLatest([selectedEntry$, runtimeCtx$]),
+    )
 
     addStorageSubscription({
       name: `${entry!.pallet}.${entry!.entry}(…)`,
       args: null,
       single: true,
-      value: decoded,
-      type: entry!.value,
+      value: of({
+        type: entry!.value,
+        payload: decoded,
+        ctx: ctx!,
+      }),
     })
   }
 

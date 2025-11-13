@@ -61,7 +61,6 @@ export const StorageQuery: FC = () => {
       name: `${entry!.pallet}.${entry!.entry}(${argString})`,
       args,
       single,
-      type: entry!.value,
       keyCodec: (hash) =>
         runtimeCtxAt$(hash).pipe(
           map(
@@ -90,8 +89,32 @@ export const StorageQuery: FC = () => {
               ),
             )
           : of(null)
+        const ctxType$ = runtimeCtxAt$(hash).pipe(
+          map((ctx) => {
+            const pallet = ctx.lookup.metadata.pallets.find(
+              (p) => p.name === entry!.pallet,
+            )
+            const ctxEntry = pallet?.storage?.items.find(
+              (it) => it.name === entry!.entry,
+            )
+            if (!ctxEntry) {
+              throw new Error(
+                `Storage entry ${entry?.pallet}.${entry?.entry} not found in ${hash}`,
+              )
+            }
+            const type =
+              ctxEntry.type.tag === "plain"
+                ? ctxEntry.type.value
+                : ctxEntry.type.value.value
 
-        return combineLatest({ value: value$, hash: hash$ })
+            return { ctx, type }
+          }),
+        )
+
+        return combineLatest([
+          combineLatest({ value: value$, hash: hash$ }),
+          ctxType$,
+        ]).pipe(map(([a, b]) => ({ ...a, ...b })))
       },
     })
   }

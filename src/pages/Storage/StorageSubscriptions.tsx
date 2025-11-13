@@ -4,20 +4,28 @@ import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
 import { ButtonGroup } from "@/components/ButtonGroup"
 import { JsonDisplay } from "@/components/JsonDisplay"
 import { cn } from "@/lib/utils"
-import { dynamicBuilder$, metadata$ } from "@/state/chains/chain.state"
+import { shortStr } from "@/utils"
 import { ViewValue } from "@/ViewValue"
+import { RuntimeContext } from "@polkadot-api/observable-client"
 import { CodecComponentType, NOTIN } from "@polkadot-api/react-builder"
-import { state, useStateObservable } from "@react-rxjs/core"
-import { PauseCircle, PlayCircle, Trash2 } from "lucide-react"
-import { Binary } from "polkadot-api"
-import { FC, useMemo, useState } from "react"
+import { Button } from "@polkahub/ui-components"
+import { useStateObservable } from "@react-rxjs/core"
+import {
+  ChevronLeft,
+  ChevronRight,
+  PauseCircle,
+  PlayCircle,
+  Trash2,
+} from "lucide-react"
+import { Binary, Enum } from "polkadot-api"
+import { FC, ReactNode, useMemo, useState } from "react"
 import { Virtuoso } from "react-virtuoso"
 import {
   KeyCodec,
   removeStorageSubscription,
-  StorageSubscription,
   storageSubscription$,
   storageSubscriptionKeys$,
+  StorageSubscriptionValue,
   toggleSubscriptionPause,
 } from "./storage.state"
 
@@ -41,7 +49,132 @@ export const StorageSubscriptions: FC = () => {
 const StorageSubscriptionBox: FC<{ subscription: string }> = ({
   subscription,
 }) => {
+  const storageSubscription = useStateObservable(
+    storageSubscription$(subscription),
+  )
+  if (!storageSubscription) return null
+
+  switch (storageSubscription.status.type) {
+    case "loading":
+      return (
+        <SubscriptionBox subscription={subscription}>
+          {() => <div>Loading…</div>}
+        </SubscriptionBox>
+      )
+    case "value":
+      return <ValueSubscriptionBox subscription={subscription} />
+    case "values":
+      return <ValuesSubscriptionBox subscription={subscription} />
+  }
+}
+
+const ValueSubscriptionBox: FC<{ subscription: string }> = ({
+  subscription,
+}) => {
+  const storageSubscription = useStateObservable(
+    storageSubscription$(subscription),
+  )
+  if (!storageSubscription) return null
+  const status = storageSubscription.status
+  if (status.type !== "value") return null
+  const { ctx, payload, type } = status.value
+
+  return (
+    <SubscriptionBox subscription={subscription}>
+      {(mode) => (
+        <ResultDisplay
+          id={subscription}
+          subValue={{
+            result: Enum("success", {
+              ctx,
+              type,
+              value: payload,
+              hash: null,
+            }),
+          }}
+          single
+          mode={mode}
+        />
+      )}
+    </SubscriptionBox>
+  )
+}
+
+const ValuesSubscriptionBox: FC<{ subscription: string }> = ({
+  subscription,
+}) => {
+  const storageSubscription = useStateObservable(
+    storageSubscription$(subscription),
+  )
+  const [target, setTarget] = useState<number | "best">("best")
+
+  if (!storageSubscription) return null
+  const status = storageSubscription.status
+  if (status.type !== "values") return null
+
+  const targetValueIdx =
+    target === "best"
+      ? status.value.length - 1
+      : status.value.findIndex((v) => v.height > target) - 1
+  const targetValue = status.value[targetValueIdx] as
+    | StorageSubscriptionValue
+    | undefined
+  const hasNext = targetValueIdx < status.value.length - 1
+  const hasPrev = targetValueIdx > 0
+
+  return (
+    <SubscriptionBox
+      subscription={subscription}
+      actions={
+        <div className="flex items-center gap-1">
+          <Button
+            disabled={!hasPrev}
+            onClick={() => setTarget(status.value[targetValueIdx - 1].height)}
+          >
+            <ChevronLeft />
+          </Button>
+          <div className="text-xs text-center">
+            <p>{targetValue?.height}</p>
+            <p className="font-mono">
+              {targetValue ? shortStr(targetValue.blockHash, 6) : null}
+            </p>
+          </div>
+          <Button
+            disabled={!hasNext}
+            onClick={() =>
+              setTarget(
+                targetValueIdx === status.value.length - 2
+                  ? "best"
+                  : status.value[targetValueIdx + 1].height,
+              )
+            }
+          >
+            <ChevronRight />
+          </Button>
+        </div>
+      }
+    >
+      {(mode) =>
+        targetValue ? (
+          <ResultDisplay
+            id={subscription}
+            subValue={targetValue}
+            single
+            mode={mode}
+          />
+        ) : null
+      }
+    </SubscriptionBox>
+  )
+}
+
+const SubscriptionBox: FC<{
+  subscription: string
+  actions?: ReactNode
+  children: (mode: "json" | "decoded") => ReactNode
+}> = ({ actions, subscription, children }) => {
   const [mode, setMode] = useState<"json" | "decoded">("decoded")
+
   const storageSubscription = useStateObservable(
     storageSubscription$(subscription),
   )
@@ -59,6 +192,7 @@ const StorageSubscriptionBox: FC<{ subscription: string }> = ({
           {storageSubscription.name}
         </h3>
         <div className="flex items-center shrink-0 gap-2">
+          {actions}
           <ButtonGroup
             value={mode}
             onValueChange={setMode as any}
@@ -87,33 +221,45 @@ const StorageSubscriptionBox: FC<{ subscription: string }> = ({
           </button>
         </div>
       </div>
-      {mode === "decoded" ? (
-        <DecodedResultDisplay
-          storageSubscription={storageSubscription}
-          subscriptionKey={subscription}
-        />
-      ) : (
-        <JsonResultDisplay storageSubscription={storageSubscription} />
-      )}
+      {children(mode)}
     </li>
   )
 }
 
+const ResultDisplay: FC<{
+  id: string
+  subValue: Pick<StorageSubscriptionValue, "result" | "keyCodec">
+  single: boolean
+  mode: "json" | "decoded"
+}> = ({ mode, ...props }) =>
+  mode === "decoded" ? (
+    <DecodedResultDisplay {...props} />
+  ) : (
+    <JsonResultDisplay {...props} />
+  )
+
 const DecodedResultDisplay: FC<{
-  storageSubscription: StorageSubscription
-  subscriptionKey: string
-}> = ({ storageSubscription, subscriptionKey }) => {
-  if (storageSubscription.status.type === "loading") {
-    return <div className="text-sm text-foreground/50">Loading…</div>
+  id: string
+  subValue: Pick<StorageSubscriptionValue, "result" | "keyCodec">
+  single: boolean
+}> = ({ subValue, single, id }) => {
+  if (subValue.result.type === "error") {
+    return (
+      <div className="text-sm text-foreground/50">{subValue.result.value}</div>
+    )
   }
-  if (storageSubscription.status.type === "value") {
+
+  const { value, ctx, type } = subValue.result.value
+
+  if (single) {
     return (
       <div className="max-h-[60svh] overflow-auto">
-        <PathsRoot.Provider value={subscriptionKey}>
+        <PathsRoot.Provider value={id}>
           <ValueDisplay
             mode="decoded"
-            type={storageSubscription.type}
-            value={storageSubscription.status.value}
+            type={type}
+            value={value}
+            ctx={ctx}
             title={"Result"}
           />
         </PathsRoot.Provider>
@@ -121,48 +267,21 @@ const DecodedResultDisplay: FC<{
     )
   }
 
-  const lastValue =
-    storageSubscription.status.value[
-      storageSubscription.status.value.length - 1
-    ]
-  if (!lastValue) {
-    throw new Error("nonsense")
-  }
-  if (lastValue.result.type === "error") {
-    return (
-      <div className="text-sm text-foreground/50">{lastValue.result.value}</div>
-    )
-  }
-
-  if (storageSubscription.single) {
-    return (
-      <div className="max-h-[60svh] overflow-auto">
-        <PathsRoot.Provider value={subscriptionKey}>
-          <ValueDisplay
-            mode="decoded"
-            type={storageSubscription.type}
-            value={lastValue.result.value.value}
-            title={"Result"}
-          />
-        </PathsRoot.Provider>
-      </div>
-    )
-  }
-
-  const values = lastValue.result.value.value as Array<{
+  const values = subValue.result.value.value as Array<{
     keyArgs: unknown[]
     value: unknown
   }>
 
   const renderItem = (keyArgs: unknown[], value: unknown, idx: number) => (
     <div key={idx} className={itemClasses}>
-      <PathsRoot.Provider value={`${subscriptionKey}-${idx}`}>
-        <KeyDisplay value={keyArgs} keyCodec={lastValue.keyCodec} />
+      <PathsRoot.Provider value={`${id}-${idx}`}>
+        <KeyDisplay value={keyArgs} keyCodec={subValue.keyCodec} />
         <ValueDisplay
           mode="decoded"
           title="Value"
           value={value}
-          type={storageSubscription.type}
+          type={type}
+          ctx={ctx}
         />
       </PathsRoot.Provider>
     </div>
@@ -193,28 +312,16 @@ const DecodedResultDisplay: FC<{
 }
 
 const JsonResultDisplay: FC<{
-  storageSubscription: StorageSubscription
-}> = ({ storageSubscription }) => {
-  if (storageSubscription.status.type === "loading") {
-    return <div className="text-sm text-foreground/50">Loading…</div>
-  }
-
-  if (storageSubscription.status.type === "value") {
+  subValue: Pick<StorageSubscriptionValue, "result" | "keyCodec">
+}> = ({ subValue }) => {
+  if (subValue.result.type === "error") {
     return (
-      <div className="max-h-[60svh] overflow-auto">
-        <JsonDisplay src={storageSubscription.status.value} />
-      </div>
+      <div className="text-sm text-foreground/50">{subValue.result.value}</div>
     )
   }
-
-  const lastValue =
-    storageSubscription.status.value[
-      storageSubscription.status.value.length - 1
-    ]
-
   return (
     <div className="max-h-[60svh] overflow-auto">
-      <JsonDisplay src={lastValue.result.value} />
+      <JsonDisplay src={subValue.result.value.value} />
     </div>
   )
 }
@@ -222,20 +329,15 @@ const JsonResultDisplay: FC<{
 const itemClasses = "py-2 border-b first:pt-0 last:pb-0 last:border-b-0"
 const VirtuosoItem: FC = (props) => <div {...props} className={itemClasses} />
 
-const metadataState$ = state(metadata$, null)
-const dynamicBuilderState$ = state(dynamicBuilder$, null)
 export const ValueDisplay: FC<{
+  ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">
   type: number
   title: string
   value: unknown | NOTIN
   mode: "decoded" | "json"
-}> = ({ type, title, value, mode }) => {
-  const metadata = useStateObservable(metadataState$)
-  const builder = useStateObservable(dynamicBuilderState$)
-
+}> = ({ ctx, type, title, value, mode }) => {
   const [codec, encodedValue] = useMemo(() => {
-    if (!builder) return [null!, null!]
-    const codec = builder.buildDefinition(type)
+    const codec = ctx.dynamicBuilder.buildDefinition(type)
     const encodedValue = (() => {
       try {
         return codec.enc(value)
@@ -244,9 +346,8 @@ export const ValueDisplay: FC<{
       }
     })()
     return [codec, encodedValue] as const
-  }, [builder, value, type])
+  }, [ctx, value, type])
 
-  if (!metadata || !builder) return null
   if (!encodedValue) {
     return <div className="text-foreground/60">Empty</div>
   }
@@ -265,7 +366,7 @@ export const ValueDisplay: FC<{
               type: CodecComponentType.Initial,
               value: codec.enc(value),
             }}
-            metadata={metadata}
+            metadata={ctx.lookup.metadata}
           />
         </div>
       ) : (
