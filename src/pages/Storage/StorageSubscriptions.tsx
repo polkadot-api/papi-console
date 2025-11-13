@@ -3,6 +3,7 @@ import { ViewCodec } from "@/codec-components/ViewCodec"
 import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
 import { ButtonGroup } from "@/components/ButtonGroup"
 import { JsonDisplay } from "@/components/JsonDisplay"
+import { cn } from "@/lib/utils"
 import { dynamicBuilder$, metadata$ } from "@/state/chains/chain.state"
 import { ViewValue } from "@/ViewValue"
 import { CodecComponentType, NOTIN } from "@polkadot-api/react-builder"
@@ -19,7 +20,6 @@ import {
   storageSubscriptionKeys$,
   toggleSubscriptionPause,
 } from "./storage.state"
-import { cn } from "@/lib/utils"
 
 export const StorageSubscriptions: FC = () => {
   const keys = useStateObservable(storageSubscriptionKeys$)
@@ -103,15 +103,35 @@ const DecodedResultDisplay: FC<{
   storageSubscription: StorageSubscription
   subscriptionKey: string
 }> = ({ storageSubscription, subscriptionKey }) => {
-  if ("error" in storageSubscription) {
+  if (storageSubscription.status.type === "loading") {
+    return <div className="text-sm text-foreground/50">Loading…</div>
+  }
+  if (storageSubscription.status.type === "value") {
     return (
-      <div className="text-sm text-foreground/50">
-        {storageSubscription.error}
+      <div className="max-h-[60svh] overflow-auto">
+        <PathsRoot.Provider value={subscriptionKey}>
+          <ValueDisplay
+            mode="decoded"
+            type={storageSubscription.type}
+            value={storageSubscription.status.value}
+            title={"Result"}
+          />
+        </PathsRoot.Provider>
       </div>
     )
   }
-  if (!("result" in storageSubscription)) {
-    return <div className="text-sm text-foreground/50">Loading…</div>
+
+  const lastValue =
+    storageSubscription.status.value[
+      storageSubscription.status.value.length - 1
+    ]
+  if (!lastValue) {
+    throw new Error("nonsense")
+  }
+  if (lastValue.result.type === "error") {
+    return (
+      <div className="text-sm text-foreground/50">{lastValue.result.value}</div>
+    )
   }
 
   if (storageSubscription.single) {
@@ -121,7 +141,7 @@ const DecodedResultDisplay: FC<{
           <ValueDisplay
             mode="decoded"
             type={storageSubscription.type}
-            value={storageSubscription.result}
+            value={lastValue.result.value.value}
             title={"Result"}
           />
         </PathsRoot.Provider>
@@ -129,7 +149,7 @@ const DecodedResultDisplay: FC<{
     )
   }
 
-  const values = storageSubscription.result as Array<{
+  const values = lastValue.result.value.value as Array<{
     keyArgs: unknown[]
     value: unknown
   }>
@@ -137,7 +157,7 @@ const DecodedResultDisplay: FC<{
   const renderItem = (keyArgs: unknown[], value: unknown, idx: number) => (
     <div key={idx} className={itemClasses}>
       <PathsRoot.Provider value={`${subscriptionKey}-${idx}`}>
-        <KeyDisplay value={keyArgs} keyCodec={storageSubscription.keyCodec} />
+        <KeyDisplay value={keyArgs} keyCodec={lastValue.keyCodec} />
         <ValueDisplay
           mode="decoded"
           title="Value"
@@ -175,21 +195,26 @@ const DecodedResultDisplay: FC<{
 const JsonResultDisplay: FC<{
   storageSubscription: StorageSubscription
 }> = ({ storageSubscription }) => {
-  if ("error" in storageSubscription) {
+  if (storageSubscription.status.type === "loading") {
+    return <div className="text-sm text-foreground/50">Loading…</div>
+  }
+
+  if (storageSubscription.status.type === "value") {
     return (
-      <div className="text-sm text-foreground/50">
-        {storageSubscription.error}
+      <div className="max-h-[60svh] overflow-auto">
+        <JsonDisplay src={storageSubscription.status.value} />
       </div>
     )
   }
 
-  if (!("result" in storageSubscription)) {
-    return <div className="text-sm text-foreground/50">Loading…</div>
-  }
+  const lastValue =
+    storageSubscription.status.value[
+      storageSubscription.status.value.length - 1
+    ]
 
   return (
     <div className="max-h-[60svh] overflow-auto">
-      <JsonDisplay src={storageSubscription.result} />
+      <JsonDisplay src={lastValue.result.value} />
     </div>
   )
 }

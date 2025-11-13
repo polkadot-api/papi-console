@@ -4,8 +4,10 @@ import { BinaryEditButton } from "@/components/BinaryEditButton"
 import { CopyText } from "@/components/Copy"
 import SliderToggle from "@/components/Toggle"
 import {
+  chainClient$,
   dynamicBuilder$,
   runtimeCtx$,
+  runtimeCtxAt$,
   unsafeApi$,
 } from "@/state/chains/chain.state"
 import {
@@ -26,6 +28,7 @@ import {
   from,
   map,
   ObservedValueOf,
+  of,
   scan,
   startWith,
   switchMap,
@@ -46,32 +49,50 @@ export const StorageQuery: FC = () => {
   if (!selectedEntry) return null
 
   const submit = async () => {
-    const [entry, unsafeApi, keyValues, keysEnabled, keyCodec] =
-      await firstValueFrom(
-        combineLatest([
-          selectedEntry$,
-          unsafeApi$,
-          keyValues$,
-          keysEnabled$,
-          keyCodec$,
-        ]),
-      )
+    const [entry, unsafeApi, keyValues, keysEnabled] = await firstValueFrom(
+      combineLatest([selectedEntry$, unsafeApi$, keyValues$, keysEnabled$]),
+    )
     const args = keyValues.slice(0, keysEnabled)
     const storageEntry = unsafeApi.query[entry!.pallet][entry!.entry]
     const single = keyValues.length === keysEnabled
-    const stream = single
-      ? storageEntry.watchValue(...args)
-      : from(storageEntry.getEntries(...args))
-
     const argString = [...args.map(stringifyArg), ...(single ? [] : ["…"])]
 
     addStorageSubscription({
       name: `${entry!.pallet}.${entry!.entry}(${argString})`,
       args,
       single,
-      stream,
       type: entry!.value,
-      keyCodec: keyCodec!,
+      keyCodec: (hash) =>
+        runtimeCtxAt$(hash).pipe(
+          map(
+            (ctx) =>
+              ctx.dynamicBuilder.buildStorage(entry!.pallet, entry!.entry).keys,
+          ),
+        ),
+      at: (hash) => {
+        const value$ = from(
+          single
+            ? storageEntry.getValue(...args, {
+                at: hash,
+              })
+            : storageEntry.getEntries(...args, {
+                at: hash,
+              }),
+        )
+        const hash$ = single
+          ? chainClient$.pipe(
+              switchMap(({ chainHead }) =>
+                chainHead.storage$(hash, "hash", (ctx) =>
+                  ctx.dynamicBuilder
+                    .buildStorage(entry!.pallet, entry!.entry)
+                    .keys.enc(...args),
+                ),
+              ),
+            )
+          : of(null)
+
+        return combineLatest({ value: value$, hash: hash$ })
+      },
     })
   }
 

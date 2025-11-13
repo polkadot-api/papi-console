@@ -1,6 +1,11 @@
 import { bytesToString } from "@/components/BinaryInput"
 import { getHashParams } from "@/hashParams"
-import { runtimeCtx$, selectedChainChanged$ } from "@/state/chains/chain.state"
+import {
+  client$,
+  runtimeCtx$,
+  selectedChainChanged$,
+} from "@/state/chains/chain.state"
+import { BlockInfo, concatMapEager } from "@polkadot-api/observable-client"
 import { state } from "@react-rxjs/core"
 import {
   createKeyedSignal,
@@ -9,21 +14,25 @@ import {
   partitionByKey,
   toKeySet,
 } from "@react-rxjs/utils"
-import { Binary } from "polkadot-api"
+import { Binary, Enum, HexString } from "polkadot-api"
 import {
   catchError,
   combineLatest,
   concat,
   distinctUntilChanged,
+  EMPTY,
+  filter,
   ignoreElements,
   map,
   merge,
+  mergeMap,
   Observable,
   of,
   scan,
   shareReplay,
   startWith,
   switchMap,
+  take,
   takeUntil,
   withLatestFrom,
 } from "rxjs"
@@ -158,68 +167,216 @@ export const [newStorageSubscription$, addStorageSubscription] = createSignal<{
   name: string
   args: unknown[] | null
   type: number
-  keyCodec?: KeyCodec
   single: boolean
-  stream: Observable<unknown>
+  keyCodec?: (hash: HexString) => Observable<KeyCodec>
+  at?: (hash: HexString) => Observable<{
+    hash: HexString | null
+    value: unknown
+  }>
+  value?: unknown
 }>()
 export const [removeStorageSubscription$, removeStorageSubscription] =
   createKeyedSignal<string>()
 export const [togglePause$, toggleSubscriptionPause] =
   createKeyedSignal<string>()
 
+type StorageSubscriptionValue = {
+  height: number
+  blockHash: HexString
+  settled: boolean
+  keyCodec?: KeyCodec
+  result: Enum<{
+    success: {
+      hash: string | null
+      value: unknown
+    }
+    error: string
+  }>
+}
 export type StorageSubscription = {
   name: string
   args: unknown[] | null
   type: number
-  keyCodec?: KeyCodec
   single: boolean
   paused: boolean
   completed: boolean
-} & ({ result: unknown } | { error: string } | {})
+  status: Enum<{
+    loading: undefined
+    value: unknown
+    values: Array<StorageSubscriptionValue>
+  }>
+}
+
+const getStatus$ = (
+  at: (
+    hash: HexString,
+  ) => Observable<{ hash: HexString | null; value: unknown }>,
+  single: boolean,
+  keyCodec?: (hash: HexString) => Observable<KeyCodec>,
+): Observable<StorageSubscription["status"]> => {
+  const queryAt$ = (
+    block: BlockInfo,
+    settled: boolean,
+  ): Observable<StorageSubscriptionValue> =>
+    combineLatest([
+      at(block.hash),
+      keyCodec?.(block.hash) ?? of(undefined),
+    ]).pipe(
+      take(1),
+      map(([payload, keyCodec]) => ({
+        height: block.number,
+        blockHash: block.hash,
+        settled,
+        keyCodec,
+        result: Enum("success", payload),
+      })),
+      catchError((ex) => [
+        {
+          height: block.number,
+          blockHash: block.hash,
+          settled,
+          result: Enum("error", String(ex)),
+        },
+      ]),
+    )
+  const finalizedResults$ = client$.pipe(
+    switchMap((client) => client.finalizedBlock$),
+    mergeMap((block) => queryAt$(block, true)),
+    // Not supporting watchEntries for now. In case it's querying entries, we only take one
+    single ? (v) => v : take(1),
+  )
+  const bestResults$ = single
+    ? client$.pipe(
+        switchMap((client) => client.bestBlocks$),
+        filter((v) => v.length > 1),
+        map((blocks) => blocks[blocks.length - 1]),
+        // We need a concatMapEager here to make sure that overrides work properly
+        concatMapEager((block) => queryAt$(block, false)),
+      )
+    : EMPTY
+
+  const getValueHash = (value: StorageSubscriptionValue) =>
+    value.result.type === "success" ? value.result.value.hash : null
+
+  const values$ = merge(finalizedResults$, bestResults$).pipe(
+    scan(
+      (
+        acc: {
+          settled: StorageSubscriptionValue[]
+          settledHashes: Record<string, number>
+          unsettled: StorageSubscriptionValue[]
+        },
+        newValue,
+      ) => {
+        const newAcc = { ...acc }
+
+        if (newValue.settled) {
+          const valueHash = getValueHash(newValue)
+          if (valueHash && newAcc.settledHashes[valueHash] != null) {
+            const prevHeight = newAcc.settledHashes[valueHash]
+            if (prevHeight > newValue.height) {
+              newAcc.settledHashes = {
+                ...newAcc.settledHashes,
+                [valueHash]: newValue.height,
+              }
+              newAcc.settled = newAcc.settled.map((prevSettled) => {
+                const hash = getValueHash(prevSettled)
+                return hash === valueHash ? newValue : prevSettled
+              })
+            }
+          } else {
+            newAcc.settled = [...newAcc.settled, newValue]
+            newAcc.settled.sort((a, b) => a.height - b.height)
+            if (valueHash) {
+              newAcc.settledHashes = {
+                ...newAcc.settledHashes,
+                [valueHash]: newValue.height,
+              }
+            }
+          }
+          // Remove all unsettled blocks behind new finalized
+          newAcc.unsettled = newAcc.unsettled.filter(
+            (u) => u.height > newValue.height,
+          )
+        } else {
+          // Remove all unsettled blocks above the new unsettled one
+          const res = [
+            ...newAcc.unsettled.filter((u) => u.height > newValue.height),
+            newValue,
+          ]
+          // Prune duplicate values by hash
+          newAcc.unsettled = []
+          let prevHash: string | null = null
+          for (let i = 0; i < res.length; i++) {
+            const hash = getValueHash(res[i])
+            if (res[i].result.type === "error" || hash !== prevHash) {
+              newAcc.unsettled.push(res[i])
+              prevHash = hash
+            }
+          }
+        }
+
+        return newAcc
+      },
+      { settled: [], settledHashes: {}, unsettled: [] },
+    ),
+    map(({ settled, settledHashes, unsettled }) => [
+      ...settled,
+      ...unsettled.filter((v) => {
+        const hash = getValueHash(v)
+        // TODO edge case of a finalized value changing in one best block, then resetting on the next one
+        return !hash || settledHashes[hash] === null
+      }),
+    ]),
+  )
+
+  return values$.pipe(map((values) => Enum("values", values)))
+}
 
 const [getStorageSubscription$, storageSubscriptionKeyChange$] = partitionByKey(
   newStorageSubscription$,
   () => uuid(),
   (src$, id) =>
     src$.pipe(
-      switchMap(({ stream, ...props }): Observable<StorageSubscription> => {
-        const paused$ = togglePause$(id).pipe(
-          scan((v) => !v, false),
-          startWith(false),
-        )
-        const result$ = stream.pipe(
-          map((result) => ({
-            ...props,
-            result,
-          })),
-          startWith(props),
-          shareReplay(1),
-        )
-        const completed$ = concat(
-          of(false),
-          result$.pipe(ignoreElements()),
-          of(true),
-        )
-        return combineLatest([paused$, completed$, result$]).pipe(
-          map(([paused, completed, result]) => ({
-            ...result,
-            paused,
-            completed,
-          })),
-          catchError((ex) => {
-            console.error(ex)
-            return [
-              {
-                ...props,
-                paused: false,
-                completed: true,
-                error:
-                  ex instanceof Error ? `Error: ${ex.message}` : "(Errored)",
-              } satisfies StorageSubscription,
-            ]
-          }),
-        )
-      }),
+      switchMap(
+        ({
+          at,
+          value,
+          keyCodec,
+          ...props
+        }): Observable<StorageSubscription> => {
+          const paused$ = togglePause$(id).pipe(
+            scan((v) => !v, false),
+            startWith(false),
+          )
+          const status$: Observable<StorageSubscription["status"]> = value
+            ? of(Enum("value", value))
+            : getStatus$(at!, props.single, keyCodec)
+          const result$ = status$.pipe(
+            map((status) => ({
+              ...props,
+              status,
+            })),
+            startWith({
+              ...props,
+              status: Enum("loading"),
+            }),
+            shareReplay(1),
+          )
+          const completed$ = concat(
+            of(false),
+            result$.pipe(ignoreElements()),
+            of(true),
+          )
+          return combineLatest([paused$, completed$, result$]).pipe(
+            map(([paused, completed, result]) => ({
+              ...result,
+              paused,
+              completed,
+            })),
+          )
+        },
+      ),
       takeUntil(merge(removeStorageSubscription$(id), selectedChainChanged$)),
     ),
 )
