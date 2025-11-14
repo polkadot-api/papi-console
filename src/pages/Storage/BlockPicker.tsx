@@ -2,7 +2,12 @@ import { Spinner } from "@/components/Icons"
 import { runtimeCtx$, runtimeCtxAt$ } from "@/state/chains/chain.state"
 import { RuntimeContext } from "@polkadot-api/observable-client"
 import { Input } from "@polkahub/ui-components"
-import { state, useStateObservable } from "@react-rxjs/core"
+import {
+  liftSuspense,
+  state,
+  SUSPENSE,
+  useStateObservable,
+} from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
 import { Check, X } from "lucide-react"
 import {
@@ -36,10 +41,17 @@ const loadedCtx$ = state(
             )
 
       return inner$.pipe(
-        map((value) => ({
-          type: "success" as const,
-          value,
-        })),
+        liftSuspense(),
+        map((value) =>
+          value === SUSPENSE
+            ? {
+                type: "loading" as const,
+              }
+            : {
+                type: "success" as const,
+                value,
+              },
+        ),
         catchError((value) => [
           {
             type: "error" as const,

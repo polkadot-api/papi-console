@@ -1,11 +1,7 @@
 import { bytesToString } from "@/components/BinaryInput"
 import { getHashParams } from "@/hashParams"
 import { client$, selectedChainChanged$ } from "@/state/chains/chain.state"
-import {
-  BlockInfo,
-  concatMapEager,
-  RuntimeContext,
-} from "@polkadot-api/observable-client"
+import { BlockInfo, RuntimeContext } from "@polkadot-api/observable-client"
 import { state } from "@react-rxjs/core"
 import {
   createKeyedSignal,
@@ -18,6 +14,7 @@ import { Binary, Enum, HexString } from "polkadot-api"
 import {
   catchError,
   combineLatest,
+  combineLatestWith,
   concat,
   EMPTY,
   filter,
@@ -71,7 +68,7 @@ const initialValue$ = palletEntries$.pipe(
 
 export const partialEntry$ = state(
   mergeWithKey({ entryChange$, initialValue$ }).pipe(
-    withLatestFrom(palletEntries$),
+    combineLatestWith(palletEntries$),
     scan(
       (acc, [evt, pallets]) => {
         const newValue =
@@ -81,7 +78,11 @@ export const partialEntry$ = state(
                 pallet: acc.pallet ?? evt.payload.pallet,
                 entry: acc.entry ?? evt.payload.entry,
               }
-        const selectedPallet = newValue.pallet ? pallets[newValue.pallet] : null
+        let selectedPallet = newValue.pallet ? pallets[newValue.pallet] : null
+        if (!selectedPallet) {
+          newValue.pallet = Object.keys(pallets)[0] ?? null
+          selectedPallet = pallets[newValue.pallet] ?? null
+        }
         if (!selectedPallet?.find((it) => it.name === newValue.entry)) {
           newValue.entry = selectedPallet?.[0]?.name ?? null
         }
@@ -264,8 +265,7 @@ const getStatus$ = (
         switchMap((client) => client.bestBlocks$),
         filter((v) => v.length > 1),
         map((blocks) => blocks[0]),
-        // We need a concatMapEager here to make sure that overrides work properly
-        concatMapEager((block) => queryAt$(block, false)),
+        switchMap((block) => queryAt$(block, false)),
       )
     : EMPTY
 

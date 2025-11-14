@@ -57,7 +57,7 @@ export const Storage = withSubscribe(
               }))}
             />
           </label>
-          {partialEntry.pallet && (
+          {partialEntry.pallet && entries[partialEntry.pallet] && (
             <label>
               Entry
               <SearchableSelect

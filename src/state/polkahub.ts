@@ -35,6 +35,8 @@ const selectedAccountPlugin = createSelectedAccountPlugin()
 const pjsWalletProvider = createPjsWalletProvider()
 const polkadotVaultProvider = createPolkadotVaultProvider()
 const readOnlyProvider$ = canSetStorage$.pipe(
+  liftSuspense(),
+  filter((v) => v !== SUSPENSE),
   map((fakeSigner) =>
     createReadOnlyProvider({
       fakeSigner,
