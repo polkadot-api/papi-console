@@ -1,7 +1,11 @@
 import { bytesToString } from "@/components/BinaryInput"
 import { getHashParams } from "@/hashParams"
 import { client$, selectedChainChanged$ } from "@/state/chains/chain.state"
-import { BlockInfo, RuntimeContext } from "@polkadot-api/observable-client"
+import {
+  BlockInfo,
+  concatMapEager,
+  RuntimeContext,
+} from "@polkadot-api/observable-client"
 import { state } from "@react-rxjs/core"
 import {
   createKeyedSignal,
@@ -16,6 +20,7 @@ import {
   combineLatest,
   combineLatestWith,
   concat,
+  distinct,
   EMPTY,
   filter,
   ignoreElements,
@@ -264,8 +269,9 @@ const getStatus$ = (
     ? client$.pipe(
         switchMap((client) => client.bestBlocks$),
         filter((v) => v.length > 1),
-        map((blocks) => blocks[0]),
-        mergeMap((block) => queryAt$(block, false)),
+        mergeMap((blocks) => blocks.slice(0, -1).reverse()),
+        distinct(),
+        concatMapEager((block) => queryAt$(block, false)),
       )
     : EMPTY
 
@@ -315,10 +321,9 @@ const getStatus$ = (
         } else {
           // Remove all unsettled blocks above the new unsettled one
           const res = [
-            ...newAcc.unsettled.filter((u) => u.height > newValue.height),
+            ...newAcc.unsettled.filter((u) => u.height < newValue.height),
             newValue,
           ]
-          res.sort((a, b) => a.height - b.height)
           // Prune duplicate values by hash
           newAcc.unsettled = []
           let prevHash: string | null = null
