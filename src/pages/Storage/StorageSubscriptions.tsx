@@ -124,8 +124,8 @@ const onHold = (cb: () => void) => (evt: MouseEvent) => {
     repeatingToken = setInterval(() => {
       if (paused) return
       cb()
-    }, 100)
-  }, 500)
+    }, 80)
+  }, 300)
 
   const stop = () => {
     target.removeEventListener("mouseout", pause)

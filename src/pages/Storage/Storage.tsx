@@ -41,37 +41,39 @@ export const Storage = withSubscribe(
 
     return (
       <div className="p-4 pb-0 flex flex-col gap-2 items-start">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 flex-wrap">
           <label>
             Block
             <BlockPicker />
           </label>
-          <label>
-            Pallet
-            <SearchableSelect
-              value={partialEntry.pallet}
-              setValue={(v) => selectEntry({ pallet: v })}
-              options={Object.keys(entries).map((e) => ({
-                text: e,
-                value: e,
-              }))}
-            />
-          </label>
-          {partialEntry.pallet && entries[partialEntry.pallet] && (
+          <div className="flex items-center gap-2 flex-wrap">
             <label>
-              Entry
+              Pallet
               <SearchableSelect
-                value={partialEntry.entry}
-                setValue={(v) => selectEntry({ entry: v })}
-                options={
-                  Object.keys(entries[partialEntry.pallet]).map((s) => ({
-                    text: s,
-                    value: s,
-                  })) ?? []
-                }
+                value={partialEntry.pallet}
+                setValue={(v) => selectEntry({ pallet: v })}
+                options={Object.keys(entries).map((e) => ({
+                  text: e,
+                  value: e,
+                }))}
               />
             </label>
-          )}
+            {partialEntry.pallet && entries[partialEntry.pallet] && (
+              <label>
+                Entry
+                <SearchableSelect
+                  value={partialEntry.entry}
+                  setValue={(v) => selectEntry({ entry: v })}
+                  options={
+                    Object.keys(entries[partialEntry.pallet]).map((s) => ({
+                      text: s,
+                      value: s,
+                    })) ?? []
+                  }
+                />
+              </label>
+            )}
+          </div>
         </div>
         {selectedEntry?.docs.length ? (
           <div className="w-full">
