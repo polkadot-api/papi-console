@@ -265,7 +265,7 @@ const getStatus$ = (
         switchMap((client) => client.bestBlocks$),
         filter((v) => v.length > 1),
         map((blocks) => blocks[0]),
-        switchMap((block) => queryAt$(block, false)),
+        mergeMap((block) => queryAt$(block, false)),
       )
     : EMPTY
 
@@ -318,6 +318,7 @@ const getStatus$ = (
             ...newAcc.unsettled.filter((u) => u.height > newValue.height),
             newValue,
           ]
+          res.sort((a, b) => a.height - b.height)
           // Prune duplicate values by hash
           newAcc.unsettled = []
           let prevHash: string | null = null

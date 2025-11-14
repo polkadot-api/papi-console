@@ -3,6 +3,12 @@ import { ViewCodec } from "@/codec-components/ViewCodec"
 import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
 import { ButtonGroup } from "@/components/ButtonGroup"
 import { JsonDisplay } from "@/components/JsonDisplay"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { Link } from "@/hashParams"
 import { cn } from "@/lib/utils"
 import { shortStr } from "@/utils"
 import { ViewValue } from "@/ViewValue"
@@ -12,7 +18,7 @@ import { Button } from "@polkahub/ui-components"
 import { useStateObservable } from "@react-rxjs/core"
 import { ChevronLeft, ChevronRight, StopCircle, Trash2 } from "lucide-react"
 import { Binary, Enum } from "polkadot-api"
-import { FC, ReactNode, useMemo, useState } from "react"
+import { FC, MouseEvent, ReactNode, useMemo, useState } from "react"
 import { Virtuoso } from "react-virtuoso"
 import { BlockState } from "../Explorer/block.state"
 import { BlockStatusIcon } from "../Explorer/Detail/BlockState"
@@ -24,12 +30,6 @@ import {
   storageSubscriptionKeys$,
   StorageSubscriptionValue,
 } from "./storage.state"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { Link } from "@/hashParams"
 
 export const StorageSubscriptions: FC = () => {
   const keys = useStateObservable(storageSubscriptionKeys$)
@@ -114,6 +114,39 @@ const ValueSubscriptionBox: FC<{ subscription: string }> = ({
   )
 }
 
+const onHold = (cb: () => void) => (evt: MouseEvent) => {
+  const target = evt.target
+  if (!target) return
+
+  let paused = false
+  let repeatingToken: any = null
+  const startToken = setTimeout(() => {
+    repeatingToken = setInterval(() => {
+      if (paused) return
+      cb()
+    }, 100)
+  }, 500)
+
+  const stop = () => {
+    target.removeEventListener("mouseout", pause)
+    target.removeEventListener("mouseenter", resume)
+    clearTimeout(startToken)
+    clearTimeout(repeatingToken)
+  }
+  const pause = () => {
+    paused = true
+  }
+  const resume = () => {
+    paused = false
+  }
+
+  window.addEventListener("mouseup", stop, {
+    once: true,
+  })
+  target.addEventListener("mouseout", pause)
+  target.addEventListener("mouseenter", resume)
+}
+
 const ValuesSubscriptionBox: FC<{ subscription: string }> = ({
   subscription,
 }) => {
@@ -136,6 +169,20 @@ const ValuesSubscriptionBox: FC<{ subscription: string }> = ({
   const hasNext = targetValueIdx < status.value.length - 1
   const hasPrev = targetValueIdx > 0
 
+  const incrementTarget = (v: number) => {
+    setTarget((target) => {
+      const targetValueIdx =
+        target === "best"
+          ? status.value.length - 1
+          : status.value.findIndex((v) => v.height > target) - 1
+
+      const nextIdx = targetValueIdx + v
+      return nextIdx === status.value.length - 1
+        ? "best"
+        : status.value[nextIdx].height
+    })
+  }
+
   return (
     <SubscriptionBox
       subscription={subscription}
@@ -146,7 +193,8 @@ const ValuesSubscriptionBox: FC<{ subscription: string }> = ({
               variant="secondary"
               className="has-[>svg]:px-1"
               disabled={!hasPrev}
-              onClick={() => setTarget(status.value[targetValueIdx - 1].height)}
+              onClick={() => incrementTarget(-1)}
+              onMouseDown={onHold(() => incrementTarget(-1))}
             >
               <ChevronLeft />
             </Button>
@@ -173,13 +221,8 @@ const ValuesSubscriptionBox: FC<{ subscription: string }> = ({
               disabled={!hasNext}
               variant="secondary"
               className="has-[>svg]:px-1"
-              onClick={() =>
-                setTarget(
-                  targetValueIdx === status.value.length - 2
-                    ? "best"
-                    : status.value[targetValueIdx + 1].height,
-                )
-              }
+              onClick={() => incrementTarget(1)}
+              onMouseDown={onHold(() => incrementTarget(1))}
             >
               <ChevronRight />
             </Button>
