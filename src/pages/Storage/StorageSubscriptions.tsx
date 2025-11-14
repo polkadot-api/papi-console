@@ -10,24 +10,26 @@ import { RuntimeContext } from "@polkadot-api/observable-client"
 import { CodecComponentType, NOTIN } from "@polkadot-api/react-builder"
 import { Button } from "@polkahub/ui-components"
 import { useStateObservable } from "@react-rxjs/core"
-import {
-  ChevronLeft,
-  ChevronRight,
-  PauseCircle,
-  PlayCircle,
-  Trash2,
-} from "lucide-react"
+import { ChevronLeft, ChevronRight, StopCircle, Trash2 } from "lucide-react"
 import { Binary, Enum } from "polkadot-api"
 import { FC, ReactNode, useMemo, useState } from "react"
 import { Virtuoso } from "react-virtuoso"
+import { BlockState } from "../Explorer/block.state"
+import { BlockStatusIcon } from "../Explorer/Detail/BlockState"
 import {
   KeyCodec,
   removeStorageSubscription,
+  stopStorageSubscription,
   storageSubscription$,
   storageSubscriptionKeys$,
   StorageSubscriptionValue,
-  toggleSubscriptionPause,
 } from "./storage.state"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { Link } from "@/hashParams"
 
 export const StorageSubscriptions: FC = () => {
   const keys = useStateObservable(storageSubscriptionKeys$)
@@ -77,10 +79,22 @@ const ValueSubscriptionBox: FC<{ subscription: string }> = ({
   if (!storageSubscription) return null
   const status = storageSubscription.status
   if (status.type !== "value") return null
-  const { ctx, payload, type } = status.value
+  const { ctx, payload, type, hash } = status.value
 
   return (
-    <SubscriptionBox subscription={subscription}>
+    <SubscriptionBox
+      subscription={subscription}
+      actions={
+        hash ? (
+          <div className="text-center">
+            <p className="text-sm">Hash</p>
+            <Link to={`/explorer/${hash}`} className="underline">
+              <p className="font-mono text-xs">{shortStr(hash, 6)}</p>
+            </Link>
+          </div>
+        ) : null
+      }
+    >
       {(mode) => (
         <ResultDisplay
           id={subscription}
@@ -88,7 +102,7 @@ const ValueSubscriptionBox: FC<{ subscription: string }> = ({
             result: Enum("success", {
               ctx,
               type,
-              value: payload,
+              payload: payload,
               hash: null,
             }),
           }}
@@ -126,32 +140,51 @@ const ValuesSubscriptionBox: FC<{ subscription: string }> = ({
     <SubscriptionBox
       subscription={subscription}
       actions={
-        <div className="flex items-center gap-1">
-          <Button
-            disabled={!hasPrev}
-            onClick={() => setTarget(status.value[targetValueIdx - 1].height)}
-          >
-            <ChevronLeft />
-          </Button>
-          <div className="text-xs text-center">
-            <p>{targetValue?.height}</p>
-            <p className="font-mono">
-              {targetValue ? shortStr(targetValue.blockHash, 6) : null}
-            </p>
+        targetValue ? (
+          <div className="flex items-center gap-1">
+            <Button
+              variant="secondary"
+              className="has-[>svg]:px-1"
+              disabled={!hasPrev}
+              onClick={() => setTarget(status.value[targetValueIdx - 1].height)}
+            >
+              <ChevronLeft />
+            </Button>
+            <div className="text-center">
+              <div className="text-sm flex items-center gap-1 justify-center">
+                <p>{targetValue.height}</p>
+                <BlockStatusIcon
+                  size={20}
+                  state={
+                    targetValue.settled ? BlockState.Finalized : BlockState.Best
+                  }
+                />
+              </div>
+              <Link
+                to={`/explorer/${targetValue.blockHash}`}
+                className="underline"
+              >
+                <p className="font-mono text-xs">
+                  {shortStr(targetValue.blockHash, 6)}
+                </p>
+              </Link>
+            </div>
+            <Button
+              disabled={!hasNext}
+              variant="secondary"
+              className="has-[>svg]:px-1"
+              onClick={() =>
+                setTarget(
+                  targetValueIdx === status.value.length - 2
+                    ? "best"
+                    : status.value[targetValueIdx + 1].height,
+                )
+              }
+            >
+              <ChevronRight />
+            </Button>
           </div>
-          <Button
-            disabled={!hasNext}
-            onClick={() =>
-              setTarget(
-                targetValueIdx === status.value.length - 2
-                  ? "best"
-                  : status.value[targetValueIdx + 1].height,
-              )
-            }
-          >
-            <ChevronRight />
-          </Button>
-        </div>
+        ) : null
       }
     >
       {(mode) =>
@@ -207,18 +240,20 @@ const SubscriptionBox: FC<{
               },
             ]}
           />
-          {storageSubscription.completed ? null : (
-            <button onClick={() => toggleSubscriptionPause(subscription)}>
-              {storageSubscription.paused ? (
-                <PlayCircle {...iconButtonProps} />
-              ) : (
-                <PauseCircle {...iconButtonProps} />
-              )}
+          {storageSubscription.completed ? (
+            <button onClick={() => removeStorageSubscription(subscription)}>
+              <Trash2 {...iconButtonProps} />
             </button>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button onClick={() => stopStorageSubscription(subscription)}>
+                  <StopCircle {...iconButtonProps} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Stop subscription</TooltipContent>
+            </Tooltip>
           )}
-          <button onClick={() => removeStorageSubscription(subscription)}>
-            <Trash2 {...iconButtonProps} />
-          </button>
         </div>
       </div>
       {children(mode)}
@@ -249,7 +284,7 @@ const DecodedResultDisplay: FC<{
     )
   }
 
-  const { value, ctx, type } = subValue.result.value
+  const { payload: value, ctx, type } = subValue.result.value
 
   if (single) {
     return (
@@ -267,7 +302,7 @@ const DecodedResultDisplay: FC<{
     )
   }
 
-  const values = subValue.result.value.value as Array<{
+  const values = subValue.result.value.payload as Array<{
     keyArgs: unknown[]
     value: unknown
   }>
@@ -321,7 +356,7 @@ const JsonResultDisplay: FC<{
   }
   return (
     <div className="max-h-[60svh] overflow-auto">
-      <JsonDisplay src={subValue.result.value.value} />
+      <JsonDisplay src={subValue.result.value.payload} />
     </div>
   )
 }

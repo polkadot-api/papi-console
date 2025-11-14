@@ -4,10 +4,11 @@ import { Chopsticks } from "@/components/Icons"
 import { LoadingMetadata } from "@/components/Loading"
 import { SearchableSelect } from "@/components/Select"
 import { withSubscribe } from "@/components/withSuspense"
-import { canSetStorage$, lookup$ } from "@/state/chains/chain.state"
+import { canSetStorage$ } from "@/state/chains/chain.state"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { FC, useState } from "react"
 import { map } from "rxjs"
+import { BlockPicker, selectedBlock$ } from "./BlockPicker"
 import { partialEntry$, selectedEntry$, selectEntry } from "./storage.state"
 import { StorageDecode } from "./StorageDecode"
 import { StorageQuery } from "./StorageQuery"
@@ -15,11 +16,11 @@ import { StorageSet } from "./StorageSet"
 import { StorageSubscriptions } from "./StorageSubscriptions"
 
 const metadataStorage$ = state(
-  lookup$.pipe(
-    map((lookup) => ({
-      lookup,
+  selectedBlock$.pipe(
+    map(({ ctx }) => ({
+      lookup: ctx.lookup,
       entries: Object.fromEntries(
-        lookup.metadata.pallets
+        ctx.lookup.metadata.pallets
           .filter((p) => p.storage)
           .map((p) => [
             p.name,
@@ -41,6 +42,10 @@ export const Storage = withSubscribe(
     return (
       <div className="p-4 pb-0 flex flex-col gap-2 items-start">
         <div className="flex items-center gap-2">
+          <label>
+            Block
+            <BlockPicker />
+          </label>
           <label>
             Pallet
             <SearchableSelect

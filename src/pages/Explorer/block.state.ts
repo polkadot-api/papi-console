@@ -244,7 +244,7 @@ export const inMemoryBlocks$ = state(
 )
 inMemoryBlocks$.subscribe()
 
-const blockHash$ = (hashOrHeight: string) =>
+export const blockHash$ = (hashOrHeight: string) =>
   hashOrHeight.length > 63
     ? of(hashOrHeight.startsWith("0x") ? hashOrHeight : `0x${hashOrHeight}`)
     : client$.pipe(

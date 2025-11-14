@@ -1,10 +1,6 @@
 import { bytesToString } from "@/components/BinaryInput"
 import { getHashParams } from "@/hashParams"
-import {
-  client$,
-  runtimeCtx$,
-  selectedChainChanged$,
-} from "@/state/chains/chain.state"
+import { client$, selectedChainChanged$ } from "@/state/chains/chain.state"
 import {
   BlockInfo,
   concatMapEager,
@@ -23,7 +19,6 @@ import {
   catchError,
   combineLatest,
   concat,
-  distinctUntilChanged,
   EMPTY,
   filter,
   ignoreElements,
@@ -41,6 +36,7 @@ import {
   withLatestFrom,
 } from "rxjs"
 import { v4 as uuid } from "uuid"
+import { selectedBlock$ } from "./BlockPicker"
 
 export type StorageMetadataEntry = {
   pallet: string
@@ -56,8 +52,8 @@ export const [entryChange$, selectEntry] = createSignal<{
   entry?: string | null
 }>()
 
-const palletEntries$ = runtimeCtx$.pipe(
-  map((ctx) =>
+const palletEntries$ = selectedBlock$.pipe(
+  map(({ ctx }) =>
     Object.fromEntries(
       ctx.lookup.metadata.pallets.map((p) => [p.name, p.storage?.items ?? []]),
     ),
@@ -104,9 +100,9 @@ export const partialEntry$ = state(
 )
 
 export const selectedEntry$ = state(
-  partialEntry$.pipe(
-    withLatestFrom(palletEntries$, runtimeCtx$),
-    map(([partialEntry, entries, ctx]): StorageMetadataEntry | null => {
+  combineLatest([partialEntry$, selectedBlock$]).pipe(
+    withLatestFrom(palletEntries$),
+    map(([[partialEntry, { ctx }], entries]): StorageMetadataEntry | null => {
       const entry = partialEntry.pallet
         ? entries[partialEntry.pallet]?.find(
             (v) => v.name === partialEntry.entry,
@@ -176,17 +172,18 @@ export const [newStorageSubscription$, addStorageSubscription] = createSignal<{
     type: number
     ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">
     hash: HexString | null
-    value: unknown
+    payload: unknown
   }>
   value?: Observable<{
     type: number
     ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">
+    hash: string | null
     payload: unknown
   }>
 }>()
 export const [removeStorageSubscription$, removeStorageSubscription] =
   createKeyedSignal<string>()
-export const [togglePause$, toggleSubscriptionPause] =
+export const [stopStorageSubscription$, stopStorageSubscription] =
   createKeyedSignal<string>()
 
 export type StorageSubscriptionValue = {
@@ -199,7 +196,7 @@ export type StorageSubscriptionValue = {
       hash: string | null
       ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">
       type: number
-      value: unknown
+      payload: unknown
     }
     error: string
   }>
@@ -208,11 +205,11 @@ export type StorageSubscription = {
   name: string
   args: unknown[] | null
   single: boolean
-  paused: boolean
   completed: boolean
   status: Enum<{
     loading: undefined
     value: {
+      hash: string | null
       ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">
       type: number
       payload: unknown
@@ -226,7 +223,7 @@ const getStatus$ = (
     type: number
     ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">
     hash: HexString | null
-    value: unknown
+    payload: unknown
   }>,
   single: boolean,
   keyCodec?: (hash: HexString) => Observable<KeyCodec>,
@@ -362,10 +359,6 @@ const [getStorageSubscription$, storageSubscriptionKeyChange$] = partitionByKey(
           keyCodec,
           ...props
         }): Observable<StorageSubscription> => {
-          const paused$ = togglePause$(id).pipe(
-            scan((v) => !v, false),
-            startWith(false),
-          )
           const status$: Observable<StorageSubscription["status"]> = value
             ? value.pipe(map((v) => Enum("value", v)))
             : getStatus$(at!, props.single, keyCodec)
@@ -379,16 +372,16 @@ const [getStorageSubscription$, storageSubscriptionKeyChange$] = partitionByKey(
               status: Enum("loading"),
             }),
             shareReplay(1),
+            takeUntil(stopStorageSubscription$(id)),
           )
           const completed$ = concat(
             of(false),
             result$.pipe(ignoreElements()),
             of(true),
           )
-          return combineLatest([paused$, completed$, result$]).pipe(
-            map(([paused, completed, result]) => ({
+          return combineLatest([completed$, result$]).pipe(
+            map(([completed, result]) => ({
               ...result,
-              paused,
               completed,
             })),
           )
@@ -409,16 +402,7 @@ export const storage$ = storageSubscriptionKeys$
 
 export const storageSubscription$ = state(
   (key: string): Observable<StorageSubscription> =>
-    getStorageSubscription$(key).pipe(
-      // Don't propagate if paused
-      distinctUntilChanged((prev, current) => {
-        // if it's not paused, mark it as "not equal" for the update to go through
-        if (!current.paused) return false
-        // otherwise, don't propagate if we were previously paused
-        // but do propagate if we weren't: Because we still need to show the "paused" status.
-        return prev.paused === current.paused
-      }),
-    ),
+    getStorageSubscription$(key),
   null,
 )
 

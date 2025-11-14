@@ -5,8 +5,6 @@ import { CopyText } from "@/components/Copy"
 import SliderToggle from "@/components/Toggle"
 import {
   chainClient$,
-  dynamicBuilder$,
-  runtimeCtx$,
   runtimeCtxAt$,
   unsafeApi$,
 } from "@/state/chains/chain.state"
@@ -23,6 +21,7 @@ import { Binary } from "polkadot-api"
 import { FC } from "react"
 import {
   combineLatest,
+  distinctUntilChanged,
   filter,
   firstValueFrom,
   from,
@@ -32,9 +31,11 @@ import {
   scan,
   startWith,
   switchMap,
+  take,
   withLatestFrom,
 } from "rxjs"
 import { twMerge } from "tailwind-merge"
+import { selectedBlock$ } from "./BlockPicker"
 import {
   addStorageSubscription,
   selectedEntry$,
@@ -49,74 +50,97 @@ export const StorageQuery: FC = () => {
   if (!selectedEntry) return null
 
   const submit = async () => {
-    const [entry, unsafeApi, keyValues, keysEnabled] = await firstValueFrom(
-      combineLatest([selectedEntry$, unsafeApi$, keyValues$, keysEnabled$]),
-    )
+    const [entry, unsafeApi, keyValues, keysEnabled, { hash }] =
+      await firstValueFrom(
+        combineLatest([
+          selectedEntry$,
+          unsafeApi$,
+          keyValues$,
+          keysEnabled$,
+          selectedBlock$,
+        ]),
+      )
     const args = keyValues.slice(0, keysEnabled)
     const storageEntry = unsafeApi.query[entry!.pallet][entry!.entry]
     const single = keyValues.length === keysEnabled
     const argString = [...args.map(stringifyArg), ...(single ? [] : ["…"])]
 
-    addStorageSubscription({
-      name: `${entry!.pallet}.${entry!.entry}(${argString})`,
-      args,
-      single,
-      keyCodec: (hash) =>
-        runtimeCtxAt$(hash).pipe(
-          map(
-            (ctx) =>
-              ctx.dynamicBuilder.buildStorage(entry!.pallet, entry!.entry).keys,
-          ),
-        ),
-      at: (hash) => {
-        const value$ = from(
-          single
-            ? storageEntry.getValue(...args, {
-                at: hash,
-              })
-            : storageEntry.getEntries(...args, {
-                at: hash,
-              }),
-        )
-        const hash$ = single
-          ? chainClient$.pipe(
-              switchMap(({ chainHead }) =>
-                chainHead.storage$(hash, "hash", (ctx) =>
-                  ctx.dynamicBuilder
-                    .buildStorage(entry!.pallet, entry!.entry)
-                    .keys.enc(...args),
-                ),
+    const at = (hash: string) => {
+      const value$ = from(
+        single
+          ? storageEntry.getValue(...args, {
+              at: hash,
+            })
+          : storageEntry.getEntries(...args, {
+              at: hash,
+            }),
+      )
+      const hash$ = single
+        ? chainClient$.pipe(
+            switchMap(({ chainHead }) =>
+              chainHead.storage$(hash, "hash", (ctx) =>
+                ctx.dynamicBuilder
+                  .buildStorage(entry!.pallet, entry!.entry)
+                  .keys.enc(...args),
               ),
+            ),
+          )
+        : of(null)
+      const ctxType$ = runtimeCtxAt$(hash).pipe(
+        map((ctx) => {
+          const pallet = ctx.lookup.metadata.pallets.find(
+            (p) => p.name === entry!.pallet,
+          )
+          const ctxEntry = pallet?.storage?.items.find(
+            (it) => it.name === entry!.entry,
+          )
+          if (!ctxEntry) {
+            throw new Error(
+              `Storage entry ${entry?.pallet}.${entry?.entry} not found in ${hash}`,
             )
-          : of(null)
-        const ctxType$ = runtimeCtxAt$(hash).pipe(
-          map((ctx) => {
-            const pallet = ctx.lookup.metadata.pallets.find(
-              (p) => p.name === entry!.pallet,
-            )
-            const ctxEntry = pallet?.storage?.items.find(
-              (it) => it.name === entry!.entry,
-            )
-            if (!ctxEntry) {
-              throw new Error(
-                `Storage entry ${entry?.pallet}.${entry?.entry} not found in ${hash}`,
-              )
-            }
-            const type =
-              ctxEntry.type.tag === "plain"
-                ? ctxEntry.type.value
-                : ctxEntry.type.value.value
+          }
+          const type =
+            ctxEntry.type.tag === "plain"
+              ? ctxEntry.type.value
+              : ctxEntry.type.value.value
 
-            return { ctx, type }
-          }),
-        )
+          return { ctx, type }
+        }),
+      )
 
-        return combineLatest([
-          combineLatest({ value: value$, hash: hash$ }),
-          ctxType$,
-        ]).pipe(map(([a, b]) => ({ ...a, ...b })))
-      },
-    })
+      return combineLatest([
+        combineLatest({ payload: value$, hash: hash$ }),
+        ctxType$,
+      ]).pipe(
+        map(([a, b]) => ({ ...a, ...b })),
+        take(1),
+      )
+    }
+    const keyCodec = (hash: string) =>
+      runtimeCtxAt$(hash).pipe(
+        map(
+          (ctx) =>
+            ctx.dynamicBuilder.buildStorage(entry!.pallet, entry!.entry).keys,
+        ),
+      )
+
+    if (hash) {
+      addStorageSubscription({
+        name: `${entry!.pallet}.${entry!.entry}(${argString})`,
+        args,
+        single,
+        keyCodec,
+        value: at(hash),
+      })
+    } else {
+      addStorageSubscription({
+        name: `${entry!.pallet}.${entry!.entry}(${argString})`,
+        args,
+        single,
+        keyCodec,
+        at,
+      })
+    }
   }
 
   return (
@@ -134,6 +158,7 @@ const keys$ = selectedEntry$.pipeState(
   filter((e) => !!e),
   map((entry) => entry.key),
   withDefault([] as number[]),
+  distinctUntilChanged((a, b) => a.join(",") === b.join(",")),
 )
 
 const hashers$ = selectedEntry$.pipeState(
@@ -222,8 +247,8 @@ export const StorageKeysInput: FC<{
 }
 
 const builderState$ = state(
-  runtimeCtx$.pipe(
-    map((ctx) => ({
+  selectedBlock$.pipe(
+    map(({ ctx }) => ({
       ...ctx.dynamicBuilder,
       lookup: ctx.lookup,
     })),
@@ -356,10 +381,13 @@ const StorageKeyInput: FC<{
 }
 
 const keyCodec$ = state(
-  combineLatest([dynamicBuilder$, selectedEntry$]).pipe(
-    map(([builder, selectedEntry]) =>
+  combineLatest([selectedBlock$, selectedEntry$]).pipe(
+    map(([{ ctx }, selectedEntry]) =>
       selectedEntry
-        ? builder.buildStorage(selectedEntry.pallet, selectedEntry.entry).keys
+        ? ctx.dynamicBuilder.buildStorage(
+            selectedEntry.pallet,
+            selectedEntry.entry,
+          ).keys
         : null,
     ),
   ),

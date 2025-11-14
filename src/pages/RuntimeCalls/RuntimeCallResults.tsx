@@ -1,5 +1,7 @@
+import { PathsRoot } from "@/codec-components/common/paths.state"
 import { ButtonGroup } from "@/components/ButtonGroup"
-import { useStateObservable } from "@react-rxjs/core"
+import { runtimeCtx$ } from "@/state/chains/chain.state"
+import { useStateObservable, withDefault } from "@react-rxjs/core"
 import { Trash2 } from "lucide-react"
 import { FC, useState } from "react"
 import { ValueDisplay } from "../Storage/StorageSubscriptions"
@@ -9,7 +11,6 @@ import {
   runtimeCallResult$,
   runtimeCallResultKeys$,
 } from "./runtimeCalls.state"
-import { PathsRoot } from "@/codec-components/common/paths.state"
 
 export const RuntimeCallResults: FC = () => {
   const keys = useStateObservable(runtimeCallResultKeys$)
@@ -71,10 +72,14 @@ const RuntimeCallResultBox: FC<{ subscription: string }> = ({
   )
 }
 
+const defaultedCtx$ = runtimeCtx$.pipeState(withDefault(null))
 const ResultDisplay: FC<{
   runtimeCallResult: RuntimeCallResult
   mode: "json" | "decoded"
 }> = ({ runtimeCallResult, mode }) => {
+  const ctx = useStateObservable(defaultedCtx$)
+  if (!ctx) return null
+
   if ("error" in runtimeCallResult) {
     return (
       <div className="text-sm">
@@ -92,6 +97,7 @@ const ResultDisplay: FC<{
     <div className="max-h-[60svh] overflow-auto">
       <ValueDisplay
         mode={mode}
+        ctx={ctx}
         type={runtimeCallResult.type}
         value={runtimeCallResult.result}
         title={"Result"}
