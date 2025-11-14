@@ -79,6 +79,7 @@ export const BlockPicker = () => {
   return (
     <div className="flex items-center">
       <Input
+        className="bg-input"
         placeholder="Block hash or number"
         value={value}
         onChange={(evt) => setValue(evt.target.value)}
