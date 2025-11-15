@@ -16,6 +16,7 @@
   "dependencies": {
     "@acala-network/chopsticks-core": "^1.2.4",
     "@ledgerhq/hw-transport-webusb": "^6.29.13",
+    "@monaco-editor/react": "^4.7.0",
     "@polkadot-api/descriptors": "file:.papi/descriptors",
     "@polkadot-api/json-rpc-provider-proxy": "^0.2.6",
     "@polkadot-api/metadata-builders": "^0.13.7",
@@ -40,7 +41,6 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@react-rxjs/core": "^0.10.8",
     "@react-rxjs/utils": "^0.9.7",
-    "buffer": "^6.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "idb-keyval": "^6.2.2",

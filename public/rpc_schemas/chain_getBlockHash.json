@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "chain_getBlockHash params",
+  "oneOf": [
+    {
+      "type": "array",
+      "description": "[] or [blockNumber].",
+      "maxItems": 1,
+      "items": {
+        "type": "number"
+      }
+    }
+  ]
+}
