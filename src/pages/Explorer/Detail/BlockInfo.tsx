@@ -1,7 +1,7 @@
 import { CopyText } from "@/components/Copy"
 import { Link } from "@/hashParams"
 import { client$ } from "@/state/chains/chain.state"
-import { polkadot_people } from "@polkadot-api/descriptors"
+import { Polkadot_people } from "@polkadot-api/descriptors"
 import {
   _void,
   Bytes,
@@ -13,15 +13,27 @@ import {
 } from "@polkadot-api/substrate-bindings"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { combineKeys } from "@react-rxjs/utils"
-import { BlockHeader } from "polkadot-api"
+import { BlockHeader, PolkadotClient } from "polkadot-api"
 import { AddressIdentity } from "polkahub"
-import { FC, ReactNode } from "react"
-import { filter, map, startWith, switchMap, take } from "rxjs"
+import { FC, ReactNode, useEffect } from "react"
+import {
+  catchError,
+  combineLatest,
+  filter,
+  from,
+  map,
+  Observable,
+  startWith,
+  switchMap,
+  take,
+} from "rxjs"
 import {
   BlockInfo,
+  blockInfo$,
   blockInfoState$,
   blocksByHeight$,
   BlockState,
+  finalized$,
 } from "../block.state"
 import { BlockStatusIcon, statusText } from "./BlockState"
 
@@ -96,23 +108,77 @@ const DetailTile: FC<{ label: string; children: ReactNode }> = ({
   </div>
 )
 
+const withHodl =
+  <T,>(hodl: () => () => void) =>
+  (source$: Observable<T>) =>
+    new Observable<T>((obs) => {
+      obs.add(source$.subscribe(obs))
+      try {
+        const hodled = hodl()
+        obs.add(hodled)
+      } catch (_) {
+        // Nothing, it might happen if the block is not pinned
+      }
+      return obs
+    })
+
+const validatorCache: WeakMap<
+  PolkadotClient,
+  Record<number, string[]>
+> = new WeakMap()
+
+const fetchValidators = (
+  client: PolkadotClient,
+  at: HexString,
+): Promise<string[]> =>
+  client.getUnsafeApi<Polkadot_people>().query.Session.Validators.getValue({
+    at,
+  })
+const fetchCachedValidators$ = (client: PolkadotClient, at: HexString) => {
+  const api = client.getUnsafeApi<Polkadot_people>()
+  return from(api.query.Session.CurrentIndex.getValue()).pipe(
+    switchMap(async (idx) => {
+      const cache = validatorCache.get(client) ?? {}
+      validatorCache.set(client, cache)
+
+      const cached = cache[idx]
+      if (cached) return { idx, validators: cached }
+      const validators = await fetchValidators(client, at)
+      return { idx, validators }
+    }),
+  )
+}
 const validators$ = state(
   (block: HexString) =>
     client$.pipe(
-      switchMap(async (client) => {
-        try {
-          return await client
-            .getTypedApi(polkadot_people)
-            .query.Session.Validators.getValue({
-              at: block,
-            })
-        } catch (ex) {
-          console.error(ex)
-          return null
-        }
-      }),
+      switchMap((client) =>
+        combineLatest([
+          fetchCachedValidators$(client, block),
+          blockInfo$(block).pipe(map((v) => v.status)),
+        ]).pipe(
+          map(([{ idx, validators }, blockStatus]) => {
+            if (
+              blockStatus === BlockState.Finalized ||
+              blockStatus === BlockState.Unknown
+            ) {
+              const cache = validatorCache.get(client) ?? {}
+              validatorCache.set(client, cache)
+              cache[idx] = validators
+            }
+            return validators
+          }),
+          withHodl(() => client.hodlBlock(block)),
+          take(1),
+          catchError(() => [null]),
+        ),
+      ),
     ),
   null,
+)
+
+// Subscribe to the validators of the finalized block so that best blocks author's of the same session will load faster
+const finalizedValidators$ = finalized$.pipe(
+  switchMap((block) => validators$(block.hash)),
 )
 
 const Author: FC<{ hash: HexString; header: BlockHeader }> = ({
@@ -121,6 +187,11 @@ const Author: FC<{ hash: HexString; header: BlockHeader }> = ({
 }) => {
   const validators = useStateObservable(validators$(hash))
   const idx = getAuthorityIdx(header)
+
+  useEffect(() => {
+    const sub = finalizedValidators$.subscribe()
+    return () => sub.unsubscribe()
+  }, [])
 
   if (idx == null || validators == null) return <div className="h-10" />
 
