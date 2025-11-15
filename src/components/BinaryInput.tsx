@@ -4,6 +4,7 @@ import { Binary } from "@polkadot-api/substrate-bindings"
 import { FileUp } from "lucide-react"
 import { FC, useState } from "react"
 import { twMerge } from "tailwind-merge"
+import { SwitchBinary } from "./Icons"
 import { TextInputField } from "./TextInputField"
 import { useGenericSynchronizeInput } from "./useSynchroniseInput"
 
@@ -76,6 +77,19 @@ export const BinaryInput: React.FC<{
             uploadError ? "border-red-600" : null,
           )}
         >
+          <button
+            className="align-middle mr-2 cursor-pointer text-foreground/90"
+            type="button"
+            onClick={() => {
+              if (inputValue.startsWith("0x")) {
+                setLocalInput(serializeValue(Binary.fromHex(inputValue)))
+              } else {
+                setLocalInput(Binary.fromText(inputValue).asHex())
+              }
+            }}
+          >
+            <SwitchBinary size={24} />
+          </button>
           {input}
           <label title="Load from file" className="text-foreground/80">
             <FileUp size={16} />
