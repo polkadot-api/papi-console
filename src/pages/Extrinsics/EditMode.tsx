@@ -8,6 +8,7 @@ import { SubtreeFocus } from "@/codec-components/common/SubtreeFocus"
 import { EditCodec } from "@/codec-components/EditCodec"
 import { TreeCodec } from "@/codec-components/EditCodec/Tree/index"
 import { FocusPath } from "@/codec-components/LookupTypeEdit"
+import { cn } from "@/lib/utils"
 import {
   CodecComponentUpdate,
   CodecComponentValue,
@@ -31,6 +32,7 @@ export const EditMode: React.FC<{
   }, [])
 
   const [focusingSubtree, setFocusingSubtree] = useState<string[] | null>(null)
+  const [collapsed, setCollapsed] = useState(false)
 
   return (
     <div className="flex flex-col items-start overflow-hidden">
@@ -39,6 +41,8 @@ export const EditMode: React.FC<{
         typeId={codecType}
         value={focusingSubtree}
         onFocus={setFocusingSubtree}
+        collapsed={collapsed}
+        onToggleCollapse={() => setCollapsed((c) => !c)}
       />
       <SubtreeFocus
         value={{ callback: setFocusingSubtree, path: focusingSubtree }}
@@ -50,7 +54,12 @@ export const EditMode: React.FC<{
           >
             <div
               ref={treeRef}
-              className="min-w-fit w-96 sticky top-0 pl-2 pb-16 leading-loose overflow-hidden max-sm:hidden text-sm"
+              className={cn(
+                "min-w-fit w-96 sticky top-0 pl-2 pb-16 leading-loose overflow-hidden max-sm:hidden text-sm",
+                {
+                  hidden: collapsed,
+                },
+              )}
             >
               <div className="relative">
                 {!value.value ? (

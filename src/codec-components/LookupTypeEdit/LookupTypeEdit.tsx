@@ -20,6 +20,7 @@ import { EditCodec } from "../EditCodec"
 import { TreeCodec } from "../EditCodec/Tree"
 import { BinaryDisplay } from "./BinaryDisplay"
 import { FocusPath } from "./FocusPath"
+import { cn } from "@/lib/utils"
 
 const editTypeMetadataProps$ = state(
   runtimeCtx$.pipe(
@@ -41,6 +42,7 @@ export const LookupTypeEdit: FC<{
   const [treeRef, setTreeRef] = useState<HTMLDivElement | null>(null)
   const [listRef, setListRef] = useState<HTMLDivElement | null>(null)
   const [focusingSubtree, setFocusingSubtree] = useState<string[] | null>(null)
+  const [collapsed, setCollapsed] = useState(false)
 
   useEffect(() => {
     if (!listRef || !treeRef) return
@@ -65,6 +67,8 @@ export const LookupTypeEdit: FC<{
           typeId={type}
           value={focusingSubtree}
           onFocus={setFocusingSubtree}
+          collapsed={collapsed}
+          onToggleCollapse={() => setCollapsed((c) => !c)}
         />
       )}
       <SubtreeFocus
@@ -78,7 +82,12 @@ export const LookupTypeEdit: FC<{
             {tree && (
               <div
                 ref={setTreeRef}
-                className="w-96 sticky top-0 pl-2 pb-16 leading-loose overflow-hidden max-sm:hidden"
+                className={cn(
+                  "w-96 sticky top-0 pl-2 pb-16 leading-loose overflow-hidden max-sm:hidden",
+                  {
+                    hidden: collapsed,
+                  },
+                )}
               >
                 <div className="relative">
                   <TreeCodec {...codecProps} />

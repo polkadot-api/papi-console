@@ -1,6 +1,7 @@
 import { lookupToType, TypeIcon, TypeIcons } from "@/components/Icons"
 import { getLookupFn, Var } from "@polkadot-api/metadata-builders"
 import { UnifiedMetadata } from "@polkadot-api/substrate-bindings"
+import { ArrowLeftToLine, ArrowRightToLine } from "lucide-react"
 import { FC, ReactElement } from "react"
 import { twMerge as clsx } from "tailwind-merge"
 
@@ -9,12 +10,23 @@ export const FocusPath: FC<{
   typeId: number
   value: string[] | null
   onFocus: (value: string[] | null) => void
-}> = ({ metadata, typeId, value, onFocus }) => {
+  collapsed?: boolean
+  onToggleCollapse?: () => void
+}> = ({ metadata, typeId, value, onFocus, collapsed, onToggleCollapse }) => {
   const breadcrumbs = getBreadcrumbs(metadata, typeId, value ?? [], onFocus)
 
   return (
     <div className="shrink-0 px-2">
       <div className="flex max-w-full flex-wrap gap-1 items-center border border-border text-sm px-2 py-1">
+        {onToggleCollapse ? (
+          <button onClick={onToggleCollapse} className="max-sm:hidden">
+            {collapsed ? (
+              <ArrowRightToLine size={16} />
+            ) : (
+              <ArrowLeftToLine size={16} />
+            )}
+          </button>
+        ) : null}
         {breadcrumbs.map((v, i) => (
           <span key={i} className="whitespace-nowrap flex gap-1 items-center">
             {i > 0 && <span className="text-foreground/50 mx-2">&gt;</span>}
