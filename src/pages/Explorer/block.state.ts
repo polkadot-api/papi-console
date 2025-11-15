@@ -1,7 +1,7 @@
 import { chopsticksInstance$ } from "@/chopsticks/chopsticks"
 import { chainClient$, client$ } from "@/state/chains/chain.state"
 import { SystemEvent } from "@polkadot-api/observable-client"
-import { state } from "@react-rxjs/core"
+import { liftSuspense, state } from "@react-rxjs/core"
 import { combineKeys, partitionByKey } from "@react-rxjs/utils"
 import { FixedSizeBinary, HexString, PolkadotClient } from "polkadot-api"
 import {
@@ -77,7 +77,7 @@ const finalizedBlocks$ = state(
     }),
   ),
 )
-finalizedBlocks$.subscribe()
+finalizedBlocks$.pipe(liftSuspense()).subscribe()
 
 export const [blockInfo$, recordedBlocks$] = partitionByKey(
   client$.pipe(switchMap((client) => client.blocks$)),
@@ -242,9 +242,9 @@ export const inMemoryBlocks$ = state(
     blockInfo$(key).pipe(startWith(null)),
   ).pipe(repeat()),
 )
-inMemoryBlocks$.subscribe()
+inMemoryBlocks$.pipe(liftSuspense()).subscribe()
 
-const blockHash$ = (hashOrHeight: string) =>
+export const blockHash$ = (hashOrHeight: string) =>
   hashOrHeight.length > 63
     ? of(hashOrHeight.startsWith("0x") ? hashOrHeight : `0x${hashOrHeight}`)
     : client$.pipe(

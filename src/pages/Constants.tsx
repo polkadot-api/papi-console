@@ -1,24 +1,24 @@
-import { lookup$, runtimeCtx$ } from "@/state/chains/chain.state"
 import { ViewCodec } from "@/codec-components/ViewCodec"
 import { ButtonGroup } from "@/components/ButtonGroup"
 import { DocsRenderer } from "@/components/DocsRenderer"
 import { ExpandBtn } from "@/components/Expand"
 import { LoadingMetadata } from "@/components/Loading"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { withSubscribe } from "@/components/withSuspense"
-import { CodecComponentType } from "@polkadot-api/react-builder"
+import { lookup$, runtimeCtx$ } from "@/state/chains/chain.state"
 import { getTypeComplexity } from "@/utils/shape"
-import { state, useStateObservable } from "@react-rxjs/core"
+import { CodecComponentType } from "@polkadot-api/react-builder"
+import { state, useStateObservable, withDefault } from "@react-rxjs/core"
 import { Dot } from "lucide-react"
 import { HexString } from "polkadot-api"
 import { FC, useState } from "react"
 import { map } from "rxjs"
 import { twMerge } from "tailwind-merge"
 import { ValueDisplay } from "./Storage/StorageSubscriptions"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 
 const metadataConstants$ = state(
   lookup$.pipe(
@@ -154,11 +154,14 @@ const ConstantEntry: FC<{
   )
 }
 
+const defaultedCtx$ = runtimeCtx$.pipeState(withDefault(null))
 const ConstantValue: FC<{ type: number; decoded: unknown }> = ({
   type,
   decoded,
 }) => {
   const [mode, setMode] = useState<"json" | "decoded">("decoded")
+  const ctx = useStateObservable(defaultedCtx$)
+  if (!ctx) return null
 
   return (
     <div className="pl-6 py-2 flex flex-col gap-2 items-start overflow-hidden w-full">
@@ -177,7 +180,13 @@ const ConstantValue: FC<{ type: number; decoded: unknown }> = ({
         ]}
       />
       <div className="overflow-auto w-full">
-        <ValueDisplay mode={mode} type={type} value={decoded} title="Value" />
+        <ValueDisplay
+          mode={mode}
+          ctx={ctx}
+          type={type}
+          value={decoded}
+          title="Value"
+        />
       </div>
     </div>
   )

@@ -3,23 +3,33 @@ import { ViewCodec } from "@/codec-components/ViewCodec"
 import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
 import { ButtonGroup } from "@/components/ButtonGroup"
 import { JsonDisplay } from "@/components/JsonDisplay"
-import { dynamicBuilder$, metadata$ } from "@/state/chains/chain.state"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { Link } from "@/hashParams"
+import { cn } from "@/lib/utils"
+import { shortStr } from "@/utils"
 import { ViewValue } from "@/ViewValue"
+import { RuntimeContext } from "@polkadot-api/observable-client"
 import { CodecComponentType, NOTIN } from "@polkadot-api/react-builder"
-import { state, useStateObservable } from "@react-rxjs/core"
-import { PauseCircle, PlayCircle, Trash2 } from "lucide-react"
-import { Binary } from "polkadot-api"
-import { FC, useMemo, useState } from "react"
+import { Button } from "@polkahub/ui-components"
+import { useStateObservable } from "@react-rxjs/core"
+import { ChevronLeft, ChevronRight, StopCircle, Trash2 } from "lucide-react"
+import { Binary, Enum } from "polkadot-api"
+import { FC, MouseEvent, ReactNode, useMemo, useState } from "react"
 import { Virtuoso } from "react-virtuoso"
+import { BlockState } from "../Explorer/block.state"
+import { BlockStatusIcon } from "../Explorer/Detail/BlockState"
 import {
   KeyCodec,
   removeStorageSubscription,
-  StorageSubscription,
+  stopStorageSubscription,
   storageSubscription$,
   storageSubscriptionKeys$,
-  toggleSubscriptionPause,
+  StorageSubscriptionValue,
 } from "./storage.state"
-import { cn } from "@/lib/utils"
 
 export const StorageSubscriptions: FC = () => {
   const keys = useStateObservable(storageSubscriptionKeys$)
@@ -41,7 +51,206 @@ export const StorageSubscriptions: FC = () => {
 const StorageSubscriptionBox: FC<{ subscription: string }> = ({
   subscription,
 }) => {
+  const storageSubscription = useStateObservable(
+    storageSubscription$(subscription),
+  )
+  if (!storageSubscription) return null
+
+  switch (storageSubscription.status.type) {
+    case "loading":
+      return (
+        <SubscriptionBox subscription={subscription}>
+          {() => <div>Loading…</div>}
+        </SubscriptionBox>
+      )
+    case "value":
+      return <ValueSubscriptionBox subscription={subscription} />
+    case "values":
+      return <ValuesSubscriptionBox subscription={subscription} />
+  }
+}
+
+const ValueSubscriptionBox: FC<{ subscription: string }> = ({
+  subscription,
+}) => {
+  const storageSubscription = useStateObservable(
+    storageSubscription$(subscription),
+  )
+  if (!storageSubscription) return null
+  const status = storageSubscription.status
+  if (status.type !== "value") return null
+  const { ctx, payload, type, hash } = status.value
+
+  return (
+    <SubscriptionBox
+      subscription={subscription}
+      actions={
+        hash ? (
+          <div className="text-center">
+            <p className="text-sm">Hash</p>
+            <Link to={`/explorer/${hash}`} className="underline">
+              <p className="font-mono text-xs">{shortStr(hash, 6)}</p>
+            </Link>
+          </div>
+        ) : null
+      }
+    >
+      {(mode) => (
+        <ResultDisplay
+          id={subscription}
+          subValue={{
+            result: Enum("success", {
+              ctx,
+              type,
+              payload: payload,
+              hash: null,
+            }),
+          }}
+          single
+          mode={mode}
+        />
+      )}
+    </SubscriptionBox>
+  )
+}
+
+const onHold = (cb: () => void) => (evt: MouseEvent) => {
+  const target = evt.target
+  if (!target) return
+
+  let paused = false
+  let repeatingToken: any = null
+  const startToken = setTimeout(() => {
+    repeatingToken = setInterval(() => {
+      if (paused) return
+      cb()
+    }, 80)
+  }, 300)
+
+  const stop = () => {
+    target.removeEventListener("mouseout", pause)
+    target.removeEventListener("mouseenter", resume)
+    clearTimeout(startToken)
+    clearTimeout(repeatingToken)
+  }
+  const pause = () => {
+    paused = true
+  }
+  const resume = () => {
+    paused = false
+  }
+
+  window.addEventListener("mouseup", stop, {
+    once: true,
+  })
+  target.addEventListener("mouseout", pause)
+  target.addEventListener("mouseenter", resume)
+}
+
+const ValuesSubscriptionBox: FC<{ subscription: string }> = ({
+  subscription,
+}) => {
+  const storageSubscription = useStateObservable(
+    storageSubscription$(subscription),
+  )
+  const [target, setTarget] = useState<number | "best">("best")
+
+  if (!storageSubscription) return null
+  const status = storageSubscription.status
+  if (status.type !== "values") return null
+
+  const targetValueIdx =
+    target === "best"
+      ? status.value.length - 1
+      : status.value.findIndex((v) => v.height > target) - 1
+  const targetValue = status.value[targetValueIdx] as
+    | StorageSubscriptionValue
+    | undefined
+  const hasNext = targetValueIdx < status.value.length - 1
+  const hasPrev = targetValueIdx > 0
+
+  const incrementTarget = (v: number) => {
+    setTarget((target) => {
+      const targetValueIdx =
+        target === "best"
+          ? status.value.length - 1
+          : status.value.findIndex((v) => v.height > target) - 1
+
+      const nextIdx = targetValueIdx + v
+      return nextIdx === status.value.length - 1
+        ? "best"
+        : status.value[nextIdx].height
+    })
+  }
+
+  return (
+    <SubscriptionBox
+      subscription={subscription}
+      actions={
+        targetValue ? (
+          <div className="flex items-center gap-1">
+            <Button
+              variant="secondary"
+              className="has-[>svg]:px-1"
+              disabled={!hasPrev}
+              onClick={() => incrementTarget(-1)}
+              onMouseDown={onHold(() => incrementTarget(-1))}
+            >
+              <ChevronLeft />
+            </Button>
+            <div className="text-center">
+              <div className="text-sm flex items-center gap-1 justify-center">
+                <p>{targetValue.height}</p>
+                <BlockStatusIcon
+                  size={20}
+                  state={
+                    targetValue.settled ? BlockState.Finalized : BlockState.Best
+                  }
+                />
+              </div>
+              <Link
+                to={`/explorer/${targetValue.blockHash}`}
+                className="underline"
+              >
+                <p className="font-mono text-xs">
+                  {shortStr(targetValue.blockHash, 6)}
+                </p>
+              </Link>
+            </div>
+            <Button
+              disabled={!hasNext}
+              variant="secondary"
+              className="has-[>svg]:px-1"
+              onClick={() => incrementTarget(1)}
+              onMouseDown={onHold(() => incrementTarget(1))}
+            >
+              <ChevronRight />
+            </Button>
+          </div>
+        ) : null
+      }
+    >
+      {(mode) =>
+        targetValue ? (
+          <ResultDisplay
+            id={subscription}
+            subValue={targetValue}
+            single
+            mode={mode}
+          />
+        ) : null
+      }
+    </SubscriptionBox>
+  )
+}
+
+const SubscriptionBox: FC<{
+  subscription: string
+  actions?: ReactNode
+  children: (mode: "json" | "decoded") => ReactNode
+}> = ({ actions, subscription, children }) => {
   const [mode, setMode] = useState<"json" | "decoded">("decoded")
+
   const storageSubscription = useStateObservable(
     storageSubscription$(subscription),
   )
@@ -59,6 +268,7 @@ const StorageSubscriptionBox: FC<{ subscription: string }> = ({
           {storageSubscription.name}
         </h3>
         <div className="flex items-center shrink-0 gap-2">
+          {actions}
           <ButtonGroup
             value={mode}
             onValueChange={setMode as any}
@@ -73,55 +283,61 @@ const StorageSubscriptionBox: FC<{ subscription: string }> = ({
               },
             ]}
           />
-          {storageSubscription.completed ? null : (
-            <button onClick={() => toggleSubscriptionPause(subscription)}>
-              {storageSubscription.paused ? (
-                <PlayCircle {...iconButtonProps} />
-              ) : (
-                <PauseCircle {...iconButtonProps} />
-              )}
+          {storageSubscription.completed ? (
+            <button onClick={() => removeStorageSubscription(subscription)}>
+              <Trash2 {...iconButtonProps} />
             </button>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button onClick={() => stopStorageSubscription(subscription)}>
+                  <StopCircle {...iconButtonProps} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Stop subscription</TooltipContent>
+            </Tooltip>
           )}
-          <button onClick={() => removeStorageSubscription(subscription)}>
-            <Trash2 {...iconButtonProps} />
-          </button>
         </div>
       </div>
-      {mode === "decoded" ? (
-        <DecodedResultDisplay
-          storageSubscription={storageSubscription}
-          subscriptionKey={subscription}
-        />
-      ) : (
-        <JsonResultDisplay storageSubscription={storageSubscription} />
-      )}
+      {children(mode)}
     </li>
   )
 }
 
+const ResultDisplay: FC<{
+  id: string
+  subValue: Pick<StorageSubscriptionValue, "result" | "keyCodec">
+  single: boolean
+  mode: "json" | "decoded"
+}> = ({ mode, ...props }) =>
+  mode === "decoded" ? (
+    <DecodedResultDisplay {...props} />
+  ) : (
+    <JsonResultDisplay {...props} />
+  )
+
 const DecodedResultDisplay: FC<{
-  storageSubscription: StorageSubscription
-  subscriptionKey: string
-}> = ({ storageSubscription, subscriptionKey }) => {
-  if ("error" in storageSubscription) {
+  id: string
+  subValue: Pick<StorageSubscriptionValue, "result" | "keyCodec">
+  single: boolean
+}> = ({ subValue, single, id }) => {
+  if (subValue.result.type === "error") {
     return (
-      <div className="text-sm text-foreground/50">
-        {storageSubscription.error}
-      </div>
+      <div className="text-sm text-foreground/50">{subValue.result.value}</div>
     )
   }
-  if (!("result" in storageSubscription)) {
-    return <div className="text-sm text-foreground/50">Loading…</div>
-  }
 
-  if (storageSubscription.single) {
+  const { payload: value, ctx, type } = subValue.result.value
+
+  if (single) {
     return (
       <div className="max-h-[60svh] overflow-auto">
-        <PathsRoot.Provider value={subscriptionKey}>
+        <PathsRoot.Provider value={id}>
           <ValueDisplay
             mode="decoded"
-            type={storageSubscription.type}
-            value={storageSubscription.result}
+            type={type}
+            value={value}
+            ctx={ctx}
             title={"Result"}
           />
         </PathsRoot.Provider>
@@ -129,20 +345,21 @@ const DecodedResultDisplay: FC<{
     )
   }
 
-  const values = storageSubscription.result as Array<{
+  const values = subValue.result.value.payload as Array<{
     keyArgs: unknown[]
     value: unknown
   }>
 
   const renderItem = (keyArgs: unknown[], value: unknown, idx: number) => (
     <div key={idx} className={itemClasses}>
-      <PathsRoot.Provider value={`${subscriptionKey}-${idx}`}>
-        <KeyDisplay value={keyArgs} keyCodec={storageSubscription.keyCodec} />
+      <PathsRoot.Provider value={`${id}-${idx}`}>
+        <KeyDisplay value={keyArgs} keyCodec={subValue.keyCodec} />
         <ValueDisplay
           mode="decoded"
           title="Value"
           value={value}
-          type={storageSubscription.type}
+          type={type}
+          ctx={ctx}
         />
       </PathsRoot.Provider>
     </div>
@@ -173,23 +390,16 @@ const DecodedResultDisplay: FC<{
 }
 
 const JsonResultDisplay: FC<{
-  storageSubscription: StorageSubscription
-}> = ({ storageSubscription }) => {
-  if ("error" in storageSubscription) {
+  subValue: Pick<StorageSubscriptionValue, "result" | "keyCodec">
+}> = ({ subValue }) => {
+  if (subValue.result.type === "error") {
     return (
-      <div className="text-sm text-foreground/50">
-        {storageSubscription.error}
-      </div>
+      <div className="text-sm text-foreground/50">{subValue.result.value}</div>
     )
   }
-
-  if (!("result" in storageSubscription)) {
-    return <div className="text-sm text-foreground/50">Loading…</div>
-  }
-
   return (
     <div className="max-h-[60svh] overflow-auto">
-      <JsonDisplay src={storageSubscription.result} />
+      <JsonDisplay src={subValue.result.value.payload} />
     </div>
   )
 }
@@ -197,20 +407,15 @@ const JsonResultDisplay: FC<{
 const itemClasses = "py-2 border-b first:pt-0 last:pb-0 last:border-b-0"
 const VirtuosoItem: FC = (props) => <div {...props} className={itemClasses} />
 
-const metadataState$ = state(metadata$, null)
-const dynamicBuilderState$ = state(dynamicBuilder$, null)
 export const ValueDisplay: FC<{
+  ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">
   type: number
   title: string
   value: unknown | NOTIN
   mode: "decoded" | "json"
-}> = ({ type, title, value, mode }) => {
-  const metadata = useStateObservable(metadataState$)
-  const builder = useStateObservable(dynamicBuilderState$)
-
+}> = ({ ctx, type, title, value, mode }) => {
   const [codec, encodedValue] = useMemo(() => {
-    if (!builder) return [null!, null!]
-    const codec = builder.buildDefinition(type)
+    const codec = ctx.dynamicBuilder.buildDefinition(type)
     const encodedValue = (() => {
       try {
         return codec.enc(value)
@@ -219,9 +424,8 @@ export const ValueDisplay: FC<{
       }
     })()
     return [codec, encodedValue] as const
-  }, [builder, value, type])
+  }, [ctx, value, type])
 
-  if (!metadata || !builder) return null
   if (!encodedValue) {
     return <div className="text-foreground/60">Empty</div>
   }
@@ -240,7 +444,7 @@ export const ValueDisplay: FC<{
               type: CodecComponentType.Initial,
               value: codec.enc(value),
             }}
-            metadata={metadata}
+            metadata={ctx.lookup.metadata}
           />
         </div>
       ) : (
