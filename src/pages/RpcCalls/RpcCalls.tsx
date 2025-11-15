@@ -27,7 +27,7 @@ export const RpcCalls = withSubscribe(
     const methods = useStateObservable(chainRpcMethods$)
     const setSchema = useRef<((method: string | null) => void) | null>(null)
     const [method, _setMethod] = useState<string | null>(null)
-    const [params, setParams] = useState<string>("{\n  \n}")
+    const [params, setParams] = useState<string>("[\n  \n]")
     const theme = useTheme()
 
     const setMethod = (method: string | null) => {
@@ -77,28 +77,25 @@ export const RpcCalls = withSubscribe(
                 if (!model) return
 
                 setSchema.current = (method) => {
-                  monaco.languages.json.jsonDefaults.setDiagnosticsOptions(
-                    method
-                      ? {
-                          validate: true,
-                          schemas: [
-                            {
-                              uri: `${SCHEMA_URL}/rpc_schemas/${method}.json`,
-                              fileMatch: [model.uri.toString()],
-                            },
-                          ],
-                          enableSchemaRequest: true,
-                          schemaRequest: "ignore",
-                        }
-                      : {
-                          validate: false,
-                        },
-                  )
+                  monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+                    validate: true,
+                    schemas: method
+                      ? [
+                          {
+                            uri: `${SCHEMA_URL}/rpc_schemas/${method}.json`,
+                            fileMatch: [model.uri.toString()],
+                          },
+                        ]
+                      : [],
+                    enableSchemaRequest: true,
+                    schemaRequest: "ignore",
+                  })
                   monaco.languages.json.jsonDefaults.setModeConfiguration(
                     method
-                      ? { completionItems: true }
+                      ? { completionItems: true, diagnostics: true }
                       : {
                           completionItems: false,
+                          diagnostics: true,
                         },
                   )
                 }

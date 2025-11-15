@@ -3,20 +3,6 @@
   "title": "state_getReadProof params",
   "oneOf": [
     {
-      "type": "object",
-      "description": "{ keys } or { keys, at }.",
-      "required": ["keys"],
-      "additionalProperties": false,
-      "properties": {
-        "keys": {
-          "type": "array",
-          "description": "Storage keys to prove.",
-          "items": { "$ref": "./common.json#/$defs/hex" }
-        },
-        "at": { "$ref": "./common.json#/$defs/hex" }
-      }
-    },
-    {
       "type": "array",
       "description": "[keys] or [keys, at].",
       "minItems": 1,
@@ -29,6 +15,21 @@
         },
         { "$ref": "./common.json#/$defs/hex" }
       ]
+    },
+    {
+      "type": "object",
+      "description": "{ keys } or { keys, at } or { keys, hash }.",
+      "required": ["keys"],
+      "additionalProperties": false,
+      "properties": {
+        "keys": {
+          "type": "array",
+          "description": "Storage keys to prove.",
+          "items": { "$ref": "./common.json#/$defs/hex" }
+        },
+        "at": { "$ref": "./common.json#/$defs/hex" },
+        "hash": { "$ref": "./common.json#/$defs/hex" }
+      }
     }
   ]
 }
