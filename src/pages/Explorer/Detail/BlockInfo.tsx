@@ -2,7 +2,7 @@ import { CopyText } from "@/components/Copy"
 import { Link } from "@/hashParams"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { combineKeys } from "@react-rxjs/utils"
-import { FC } from "react"
+import { FC, ReactNode } from "react"
 import { filter, map, startWith, switchMap, take } from "rxjs"
 import {
   BlockInfo,
@@ -10,53 +10,77 @@ import {
   blocksByHeight$,
   BlockState,
 } from "../block.state"
+import { BlockAuthor } from "./BlockAuthor"
 import { BlockStatusIcon, statusText } from "./BlockState"
 
 export const BlockInfoView: FC<{
   block: BlockInfo
 }> = ({ block }) => (
-  <div className="p-2">
-    <div className="flex flex-wrap justify-between">
-      <h2 className="font-bold text-xl whitespace-nowrap overflow-hidden text-ellipsis">
-        Block {block.hash}
-      </h2>
-      <p className="text-xl">{block.number.toLocaleString()}</p>
-    </div>
-    <p className="flex gap-1 items-center py-1">
-      Status:
-      <BlockStatusIcon state={block.status} />
-      {statusText[block.status]}
-    </p>
-    <div className="flex flex-wrap justify-between">
-      <div className="flex flex-col">
-        <div>Parent</div>
+  <section className="space-y-4 px-4 py-2">
+    <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="space-y-2">
+        <p className="text-3xl font-semibold tracking-tight">
+          #{block.number.toLocaleString()}
+        </p>
+        <div className="flex flex-wrap items-center gap-2 text-sm font-mono text-foreground/90">
+          <span className="truncate max-w-full">{block.hash}</span>
+          <CopyText className="text-foreground/70" text={block.hash} binary />
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-3 md:justify-end">
+        <StatusChip state={block.status} />
+      </div>
+    </header>
+
+    <div className="grid gap-4 md:grid-cols-2">
+      <DetailTile label="Parent block">
         <BlockLink hash={block.parent} />
-      </div>
-      <div className="flex flex-col items-end">
-        <div>Children</div>
+      </DetailTile>
+      <DetailTile label="Children">
         <BlockChildren hash={block.hash} />
-      </div>
+      </DetailTile>
     </div>
+
     {block.header && (
-      <div className="text-foreground/80 py-2">
-        <p>
-          State root: {block.header.stateRoot.slice(0, 18)}{" "}
-          <CopyText
-            className="align-middle"
-            text={block.header.stateRoot}
-            binary
-          />
-        </p>
-        <p>
-          Extrinsic root: {block.header.extrinsicRoot.slice(0, 18)}{" "}
-          <CopyText
-            className="align-middle"
-            text={block.header.extrinsicRoot}
-            binary
-          />
-        </p>
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+        <DetailTile label="Roots">
+          <HashPreview title="state" value={block.header.stateRoot} />
+          <HashPreview title="extrinsic" value={block.header.extrinsicRoot} />
+        </DetailTile>
+        <DetailTile label="Block author">
+          <BlockAuthor hash={block.hash} header={block.header} />
+        </DetailTile>
       </div>
     )}
+  </section>
+)
+
+const StatusChip: FC<{ state: BlockState }> = ({ state }) => (
+  <span className="inline-flex items-center gap-2 rounded-full border border-foreground/20 bg-foreground/2 px-4 py-2 text-sm font-medium">
+    <BlockStatusIcon size={20} state={state} />
+    {statusText[state]}
+  </span>
+)
+
+const HashPreview: FC<{ title: string; value: string }> = ({
+  title,
+  value,
+}) => (
+  <div className="font-mono text-sm">
+    {title}: {value.slice(0, 18)}…
+    <CopyText className="align-middle" text={value} binary />
+  </div>
+)
+
+const DetailTile: FC<{ label: string; children: ReactNode }> = ({
+  label,
+  children,
+}) => (
+  <div className="rounded-xl border border-foreground/10 bg-foreground/2 p-4">
+    <p className="text-xs uppercase tracking-widest text-foreground/60">
+      {label}
+    </p>
+    <div className="mt-2 text-base text-muted-foreground">{children}</div>
   </div>
 )
 
