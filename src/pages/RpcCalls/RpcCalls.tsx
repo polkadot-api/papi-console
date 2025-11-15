@@ -67,10 +67,10 @@ export const RpcCalls = withSubscribe(
         <div className="w-full">
           JSON Payload
           <Suspense
-            fallback={<div className="border rounded p-1 h-80 w-full" />}
+            fallback={<div className="border rounded h-80 w-full" />}
           >
             <Editor
-              className="border rounded p-1 h-80"
+              className="border rounded h-80"
               language="json"
               onMount={(editor, monaco) => {
                 const model = editor.getModel()
