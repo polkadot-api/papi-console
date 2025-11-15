@@ -1,9 +1,16 @@
 import { chopsticksInstance$ } from "@/chopsticks/chopsticks"
 import { chainClient$, client$ } from "@/state/chains/chain.state"
 import { SystemEvent } from "@polkadot-api/observable-client"
+import { blockHeader } from "@polkadot-api/substrate-bindings"
 import { state } from "@react-rxjs/core"
 import { combineKeys, partitionByKey } from "@react-rxjs/utils"
-import { FixedSizeBinary, HexString, PolkadotClient } from "polkadot-api"
+import {
+  BlockHeader,
+  FixedSizeBinary,
+  HexString,
+  PolkadotClient,
+  BlockInfo as RawBlockInfo,
+} from "polkadot-api"
 import {
   catchError,
   combineLatest,
@@ -33,7 +40,6 @@ import {
   toArray,
   withLatestFrom,
 } from "rxjs"
-import { BlockInfo as RawBlockInfo } from "polkadot-api"
 
 export const finalized$ = client$.pipeState(
   switchMap((client) => client.finalizedBlock$),
@@ -52,13 +58,7 @@ export interface BlockInfo {
   number: number
   body: string[] | null
   events: SystemEvent[] | null
-  header: {
-    parentHash: HexString
-    number: number
-    stateRoot: HexString
-    extrinsicRoot: HexString
-    digests: unknown[]
-  } | null
+  header: BlockHeader | null
   status: BlockState
   diff: Record<string, [string | null, string | null]> | null
 }
@@ -175,6 +175,7 @@ const getUnpinnedBlockInfo$ = (hash: string): Observable<BlockInfo> =>
     ),
   )
 
+const digestCodec = blockHeader.inner.digests.inner
 const getUnpinnedBlockInfoFallback$ = (
   hash: string,
   client: PolkadotClient,
@@ -185,7 +186,7 @@ const getUnpinnedBlockInfoFallback$ = (
         block: {
           extrinsics: HexString[]
           header: {
-            digest: { logs: Array<unknown> }
+            digest: { logs: Array<string> }
             extrinsicsRoot: string
             number: HexString
             parentHash: HexString
@@ -223,7 +224,16 @@ const getUnpinnedBlockInfoFallback$ = (
         body: extrinsics,
         events: null,
         header: {
-          digests: header.digest.logs,
+          digests: header.digest.logs
+            .map((log) => {
+              try {
+                return digestCodec.dec(log)
+              } catch (ex) {
+                console.error(ex)
+                return null
+              }
+            })
+            .filter((v) => v != null),
           extrinsicRoot: header.extrinsicsRoot,
           number,
           parentHash: header.parentHash,

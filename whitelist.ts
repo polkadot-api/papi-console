@@ -5,4 +5,5 @@ export const whitelist: Polkadot_peopleWhitelistEntry[] = [
   "query.Identity.SuperOf",
   "query.System.Account",
   "tx.Balances.transfer_keep_alive",
+  "query.Session.Validators",
 ]

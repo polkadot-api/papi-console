@@ -1,7 +1,20 @@
 import { CopyText } from "@/components/Copy"
 import { Link } from "@/hashParams"
+import { client$ } from "@/state/chains/chain.state"
+import { polkadot_people } from "@polkadot-api/descriptors"
+import {
+  _void,
+  Bytes,
+  HexString,
+  Struct,
+  u32,
+  u64,
+  Variant,
+} from "@polkadot-api/substrate-bindings"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { combineKeys } from "@react-rxjs/utils"
+import { BlockHeader } from "polkadot-api"
+import { AddressIdentity } from "polkahub"
 import { FC } from "react"
 import { filter, map, startWith, switchMap, take } from "rxjs"
 import {
@@ -38,27 +51,103 @@ export const BlockInfoView: FC<{
       </div>
     </div>
     {block.header && (
-      <div className="text-foreground/80 py-2">
-        <p>
-          State root: {block.header.stateRoot.slice(0, 18)}{" "}
-          <CopyText
-            className="align-middle"
-            text={block.header.stateRoot}
-            binary
-          />
-        </p>
-        <p>
-          Extrinsic root: {block.header.extrinsicRoot.slice(0, 18)}{" "}
-          <CopyText
-            className="align-middle"
-            text={block.header.extrinsicRoot}
-            binary
-          />
-        </p>
+      <div className="flex flex-wrap justify-between items-center">
+        <div className="text-foreground/80 py-2">
+          <p>
+            State root: {block.header.stateRoot.slice(0, 18)}{" "}
+            <CopyText
+              className="align-middle"
+              text={block.header.stateRoot}
+              binary
+            />
+          </p>
+          <p>
+            Extrinsic root: {block.header.extrinsicRoot.slice(0, 18)}{" "}
+            <CopyText
+              className="align-middle"
+              text={block.header.extrinsicRoot}
+              binary
+            />
+          </p>
+        </div>
+        <Author hash={block.hash} header={block.header} />
       </div>
     )}
   </div>
 )
+
+const validators$ = state(
+  (block: HexString) =>
+    client$.pipe(
+      switchMap(async (client) => {
+        try {
+          return await client
+            .getTypedApi(polkadot_people)
+            .query.Session.Validators.getValue({
+              at: block,
+            })
+        } catch (ex) {
+          console.error(ex)
+          return null
+        }
+      }),
+    ),
+  null,
+)
+
+const Author: FC<{ hash: HexString; header: BlockHeader }> = ({
+  hash,
+  header,
+}) => {
+  const validators = useStateObservable(validators$(hash))
+  const idx = getAuthorityIdx(header)
+
+  if (idx == null || validators == null) return null
+
+  return (
+    <div>
+      <p className="text-right">Block author</p>
+      <AddressIdentity
+        addr={validators[Number(idx % BigInt(validators.length))]}
+      />
+    </div>
+  )
+}
+
+const DigestWithVRF = Struct({
+  authority_index: u32,
+  slot: u64,
+  vrf_signature: Struct({
+    pre_output: Bytes(32),
+    proof: Bytes(64),
+  }),
+})
+const BabePreDigest = Variant({
+  Uknown: _void,
+  Primary: DigestWithVRF,
+  SecondaryPlain: Struct({
+    authority_index: u32,
+    slot: u64,
+  }),
+  SecondaryVRF: DigestWithVRF,
+})
+
+const getAuthorityIdx = (header: BlockHeader) => {
+  const preRuntime = header.digests.find((d) => d.type === "preRuntime")?.value
+
+  switch (preRuntime?.engine) {
+    case "BABE": {
+      const babe = BabePreDigest.dec(preRuntime.payload)
+      if (!babe.value) return null
+      return BigInt(babe.value.authority_index)
+    }
+    case "aura": {
+      return u64.dec(preRuntime.payload)
+    }
+  }
+
+  return null
+}
 
 const childBlocks$ = state(
   (hash: string) =>
