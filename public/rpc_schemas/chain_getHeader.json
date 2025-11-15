@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "chain_getHeader params",
+  "oneOf": [
+    {
+      "type": "object",
+      "description": "{} or { hash }.",
+      "maxProperties": 1,
+      "additionalProperties": false,
+      "properties": { "hash": { "$ref": "./common.json#/$defs/hex" } }
+    },
+    {
+      "type": "array",
+      "description": "[] or [hash].",
+      "maxItems": 1,
+      "items": { "$ref": "./common.json#/$defs/hex" }
+    }
+  ]
+}

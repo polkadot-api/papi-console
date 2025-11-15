@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "state_getReadProof params",
+  "oneOf": [
+    {
+      "type": "object",
+      "description": "{ keys } or { keys, at }.",
+      "required": ["keys"],
+      "additionalProperties": false,
+      "properties": {
+        "keys": {
+          "type": "array",
+          "description": "Storage keys to prove.",
+          "items": { "$ref": "./common.json#/$defs/hex" }
+        },
+        "at": { "$ref": "./common.json#/$defs/hex" }
+      }
+    },
+    {
+      "type": "array",
+      "description": "[keys] or [keys, at].",
+      "minItems": 1,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "type": "array",
+          "description": "Storage keys to prove.",
+          "items": { "$ref": "./common.json#/$defs/hex" }
+        },
+        { "$ref": "./common.json#/$defs/hex" }
+      ]
+    }
+  ]
+}

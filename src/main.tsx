@@ -1,5 +1,3 @@
-import { Buffer } from "buffer"
-globalThis.Buffer = Buffer
 import { dynamicBuilder$ } from "@/state/chains/chain.state"
 import { RemoveSubscribe, Subscribe } from "@react-rxjs/core"
 import { PolkaHubProvider } from "polkahub"
