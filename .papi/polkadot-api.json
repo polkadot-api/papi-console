@@ -1,12 +1,15 @@
 {
   "version": 0,
   "descriptorPath": ".papi/descriptors",
+  "options": {
+    "whitelist": ".papi/whitelist.ts"
+  },
   "entries": {
     "polkadot_people": {
       "chain": "polkadot_people",
       "metadata": ".papi/metadata/polkadot_people.scale",
       "genesis": "0x67fa177a097bfa18f77ea95ab56e9bcdfeb0e5b8a40e46298bb93e16b6fc5008",
-      "codeHash": "0x5ad90a21b395a16a6d720983bb9fdd096577710beea33c7882bb61a7518dbb79"
+      "codeHash": "0x19d152fef983bf5be332cd07dc6f5c7291d842a4e2d5501eca02a86c10df211d"
     }
   }
 }
