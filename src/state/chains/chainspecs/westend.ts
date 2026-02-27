@@ -1,1 +1,1 @@
-export { chainSpec } from "polkadot-api/chains/westend2"
+export { chainSpec } from "polkadot-api/chains/westend"

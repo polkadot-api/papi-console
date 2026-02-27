@@ -10,7 +10,7 @@ import {
   unifyMetadata,
 } from "@polkadot-api/substrate-bindings"
 import { getExtrinsicDecoder } from "@polkadot-api/tx-utils"
-import { fromHex, toHex } from "@polkadot-api/utils"
+import { fromHex, toHex } from "polkadot-api/utils"
 import { liftSuspense, sinkSuspense, state, SUSPENSE } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
 import { get, update } from "idb-keyval"

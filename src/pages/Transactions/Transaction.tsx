@@ -5,7 +5,7 @@ import { TxBroadcastEvent } from "polkadot-api"
 import * as React from "react"
 import { dismissTransaction, onGoingEvents } from "./transactions.state"
 import { Trash2 } from "lucide-react"
-import { jsonPrint } from "@polkadot-api/utils"
+import { jsonSerialize } from "polkadot-api/utils"
 
 export const Transaction: React.FC<{
   event:
@@ -23,7 +23,11 @@ export const Transaction: React.FC<{
       case "error":
         return <span>There was an unexpected error.</span>
       case "invalid":
-        return <span>Invalid transaction. {jsonPrint(event.value)}</span>
+        return (
+          <span>
+            Invalid transaction. {JSON.stringify(event.value, jsonSerialize)}
+          </span>
+        )
       case "txBestBlocksState": {
         return event.found ? (
           <span>
@@ -58,7 +62,7 @@ export const Transaction: React.FC<{
             </Link>
             {event.ok
               ? "."
-              : `, but it failed: ${jsonPrint(event.dispatchError)}.`}
+              : `, but it failed: ${JSON.stringify(event.dispatchError, jsonSerialize)}.`}
           </span>
         )
     }

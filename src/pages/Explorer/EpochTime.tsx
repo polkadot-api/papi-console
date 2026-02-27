@@ -50,7 +50,7 @@ const epochFromCall$ = runtimeCtx$.pipe(
     }
     return (
       getFromApi("BabeApi", "configuration")?.then((r) =>
-        Number(r.epoch_length),
+        Number((r as any).epoch_length),
       ) ?? of(null)
     )
   }),
@@ -72,7 +72,7 @@ const epochStartBlock$ = state(
         ? client
             .getUnsafeApi()
             .query[pallet][entry].watchValue()
-            .pipe(map(([, duration]) => Number(duration)))
+            .pipe(map(({ value }) => Number((value as any)[1])))
         : of(null)
     }),
   ),

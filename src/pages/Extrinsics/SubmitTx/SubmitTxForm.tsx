@@ -5,7 +5,7 @@ import { trackSignedTx, trackUnsignedTx } from "@/pages/Transactions"
 import { unsafeApi$ } from "@/state/chains/chain.state"
 import { selectedAccount$ } from "@/state/polkahub"
 import { compactNumber } from "@polkadot-api/substrate-bindings"
-import { fromHex, mergeUint8, toHex } from "@polkadot-api/utils"
+import { fromHex, mergeUint8 } from "polkadot-api/utils"
 import { AccountPicker } from "@polkahub/ui-components"
 import { useStateObservable } from "@react-rxjs/core"
 import { Binary } from "polkadot-api"
@@ -72,7 +72,7 @@ const SubmitUnsigned: FC<{ callData: string; onClose: () => void }> = ({
           new Uint8Array([4]),
           data,
         ])
-        trackUnsignedTx(toHex(unsignedTx))
+        trackUnsignedTx(unsignedTx)
         onClose()
       }}
       className="flex gap-2 items-center justify-center"

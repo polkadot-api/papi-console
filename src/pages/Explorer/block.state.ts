@@ -1,16 +1,16 @@
 import { chopsticksInstance$ } from "@/chopsticks/chopsticks"
 import { chainClient$, client$ } from "@/state/chains/chain.state"
 import { SystemEvent } from "@polkadot-api/observable-client"
-import { blockHeader } from "@polkadot-api/substrate-bindings"
+import { blockHeader, SizedHex } from "@polkadot-api/substrate-bindings"
 import { liftSuspense, state } from "@react-rxjs/core"
 import { combineKeys, partitionByKey } from "@react-rxjs/utils"
 import {
   BlockHeader,
-  FixedSizeBinary,
   HexString,
   PolkadotClient,
   BlockInfo as RawBlockInfo,
 } from "polkadot-api"
+import { fromHex } from "polkadot-api/utils"
 import {
   catchError,
   combineLatest,
@@ -56,7 +56,7 @@ export interface BlockInfo {
   hash: string
   parent: string
   number: number
-  body: string[] | null
+  body: Uint8Array[] | null
   events: SystemEvent[] | null
   header: BlockHeader | null
   status: BlockState
@@ -93,7 +93,7 @@ export const [blockInfo$, recordedBlocks$] = partitionByKey(
               hash: of(hash),
               parent: of(parent),
               number: of(number),
-              body: client.watchBlockBody(hash).pipe(
+              body: client.getBlockBody$(hash).pipe(
                 startWith(null),
                 catchError((err) => {
                   console.error("fetch body failed", err)
@@ -103,7 +103,7 @@ export const [blockInfo$, recordedBlocks$] = partitionByKey(
               events: from(
                 client.getUnsafeApi().query.System.Events.getValue({
                   at: hash,
-                }),
+                }) as Promise<any>,
               ).pipe(
                 startWith(null),
                 catchError((err) => {
@@ -154,10 +154,10 @@ const getUnpinnedBlockInfo$ = (hash: string): Observable<BlockInfo> =>
             ),
           ),
         ),
-        body: client.watchBlockBody(hash),
+        body: client.getBlockBody$(hash),
         events: client.getUnsafeApi().query.System.Events.getValue({
           at: hash,
-        }),
+        }) as Promise<any>,
       }).pipe(
         map(({ headerAndStatus: { header, status }, body, events }) => ({
           hash: hash,
@@ -221,7 +221,7 @@ const getUnpinnedBlockInfoFallback$ = (
       ({ block: { extrinsics, header }, status, number }): BlockInfo => ({
         hash,
         parent: header.parentHash,
-        body: extrinsics,
+        body: extrinsics.map(fromHex),
         events: null,
         header: {
           digests: header.digest.logs
@@ -254,7 +254,7 @@ export const inMemoryBlocks$ = state(
 )
 inMemoryBlocks$.pipe(liftSuspense()).subscribe()
 
-export const blockHash$ = (hashOrHeight: string) =>
+export const blockHash$ = (hashOrHeight: string): Observable<SizedHex<32>> =>
   hashOrHeight.length > 63
     ? of(hashOrHeight.startsWith("0x") ? hashOrHeight : `0x${hashOrHeight}`)
     : client$.pipe(
@@ -268,11 +268,13 @@ export const blockHash$ = (hashOrHeight: string) =>
               if (x.length) return x[0]
               throw null
             }),
-            catchError(() =>
-              client
-                .getUnsafeApi()
-                .query.System.BlockHash.getValue(Number(hashOrHeight))
-                .then((x: FixedSizeBinary<32>) => x.asHex()),
+            catchError(
+              () =>
+                client
+                  .getUnsafeApi()
+                  .query.System.BlockHash.getValue(
+                    Number(hashOrHeight),
+                  ) as Promise<SizedHex<32>>,
             ),
           ),
         ),

@@ -9,6 +9,7 @@ import { state } from "@react-rxjs/core"
 import { Binary, createClient, SS58String } from "polkadot-api"
 import { catchError, from, of, tap } from "rxjs"
 import { getProvider } from "./chains/chain.state"
+import { fromHex } from "polkadot-api/utils"
 
 export interface Identity {
   displayName: string
@@ -51,14 +52,16 @@ export const getAddressName = async (
   if (!id) {
     const sup = await typedApi.query.Identity.SuperOf.getValue(addr)
     if (!sup) return null
-    const subDisplay = readIdentityData(sup[1])?.asText() || ""
+    const supData = readIdentityData(sup[1])
+    const subDisplay = supData && Binary.toText(supData)
     if (!subDisplay) return null
     subIdStr = ` (${subDisplay})`
     id = await typedApi.query.Identity.IdentityOf.getValue(sup[0])
     if (!id) return null
   }
 
-  const displayName = readIdentityData(id.info.display)?.asText()
+  const displayData = readIdentityData(id.info.display)
+  const displayName = displayData && Binary.toText(displayData)
   return displayName
     ? {
         displayName: `${displayName}${subIdStr}`,
@@ -88,9 +91,8 @@ export const identity$ = state(
   (address) => cache.getValue()[address] ?? null,
 )
 
-const readIdentityData = (identityData: IdentityData): Binary | null => {
+const readIdentityData = (identityData: IdentityData): Uint8Array | null => {
   if (identityData.type === "None" || identityData.type === "Raw0") return null
-  if (identityData.type === "Raw1")
-    return Binary.fromBytes(new Uint8Array(identityData.value))
-  return identityData.value
+  if (identityData.type === "Raw1") return new Uint8Array(identityData.value)
+  return fromHex(identityData.value)
 }
