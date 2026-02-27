@@ -1,7 +1,4 @@
-import type {
-  Blockchain,
-  ChopsticksProvider,
-} from "@acala-network/chopsticks-core"
+import { Blockchain, ChopsticksProvider } from "@acala-network/chopsticks-core"
 import {
   getSyncProvider,
   InnerJsonRpcProvider,
@@ -18,51 +15,54 @@ export const createChopsticksProvider = (endpoint: string) =>
       let isRunning = true
       let chain: Blockchain
 
-      let innerProvider: InstanceType<typeof ChopsticksProvider>
-      const provider: InnerJsonRpcProvider = (onMessage) => {
-        return {
-          send: async (msg) => {
-            if (msg.method === "chainHead_v1_follow") {
-              const subscription = await innerProvider.subscribe(
-                "chainHead_v1_followEvent",
-                msg.method,
-                msg.params,
-                (err, result) => {
-                  if (err) {
-                    console.error(err)
-                    return
-                  }
-                  onMessage({
-                    jsonrpc: "2.0",
-                    method: "chainHead_v1_followEvent",
-                    params: {
-                      subscription,
-                      result,
-                    },
-                  })
-                },
-              )
+      const getProvider =
+        (
+          innerProvider: InstanceType<typeof ChopsticksProvider>,
+        ): InnerJsonRpcProvider =>
+        (onMessage) => {
+          return {
+            send: async (msg) => {
+              if (msg.method === "chainHead_v1_follow") {
+                const subscription = await innerProvider.subscribe(
+                  "chainHead_v1_followEvent",
+                  msg.method,
+                  msg.params,
+                  (err, result) => {
+                    if (err) {
+                      console.error(err)
+                      return
+                    }
+                    onMessage({
+                      jsonrpc: "2.0",
+                      method: "chainHead_v1_followEvent",
+                      params: {
+                        subscription,
+                        result,
+                      },
+                    })
+                  },
+                )
+                onMessage({
+                  jsonrpc: "2.0",
+                  id: msg.id!,
+                  result: subscription,
+                })
+                return
+              }
+
+              const response = await innerProvider.send(msg.method, msg.params)
               onMessage({
                 jsonrpc: "2.0",
                 id: msg.id!,
-                result: subscription,
+                result: response,
               })
-              return
-            }
-
-            const response = await innerProvider.send(msg.method, msg.params)
-            onMessage({
-              jsonrpc: "2.0",
-              id: msg.id!,
-              result: response,
-            })
-          },
-          disconnect: () => {
-            chain.close()
-            chopsticksInstance$.next(null)
-          },
+            },
+            disconnect: () => {
+              chain.close()
+              chopsticksInstance$.next(null)
+            },
+          }
         }
-      }
       ;(async () => {
         try {
           const { ChopsticksProvider, setup } =
@@ -72,9 +72,8 @@ export const createChopsticksProvider = (endpoint: string) =>
             endpoint,
             mockSignatureHost: true,
           })
-          innerProvider = new ChopsticksProvider(chain)
           if (isRunning) {
-            onReady(provider)
+            onReady(getProvider(new ChopsticksProvider(chain)))
             chopsticksInstance$.next(chain)
           } else chain.close()
         } catch {
