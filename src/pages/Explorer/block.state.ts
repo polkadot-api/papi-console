@@ -103,7 +103,7 @@ export const [blockInfo$, recordedBlocks$] = partitionByKey(
               events: from(
                 client.getUnsafeApi().query.System.Events.getValue({
                   at: hash,
-                }) as Promise<any>,
+                }) as Promise<SystemEvent[]>,
               ).pipe(
                 startWith(null),
                 catchError((err) => {
@@ -157,7 +157,7 @@ const getUnpinnedBlockInfo$ = (hash: string): Observable<BlockInfo> =>
         body: client.getBlockBody$(hash),
         events: client.getUnsafeApi().query.System.Events.getValue({
           at: hash,
-        }) as Promise<any>,
+        }) as Promise<SystemEvent[]>,
       }).pipe(
         map(({ headerAndStatus: { header, status }, body, events }) => ({
           hash: hash,
