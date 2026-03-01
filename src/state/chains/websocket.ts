@@ -1,5 +1,5 @@
-import { withPolkadotSdkCompat } from "polkadot-api/polkadot-sdk-compat"
-import { getWsProvider, JsonRpcProvider } from "polkadot-api/ws-provider"
+import type { JsonRpcProvider } from "polkadot-api"
+import { getWsProvider } from "polkadot-api/ws"
 
 export interface WebsocketSource {
   type: "websocket"
@@ -17,5 +17,5 @@ export async function createWebsocketSource(
 }
 
 export function getWebsocketProvider(source: WebsocketSource): JsonRpcProvider {
-  return withPolkadotSdkCompat(getWsProvider(source.endpoint))
+  return getWsProvider(source.endpoint)
 }

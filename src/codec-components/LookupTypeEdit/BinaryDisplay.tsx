@@ -3,8 +3,8 @@ import { BinaryEditButton } from "@/components/BinaryEditButton"
 import { CopyText } from "@/components/Copy"
 import { ExpandBtn } from "@/components/Expand"
 import { CodecComponentType, NOTIN } from "@polkadot-api/react-builder"
-import { Binary, HexString } from "@polkadot-api/substrate-bindings"
-import { toHex } from "@polkadot-api/utils"
+import { HexString } from "@polkadot-api/substrate-bindings"
+import { fromHex, toHex } from "polkadot-api/utils"
 import { ComponentProps, FC, useState } from "react"
 import { twMerge } from "tailwind-merge"
 import { EditCodec } from "../EditCodec"
@@ -24,7 +24,7 @@ export const BinaryDisplay: FC<
     if (value.type === CodecComponentType.Initial) {
       if (!value.value) return null
       return typeof value.value === "string"
-        ? Binary.fromHex(value.value).asBytes()
+        ? fromHex(value.value)
         : value.value
     }
     if (value.value.empty || !value.value.encoded) return null
@@ -43,7 +43,7 @@ export const BinaryDisplay: FC<
           className={twMerge(
             "binary-display-codec",
             "text-sm tabular-nums overflow-hidden flex-1",
-            wrap ? "break-words" : "whitespace-nowrap text-ellipsis h-5",
+            wrap ? "wrap-break-word" : "whitespace-nowrap text-ellipsis h-5",
           )}
         >
           {isEmpty ? (

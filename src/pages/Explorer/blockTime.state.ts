@@ -36,7 +36,7 @@ const fromCall$ = runtimeCtx$.pipe(
     return (
       getFromApi("AuraApi", "slot_duration")?.then((r) => Number(r)) ??
       getFromApi("BabeApi", "configuration")?.then((r) =>
-        Number(r.slot_duration),
+        Number((r as any).slot_duration),
       ) ??
       of(null)
     )

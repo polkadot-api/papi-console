@@ -9,7 +9,8 @@ import { shortStr } from "@/utils"
 import { SystemEvent } from "@polkadot-api/observable-client"
 import { DecodedExtrinsic } from "@polkadot-api/tx-utils"
 import { Dot, Edit } from "lucide-react"
-import { Binary, Enum, HexString, SS58String } from "polkadot-api"
+import { Enum, HexString, SS58String } from "polkadot-api"
+import { toHex } from "polkadot-api/utils"
 import { FC, useEffect, useRef, useState } from "react"
 import { twMerge } from "tailwind-merge"
 
@@ -41,13 +42,13 @@ export const Extrinsic: FC<{
           {extrinsic.idx}. {extrinsic.call.type}.{extrinsic.call.value.type}
         </button>
         <div className="flex gap-2 items-center">
-          <CopyBinary value={extrinsic.callData.asBytes()} />
-          {extrinsic.callData.asBytes().length > 1024 ? (
+          <CopyBinary value={extrinsic.callData} />
+          {extrinsic.callData.length > 1024 ? (
             <span className="opacity-50">
               <Edit size={14} />
             </span>
           ) : (
-            <Link to={"/extrinsics#data=" + extrinsic.callData.asHex()}>
+            <Link to={"/extrinsics#data=" + toHex(extrinsic.callData)}>
               <Edit size={14} />
             </Link>
           )}
@@ -107,7 +108,7 @@ const SignedExtensions: FC<{ extra: Record<string, unknown> }> = ({
 const SignedExtension: FC<{ id: string; value: unknown }> = ({ id, value }) => {
   const [expanded, setExpanded] = useState(false)
   const inlineJson = JSON.stringify(value, (_, v) =>
-    typeof v === "bigint" ? String(v) : v instanceof Binary ? v.asHex() : v,
+    typeof v === "bigint" ? String(v) : v instanceof Uint8Array ? toHex(v) : v,
   )
 
   if (!inlineJson || inlineJson.length < 40) {
