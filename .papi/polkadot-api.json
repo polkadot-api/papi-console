@@ -1,9 +1,6 @@
 {
   "version": 0,
   "descriptorPath": ".papi/descriptors",
-  "options": {
-    "whitelist": ".papi/whitelist.ts"
-  },
   "entries": {
     "polkadot_people": {
       "chain": "polkadot_people",

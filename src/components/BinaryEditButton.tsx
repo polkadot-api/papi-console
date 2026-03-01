@@ -5,7 +5,6 @@ import {
 import { Modal } from "@/components/Modal"
 import { useGenericSynchronizeInput } from "@/components/useSynchroniseInput"
 import { NOTIN } from "@polkadot-api/react-builder"
-import { Binary } from "@polkadot-api/substrate-bindings"
 import { Download, FileUp } from "lucide-react"
 import { ComponentProps, FC, useMemo, useState } from "react"
 import { twMerge } from "tailwind-merge"
@@ -13,6 +12,7 @@ import { twMerge } from "tailwind-merge"
 import { saveAs } from "save-as"
 import { BinaryEdit } from "./Icons"
 import { ActionButton } from "./ActionButton"
+import { fromHex, toHex } from "polkadot-api/utils"
 
 export interface BinaryEditProps {
   initialValue?: Uint8Array
@@ -80,17 +80,13 @@ const BinaryEditModalContent: FC<
   const [inputValue, setInputValue] = useGenericSynchronizeInput(
     value,
     setValue as any,
-    (input) => parseInput(input).asBytes(),
+    parseInput,
     "" as string | Uint8Array,
     (value) => {
       if (value.length > MAX_DISPLAY_SIZE) return ""
-      return Binary.fromBytes(value).asHex()
+      return toHex(value)
     },
-    (input, value) =>
-      checkEqualInputBinary(
-        parseInput(input),
-        value === NOTIN ? NOTIN : Binary.fromBytes(value),
-      ),
+    (input, value) => checkEqualInputBinary(parseInput(input), value),
   )
 
   const placeholder =
@@ -158,7 +154,7 @@ const BinaryEditModalContent: FC<
             <BinaryFileInput
               validate={validateFile}
               onError={() => setError("Error loading file")}
-              onLoaded={(value) => setValue(value.asBytes())}
+              onLoaded={setValue}
             />
           </label>
         </div>
@@ -186,6 +182,4 @@ const BinaryEditModalContent: FC<
 }
 
 const parseInput = (value: string | Uint8Array) =>
-  value instanceof Uint8Array
-    ? Binary.fromBytes(value)
-    : Binary.fromHex(value.startsWith("0x") ? value : `0x${value}`)
+  value instanceof Uint8Array ? value : fromHex(value)

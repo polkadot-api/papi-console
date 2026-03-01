@@ -14,7 +14,7 @@ import { BlockStorageDiff } from "./BlockStorageDiff"
 import { ApplyExtrinsicEvent, Extrinsic } from "./Extrinsic"
 import { getHashParams } from "@/hashParams"
 import { Blake2256 } from "@polkadot-api/substrate-bindings"
-import { fromHex, toHex } from "@polkadot-api/utils"
+import { toHex } from "polkadot-api/utils"
 
 const blockExtrinsics$ = state((hash: string) => {
   const body$ = blockInfoState$(hash).pipe(
@@ -31,7 +31,7 @@ const blockExtrinsics$ = state((hash: string) => {
     map(([body, { txDecoder }]) =>
       body.map((raw, idx) => ({
         idx,
-        hash: toHex(Blake2256(fromHex(raw))),
+        hash: toHex(Blake2256(raw)),
         ...txDecoder(raw),
       })),
     ),

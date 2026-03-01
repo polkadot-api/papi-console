@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { toHex } from "@polkadot-api/utils"
+import { toHex } from "polkadot-api/utils"
 import { HexString } from "polkadot-api"
 import React, { lazy, Suspense, useState } from "react"
 
