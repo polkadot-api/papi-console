@@ -1,1 +1,1 @@
-export { chainSpec } from "polkadot-api/chains/kusama_people"
+export { chainSpec } from "polkadot-api/chains/ksmcc3_people"

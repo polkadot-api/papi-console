@@ -3,7 +3,7 @@ import { Chopsticks } from "@/components/Icons"
 import { Button } from "@/components/ui/button"
 import { chainClient$, client$, lookup$ } from "@/state/chains/chain.state"
 import { getTypeComplexity } from "@/utils"
-import { fromHex, toHex } from "polkadot-api/utils"
+import { fromHex, toHex } from "@polkadot-api/utils"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
 import { FC, useState } from "react"
@@ -31,7 +31,7 @@ const currentValue$ = state(
       ),
       withLatestFrom(lookup$, selectedEntry$.pipe(filter((v) => v != null))),
       map(([v, lookup, entry]) => {
-        if (v != null) return v.value
+        if (v != null) return v
         const pallet = lookup.metadata.pallets.find(
           (p) => p.name == entry.pallet,
         )!

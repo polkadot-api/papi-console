@@ -8,7 +8,8 @@ import {
   CodecComponentType,
   CodecComponentValue,
 } from "@polkadot-api/react-builder"
-import { fromHex, toHex } from "polkadot-api/utils"
+import { Binary } from "@polkadot-api/substrate-bindings"
+import { toHex } from "@polkadot-api/utils"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { useLayoutEffect, useState } from "react"
 import { useLocation } from "react-router-dom"
@@ -142,7 +143,7 @@ export const Extrinsics = withSubscribe(
           <JsonMode
             value={
               typeof binaryValue === "string"
-                ? fromHex(binaryValue)
+                ? Binary.fromHex(binaryValue).asBytes()
                 : binaryValue
             }
             decode={extrinsicProps.codec.dec}

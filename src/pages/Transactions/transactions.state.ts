@@ -6,12 +6,13 @@ import {
   mergeWithKey,
   partitionByKey,
 } from "@react-rxjs/utils"
-import { InvalidTxError } from "polkadot-api"
+import { HexString, InvalidTxError, TxBroadcastEvent } from "polkadot-api"
 import {
   catchError,
   filter,
   merge,
   mergeMap,
+  Observable,
   of,
   skip,
   takeUntil,
@@ -19,8 +20,8 @@ import {
   withLatestFrom,
 } from "rxjs"
 
-const [signedTx$, trackSignedTx] = createSignal<Uint8Array>()
-const [unsignedTx$, trackUnsignedTx] = createSignal<Uint8Array>()
+const [signedTx$, trackSignedTx] = createSignal<HexString>()
+const [unsignedTx$, trackUnsignedTx] = createSignal<HexString>()
 export { trackSignedTx, trackUnsignedTx }
 
 export const [dismissTransaction$, dismissTransaction] = createSignal<string>()
@@ -28,8 +29,14 @@ export const [dismissTransaction$, dismissTransaction] = createSignal<string>()
 const transactions$ = mergeWithKey({ signedTx$, unsignedTx$ }).pipe(
   withLatestFrom(chainClient$),
   mergeMap(([tx, { client }]) => {
+    const submitAndWatch = client.submitAndWatch as (
+      tx: HexString,
+      at: string,
+      withSigned?: boolean,
+    ) => Observable<TxBroadcastEvent>
+
     let txHash: string = ""
-    return client.submitAndWatch(tx.payload, "finalized").pipe(
+    return submitAndWatch(tx.payload, "finalized", true).pipe(
       tap((e) => {
         txHash = e.txHash
       }),

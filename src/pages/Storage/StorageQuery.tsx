@@ -14,9 +14,10 @@ import {
   NOTIN,
 } from "@polkadot-api/react-builder"
 import { Twox128 } from "@polkadot-api/substrate-bindings"
-import { fromHex, toHex } from "polkadot-api/utils"
+import { toHex } from "@polkadot-api/utils"
 import { state, useStateObservable, withDefault } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
+import { Binary } from "polkadot-api"
 import { FC } from "react"
 import {
   combineLatest,
@@ -77,13 +78,11 @@ export const StorageQuery: FC = () => {
       const hash$ = single
         ? chainClient$.pipe(
             switchMap(({ chainHead }) =>
-              chainHead
-                .storage$(hash, "hash", (ctx) =>
-                  ctx.dynamicBuilder
-                    .buildStorage(entry!.pallet, entry!.entry)
-                    .keys.enc(...args),
-                )
-                .pipe(map(({ value }) => value)),
+              chainHead.storage$(hash, "hash", (ctx) =>
+                ctx.dynamicBuilder
+                  .buildStorage(entry!.pallet, entry!.entry)
+                  .keys.enc(...args),
+              ),
             ),
           )
         : of(null)
@@ -367,7 +366,7 @@ const StorageKeyInput: FC<{
         <BinaryEditButton
           initialValue={
             typeof binaryValue === "string"
-              ? fromHex(binaryValue)
+              ? Binary.fromHex(binaryValue).asBytes()
               : (binaryValue ?? undefined)
           }
           onValueChange={(value) => setKeyValue({ idx, value })}
@@ -442,7 +441,7 @@ export const KeyDisplay: FC = () => {
       </div>
       <CopyText text={key ?? ""} disabled={key === null} binary />
       <BinaryEditButton
-        initialValue={key ? fromHex(key) : undefined}
+        initialValue={key ? Binary.fromHex(key).asBytes() : undefined}
         onValueChange={(value: NonNullable<DecodedKey>) => {
           let newKeysEnabled = keysEnabled
           if (
@@ -519,7 +518,9 @@ const decodeKey = (
       ? []
       : item.type.value.hashers.map((x) => hashersToLength[x.tag])
 
-  let argsRemaining = fromHex(keyRemaining.replace(twoxHash(item.name), "0x"))
+  let argsRemaining = Binary.fromHex(
+    keyRemaining.replace(twoxHash(item.name), "0x"),
+  ).asBytes()
 
   const args: any[] = []
   const argsLen = codec.args.inner.length

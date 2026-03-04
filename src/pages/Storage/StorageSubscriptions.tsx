@@ -17,7 +17,7 @@ import { CodecComponentType, NOTIN } from "@polkadot-api/react-builder"
 import { Button } from "@polkahub/ui-components"
 import { useStateObservable } from "@react-rxjs/core"
 import { ChevronLeft, ChevronRight, StopCircle, Trash2 } from "lucide-react"
-import { Enum } from "polkadot-api"
+import { Binary, Enum } from "polkadot-api"
 import { FC, MouseEvent, ReactNode, useMemo, useState } from "react"
 import { Virtuoso } from "react-virtuoso"
 import { BlockState } from "../Explorer/block.state"
@@ -30,7 +30,6 @@ import {
   storageSubscriptionKeys$,
   StorageSubscriptionValue,
 } from "./storage.state"
-import { fromHex } from "polkadot-api/utils"
 
 export const StorageSubscriptions: FC = () => {
   const keys = useStateObservable(storageSubscriptionKeys$)
@@ -461,7 +460,7 @@ const KeyDisplay: FC<{
 }> = ({ value, keyCodec }) => {
   const binaryValue = (() => {
     try {
-      return keyCodec ? fromHex(keyCodec.enc(...value)) : null
+      return keyCodec ? Binary.fromHex(keyCodec.enc(...value)).asBytes() : null
     } catch (_) {
       return null
     }

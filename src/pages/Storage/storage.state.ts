@@ -14,7 +14,7 @@ import {
   partitionByKey,
   toKeySet,
 } from "@react-rxjs/utils"
-import { Enum, HexString } from "polkadot-api"
+import { Binary, Enum, HexString } from "polkadot-api"
 import {
   catchError,
   combineLatest,
@@ -416,7 +416,10 @@ export const storageSubscription$ = state(
 
 export const stringifyArg = (value: unknown) => {
   if (typeof value === "object" && value !== null) {
-    return value instanceof Uint8Array ? bytesToString(value) : "arg"
+    if (value instanceof Binary) {
+      return bytesToString(value)
+    }
+    return "arg"
   }
   return String(value)
 }

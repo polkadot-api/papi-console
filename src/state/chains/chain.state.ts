@@ -1,4 +1,7 @@
-import { createChopsticksProvider } from "@/chopsticks/chopsticks"
+import {
+  chopsticksInstance$,
+  createChopsticksProvider,
+} from "@/chopsticks/chopsticks"
 import { getHashParams, setHashParams } from "@/hashParams"
 import { getDynamicBuilder, getLookupFn } from "@polkadot-api/metadata-builders"
 import {
@@ -7,7 +10,7 @@ import {
   unifyMetadata,
 } from "@polkadot-api/substrate-bindings"
 import { getExtrinsicDecoder } from "@polkadot-api/tx-utils"
-import { fromHex, toHex } from "polkadot-api/utils"
+import { fromHex, toHex } from "@polkadot-api/utils"
 import { liftSuspense, sinkSuspense, state, SUSPENSE } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
 import { get, update } from "idb-keyval"
@@ -72,6 +75,9 @@ console.log("You can enable JSON-RPC logs by calling `setRpcLogsEnabled(true)`")
 ;(window as any).setRpcLogsEnabled = setRpcLogsEnabled
 
 export const getProvider = (source: ChainSource) => {
+  // TODO bug: provider is not getting disconnected
+  chopsticksInstance$.next(null)
+
   const provider =
     source.type === "websocket"
       ? source.withChopsticks

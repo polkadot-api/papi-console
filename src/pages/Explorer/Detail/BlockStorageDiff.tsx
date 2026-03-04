@@ -19,7 +19,7 @@ import {
   u8,
   Vector,
 } from "@polkadot-api/substrate-bindings"
-import { toHex } from "polkadot-api/utils"
+import { toHex } from "@polkadot-api/utils"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { Binary, Codec } from "polkadot-api"
 import { FC } from "react"
@@ -37,12 +37,12 @@ const blockDiff$ = state(
 
         const palletKeys = Object.fromEntries(
           lookup.metadata.pallets.map((pallet) => [
-            toHex(Twox128(Binary.fromText(pallet.name))).slice(2),
+            toHex(Twox128(Binary.fromText(pallet.name).asBytes())).slice(2),
             {
               name: pallet.name,
               entries: Object.fromEntries(
                 pallet.storage?.items.map((item) => [
-                  toHex(Twox128(Binary.fromText(item.name))).slice(2),
+                  toHex(Twox128(Binary.fromText(item.name).asBytes())).slice(2),
                   item.name,
                 ]) ?? [],
               ),
@@ -149,7 +149,7 @@ export const BlockStorageDiff: FC<{
                         ? `(${JSON.stringify(v, (_, v) =>
                             typeof v === "bigint"
                               ? `${v}n`
-                              : v instanceof Uint8Array
+                              : v instanceof Binary
                                 ? bytesToString(v)
                                 : v,
                           )})`
@@ -176,7 +176,7 @@ export const BlockStorageDiff: FC<{
   )
 }
 
-const strToHex = (v: string) => toHex(Binary.fromText(v))
+const strToHex = (v: string) => Binary.fromText(v).asHex()
 const wellKnownKeys: Record<
   string,
   {

@@ -1,4 +1,5 @@
 import { bytesToString } from "@/components/BinaryInput"
+import { Binary } from "@polkadot-api/substrate-bindings"
 import { FC } from "react"
 import ReactJson from "react18-json-view"
 import "react18-json-view/src/dark.css"
@@ -17,14 +18,14 @@ export const JsonDisplay: FC<{
       src={src}
       dark={theme === "dark"}
       theme="a11y"
-      replacer={(v) => (v instanceof Uint8Array ? bytesToString(v) : v)}
+      replacer={(v) => (v instanceof Binary ? bytesToString(v) : v)}
       customizeCopy={(v) =>
         JSON.stringify(
           v,
           (_, v) =>
             typeof v === "bigint"
               ? `${v}n`
-              : v instanceof Uint8Array
+              : v instanceof Binary
                 ? bytesToString(v)
                 : v,
           2,

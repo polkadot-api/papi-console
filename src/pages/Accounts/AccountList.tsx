@@ -12,7 +12,6 @@ import {
 } from "@react-rxjs/core"
 import { Send } from "lucide-react"
 import { CompatibilityLevel, SS58String } from "polkadot-api"
-import { toHex } from "polkadot-api/utils"
 import {
   Account,
   ledgerProviderId,
@@ -78,7 +77,7 @@ const AccountCard: FC<{
       <div className="flex justify-between items-start overflow-hidden">
         <AccountIdDisplay
           value={account.address}
-          className="shrink overflow-hidden"
+          className="shrink-1 overflow-hidden"
         />
         <SourceTag account={account} />
       </div>
@@ -128,7 +127,7 @@ const balance$ = state(
         typedApi.query.System.Account.watchValue(accountId),
       ),
       map((account) => {
-        const { reserved, free, frozen } = account.value.data
+        const { reserved, free, frozen } = account.data
         const total = reserved + free
 
         // TODO ED
@@ -157,12 +156,12 @@ const getTransferCallData$ = state(
       const tokenDecimals = chainProperties?.tokenDecimals
 
       if (tokenDecimals == null) return null
-
-      const staticApis = await typedApi.getStaticApis()
+      const token = await typedApi.compatibilityToken
 
       if (
-        !staticApis.compat.tx.Balances.transfer_keep_alive.isCompatible(
+        !typedApi.tx.Balances.transfer_keep_alive.isCompatible(
           CompatibilityLevel.BackwardsCompatible,
+          token,
         )
       ) {
         return null
@@ -171,12 +170,12 @@ const getTransferCallData$ = state(
       return (dest: SS58String) => {
         const value = 10n ** BigInt(tokenDecimals)
 
-        return toHex(
-          staticApis.tx.Balances.transfer_keep_alive.getCallData({
-            dest: MultiAddress.Id(dest),
-            value,
-          }),
-        )
+        return typedApi.tx.Balances.transfer_keep_alive({
+          dest: MultiAddress.Id(dest),
+          value,
+        })
+          .getEncodedData(token)
+          .asHex()
       }
     }),
   ),

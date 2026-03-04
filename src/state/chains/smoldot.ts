@@ -1,13 +1,14 @@
-import type { JsonRpcProvider } from "polkadot-api"
 import { getSmProvider } from "polkadot-api/sm-provider"
+import { Chain } from "polkadot-api/smoldot"
 import { startFromWorker } from "polkadot-api/smoldot/from-worker"
 import SmWorker from "polkadot-api/smoldot/worker?worker"
+import type { JsonRpcProvider } from "polkadot-api/ws-provider/web"
 
 const [dotChainSpec, ksmChainSpec, paseoChainSpec, westendChainSpec] = [
   import("polkadot-api/chains/polkadot"),
-  import("polkadot-api/chains/kusama"),
+  import("polkadot-api/chains/ksmcc3"),
   import("polkadot-api/chains/paseo"),
-  import("polkadot-api/chains/westend"),
+  import("polkadot-api/chains/westend2"),
 ].map((x) => x.then((y) => y.chainSpec))
 const smoldot = startFromWorker(new SmWorker(), {
   logCallback: (level, target, message) => {
@@ -19,12 +20,22 @@ const smoldot = startFromWorker(new SmWorker(), {
   },
   forbidWs: true,
 })
-
-const relayChains: Record<string, Promise<string>> = {
-  polkadot: dotChainSpec,
-  kusama: ksmChainSpec,
-  paseo: paseoChainSpec,
-  westend: westendChainSpec,
+const relayChains: Record<
+  string,
+  { chainSpec: Promise<string>; chain: Promise<Chain> | null }
+> = {
+  polkadot: { chainSpec: dotChainSpec, chain: null },
+  kusama: { chainSpec: ksmChainSpec, chain: null },
+  paseo: { chainSpec: paseoChainSpec, chain: null },
+  westend: { chainSpec: westendChainSpec, chain: null },
+}
+const getRelayChain = async (name: string) => {
+  if (!relayChains[name].chain) {
+    relayChains[name].chain = smoldot.addChain({
+      chainSpec: await relayChains[name].chainSpec,
+    })
+  }
+  return relayChains[name].chain
 }
 
 export interface SmoldotSource {
@@ -41,12 +52,11 @@ export async function createSmoldotSource(
   relayChain?: string,
 ): Promise<SmoldotSource> {
   if (id in relayChains) {
-    const chainSpec = await relayChains[id]
-    return {
+    return relayChains[id].chainSpec.then((chainSpec) => ({
       id,
       type: "chainSpec",
       value: { chainSpec },
-    }
+    }))
   }
   const { chainSpec } = await import(`./chainspecs/${id}.ts`)
   const parsed = JSON.parse(chainSpec)
@@ -61,15 +71,16 @@ export async function createSmoldotSource(
 }
 
 export function getSmoldotProvider(source: SmoldotSource): JsonRpcProvider {
-  const chainFactory = () =>
-    source.value.relayChain
-      ? relayChains[source.value.relayChain].then(async (chainSpec) =>
-          smoldot.addChain({
-            chainSpec: source.value.chainSpec,
-            potentialRelayChains: [await smoldot.addChain({ chainSpec })],
-          }),
-        )
-      : smoldot.addChain({ chainSpec: source.value.chainSpec })
+  const chain = source.value.relayChain
+    ? getRelayChain(source.value.relayChain).then((chain) =>
+        smoldot.addChain({
+          chainSpec: source.value.chainSpec,
+          potentialRelayChains: [chain],
+        }),
+      )
+    : smoldot.addChain({
+        chainSpec: source.value.chainSpec,
+      })
 
-  return getSmProvider(chainFactory)
+  return getSmProvider(chain)
 }

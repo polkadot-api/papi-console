@@ -1,5 +1,5 @@
 import { CopyText } from "@/components/Copy"
-import { toHex } from "polkadot-api/utils"
+import { Binary } from "polkadot-api"
 import {
   createContext,
   FC,
@@ -55,7 +55,7 @@ export const CopyBinary: FC<{ value: Uint8Array; visible?: boolean }> = ({
   visible = true,
 }) => (
   <CopyText
-    text={toHex(value)}
+    text={Binary.fromBytes(value).asHex()}
     className={twMerge("transition-opacity", !visible ? "opacity-0" : "")}
     binary
   />

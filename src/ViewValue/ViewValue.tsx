@@ -1,6 +1,6 @@
 import { BytesDisplay } from "@/codec-components/ViewCodec/CBytes"
 import { AccountIdDisplay } from "@/components/AccountIdDisplay"
-import { getSs58AddressInfo } from "polkadot-api"
+import { Binary, getSs58AddressInfo } from "polkadot-api"
 import { FC } from "react"
 import { EnumDisplay } from "./EnumDisplay"
 import { ArrayDisplay } from "./ListComponents"
@@ -32,7 +32,7 @@ export const ViewValue: FC<{
       return <NumberDisplay value={value} />
     case "object": {
       if (value == null) return <>TODO</>
-      if (value instanceof Uint8Array) return <BytesDisplay value={value} />
+      if (value instanceof Binary) return <BytesDisplay value={value} />
       if (Array.isArray(value)) return <ArrayDisplay value={value} />
       if ("type" in value && typeof value.type === "string" && "value" in value)
         return <EnumDisplay value={value as any} />
