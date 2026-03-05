@@ -7,6 +7,7 @@ import {
   EditBool,
   EditBytes,
   EditEthAccount,
+  EditFixedBytes,
   EditNumber,
   EditOption,
   EditPrimitiveComponentProps,
@@ -48,6 +49,7 @@ export const CBigNumber: EditBigNumber = CPrimitive
 export const CNumber: EditNumber = CPrimitive
 export const CAccountId: EditAccountId = CPrimitive
 export const CBytes: EditBytes = CPrimitive
+export const CFixedBytes: EditFixedBytes = CPrimitive
 export const CBitSeq: EditBitSeq = CPrimitive
 
 export const COption: EditOption = ({

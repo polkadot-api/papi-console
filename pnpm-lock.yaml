@@ -24,7 +24,7 @@ importers:
         version: 4.7.0(monaco-editor@0.54.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@polkadot-api/descriptors':
         specifier: file:.papi/descriptors
-        version: file:.papi/descriptors(polkadot-api@2.0.0-rc.2(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1))
+        version: file:.papi/descriptors(polkadot-api@2.0.0-rc.3(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1))
       '@polkadot-api/json-rpc-provider-proxy':
         specifier: ^0.3.0
         version: 0.3.0
@@ -32,11 +32,11 @@ importers:
         specifier: ^0.13.11
         version: 0.13.11
       '@polkadot-api/observable-client':
-        specifier: ^0.18.1
-        version: 0.18.1(rxjs@7.8.2)
+        specifier: ^0.18.2
+        version: 0.18.2(rxjs@7.8.2)
       '@polkadot-api/react-builder':
-        specifier: 0.3.13
-        version: 0.3.13(react@19.2.4)
+        specifier: 0.4.0
+        version: 0.4.0(react@19.2.4)
       '@polkadot-api/react-components':
         specifier: ^0.4.2
         version: 0.4.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -101,11 +101,11 @@ importers:
         specifier: ^6.2.2
         version: 6.2.2
       lucide-react:
-        specifier: ^0.575.0
-        version: 0.575.0(react@19.2.4)
+        specifier: ^0.577.0
+        version: 0.577.0(react@19.2.4)
       polkadot-api:
-        specifier: ^2.0.0-rc.2
-        version: 2.0.0-rc.2(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
+        specifier: 2.0.0-rc.3
+        version: 2.0.0-rc.3(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
       polkahub:
         specifier: ^0.5.0
         version: 0.5.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(jiti@2.6.1)(postcss@8.5.6)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(rxjs@7.8.2)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.4))(utf-8-validate@5.0.10)(yaml@2.6.1)(zod@3.25.76)
@@ -122,11 +122,11 @@ importers:
         specifier: ^7.13.1
         version: 7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-svg:
-        specifier: ^17.2.2
-        version: 17.2.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: ^17.2.4
+        version: 17.2.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-virtuoso:
-        specifier: ^4.18.1
-        version: 4.18.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: ^4.18.3
+        version: 4.18.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react18-json-view:
         specifier: ^0.2.9
         version: 0.2.9(patch_hash=18eb0a02f9279644adf5cb880895a0c85bd6a84bb945850a7d29833aa7c4c00c)(react@19.2.4)
@@ -151,10 +151,10 @@ importers:
         version: 9.39.3
       '@tailwindcss/vite':
         specifier: ^4.2.1
-        version: 4.2.1(vite@7.3.1(@types/node@25.3.1)(jiti@2.6.1)(lightningcss@1.31.1)(yaml@2.6.1))
+        version: 4.2.1(vite@7.3.1(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(yaml@2.6.1))
       '@types/node':
-        specifier: ^25.3.1
-        version: 25.3.1
+        specifier: ^25.3.5
+        version: 25.3.5
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14
@@ -166,7 +166,7 @@ importers:
         version: 4.0.7
       '@vitejs/plugin-react':
         specifier: ^5.1.4
-        version: 5.1.4(vite@7.3.1(@types/node@25.3.1)(jiti@2.6.1)(lightningcss@1.31.1)(yaml@2.6.1))
+        version: 5.1.4(vite@7.3.1(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(yaml@2.6.1))
       eslint:
         specifier: ^9.39.2
         version: 9.39.3(jiti@2.6.1)
@@ -177,8 +177,8 @@ importers:
         specifier: ^0.5.2
         version: 0.5.2(eslint@9.39.3(jiti@2.6.1))
       globals:
-        specifier: ^17.3.0
-        version: 17.3.0
+        specifier: ^17.4.0
+        version: 17.4.0
       prettier:
         specifier: ^3.8.1
         version: 3.8.1
@@ -193,7 +193,7 @@ importers:
         version: 8.56.1(eslint@9.39.3(jiti@2.6.1))(typescript@5.9.3)
       vite:
         specifier: ^7.3.1
-        version: 7.3.1(@types/node@25.3.1)(jiti@2.6.1)(lightningcss@1.31.1)(yaml@2.6.1)
+        version: 7.3.1(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(yaml@2.6.1)
 
 packages:
 
@@ -796,8 +796,8 @@ packages:
   '@pinojs/redact@0.4.0':
     resolution: {integrity: sha512-k2ENnmBugE/rzQfEcdWHcCY+/FM3VLzH9cYEsbdsoqrvzAKRhUZeRNhAZvB8OitQJ1TBed3yqWtdjzS6wJKBwg==}
 
-  '@polkadot-api/cli@0.19.1':
-    resolution: {integrity: sha512-f6EXO8MQgNPu4mt4iWMyUrNqJmY92tUbJOL1In20QWkQF8wuB1rOD7T35g0PAvWu4cr1n4JcomUNuWWMURFe9Q==}
+  '@polkadot-api/cli@0.19.2':
+    resolution: {integrity: sha512-4MIW579KdCPpwGMh+PEG1fHgDmdu4JO8i5zNSm+9LISQGr8fndY6PK6eF9tclVzAxmaSme84XJwLKJVhmTJlzw==}
     hasBin: true
 
   '@polkadot-api/codegen@0.22.1':
@@ -849,8 +849,8 @@ packages:
   '@polkadot-api/metadata-compatibility@0.5.1':
     resolution: {integrity: sha512-NLzXAGdXE+5OHGX/JI+IMzmwtw+w572wfyeZdL1MW52/NQ+7JwA+969QG1/zrju2xB9VDDfCWaPewwcYolxJLQ==}
 
-  '@polkadot-api/observable-client@0.18.1':
-    resolution: {integrity: sha512-6FM+T08qAw8UsVskcSbCHC7LkGAc5EOiwRPA2A3Yr5MfDPp/aIuFrrCwwjWPtBO6CTDAnM9Z+gOA2osecxbiDw==}
+  '@polkadot-api/observable-client@0.18.2':
+    resolution: {integrity: sha512-why14EeU9mI9GcAbg9cDOIUinEB40SA3VIdl7PHGivelliZi8Iu7MTj3wH1e9gDIjFAeVpsLNwAjfzxj44mGrQ==}
     peerDependencies:
       rxjs: '>=7.8.0'
 
@@ -869,8 +869,8 @@ packages:
   '@polkadot-api/raw-client@0.2.0':
     resolution: {integrity: sha512-qHR5XUcTI1/a8+vYZ81KqjzKvcpEaRyHxcbrPAS2mzdiDqYcZjdCsm3v9ESvMxRI6tOjVV7MeQSp8BAB+NDdTA==}
 
-  '@polkadot-api/react-builder@0.3.13':
-    resolution: {integrity: sha512-mkleXD9pZcVi2MK3XM9pesjqEJldFm0DRaTjRve6ksmv9hFdvFk7A+aGRFIkw8o67cRe4aSi8BRVsQxNidSXRQ==}
+  '@polkadot-api/react-builder@0.4.0':
+    resolution: {integrity: sha512-s4DcXKSWTOCPYqFTF79ctQ/0sWTlbK1oVeoc0DOK8Xha+4+E4h9hVNwuIIb+ePO9u+yk0QdnETW7xzATljdfeQ==}
     peerDependencies:
       react: '>=18'
 
@@ -918,8 +918,8 @@ packages:
   '@polkadot-api/wasm-executor@0.2.3':
     resolution: {integrity: sha512-B2h1o+Qlo9idpASaHvMSoViB2I5ko5OAfwfhYF8LQDkTADK0B+SeStzNj1Qn+FG34wqTuv7HzBCdjaUgzYINJQ==}
 
-  '@polkadot-api/ws-middleware@0.2.1':
-    resolution: {integrity: sha512-PdtY68+ePAfi4E3sKxaWxYpHnoVV45ZlUZPGj6WaNkXKM5Onfgk1/TZwzyZt8pa7gJ/XQzc3oD1atdFFYlf1fg==}
+  '@polkadot-api/ws-middleware@0.2.2':
+    resolution: {integrity: sha512-V+eEaQqFxLOOpvslxJ9Ft2tjzoGGJ1rVZD1RI2eVAhyPnDvKBwDIST1KGcFi0CpuL+YvS2DouygxwSWLh4E/eQ==}
     peerDependencies:
       rxjs: '>=7.8.0'
 
@@ -2379,11 +2379,11 @@ packages:
   '@types/node@12.20.55':
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
 
-  '@types/node@24.10.14':
-    resolution: {integrity: sha512-OowOUbD1lBCOFIPOZ8xnMIhgqA4sCutMiYOmPHL1PTLt5+y1XA+g2+yC9OOyz8p+deMZqPZLxfMjYIfrKsPeFg==}
+  '@types/node@24.12.0':
+    resolution: {integrity: sha512-GYDxsZi3ChgmckRT9HPU0WEhKLP08ev/Yfcq2AstjrDASOYCSXeyjDsHg4v5t4jOj7cyDX3vmprafKlWIG9MXQ==}
 
-  '@types/node@25.3.1':
-    resolution: {integrity: sha512-hj9YIJimBCipHVfHKRMnvmHg+wfhKc0o4mTtXh9pKBjC8TLJzz0nzGmLi5UJsYAUgSvXFHgb0V2oY10DUFtImw==}
+  '@types/node@25.3.5':
+    resolution: {integrity: sha512-oX8xrhvpiyRCQkG1MFchB09f+cXftgIXb3a7UUa4Y3wpmZPw5tyZGTLWhlESOLq1Rq6oDlc8npVU2/9xiCuXMA==}
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
@@ -3174,8 +3174,8 @@ packages:
     resolution: {integrity: sha512-oahGvuMGQlPw/ivIYBjVSrWAfWLBeku5tpPE2fOPLi+WHffIWbuh2tCjhyQhTBPMf5E9jDEH4FOmTYgYwbKwtQ==}
     engines: {node: '>=18'}
 
-  globals@17.3.0:
-    resolution: {integrity: sha512-yMqGUQVVCkD4tqjOJf3TnrvaaHDMYp4VlUSObbkIiuCPe/ofdMBFIAcBbCSRFWOnos6qRiTVStDwqPLUclaxIw==}
+  globals@17.4.0:
+    resolution: {integrity: sha512-hjrNztw/VajQwOLsMNT1cbJiH2muO3OROCHnbehc8eY5JyD2gqz4AcMHPqgaOR59DjgUjYAYLeH699g/eWi2jw==}
     engines: {node: '>=18'}
 
   gopd@1.2.0:
@@ -3497,6 +3497,11 @@ packages:
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
+  lucide-react@0.577.0:
+    resolution: {integrity: sha512-4LjoFv2eEPwYDPg/CUdBJQSDfPyzXCRrVW1X7jrx/trgxnxkHFjnVZINbzvzxjN70dxychOfg+FTYwBiS3pQ5A==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
@@ -3752,8 +3757,8 @@ packages:
     resolution: {integrity: sha512-40QW5YalBNfQo5yRYmiw7Yz6TKKVr3h6970B2YE+3fQpsWcrbj1PzJgxeJ19DRQjhMbKPIuMY8rFaXc8moolVw==}
     engines: {node: '>=10.13.0'}
 
-  polkadot-api@2.0.0-rc.2:
-    resolution: {integrity: sha512-FNV28DO6kDSJUhXM2QOP66TzQDDpxAjiV7WG8yvj/P142id72UzMJ+ChTdbqjVH+ssICkqrWOicXli8vh654TQ==}
+  polkadot-api@2.0.0-rc.3:
+    resolution: {integrity: sha512-lQWbRsD13AXxLiv/zI1E1gbfg73oBJnQ7LF7/Qn+feOFnXTlqDObqwEE/0Q8CExzi6UevdcAYE3RUoHzv0U3aA==}
     hasBin: true
     peerDependencies:
       rxjs: '>=7.8.0'
@@ -3901,14 +3906,14 @@ packages:
       '@types/react':
         optional: true
 
-  react-svg@17.2.2:
-    resolution: {integrity: sha512-Xi25rN0NLE5b0ZS2lJpGM4liDqU3g2Ir5ICy9sSg19+IRGcB5sII16v46WZ3RYA10kSSC/UlusX3JmK242ah4A==}
+  react-svg@17.2.4:
+    resolution: {integrity: sha512-sqhO7OljLNmP6xgOQUxl1w0MWukcruKQygvKO5k+66ak/wRzDubYBOazq6p/HyYowCXsSirEMflosQ+bpCt/5Q==}
     peerDependencies:
       react: ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  react-virtuoso@4.18.1:
-    resolution: {integrity: sha512-KF474cDwaSb9+SJ380xruBB4P+yGWcVkcu26HtMqYNMTYlYbrNy8vqMkE+GpAApPPufJqgOLMoWMFG/3pJMXUA==}
+  react-virtuoso@4.18.3:
+    resolution: {integrity: sha512-fLz/peHAx4Eu0DLHurFEEI7Y6n5CqEoxBh04rgJM9yMuOJah2a9zWg/MUOmZLcp7zuWYorXq5+5bf3IRgkNvWg==}
     peerDependencies:
       react: '>=16 || >=17 || >= 18 || >= 19'
       react-dom: '>=16 || >=17 || >= 18 || >=19'
@@ -5125,7 +5130,7 @@ snapshots:
 
   '@pinojs/redact@0.4.0': {}
 
-  '@polkadot-api/cli@0.19.1(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(utf-8-validate@5.0.10)(yaml@2.6.1)':
+  '@polkadot-api/cli@0.19.2(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(utf-8-validate@5.0.10)(yaml@2.6.1)':
     dependencies:
       '@commander-js/extra-typings': 14.0.0(commander@14.0.3)
       '@polkadot-api/codegen': 0.22.1
@@ -5133,16 +5138,16 @@ snapshots:
       '@polkadot-api/json-rpc-provider': 0.1.0
       '@polkadot-api/known-chains': 0.10.0
       '@polkadot-api/metadata-compatibility': 0.5.1
-      '@polkadot-api/observable-client': 0.18.1(rxjs@7.8.2)
+      '@polkadot-api/observable-client': 0.18.2(rxjs@7.8.2)
       '@polkadot-api/sm-provider': 0.2.0(@polkadot-api/smoldot@0.3.15(bufferutil@4.1.0)(utf-8-validate@5.0.10))
       '@polkadot-api/smoldot': 0.3.15(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       '@polkadot-api/substrate-bindings': 0.19.0
       '@polkadot-api/substrate-client': 0.6.0
       '@polkadot-api/utils': 0.3.0
       '@polkadot-api/wasm-executor': 0.2.3
-      '@polkadot-api/ws-middleware': 0.2.1(rxjs@7.8.2)
+      '@polkadot-api/ws-middleware': 0.2.2(rxjs@7.8.2)
       '@polkadot-api/ws-provider': 0.8.0(rxjs@7.8.2)
-      '@types/node': 25.3.1
+      '@types/node': 25.3.5
       commander: 14.0.3
       execa: 9.6.1
       fs.promises.exists: 1.1.4
@@ -5172,9 +5177,9 @@ snapshots:
       '@polkadot-api/substrate-bindings': 0.19.0
       '@polkadot-api/utils': 0.3.0
 
-  '@polkadot-api/descriptors@file:.papi/descriptors(polkadot-api@2.0.0-rc.2(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1))':
+  '@polkadot-api/descriptors@file:.papi/descriptors(polkadot-api@2.0.0-rc.3(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1))':
     dependencies:
-      polkadot-api: 2.0.0-rc.2(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
+      polkadot-api: 2.0.0-rc.3(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
 
   '@polkadot-api/ink-contracts@0.5.1':
     dependencies:
@@ -5237,7 +5242,7 @@ snapshots:
       '@polkadot-api/metadata-builders': 0.13.11
       '@polkadot-api/substrate-bindings': 0.19.0
 
-  '@polkadot-api/observable-client@0.18.1(rxjs@7.8.2)':
+  '@polkadot-api/observable-client@0.18.2(rxjs@7.8.2)':
     dependencies:
       '@polkadot-api/metadata-builders': 0.13.11
       '@polkadot-api/substrate-bindings': 0.19.0
@@ -5268,7 +5273,7 @@ snapshots:
     dependencies:
       '@polkadot-api/json-rpc-provider': 0.1.0
 
-  '@polkadot-api/react-builder@0.3.13(react@19.2.4)':
+  '@polkadot-api/react-builder@0.4.0(react@19.2.4)':
     dependencies:
       '@polkadot-api/metadata-builders': 0.13.11
       '@polkadot-api/substrate-bindings': 0.19.0
@@ -5308,7 +5313,7 @@ snapshots:
 
   '@polkadot-api/smoldot@0.3.15(bufferutil@4.1.0)(utf-8-validate@5.0.10)':
     dependencies:
-      '@types/node': 24.10.14
+      '@types/node': 24.12.0
       smoldot: 2.0.40(bufferutil@4.1.0)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
@@ -5356,7 +5361,7 @@ snapshots:
 
   '@polkadot-api/wasm-executor@0.2.3': {}
 
-  '@polkadot-api/ws-middleware@0.2.1(rxjs@7.8.2)':
+  '@polkadot-api/ws-middleware@0.2.2(rxjs@7.8.2)':
     dependencies:
       '@polkadot-api/json-rpc-provider': 0.1.0
       '@polkadot-api/json-rpc-provider-proxy': 0.3.0
@@ -5567,7 +5572,7 @@ snapshots:
       '@react-rxjs/utils': 0.9.7(@react-rxjs/core@0.10.8(react@19.2.4)(rxjs@7.8.2))(react@19.2.4)(rxjs@7.8.2)
       '@rx-state/core': 0.1.4(rxjs@7.8.2)
       '@types/react': 19.2.14
-      polkadot-api: 2.0.0-rc.2(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
+      polkadot-api: 2.0.0-rc.3(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
       react: 19.2.4
       rxjs: 7.8.2
     transitivePeerDependencies:
@@ -5595,7 +5600,7 @@ snapshots:
       '@types/react': 19.2.14
       buffer: 6.0.3
       lucide-react: 0.575.0(react@19.2.4)
-      polkadot-api: 2.0.0-rc.2(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
+      polkadot-api: 2.0.0-rc.3(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
       react: 19.2.4
       rxjs: 7.8.2
     transitivePeerDependencies:
@@ -5651,7 +5656,7 @@ snapshots:
       '@react-rxjs/utils': 0.9.7(@react-rxjs/core@0.10.8(react@19.2.4)(rxjs@7.8.2))(react@19.2.4)(rxjs@7.8.2)
       '@types/react': 19.2.14
       lucide-react: 0.575.0(react@19.2.4)
-      polkadot-api: 2.0.0-rc.2(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
+      polkadot-api: 2.0.0-rc.3(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
       react: 19.2.4
       rxjs: 7.8.2
     transitivePeerDependencies:
@@ -5677,7 +5682,7 @@ snapshots:
       '@react-rxjs/utils': 0.9.7(@react-rxjs/core@0.10.8(react@19.2.4)(rxjs@7.8.2))(react@19.2.4)(rxjs@7.8.2)
       '@types/react': 19.2.14
       lucide-react: 0.575.0(react@19.2.4)
-      polkadot-api: 2.0.0-rc.2(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
+      polkadot-api: 2.0.0-rc.3(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
       react: 19.2.4
       rxjs: 7.8.2
     transitivePeerDependencies:
@@ -5697,7 +5702,7 @@ snapshots:
     dependencies:
       '@react-rxjs/utils': 0.9.7(@react-rxjs/core@0.10.8(react@19.2.4)(rxjs@7.8.2))(react@19.2.4)(rxjs@7.8.2)
       '@rx-state/core': 0.1.4(rxjs@7.8.2)
-      polkadot-api: 2.0.0-rc.2(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
+      polkadot-api: 2.0.0-rc.3(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
       rxjs: 7.8.2
     transitivePeerDependencies:
       - '@microsoft/api-extractor'
@@ -5723,7 +5728,7 @@ snapshots:
       '@react-rxjs/utils': 0.9.7(@react-rxjs/core@0.10.8(react@19.2.4)(rxjs@7.8.2))(react@19.2.4)(rxjs@7.8.2)
       '@types/react': 19.2.14
       lucide-react: 0.575.0(react@19.2.4)
-      polkadot-api: 2.0.0-rc.2(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
+      polkadot-api: 2.0.0-rc.3(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
       react: 19.2.4
       rxjs: 7.8.2
     transitivePeerDependencies:
@@ -5750,7 +5755,7 @@ snapshots:
       '@react-rxjs/utils': 0.9.7(@react-rxjs/core@0.10.8(react@19.2.4)(rxjs@7.8.2))(react@19.2.4)(rxjs@7.8.2)
       '@types/react': 19.2.14
       lucide-react: 0.575.0(react@19.2.4)
-      polkadot-api: 2.0.0-rc.2(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
+      polkadot-api: 2.0.0-rc.3(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
       react: 19.2.4
       rxjs: 7.8.2
     transitivePeerDependencies:
@@ -5798,7 +5803,7 @@ snapshots:
       '@polkahub/plugin': 0.5.0(@react-rxjs/core@0.10.8(react@19.2.4)(rxjs@7.8.2))(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(react@19.2.4)(utf-8-validate@5.0.10)(yaml@2.6.1)
       '@react-rxjs/utils': 0.9.7(@react-rxjs/core@0.10.8(react@19.2.4)(rxjs@7.8.2))(react@19.2.4)(rxjs@7.8.2)
       '@rx-state/core': 0.1.4(rxjs@7.8.2)
-      polkadot-api: 2.0.0-rc.2(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
+      polkadot-api: 2.0.0-rc.3(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
       rxjs: 7.8.2
     transitivePeerDependencies:
       - '@microsoft/api-extractor'
@@ -5859,7 +5864,7 @@ snapshots:
       '@react-rxjs/utils': 0.9.7(@react-rxjs/core@0.10.8(react@19.2.4)(rxjs@7.8.2))(react@19.2.4)(rxjs@7.8.2)
       '@types/react': 19.2.14
       lucide-react: 0.575.0(react@19.2.4)
-      polkadot-api: 2.0.0-rc.2(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
+      polkadot-api: 2.0.0-rc.3(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
       react: 19.2.4
       rxjs: 7.8.2
     transitivePeerDependencies:
@@ -5889,7 +5894,7 @@ snapshots:
       '@walletconnect/types': 2.23.0
       '@walletconnect/universal-provider': 2.23.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
       '@walletconnect/utils': 2.23.0(typescript@5.9.3)(zod@3.25.76)
-      polkadot-api: 2.0.0-rc.2(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
+      polkadot-api: 2.0.0-rc.3(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1)
       react: 19.2.4
       rxjs: 7.8.2
     transitivePeerDependencies:
@@ -7486,12 +7491,12 @@ snapshots:
       '@tailwindcss/oxide-win32-arm64-msvc': 4.2.1
       '@tailwindcss/oxide-win32-x64-msvc': 4.2.1
 
-  '@tailwindcss/vite@4.2.1(vite@7.3.1(@types/node@25.3.1)(jiti@2.6.1)(lightningcss@1.31.1)(yaml@2.6.1))':
+  '@tailwindcss/vite@4.2.1(vite@7.3.1(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(yaml@2.6.1))':
     dependencies:
       '@tailwindcss/node': 4.2.1
       '@tailwindcss/oxide': 4.2.1
       tailwindcss: 4.2.1
-      vite: 7.3.1(@types/node@25.3.1)(jiti@2.6.1)(lightningcss@1.31.1)(yaml@2.6.1)
+      vite: 7.3.1(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(yaml@2.6.1)
 
   '@tanem/svg-injector@11.3.1':
     dependencies:
@@ -7522,11 +7527,11 @@ snapshots:
 
   '@types/bn.js@5.2.0':
     dependencies:
-      '@types/node': 25.3.1
+      '@types/node': 25.3.5
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 25.3.1
+      '@types/node': 25.3.5
     optional: true
 
   '@types/estree@1.0.8': {}
@@ -7536,11 +7541,11 @@ snapshots:
   '@types/node@12.20.55':
     optional: true
 
-  '@types/node@24.10.14':
+  '@types/node@24.12.0':
     dependencies:
       undici-types: 7.16.0
 
-  '@types/node@25.3.1':
+  '@types/node@25.3.5':
     dependencies:
       undici-types: 7.18.2
 
@@ -7567,12 +7572,12 @@ snapshots:
 
   '@types/ws@7.4.7':
     dependencies:
-      '@types/node': 25.3.1
+      '@types/node': 25.3.5
     optional: true
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 25.3.1
+      '@types/node': 25.3.5
     optional: true
 
   '@typescript-eslint/eslint-plugin@8.56.1(@typescript-eslint/parser@8.56.1(eslint@9.39.3(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.3(jiti@2.6.1))(typescript@5.9.3)':
@@ -7666,7 +7671,7 @@ snapshots:
       '@typescript-eslint/types': 8.56.1
       eslint-visitor-keys: 5.0.1
 
-  '@vitejs/plugin-react@5.1.4(vite@7.3.1(@types/node@25.3.1)(jiti@2.6.1)(lightningcss@1.31.1)(yaml@2.6.1))':
+  '@vitejs/plugin-react@5.1.4(vite@7.3.1(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(yaml@2.6.1))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.29.0)
@@ -7674,7 +7679,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-rc.3
       '@types/babel__core': 7.20.5
       react-refresh: 0.18.0
-      vite: 7.3.1(@types/node@25.3.1)(jiti@2.6.1)(lightningcss@1.31.1)(yaml@2.6.1)
+      vite: 7.3.1(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(yaml@2.6.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -8644,7 +8649,7 @@ snapshots:
 
   globals@14.0.0: {}
 
-  globals@17.3.0: {}
+  globals@17.4.0: {}
 
   gopd@1.2.0:
     optional: true
@@ -8914,6 +8919,10 @@ snapshots:
       yallist: 3.1.1
 
   lucide-react@0.575.0(react@19.2.4):
+    dependencies:
+      react: 19.2.4
+
+  lucide-react@0.577.0(react@19.2.4):
     dependencies:
       react: 19.2.4
 
@@ -9235,16 +9244,16 @@ snapshots:
 
   pngjs@5.0.0: {}
 
-  polkadot-api@2.0.0-rc.2(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1):
+  polkadot-api@2.0.0-rc.3(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(rxjs@7.8.2)(utf-8-validate@5.0.10)(yaml@2.6.1):
     dependencies:
-      '@polkadot-api/cli': 0.19.1(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(utf-8-validate@5.0.10)(yaml@2.6.1)
+      '@polkadot-api/cli': 0.19.2(bufferutil@4.1.0)(jiti@2.6.1)(postcss@8.5.6)(utf-8-validate@5.0.10)(yaml@2.6.1)
       '@polkadot-api/ink-contracts': 0.5.1
       '@polkadot-api/json-rpc-provider': 0.1.0
       '@polkadot-api/known-chains': 0.10.0
       '@polkadot-api/logs-provider': 0.1.0
       '@polkadot-api/metadata-builders': 0.13.11
       '@polkadot-api/metadata-compatibility': 0.5.1
-      '@polkadot-api/observable-client': 0.18.1(rxjs@7.8.2)
+      '@polkadot-api/observable-client': 0.18.2(rxjs@7.8.2)
       '@polkadot-api/pjs-signer': 0.6.21
       '@polkadot-api/polkadot-signer': 0.1.6
       '@polkadot-api/signer': 0.2.15
@@ -9253,7 +9262,7 @@ snapshots:
       '@polkadot-api/substrate-bindings': 0.19.0
       '@polkadot-api/substrate-client': 0.6.0
       '@polkadot-api/utils': 0.3.0
-      '@polkadot-api/ws-middleware': 0.2.1(rxjs@7.8.2)
+      '@polkadot-api/ws-middleware': 0.2.2(rxjs@7.8.2)
       '@polkadot-api/ws-provider': 0.8.0(rxjs@7.8.2)
       '@rx-state/core': 0.1.4(rxjs@7.8.2)
       rxjs: 7.8.2
@@ -9442,7 +9451,7 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.14
 
-  react-svg@17.2.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-svg@17.2.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@babel/runtime': 7.28.6
       '@tanem/svg-injector': 11.3.1
@@ -9451,7 +9460,7 @@ snapshots:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
 
-  react-virtuoso@4.18.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-virtuoso@4.18.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
@@ -9911,7 +9920,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  vite@7.3.1(@types/node@25.3.1)(jiti@2.6.1)(lightningcss@1.31.1)(yaml@2.6.1):
+  vite@7.3.1(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(yaml@2.6.1):
     dependencies:
       esbuild: 0.27.3
       fdir: 6.5.0(picomatch@4.0.3)
@@ -9920,7 +9929,7 @@ snapshots:
       rollup: 4.59.0
       tinyglobby: 0.2.15
     optionalDependencies:
-      '@types/node': 25.3.1
+      '@types/node': 25.3.5
       fsevents: 2.3.3
       jiti: 2.6.1
       lightningcss: 1.31.1

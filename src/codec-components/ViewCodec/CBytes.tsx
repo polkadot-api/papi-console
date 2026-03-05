@@ -1,14 +1,21 @@
 import { getBytesFormat } from "@/components/BinaryInput"
 import { SwitchBinary } from "@/components/Icons"
-import { ViewBytes } from "@polkadot-api/react-builder"
+import { ViewBytes, ViewFixedBytes } from "@polkadot-api/react-builder"
+import { Binary } from "polkadot-api"
+import { toHex } from "polkadot-api/utils"
 import { FC, useState } from "react"
 import { useReportBinary } from "./CopyBinary"
-import { toHex } from "polkadot-api/utils"
 
 export const CBytes: ViewBytes = ({ value, encodedValue }) => {
   useReportBinary(encodedValue)
 
   return <BytesDisplay value={value} />
+}
+
+export const CFixedBytes: ViewFixedBytes = ({ value, encodedValue }) => {
+  useReportBinary(encodedValue)
+
+  return <BytesDisplay value={Binary.fromHex(value)} />
 }
 
 export const BytesDisplay: FC<{ value: Uint8Array }> = ({ value }) => {
