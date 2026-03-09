@@ -7,17 +7,18 @@ import { twMerge } from "tailwind-merge"
 import { SwitchBinary } from "./Icons"
 import { TextInputField } from "./TextInputField"
 import { useGenericSynchronizeInput } from "./useSynchroniseInput"
+import { fromHex, toHex } from "polkadot-api/utils"
 
 export const BinaryInput: React.FC<{
-  encodedValue: Binary | NOTIN
-  onValueChanged: (newValue: Binary | NOTIN) => boolean
+  encodedValue: Uint8Array | NOTIN
+  onValueChanged: (newValue: Uint8Array | NOTIN) => boolean
   len?: number
 }> = ({ encodedValue, onValueChanged, len }) => {
   const [localInput, setLocalInput] = useGenericSynchronizeInput(
     encodedValue,
     onValueChanged,
     (value) => validate(parseValue(value), len),
-    "" as string | Binary,
+    "" as string | Uint8Array,
     serializeValue,
     checkEqualInputBinary,
   )
@@ -44,7 +45,7 @@ export const BinaryInput: React.FC<{
   }
 
   const parsed = parseValue(inputValue)
-  const length = parsed === NOTIN ? null : parsed.asBytes().length
+  const length = parsed === NOTIN ? null : parsed.length
 
   const oddHexLength =
     typeof localInput === "string" &&
@@ -82,9 +83,9 @@ export const BinaryInput: React.FC<{
             type="button"
             onClick={() => {
               if (inputValue.startsWith("0x")) {
-                setLocalInput(serializeValue(Binary.fromHex(inputValue)))
+                setLocalInput(serializeValue(fromHex(inputValue)))
               } else {
-                setLocalInput(Binary.fromText(inputValue).asHex())
+                setLocalInput(toHex(Binary.fromText(inputValue)))
               }
             }}
           >
@@ -110,7 +111,7 @@ export const BinaryInput: React.FC<{
 
 export const BinaryFileInput: FC<{
   validate: (file: File) => boolean
-  onLoaded: (value: Binary) => void
+  onLoaded: (value: Uint8Array) => void
   onError: () => void
 }> = ({ validate, onLoaded, onError }) => {
   const loadFile = async (file: File) => {
@@ -124,7 +125,7 @@ export const BinaryFileInput: FC<{
         reader.onerror = reject
         reader.readAsArrayBuffer(file)
       })
-      onLoaded(Binary.fromBytes(new Uint8Array(buffer)))
+      onLoaded(new Uint8Array(buffer))
     } catch (ex) {
       console.error(ex)
       onError()
@@ -143,19 +144,22 @@ export const BinaryFileInput: FC<{
   )
 }
 
-const validate = (value: Binary | NOTIN, len?: number): Binary | NOTIN => {
+const validate = (
+  value: Uint8Array | NOTIN,
+  len?: number,
+): Uint8Array | NOTIN => {
   if (!len || value === NOTIN) return value
-  return value.asBytes().length !== len ? NOTIN : value
+  return value.length !== len ? NOTIN : value
 }
 
-const parseValue = (value: string | Binary): Binary | NOTIN => {
-  if (value instanceof Binary) return value
+const parseValue = (value: string | Uint8Array): Uint8Array | NOTIN => {
+  if (value instanceof Uint8Array) return value
 
   if (value.trim() === "") return Binary.fromText("")
 
   if (value.startsWith("0x")) {
     try {
-      return Binary.fromHex(value)
+      return fromHex(value)
     } catch (_) {
       return NOTIN
     }
@@ -164,40 +168,35 @@ const parseValue = (value: string | Binary): Binary | NOTIN => {
   return Binary.fromText(value)
 }
 
-const serializeValue = (value: Binary): string | Binary => {
-  const bytes = value.asBytes()
-  if (bytes.length === 0) return ""
-  if (bytes.length > 5 * 1024 * 1024) return value
+const serializeValue = (value: Uint8Array): string | Uint8Array => {
+  if (value.length === 0) return ""
+  if (value.length > 5 * 1024 * 1024) return value
 
   return bytesToString(value)
 }
 
 const textDecoder = new TextDecoder("utf-8", { fatal: true })
-export const getBytesFormat = (value: Binary) => {
+export const getBytesFormat = (value: Uint8Array) => {
   try {
-    const bytes = value.asBytes()
-    if (bytes.slice(0, 5).every((b) => b < 32)) throw null
+    if (value.slice(0, 5).every((b) => b < 32)) throw null
     return {
       type: "text",
-      value: textDecoder.decode(bytes),
+      value: textDecoder.decode(value),
     }
   } catch (_) {
     return {
       type: "hex",
-      value: value.asHex(),
+      value: toHex(value),
     }
   }
 }
-export const bytesToString = (value: Binary) => getBytesFormat(value).value
+export const bytesToString = (value: Uint8Array) => getBytesFormat(value).value
 
 export const checkEqualInputBinary = (
-  input: string | Binary,
-  value: Binary | typeof NOTIN,
+  input: string | Uint8Array,
+  value: Uint8Array | typeof NOTIN,
 ) => {
   const parsed = parseValue(input)
   if (parsed === NOTIN || value === NOTIN) return true
-  const inputBytes = parsed.asBytes()
-  const valueBytes = value.asBytes()
-
-  return byteArraysAreEqual(inputBytes, valueBytes)
+  return byteArraysAreEqual(parsed, value)
 }

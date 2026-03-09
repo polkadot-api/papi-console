@@ -5,6 +5,7 @@ import {
   EditBool,
   EditBytes,
   EditEthAccount,
+  EditFixedBytes,
   EditNumber,
   EditOption,
   EditPrimitiveComponentProps,
@@ -14,7 +15,7 @@ import {
   NOTIN,
 } from "@polkadot-api/react-builder"
 import { u8 } from "@polkadot-api/substrate-bindings"
-import { toHex } from "@polkadot-api/utils"
+import { toHex } from "polkadot-api/utils"
 import { useStateObservable } from "@react-rxjs/core"
 import { FC } from "react"
 import { isActive$ } from "../common/paths.state"
@@ -45,6 +46,7 @@ export const CBigNumber: EditBigNumber = CPrimitive
 export const CNumber: EditNumber = CPrimitive
 export const CAccountId: EditAccountId = CPrimitive
 export const CBytes: EditBytes = CPrimitive
+export const CFixedBytes: EditFixedBytes = CPrimitive
 export const CBitSeq: EditBitSeq = CPrimitive
 
 export const COption: EditOption = ({ path, value, inner }) => {

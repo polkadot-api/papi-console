@@ -1,7 +1,8 @@
 import { getBytesFormat } from "@/components/BinaryInput"
 import { SwitchBinary } from "@/components/Icons"
-import { ViewBytes } from "@polkadot-api/react-builder"
+import { ViewBytes, ViewFixedBytes } from "@polkadot-api/react-builder"
 import { Binary } from "polkadot-api"
+import { toHex } from "polkadot-api/utils"
 import { FC, useState } from "react"
 import { useReportBinary } from "./CopyBinary"
 
@@ -11,7 +12,13 @@ export const CBytes: ViewBytes = ({ value, encodedValue }) => {
   return <BytesDisplay value={value} />
 }
 
-export const BytesDisplay: FC<{ value: Binary }> = ({ value }) => {
+export const CFixedBytes: ViewFixedBytes = ({ value, encodedValue }) => {
+  useReportBinary(encodedValue)
+
+  return <BytesDisplay value={Binary.fromHex(value)} />
+}
+
+export const BytesDisplay: FC<{ value: Uint8Array }> = ({ value }) => {
   const [forceBinary, setForceBinary] = useState(false)
 
   const format = getBytesFormat(value)
@@ -27,7 +34,7 @@ export const BytesDisplay: FC<{ value: Binary }> = ({ value }) => {
           <SwitchBinary size={24} />
         </button>
       ) : null}
-      {forceBinary ? value.asHex() : format.value}
+      {forceBinary ? toHex(value) : format.value}
     </div>
   )
 }
