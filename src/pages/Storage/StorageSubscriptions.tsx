@@ -107,7 +107,7 @@ const ValueSubscriptionBox: FC<{ subscription: string }> = ({
               hash: null,
             }),
           }}
-          single
+          single={storageSubscription.single}
           mode={mode}
         />
       )}
