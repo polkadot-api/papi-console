@@ -35,7 +35,6 @@ import {
   switchMap,
   take,
   takeUntil,
-  withLatestFrom,
 } from "rxjs"
 import { v4 as uuid } from "uuid"
 import { selectedBlock$ } from "./BlockPicker"
@@ -54,12 +53,15 @@ export const [entryChange$, selectEntry] = createSignal<{
   entry?: string | null
 }>()
 
+const getPalletEntries = (
+  ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">,
+) =>
+  Object.fromEntries(
+    ctx.lookup.metadata.pallets.map((p) => [p.name, p.storage?.items ?? []]),
+  )
+
 const palletEntries$ = selectedBlock$.pipe(
-  map(({ ctx }) =>
-    Object.fromEntries(
-      ctx.lookup.metadata.pallets.map((p) => [p.name, p.storage?.items ?? []]),
-    ),
-  ),
+  map(({ ctx }) => getPalletEntries(ctx)),
 )
 
 const initialValue$ = palletEntries$.pipe(
@@ -106,9 +108,16 @@ export const partialEntry$ = state(
 )
 
 export const selectedEntry$ = state(
-  combineLatest([partialEntry$, selectedBlock$]).pipe(
-    withLatestFrom(palletEntries$),
-    map(([[partialEntry, { ctx }], entries]): StorageMetadataEntry | null => {
+  combineLatest([
+    partialEntry$,
+    selectedBlock$.pipe(
+      map(({ ctx }) => {
+        const entries = getPalletEntries(ctx)
+        return { ctx, entries }
+      }),
+    ),
+  ]).pipe(
+    map(([partialEntry, { ctx, entries }]): StorageMetadataEntry | null => {
       const entry = partialEntry.pallet
         ? entries[partialEntry.pallet]?.find(
             (v) => v.name === partialEntry.entry,
