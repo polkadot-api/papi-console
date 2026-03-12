@@ -37,7 +37,9 @@ export const CResult: ViewResult = ({ value, inner }) => {
 }
 
 export const CStr: ViewStr = ({ value }) => <div>{value}</div>
-export const CNumber: ViewNumber = ({ value }) => <div>{value}</div>
+export const CNumber: ViewNumber = ({ value }) => (
+  <div>{value.toLocaleString()}</div>
+)
 export const CBitSeq: ViewBitSeq = ({ value }) => (
   <div>
     {value
@@ -46,5 +48,5 @@ export const CBitSeq: ViewBitSeq = ({ value }) => (
   </div>
 )
 export const CBigNumber: ViewBigNumber = ({ value }) => (
-  <div>{String(value)}</div>
+  <div>{value.toLocaleString()}</div>
 )

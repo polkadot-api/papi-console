@@ -11,7 +11,7 @@ index 44b3fdc1f5d619833af09f0f916a685e55fcc9c8..7054064cb847e7d69eac8ddad21b5593
      collapseStringsAfterLength?: number;
      collapseStringMode?: 'directly' | 'word' | 'address';
 diff --git a/dist/es/index.mjs b/dist/es/index.mjs
-index ee2e3dee5780764f111f8761442e45014d8f050e..70adf8d3cad13239dfc255d2ae3d87225eb5d0b1 100644
+index ee2e3dee5780764f111f8761442e45014d8f050e..8e92ebf3f7ed6c22c883c68deed5c4e2612bbdcc 100644
 --- a/dist/es/index.mjs
 +++ b/dist/es/index.mjs
 @@ -495,7 +495,7 @@ function LargeArrayNode({ originNode, node, depth, index, deleteHandle: _deleteS
@@ -64,6 +64,15 @@ index ee2e3dee5780764f111f8761442e45014d8f050e..70adf8d3cad13239dfc255d2ae3d8722
      let customReturn;
      if (typeof customizeNode === 'function')
          customReturn = safeCall(customizeNode, [{ node, depth, indexOrName }]);
+@@ -878,7 +879,7 @@ function JsonNode({ node, depth, deleteHandle: _deleteHandle, indexOrName, paren
+             className += ' ' + customReturn.className;
+         if (deleting)
+             className += ' json-view--deleting';
+-        let displayValue = String(node);
++        let displayValue = type === 'number' || type === 'bigint' ? node.toLocaleString() : String(node);
+         if (type === 'bigint')
+             displayValue += 'n';
+         const EditingElement = useMemo(() => (jsx("span", { contentEditable: true, className: className, dangerouslySetInnerHTML: { __html: type === 'string' ? `"${displayValue}"` : displayValue }, ref: valueRef, onKeyDown: handleKeyDown })), [displayValue, type, handleKeyDown]);
 @@ -920,12 +921,13 @@ const JsonViewContext = createContext({
      DoneComponent: undefined,
      CustomOperation: undefined
