@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   react18-json-view:
-    hash: 18eb0a02f9279644adf5cb880895a0c85bd6a84bb945850a7d29833aa7c4c00c
+    hash: 962696fac5fe7ad3e94fd36dad07521c6c3eafd52f219ab335d52438387f6b66
     path: patches/react18-json-view.patch
 
 importers:
@@ -129,7 +129,7 @@ importers:
         version: 4.18.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react18-json-view:
         specifier: ^0.2.9
-        version: 0.2.9(patch_hash=18eb0a02f9279644adf5cb880895a0c85bd6a84bb945850a7d29833aa7c4c00c)(react@19.2.4)
+        version: 0.2.9(patch_hash=962696fac5fe7ad3e94fd36dad07521c6c3eafd52f219ab335d52438387f6b66)(react@19.2.4)
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
@@ -2384,6 +2384,9 @@ packages:
 
   '@types/node@25.3.5':
     resolution: {integrity: sha512-oX8xrhvpiyRCQkG1MFchB09f+cXftgIXb3a7UUa4Y3wpmZPw5tyZGTLWhlESOLq1Rq6oDlc8npVU2/9xiCuXMA==}
+
+  '@types/node@25.4.0':
+    resolution: {integrity: sha512-9wLpoeWuBlcbBpOY3XmzSTG3oscB6xjBEEtn+pYXTfhyXhIxC5FsBer2KTopBlvKEiW9l13po9fq+SJY/5lkhw==}
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
@@ -5147,7 +5150,7 @@ snapshots:
       '@polkadot-api/wasm-executor': 0.2.3
       '@polkadot-api/ws-middleware': 0.2.2(rxjs@7.8.2)
       '@polkadot-api/ws-provider': 0.8.0(rxjs@7.8.2)
-      '@types/node': 25.3.5
+      '@types/node': 25.4.0
       commander: 14.0.3
       execa: 9.6.1
       fs.promises.exists: 1.1.4
@@ -7549,6 +7552,10 @@ snapshots:
     dependencies:
       undici-types: 7.18.2
 
+  '@types/node@25.4.0':
+    dependencies:
+      undici-types: 7.18.2
+
   '@types/normalize-package-data@2.4.4': {}
 
   '@types/prop-types@15.7.15': {}
@@ -9465,7 +9472,7 @@ snapshots:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
 
-  react18-json-view@0.2.9(patch_hash=18eb0a02f9279644adf5cb880895a0c85bd6a84bb945850a7d29833aa7c4c00c)(react@19.2.4):
+  react18-json-view@0.2.9(patch_hash=962696fac5fe7ad3e94fd36dad07521c6c3eafd52f219ab335d52438387f6b66)(react@19.2.4):
     dependencies:
       copy-to-clipboard: 3.3.3
       react: 19.2.4
