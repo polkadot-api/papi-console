@@ -1,4 +1,5 @@
 import { BinaryDisplay } from "@/codec-components/LookupTypeEdit"
+import { ActionButton } from "@/components/ActionButton"
 import { ButtonGroup } from "@/components/ButtonGroup"
 import { LoadingMetadata } from "@/components/Loading"
 import { withSubscribe } from "@/components/withSuspense"
@@ -8,18 +9,18 @@ import {
   CodecComponentType,
   CodecComponentValue,
 } from "@polkadot-api/react-builder"
-import { fromHex, toHex } from "polkadot-api/utils"
 import { state, useStateObservable } from "@react-rxjs/core"
+import { FileSearch, Settings } from "lucide-react"
+import { fromHex, toHex } from "polkadot-api/utils"
 import { useLayoutEffect, useState } from "react"
 import { useLocation } from "react-router-dom"
 import { map } from "rxjs"
 import { twMerge } from "tailwind-merge"
+import { ExtrinsicAnalyzer } from "./ExtrinsicAnalyzer"
+import { CustomSignedExt, customSignedExtensions$ } from "./CustomSignedExt"
 import { EditMode } from "./EditMode"
 import { JsonMode } from "./JsonMode"
 import { ExtrinsicModal } from "./SubmitTx/SubmitTx"
-import { ActionButton } from "@/components/ActionButton"
-import { Settings } from "lucide-react"
-import { CustomSignedExt, customSignedExtensions$ } from "./CustomSignedExt"
 
 const extrinsicProps$ = state(
   runtimeCtx$.pipe(
@@ -55,7 +56,7 @@ const customExtensionsCount$ = state(
 export const Extrinsics = withSubscribe(
   () => {
     const [viewMode, setViewMode] = useState<"edit" | "json">("edit")
-    const [editingExtensions, setEditingExtensions] = useState(false)
+    const [page, setPage] = useState<"analyze" | "extensions" | null>(null)
     const extrinsicProps = useStateObservable(extrinsicProps$)
     const location = useLocation()
 
@@ -83,8 +84,10 @@ export const Extrinsics = withSubscribe(
       }
     }, [binaryValue])
 
-    if (editingExtensions)
-      return <CustomSignedExt onClose={() => setEditingExtensions(false)} />
+    if (page === "extensions")
+      return <CustomSignedExt onClose={() => setPage(null)} />
+    if (page === "analyze")
+      return <ExtrinsicAnalyzer onClose={() => setPage(null)} />
 
     return (
       <div
@@ -120,8 +123,14 @@ export const Extrinsics = withSubscribe(
           />
           <div className="flex flex-row items-center gap-2">
             <ActionButton
+              className="text-foreground/70"
+              onClick={() => setPage("analyze")}
+            >
+              <FileSearch />
+            </ActionButton>
+            <ActionButton
               className="text-foreground/70 flex items-center gap-1"
-              onClick={() => setEditingExtensions(true)}
+              onClick={() => setPage("extensions")}
             >
               {customExtensionsCount$}
               <Settings />

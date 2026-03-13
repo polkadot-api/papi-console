@@ -1,18 +1,21 @@
 import { createChopsticksProvider } from "@/chopsticks/chopsticks"
 import { getHashParams, setHashParams } from "@/hashParams"
 import { getDynamicBuilder, getLookupFn } from "@polkadot-api/metadata-builders"
+import type {
+  ChainHead$,
+  RuntimeContext,
+} from "@polkadot-api/observable-client"
 import {
   decAnyMetadata,
   HexString,
   unifyMetadata,
 } from "@polkadot-api/substrate-bindings"
-import { getExtrinsicDecoder } from "@polkadot-api/tx-utils"
-import { fromHex, toHex } from "polkadot-api/utils"
 import { liftSuspense, sinkSuspense, state, SUSPENSE } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
 import { get, update } from "idb-keyval"
 import { createClient } from "polkadot-api"
 import { withLogsRecorder } from "polkadot-api/logs-provider"
+import { fromHex, toHex } from "polkadot-api/utils"
 import {
   catchError,
   concat,
@@ -47,7 +50,6 @@ import {
   getWebsocketProvider,
   WebsocketSource,
 } from "./websocket"
-import type { ChainHead$ } from "@polkadot-api/observable-client"
 
 export type ChainSource = WebsocketSource | SmoldotSource
 
@@ -254,14 +256,6 @@ const uncachedRuntimeCtx$ = chainClient$.pipeState(
   filter(Boolean),
 )
 
-const withTxDecoder: <T extends { metadataRaw: Uint8Array }>(
-  input: Observable<T>,
-) => Observable<T & { txDecoder: ReturnType<typeof getExtrinsicDecoder> }> =
-  map((ctx) => ({
-    ...ctx,
-    txDecoder: getExtrinsicDecoder(ctx.metadataRaw),
-  }))
-
 export const runtimeCtxAt$ = state((atBlock: string) =>
   chainClient$.pipe(
     take(1),
@@ -272,17 +266,20 @@ export const runtimeCtxAt$ = state((atBlock: string) =>
         client.chainHead.getRuntimeContext$(atBlock)
       )
     }),
-    withTxDecoder,
   ),
 )
 
+export type CachedRuntime = Pick<
+  RuntimeContext,
+  "metadataRaw" | "lookup" | "dynamicBuilder"
+>
 export const runtimeCtx$ = chainClient$.pipeState(
   switchMap(({ id }) =>
     get<MetadataCache>(IDB_KEY).then((cache) =>
       cache ? [...cache.entries()].find(([, v]) => v.id === id) : undefined,
     ),
   ),
-  switchMap((cached) => {
+  switchMap((cached): Observable<RuntimeContext | CachedRuntime> => {
     if (!cached) return uncachedRuntimeCtx$
     const metadata = unifyMetadata(decAnyMetadata(cached[1].data))
     const lookup = getLookupFn(metadata)
@@ -296,7 +293,6 @@ export const runtimeCtx$ = chainClient$.pipeState(
       }),
     )
   }),
-  withTxDecoder,
 )
 
 export const lookup$ = runtimeCtx$.pipeState(map((ctx) => ctx.lookup))

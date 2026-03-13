@@ -92,7 +92,7 @@ export const Extrinsic: FC<{
   )
 }
 
-const SignedExtensions: FC<{ extra: Record<string, unknown> }> = ({
+export const SignedExtensions: FC<{ extra: Record<string, unknown> }> = ({
   extra,
 }) => (
   <div className="space-y-2">
@@ -173,7 +173,7 @@ export const EventDisplay: FC<{
   )
 }
 
-const Sender: React.FC<{
+export const Sender: React.FC<{
   sender: Enum<{ Id: SS58String }> | SS58String | HexString
 }> = ({ sender }) => {
   const value: string | null =
