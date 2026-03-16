@@ -75,7 +75,8 @@ export const IntegerInput: FC<{
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const input = e.target.value
+      // Exclude thousands separators when pasting
+      const input = e.target.value.replace(/[,. ']/g, "")
 
       // Allow empty input
       if (input === "") {
