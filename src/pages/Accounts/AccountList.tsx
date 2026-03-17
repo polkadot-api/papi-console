@@ -172,7 +172,7 @@ const getTransferCallData$ = state(
         const value = 10n ** BigInt(tokenDecimals)
 
         return toHex(
-          staticApis.tx.Balances.transfer_keep_alive.getCallData({
+          staticApis.tx.Balances.transfer_keep_alive.getEncodedData({
             dest: MultiAddress.Id(dest),
             value,
           }),
