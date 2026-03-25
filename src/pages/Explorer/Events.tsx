@@ -108,7 +108,7 @@ export const Events = () => {
               >
                 {"event" in evt ? (
                   <Popover content={<EventPopover event={evt} />}>
-                    <button className="w-full p-1 text-left text-card-foreground/80 hover:text-card-foreground/100">{`${evt.event.type}.${evt.event.value.type}`}</button>
+                    <button className="w-full p-1 text-left text-card-foreground/80 hover:text-card-foreground">{`${evt.event.type}.${evt.event.value.type}`}</button>
                   </Popover>
                 ) : (
                   `… ${evt.length} more`
