@@ -427,7 +427,7 @@ export const ValueDisplay: FC<{
     return [codec, encodedValue] as const
   }, [ctx, value, type])
 
-  if (!encodedValue) {
+  if (!encodedValue || value === undefined) {
     return <div className="text-foreground/60">Empty</div>
   }
 
