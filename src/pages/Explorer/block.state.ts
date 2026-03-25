@@ -14,6 +14,7 @@ import { fromHex } from "polkadot-api/utils"
 import {
   catchError,
   combineLatest,
+  combineLatestWith,
   concat,
   defer,
   EMPTY,
@@ -27,7 +28,9 @@ import {
   Observable,
   of,
   repeat,
+  retry,
   scan,
+  share,
   skip,
   startWith,
   Subject,
@@ -36,7 +39,6 @@ import {
   takeUntil,
   takeWhile,
   tap,
-  timer,
   toArray,
   withLatestFrom,
 } from "rxjs"
@@ -77,8 +79,13 @@ const finalizedBlocks$ = state(
     }),
   ),
 )
-finalizedBlocks$.pipe(liftSuspense()).subscribe()
+finalizedBlocks$.pipe(liftSuspense(), retry()).subscribe()
 
+const MAX_HEIGHT = 600
+const sharedBlocks$ = client$.pipe(
+  switchMap((client) => client.blocks$),
+  share(),
+)
 export const [blockInfo$, recordedBlocks$] = partitionByKey(
   client$.pipe(switchMap((client) => client.blocks$)),
   (v) => v.hash,
@@ -122,15 +129,18 @@ export const [blockInfo$, recordedBlocks$] = partitionByKey(
               diff: getBlockDiff$(parent, hash),
             }),
             NEVER,
+          ).pipe(
+            takeUntil(
+              merge(
+                // Reset when client is changed
+                client$.pipe(skip(1)),
+                // Or after 1 hour
+                sharedBlocks$.pipe(
+                  filter((b) => b.number >= number + MAX_HEIGHT),
+                ),
+              ),
+            ),
           ),
-      ),
-      takeUntil(
-        merge(
-          // Reset when client is changed
-          client$.pipe(skip(1)),
-          // Or after 1 hour
-          timer(60 * 60 * 1000),
-        ),
       ),
     ),
 )
@@ -384,7 +394,7 @@ const getBlockStatus$ = (
   parent: string,
 ): Observable<BlockState> =>
   client.bestBlocks$.pipe(
-    withLatestFrom(finalizedBlocks$),
+    combineLatestWith(finalizedBlocks$),
     map(([best, finBlocks]) => {
       const status = getBlockStatus(best, finBlocks, number, hash)
       if (status === BlockState.Finalized && !finBlocks.has(parent))
