@@ -38,7 +38,7 @@ const networks = {
   Kusama,
   Paseo,
   Westend,
-  Custom: [
+  Localhost: [
     {
       id: "localhost",
       display: "Localhost",
@@ -48,6 +48,14 @@ const networks = {
         "Port 3000": "ws://127.0.0.1:3000",
         "Port 8132": "ws://127.0.0.1:8132",
       },
+    } as Network,
+  ],
+  Custom: [
+    {
+      id: "custom",
+      display: "Custom",
+      lightclient: false,
+      endpoints: {},
     } as Network,
   ],
 }
