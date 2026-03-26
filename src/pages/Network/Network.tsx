@@ -194,7 +194,11 @@ const NetworkSwitchDialogContent: FC<{
               <ScrollArea className="h-[260px]">
                 {networkCategories.map((category) => {
                   if (category.name === "Custom") {
-                    if (!isValidUri(enteredText)) return null
+                    if (
+                      !isValidUri(enteredText) ||
+                      enteredText.startsWith("localhost:")
+                    )
+                      return null
                     return (
                       <CommandGroup key={category.name} heading={category.name}>
                         <CommandItem
@@ -243,6 +247,29 @@ const NetworkSwitchDialogContent: FC<{
                           {network.display}
                         </CommandItem>
                       ))}
+                      {category.name === "Localhost" &&
+                      enteredText.startsWith("localhost:") ? (
+                        <CommandItem
+                          value={enteredText}
+                          onSelect={() => {
+                            handleNetworkSelect({
+                              id: "localhost",
+                              lightclient: false,
+                              endpoints: { custom: `ws://${enteredText}` },
+                              display: enteredText,
+                            })
+                          }}
+                        >
+                          <Check
+                            className={`mr-2 h-4 w-4 ${
+                              selectedNetwork.id === "custom"
+                                ? "opacity-100"
+                                : "opacity-0"
+                            }`}
+                          />
+                          {enteredText}
+                        </CommandItem>
+                      ) : null}
                     </CommandGroup>
                   )
                 })}
@@ -287,7 +314,6 @@ const NetworkSwitchDialogContent: FC<{
                       <CustomPort
                         selectedRpc={selectedRpc}
                         setSelectedRpc={setSelectedRpc}
-                        initialPort=""
                       />
                     ) : null}
                   </RadioGroup>
@@ -388,9 +414,12 @@ const ConnectionOption: FC<{
 const CustomPort: FC<{
   selectedRpc: string
   setSelectedRpc: (rpc: string) => void
-  initialPort: string
-}> = ({ selectedRpc, setSelectedRpc, initialPort }) => {
-  const [port, setPort] = useState(initialPort)
+}> = ({ selectedRpc, setSelectedRpc }) => {
+  const [port, setPort] = useState(
+    selectedRpc.startsWith("ws://localhost:")
+      ? selectedRpc.slice("ws://localhost:".length)
+      : "",
+  )
   const value = `ws://localhost:${port}`
   const isSelected = selectedRpc === value
 
