@@ -3,13 +3,11 @@
     "id": "kusama_asset_hub",
     "display": "Kusama AssetHub",
     "rpcs": {
-      "Dwellir": "wss://asset-hub-kusama-rpc.dwellir.com",
-      "Dwellir Tunisia": "wss://statemine-rpc-tn.dwellir.com",
+      "Dwellir": "wss://asset-hub-kusama-rpc.n.dwellir.com",
       "IBP1": "wss://sys.ibp.network/statemine",
       "IBP2": "wss://asset-hub-kusama.dotters.network",
       "LuckyFriday": "wss://rpc-asset-hub-kusama.luckyfriday.io",
       "Parity": "wss://kusama-asset-hub-rpc.polkadot.io",
-      "RadiumBlock": "wss://statemine.public.curie.radiumblock.co/ws",
       "Stakeworld": "wss://ksm-rpc.stakeworld.io/assethub"
     },
     "relayChainInfo": {
@@ -29,15 +27,14 @@
     "hasChainSpecs": true,
     "rpcs": {
       "Allnodes": "wss://kusama-rpc.publicnode.com",
-      "Dwellir": "wss://kusama-rpc.dwellir.com",
-      "Dwellir Tunisia": "wss://kusama-rpc-tn.dwellir.com",
+      "Dwellir": "wss://kusama-rpc.n.dwellir.com",
+      "Helixstreet": "wss://rpc-kusama.helixstreet.io",
       "IBP1": "wss://rpc.ibp.network/kusama",
       "IBP2": "wss://kusama.dotters.network",
       "LuckyFriday": "wss://rpc-kusama.luckyfriday.io",
       "OnFinality": "wss://kusama.api.onfinality.io/public-ws",
-      "RockX": "wss://rockx-ksm.w3node.com/polka-public-ksm/ws",
       "Stakeworld": "wss://ksm-rpc.stakeworld.io",
-      "SubQuery": "wss://kusama.rpc.subquery.network/public/ws"
+      "RockX": "wss://rockx-ksm.w3node.com/polka-public-ksm/ws"
     },
     "nativeToken": {
       "symbol": "KSM",
@@ -48,13 +45,12 @@
     "id": "kusama_bridge_hub",
     "display": "Kusama BridgeHub",
     "rpcs": {
-      "Dwellir": "wss://bridge-hub-kusama-rpc.dwellir.com",
-      "Dwellir Tunisia": "wss://kusama-bridge-hub-rpc-tn.dwellir.com",
+      "Dwellir": "wss://bridge-hub-kusama-rpc.n.dwellir.com",
       "IBP1": "wss://sys.ibp.network/bridgehub-kusama",
       "IBP2": "wss://bridge-hub-kusama.dotters.network",
       "LuckyFriday": "wss://rpc-bridge-hub-kusama.luckyfriday.io",
+      "OnFinality": "wss://bridgehub-kusama.api.onfinality.io/public-ws",
       "Parity": "wss://kusama-bridge-hub-rpc.polkadot.io",
-      "RadiumBlock": "wss://bridgehub-kusama.public.curie.radiumblock.co/ws",
       "Stakeworld": "wss://ksm-rpc.stakeworld.io/bridgehub"
     },
     "relayChainInfo": {
@@ -72,7 +68,7 @@
     "id": "kusama_coretime",
     "display": "Kusama Coretime",
     "rpcs": {
-      "Dwellir": "wss://coretime-kusama-rpc.dwellir.com",
+      "Dwellir": "wss://coretime-kusama-rpc.n.dwellir.com",
       "IBP1": "wss://sys.ibp.network/coretime-kusama",
       "IBP2": "wss://coretime-kusama.dotters.network",
       "LuckyFriday": "wss://rpc-coretime-kusama.luckyfriday.io",
@@ -94,7 +90,8 @@
     "id": "kusama_people",
     "display": "Kusama People",
     "rpcs": {
-      "Dwellir": "wss://people-kusama-rpc.dwellir.com",
+      "Dwellir": "wss://people-kusama-rpc.n.dwellir.com",
+      "Helixstreet": "wss://rpc-people-kusama.helixstreet.io",
       "IBP1": "wss://sys.ibp.network/people-kusama",
       "IBP2": "wss://people-kusama.dotters.network",
       "LuckyFriday": "wss://rpc-people-kusama.luckyfriday.io",
@@ -116,10 +113,11 @@
     "id": "kusama_encointer",
     "display": "Encointer Network",
     "rpcs": {
-      "Dwellir": "wss://encointer-kusama-rpc.dwellir.com",
+      "Dwellir": "wss://encointer-kusama-rpc.n.dwellir.com",
       "Encointer Association": "wss://kusama.api.encointer.org",
       "IBP1": "wss://sys.ibp.network/encointer-kusama",
-      "IBP2": "wss://encointer-kusama.dotters.network"
+      "IBP2": "wss://encointer-kusama.dotters.network",
+      "LuckyFriday": "wss://rpc-encointer-kusama.luckyfriday.io"
     },
     "relayChainInfo": {
       "id": "kusama",
@@ -141,49 +139,12 @@
       "parachain": 2088
     },
     "rpcs": {
-      "Centrifuge": "wss://fullnode.altair.centrifuge.io",
-      "OnFinality": "wss://altair.api.onfinality.io/public-ws"
+      "OnFinality": "wss://altair.api.onfinality.io/public-ws",
+      "Centrifuge": "wss://fullnode.altair.centrifuge.io"
     },
     "nativeToken": {
       "symbol": "AIR",
       "decimals": 18
-    },
-    "hasChainSpecs": false
-  },
-  {
-    "id": "amplitude",
-    "display": "Amplitude",
-    "relayChainInfo": {
-      "id": "kusama",
-      "isSystem": false,
-      "parachain": 2124
-    },
-    "rpcs": {
-      "Dwellir": "wss://amplitude-rpc.dwellir.com",
-      "PendulumChain": "wss://rpc-amplitude.pendulumchain.tech"
-    },
-    "nativeToken": {
-      "symbol": "AMPE",
-      "decimals": 12
-    },
-    "hasChainSpecs": false
-  },
-  {
-    "id": "bajun",
-    "display": "Bajun Network",
-    "relayChainInfo": {
-      "id": "kusama",
-      "isSystem": false,
-      "parachain": 2119
-    },
-    "rpcs": {
-      "AjunaNetwork": "wss://rpc-parachain.bajun.network",
-      "OnFinality": "wss://bajun.api.onfinality.io/public-ws",
-      "RadiumBlock": "wss://bajun.public.curie.radiumblock.co/ws"
-    },
-    "nativeToken": {
-      "symbol": "BAJU",
-      "decimals": 12
     },
     "hasChainSpecs": false
   },
@@ -197,7 +158,7 @@
     },
     "rpcs": {
       "Basilisk": "wss://rpc.basilisk.cloud",
-      "Dwellir": "wss://basilisk-rpc.dwellir.com"
+      "Dwellir": "wss://basilisk-rpc.n.dwellir.com"
     },
     "nativeToken": {
       "symbol": "BSX",
@@ -214,7 +175,6 @@
       "parachain": 2001
     },
     "rpcs": {
-      "Dwellir": "wss://bifrost-rpc.dwellir.com",
       "Liebi": "wss://bifrost-rpc.liebi.com/ws",
       "LiebiUS": "wss://us.bifrost-rpc.liebi.com/ws"
     },
@@ -225,92 +185,27 @@
     "hasChainSpecs": false
   },
   {
-    "id": "calamari",
-    "display": "Calamari",
-    "relayChainInfo": {
-      "id": "kusama",
-      "isSystem": false,
-      "parachain": 2084
-    },
+    "id": "shadow",
+    "display": "Crust Shadow",
     "rpcs": {
-      "Manta Network": "wss://calamari.systems"
-    },
-    "nativeToken": {
-      "symbol": "KMA",
-      "decimals": 12
-    },
-    "hasChainSpecs": false
+      "Crust APP": "wss://rpc-shadow.crustnetwork.app",
+      "Crust CC": "wss://rpc-shadow.crustnetwork.cc",
+      "Crust XYZ": "wss://rpc-shadow.crustnetwork.xyz"
+    }
   },
   {
-    "id": "crab",
-    "display": "Crab",
-    "relayChainInfo": {
-      "id": "kusama",
-      "isSystem": false,
-      "parachain": 2105
-    },
+    "id": "ipci",
+    "display": "DAO IPCI",
     "rpcs": {
-      "Darwinia": "wss://crab-rpc.darwinia.network/",
-      "Dcdao": "wss://crab-rpc.dcdao.box",
-      "Dwellir": "wss://darwiniacrab-rpc.dwellir.com"
-    },
-    "nativeToken": {
-      "symbol": "CRAB",
-      "decimals": 18
-    },
-    "hasChainSpecs": false
+      "Airalab": "wss://ipci.rpc.robonomics.network"
+    }
   },
   {
-    "id": "imbue",
-    "display": "Imbue Network",
-    "relayChainInfo": {
-      "id": "kusama",
-      "isSystem": false,
-      "parachain": 2121
-    },
+    "id": "kabocha",
+    "display": "Kabocha",
     "rpcs": {
-      "Imbue Network 0": "wss://kusama.imbuenetwork.com"
-    },
-    "nativeToken": {
-      "symbol": "IMBU",
-      "decimals": 12
-    },
-    "hasChainSpecs": false
-  },
-  {
-    "id": "integritee",
-    "display": "Integritee Network",
-    "relayChainInfo": {
-      "id": "kusama",
-      "isSystem": false,
-      "parachain": 2015
-    },
-    "rpcs": {
-      "Integritee": "wss://kusama.api.integritee.network",
-      "OnFinality": "wss://integritee-kusama.api.onfinality.io/public-ws"
-    },
-    "nativeToken": {
-      "symbol": "TEER",
-      "decimals": 12
-    },
-    "hasChainSpecs": false
-  },
-  {
-    "id": "tinker",
-    "display": "InvArch Tinkernet",
-    "relayChainInfo": {
-      "id": "kusama",
-      "isSystem": false,
-      "parachain": 2125
-    },
-    "rpcs": {
-      "Dwellir": "wss://tinkernet-rpc.dwellir.com"
-    },
-    "nativeToken": {
-      "symbol": "TNKR",
-      "decimals": 12
-    },
-    "hasChainSpecs": false
+      "JelliedOwl": "wss://kabocha.jelliedowl.net"
+    }
   },
   {
     "id": "karura",
@@ -321,8 +216,7 @@
       "parachain": 2000
     },
     "rpcs": {
-      "Dwellir": "wss://karura-rpc.dwellir.com",
-      "OnFinality": "wss://karura.api.onfinality.io/public-ws"
+      "Dwellir": "wss://karura-rpc.n.dwellir.com"
     },
     "nativeToken": {
       "symbol": "KAR",
@@ -331,25 +225,12 @@
     "hasChainSpecs": false
   },
   {
-    "id": "khala",
-    "display": "Khala Network",
-    "relayChainInfo": {
-      "id": "kusama",
-      "isSystem": false,
-      "parachain": 2004
-    },
+    "id": "kintsugi",
+    "display": "Kintsugi BTC",
     "rpcs": {
-      "Dwellir": "wss://khala-rpc.dwellir.com",
-      "Helikon": "wss://rpc.helikon.io/khala",
-      "OnFinality": "wss://khala.api.onfinality.io/public-ws",
-      "Phala": "wss://khala-api.phala.network/ws",
-      "RadiumBlock": "wss://khala.public.curie.radiumblock.co/ws"
-    },
-    "nativeToken": {
-      "symbol": "PHA",
-      "decimals": 12
-    },
-    "hasChainSpecs": false
+      "Kintsugi Labs": "wss://api-kusama.interlay.io/parachain",
+      "OnFinality": "wss://kintsugi.api.onfinality.io/public-ws"
+    }
   },
   {
     "id": "kreivo",
@@ -370,6 +251,13 @@
     "hasChainSpecs": false
   },
   {
+    "id": "krest",
+    "display": "Krest",
+    "rpcs": {
+      "OnFinality": "wss://krest.api.onfinality.io/public-ws"
+    }
+  },
+  {
     "id": "moonriver",
     "display": "Moonriver",
     "relayChainInfo": {
@@ -379,11 +267,8 @@
     },
     "rpcs": {
       "Moonbeam Foundation": "wss://wss.api.moonriver.moonbeam.network",
-      "Allnodes": "wss://moonriver-rpc.publicnode.com",
-      "Dwellir": "wss://moonriver-rpc.dwellir.com",
-      "OnFinality": "wss://moonriver.api.onfinality.io/public-ws",
-      "RadiumBlock": "wss://moonriver.public.curie.radiumblock.co/ws",
-      "UnitedBloc": "wss://moonriver.unitedbloc.com"
+      "UnitedBloc": "wss://moonriver.unitedbloc.com",
+      "OnFinality": "wss://moonriver.api.onfinality.io/public-ws"
     },
     "nativeToken": {
       "symbol": "MOVR",
@@ -392,22 +277,27 @@
     "hasChainSpecs": false
   },
   {
-    "id": "quartz",
-    "display": "QUARTZ by UNIQUE",
+    "id": "robonomics",
+    "display": "Robonomics",
+    "rpcs": {
+      "Airalab": "wss://kusama.rpc.robonomics.network/"
+    }
+  },
+  {
+    "id": "shiden",
+    "display": "Shiden",
     "relayChainInfo": {
       "id": "kusama",
       "isSystem": false,
-      "parachain": 2095
+      "parachain": 2007
     },
     "rpcs": {
-      "Dwellir": "wss://quartz-rpc.dwellir.com",
-      "Geo Load Balancer": "wss://ws-quartz.unique.network",
-      "Unique America": "wss://us-ws-quartz.unique.network",
-      "Unique Asia": "wss://asia-ws-quartz.unique.network",
-      "Unique Europe": "wss://eu-ws-quartz.unique.network"
+      "Astar": "wss://rpc.shiden.astar.network",
+      "Dwellir": "wss://shiden-rpc.n.dwellir.com",
+      "OnFinality": "wss://shiden.api.onfinality.io/public-ws"
     },
     "nativeToken": {
-      "symbol": "QTZ",
+      "symbol": "SDN",
       "decimals": 18
     },
     "hasChainSpecs": false
@@ -421,15 +311,19 @@
       "parachain": 2007
     },
     "rpcs": {
-      "Astar": "wss://rpc.shiden.astar.network",
-      "Dwellir": "wss://shiden-rpc.dwellir.com",
-      "OnFinality": "wss://shiden.api.onfinality.io/public-ws",
-      "RadiumBlock": "wss://shiden.public.curie.radiumblock.co/ws"
+      "StakeTechnologies": "wss://rpc.shiden.astar.network"
     },
     "nativeToken": {
       "symbol": "SDN",
       "decimals": 18
     },
     "hasChainSpecs": false
+  },
+  {
+    "id": "sora",
+    "display": "SORA",
+    "rpcs": {
+      "Soramitsu": "wss://ws.parachain-collator-2.c2.sora2.soramitsu.co.jp"
+    }
   }
 ]

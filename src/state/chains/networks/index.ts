@@ -26,7 +26,7 @@ const [Polkadot, Kusama, Paseo, Westend] = (
 ).map((n): Network[] =>
   n.map((x) => ({
     endpoints: x.rpcs as any,
-    lightclient: x.hasChainSpecs,
+    lightclient: !!x.hasChainSpecs,
     id: x.id,
     display: x.display,
     relayChain: x.relayChainInfo?.id,
