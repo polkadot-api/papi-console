@@ -11,6 +11,7 @@ import { RuntimeCalls } from "./pages/RuntimeCalls"
 import { Storage } from "./pages/Storage"
 import { Transactions } from "./pages/Transactions"
 import { ViewFns } from "./pages/ViewFns"
+import { ConnectionState } from "./components/ConnectionState"
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
       </div>
       <Transactions />
       <VaultTxModal />
+      <ConnectionState />
     </div>
   )
 }

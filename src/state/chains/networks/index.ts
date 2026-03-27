@@ -26,7 +26,7 @@ const [Polkadot, Kusama, Paseo, Westend] = (
 ).map((n): Network[] =>
   n.map((x) => ({
     endpoints: x.rpcs as any,
-    lightclient: x.hasChainSpecs,
+    lightclient: !!x.hasChainSpecs,
     id: x.id,
     display: x.display,
     relayChain: x.relayChainInfo?.id,
@@ -38,7 +38,7 @@ const networks = {
   Kusama,
   Paseo,
   Westend,
-  Custom: [
+  Localhost: [
     {
       id: "localhost",
       display: "Localhost",
@@ -48,6 +48,14 @@ const networks = {
         "Port 3000": "ws://127.0.0.1:3000",
         "Port 8132": "ws://127.0.0.1:8132",
       },
+    } as Network,
+  ],
+  Custom: [
+    {
+      id: "custom",
+      display: "Custom",
+      lightclient: false,
+      endpoints: {},
     } as Network,
   ],
 }

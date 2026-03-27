@@ -30,6 +30,7 @@ import {
   selectedChain$,
 } from "@/state/chains/chain.state"
 import { addCustomNetwork, getCustomNetwork } from "@/state/chains/networks"
+import { Input } from "@polkahub/ui-components"
 import { useStateObservable } from "@react-rxjs/core"
 import { Check, ChevronDown } from "lucide-react"
 import { FC, useState } from "react"
@@ -43,6 +44,47 @@ export function NetworkSwitcher({
   const [open, setOpen] = useState(false)
   const selectedChain = useStateObservable(selectedChain$)
 
+  const getChainName = () => {
+    if (selectedChain.network.id === "custom") {
+      try {
+        const url = new URL(selectedChain.endpoint)
+        if (["127.0.0.1", "localhost"].includes(url.hostname)) {
+          return "Localhost"
+        }
+
+        return url.hostname
+      } catch {
+        return selectedChain.endpoint
+      }
+    }
+    return selectedChain.network.display
+  }
+  const getNodeName = () => {
+    if (selectedChain.withChopsticks) {
+      return <Chopsticks className="inline-block align-text-top" />
+    }
+
+    if (selectedChain.network.id === "localhost") {
+      try {
+        const url = new URL(selectedChain.endpoint)
+
+        return url.port
+      } catch {
+        return null
+      }
+    }
+
+    if (selectedChain.endpoint === "light-client") {
+      return "Smoldot"
+    }
+
+    return (
+      Object.entries(selectedChain.network.endpoints).find(
+        ([, e]) => selectedChain.endpoint === e,
+      )?.[0] ?? selectedChain.endpoint
+    )
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -54,7 +96,10 @@ export function NetworkSwitcher({
           )}
         >
           <span className="overflow-hidden text-ellipsis">
-            {selectedChain.network.display}
+            {getChainName()}
+            <span className="text-sm text-muted-foreground ml-1">
+              {getNodeName()}
+            </span>
           </span>
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -100,7 +145,7 @@ const NetworkSwitchDialogContent: FC<{
 
   const handleConfirm = () => {
     const chopsticksEnabled = selectedRpc !== "light-client" && withChopsticks
-    if (selectedNetwork.id === "custom-network") {
+    if (selectedNetwork.id === "custom") {
       addCustomNetwork(selectedRpc)
       onChangeChain({
         network: getCustomNetwork(),
@@ -147,59 +192,99 @@ const NetworkSwitchDialogContent: FC<{
                 <div className="text-foreground/50">No networks found.</div>
               </CommandEmpty>
               <ScrollArea className="h-[260px]">
-                {networkCategories.map((category) => (
-                  <CommandGroup key={category.name} heading={category.name}>
-                    {category.networks.map((network) => (
-                      <CommandItem
-                        key={network.id}
-                        onSelect={() => handleNetworkSelect(network)}
-                        value={
-                          network.display.includes(category.name)
-                            ? network.display
-                            : `${category.name} ${network.display}`
-                        }
-                      >
-                        <Check
-                          className={`mr-2 h-4 w-4 ${
-                            selectedNetwork.id === network.id
-                              ? "opacity-100"
-                              : "opacity-0"
-                          }`}
-                        />
-                        {network.display}
-                      </CommandItem>
-                    ))}
-                    {category.name === "Custom" && isValidUri(enteredText) ? (
-                      <CommandItem
-                        value={enteredText}
-                        onSelect={() => {
-                          handleNetworkSelect({
-                            id: "custom-network",
-                            lightclient: false,
-                            endpoints: { custom: enteredText },
-                            display: enteredText,
-                          })
-                        }}
-                      >
-                        <Check
-                          className={`mr-2 h-4 w-4 ${
-                            selectedNetwork.id === "custom-network"
-                              ? "opacity-100"
-                              : "opacity-0"
-                          }`}
-                        />
-                        {enteredText}
-                      </CommandItem>
-                    ) : null}
-                  </CommandGroup>
-                ))}
+                {networkCategories.map((category) => {
+                  if (category.name === "Custom") {
+                    if (
+                      !isValidUri(enteredText) ||
+                      enteredText.startsWith("localhost:")
+                    )
+                      return null
+                    return (
+                      <CommandGroup key={category.name} heading={category.name}>
+                        <CommandItem
+                          value={enteredText}
+                          onSelect={() => {
+                            handleNetworkSelect({
+                              id: "custom",
+                              lightclient: false,
+                              endpoints: { custom: enteredText },
+                              display: enteredText,
+                            })
+                          }}
+                        >
+                          <Check
+                            className={`mr-2 h-4 w-4 ${
+                              selectedNetwork.id === "custom"
+                                ? "opacity-100"
+                                : "opacity-0"
+                            }`}
+                          />
+                          {enteredText}
+                        </CommandItem>
+                      </CommandGroup>
+                    )
+                  }
+
+                  return (
+                    <CommandGroup key={category.name} heading={category.name}>
+                      {category.networks.map((network) => (
+                        <CommandItem
+                          key={network.id}
+                          onSelect={() => handleNetworkSelect(network)}
+                          value={
+                            network.display.includes(category.name)
+                              ? network.display
+                              : `${category.name} ${network.display}`
+                          }
+                        >
+                          <Check
+                            className={`mr-2 h-4 w-4 ${
+                              selectedNetwork.id === network.id
+                                ? "opacity-100"
+                                : "opacity-0"
+                            }`}
+                          />
+                          {network.display}
+                        </CommandItem>
+                      ))}
+                      {category.name === "Localhost" &&
+                      enteredText.startsWith("localhost:") ? (
+                        <CommandItem
+                          value={enteredText}
+                          onSelect={() => {
+                            handleNetworkSelect({
+                              id: "localhost",
+                              lightclient: false,
+                              endpoints: { custom: `ws://${enteredText}` },
+                              display: enteredText,
+                            })
+                          }}
+                        >
+                          <Check
+                            className={`mr-2 h-4 w-4 ${
+                              selectedNetwork.id === "custom"
+                                ? "opacity-100"
+                                : "opacity-0"
+                            }`}
+                          />
+                          {enteredText}
+                        </CommandItem>
+                      ) : null}
+                    </CommandGroup>
+                  )
+                })}
               </ScrollArea>
             </CommandList>
           </CommandPopover>
           <div className="h-[50vh] flex flex-col gap-2">
             {selectedNetwork ? (
               <div className="grow overflow-hidden flex flex-col">
-                <p className="py-2">Network: {selectedNetwork.display}</p>
+                <p className="py-2">
+                  Network:{" "}
+                  {selectedNetwork.id === "custom"
+                    ? "Custom"
+                    : selectedNetwork.display}
+                </p>
                 <div className="overflow-auto">
                   <RadioGroup
                     value={selectedRpc}
@@ -225,6 +310,12 @@ const NetworkSwitchDialogContent: FC<{
                         />
                       ),
                     )}
+                    {selectedNetwork.id === "localhost" ? (
+                      <CustomPort
+                        selectedRpc={selectedRpc}
+                        setSelectedRpc={setSelectedRpc}
+                      />
+                    ) : null}
                   </RadioGroup>
                 </div>
               </div>
@@ -259,7 +350,7 @@ const NetworkSwitchDialogContent: FC<{
           disabled={
             !selectedNetwork ||
             !hasChanged ||
-            (selectedNetwork.id === "custom-network" && !selectedRpc)
+            (selectedNetwork.id === "custom" && !selectedRpc)
           }
         >
           Confirm Selection
@@ -319,3 +410,51 @@ const ConnectionOption: FC<{
     ) : null}
   </div>
 )
+
+const CustomPort: FC<{
+  selectedRpc: string
+  setSelectedRpc: (rpc: string) => void
+}> = ({ selectedRpc, setSelectedRpc }) => {
+  const [port, setPort] = useState(
+    selectedRpc.startsWith("ws://localhost:")
+      ? selectedRpc.slice("ws://localhost:".length)
+      : "",
+  )
+  const value = `ws://localhost:${port}`
+  const isSelected = selectedRpc === value
+
+  return (
+    <div
+      className={`overflow-hidden p-3 border rounded-md ${isSelected ? "border-polkadot bg-polkadot/5" : "border-border"}`}
+    >
+      <div className="flex items-start space-x-2">
+        <RadioGroupItem
+          value={value}
+          id="chain-localhost-other"
+          className="mt-1"
+        />
+        <div className="grid gap-0.5 grow">
+          <Label htmlFor="chain-localhost-other" className="font-medium">
+            Other ports
+            <Badge variant="outline" className="ml-2 text-xs">
+              RPC
+            </Badge>
+            <p className="text-xs text-muted-foreground">Local RPC node</p>
+          </Label>
+        </div>
+      </div>
+
+      <div className="mt-2 pt-2 border-t">
+        <Input
+          type="number"
+          placeholder="Port"
+          value={port}
+          onChange={(evt) => {
+            setPort(evt.target.value)
+            setSelectedRpc(`ws://localhost:${evt.target.value}`)
+          }}
+        />
+      </div>
+    </div>
+  )
+}

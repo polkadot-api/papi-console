@@ -3,11 +3,11 @@
     "id": "paseo_asset_hub",
     "display": "Paseo AssetHub",
     "rpcs": {
-      "Dwellir": "wss://asset-hub-paseo-rpc.dwellir.com",
+      "Dwellir": "wss://asset-hub-paseo-rpc.n.dwellir.com",
       "IBP1": "wss://sys.ibp.network/asset-hub-paseo",
       "IBP2": "wss://asset-hub-paseo.dotters.network",
-      "StakeWorld": "wss://pas-rpc.stakeworld.io/assethub",
-      "TurboFlakes": "wss://sys.turboflakes.io/asset-hub-paseo"
+      "TurboFlakes": "wss://sys.turboflakes.io/asset-hub-paseo",
+      "StakeWorld": "wss://pas-rpc.stakeworld.io/assethub"
     },
     "relayChainInfo": {
       "id": "paseo",
@@ -26,7 +26,7 @@
     "hasChainSpecs": true,
     "rpcs": {
       "Amforc": "wss://paseo.rpc.amforc.com",
-      "Dwellir": "wss://paseo-rpc.dwellir.com",
+      "Dwellir": "wss://paseo-rpc.n.dwellir.com",
       "IBP1": "wss://rpc.ibp.network/paseo",
       "IBP2": "wss://paseo.dotters.network",
       "StakeWorld": "wss://pas-rpc.stakeworld.io"
@@ -37,27 +37,10 @@
     }
   },
   {
-    "id": "passet_hub",
-    "display": "PAsset Hub",
-    "rpcs": {
-      "Parity": "wss://testnet-passet-hub.polkadot.io",
-      "IBP1": "wss://passet-hub-paseo.ibp.network"
-    },
-    "relayChainInfo": {
-      "id": "paseo",
-      "isSystem": true,
-      "parachain": 1111
-    },
-    "nativeToken": {
-      "symbol": "PAS",
-      "decimals": 10
-    },
-    "hasChainSpecs": false
-  },
-  {
     "id": "paseo_bridge_hub",
     "display": "Paseo BridgeHub",
     "rpcs": {
+      "IBP1": "wss://bridge-hub-paseo.ibp.network",
       "IBP2": "wss://bridge-hub-paseo.dotters.network"
     },
     "relayChainInfo": {
@@ -72,9 +55,18 @@
     "hasChainSpecs": false
   },
   {
-    "id": "paseo_core_time",
+    "id": "paseo_collectives",
+    "display": "Collectives",
+    "rpcs": {
+      "IBP1": "wss://collectives-paseo.ibp.network",
+      "IBP2": "wss://collectives-paseo.dotters.network"
+    }
+  },
+  {
+    "id": "paseo_coretime",
     "display": "Paseo Coretime",
     "rpcs": {
+      "IBP1": "wss://coretime-paseo.ibp.network",
       "IBP2": "wss://coretime-paseo.dotters.network",
       "ParaNodes": "wss://paseo-coretime.paranodes.io"
     },
@@ -94,6 +86,7 @@
     "display": "Paseo People",
     "rpcs": {
       "Amforc": "wss://people-paseo.rpc.amforc.com",
+      "IBP1": "wss://people-paseo.ibp.network",
       "IBP2": "wss://people-paseo.dotters.network"
     },
     "relayChainInfo": {
@@ -142,6 +135,13 @@
     "hasChainSpecs": false
   },
   {
+    "id": "paseo_aventus",
+    "display": "Aventus",
+    "rpcs": {
+      "Aventus": "wss://avn-parachain.testnet.aventus.io"
+    }
+  },
+  {
     "id": "paseo_bifrost",
     "display": "Bifrost(Paseo)",
     "relayChainInfo": {
@@ -150,7 +150,8 @@
       "parachain": 2030
     },
     "rpcs": {
-      "Liebi": "wss://bifrost-rpc.paseo.liebi.com/ws"
+      "Liebi": "wss://bifrost-rpc.paseo.liebi.com/ws",
+      "Liebi2": "wss://bifrost-rpc.paseo2.liebi.com/ws"
     },
     "nativeToken": {
       "symbol": "BNC",
@@ -159,21 +160,11 @@
     "hasChainSpecs": false
   },
   {
-    "id": "darwinia_koi",
-    "display": "Darwinia Koi",
-    "relayChainInfo": {
-      "id": "paseo",
-      "isSystem": false,
-      "parachain": 2105
-    },
+    "id": "bulletin",
+    "display": "Bulletin (Paseo)",
     "rpcs": {
-      "Darwinia": "wss://koi-rpc.darwinia.network"
-    },
-    "nativeToken": {
-      "symbol": "KRING",
-      "decimals": 18
-    },
-    "hasChainSpecs": false
+      "Parity": "wss://paseo-bulletin-rpc.polkadot.io"
+    }
   },
   {
     "id": "paseo_frequency",
@@ -193,6 +184,20 @@
     "hasChainSpecs": false
   },
   {
+    "id": "heima-paseo",
+    "display": "Heima paseo",
+    "rpcs": {
+      "Heima": "wss://rpc.paseo-parachain.heima.network"
+    }
+  },
+  {
+    "id": "rococoHydraDX",
+    "display": "Hydration (Paseo)",
+    "rpcs": {
+      "Galactic Council": "wss://paseo-rpc.play.hydration.cloud"
+    }
+  },
+  {
     "id": "paseo_hyperbridge",
     "display": "Hyperbridge (Gargantua)",
     "relayChainInfo": {
@@ -206,40 +211,6 @@
     "nativeToken": {
       "symbol": "tBRIDGE",
       "decimals": 12
-    },
-    "hasChainSpecs": false
-  },
-  {
-    "id": "paseo_integritee",
-    "display": "Integritee Network (Paseo)",
-    "relayChainInfo": {
-      "id": "paseo",
-      "isSystem": false,
-      "parachain": 2039
-    },
-    "rpcs": {
-      "Integritee": "wss://paseo.api.integritee.network"
-    },
-    "nativeToken": {
-      "symbol": "TEER",
-      "decimals": 12
-    },
-    "hasChainSpecs": false
-  },
-  {
-    "id": "paseo_kilt",
-    "display": "KILT Peregrine",
-    "relayChainInfo": {
-      "id": "paseo",
-      "isSystem": false,
-      "parachain": 2086
-    },
-    "rpcs": {
-      "BOTLabs": "wss://peregrine.kilt.io/parachain-public-ws/"
-    },
-    "nativeToken": {
-      "symbol": "PILT",
-      "decimals": 15
     },
     "hasChainSpecs": false
   },
@@ -262,40 +233,6 @@
     "hasChainSpecs": true
   },
   {
-    "id": "paseo_laos_sigma",
-    "display": "Laos Sigma",
-    "relayChainInfo": {
-      "id": "paseo",
-      "isSystem": false,
-      "parachain": 4006
-    },
-    "rpcs": {
-      "freeverse.io": "wss://rpc.laossigma.laosfoundation.io"
-    },
-    "nativeToken": {
-      "symbol": "SIGMA",
-      "decimals": 18
-    },
-    "hasChainSpecs": false
-  },
-  {
-    "id": "paseo_myriad",
-    "display": "Myriad Social Testnet",
-    "relayChainInfo": {
-      "id": "paseo",
-      "isSystem": false,
-      "parachain": 4005
-    },
-    "rpcs": {
-      "myriadPaseo": "wss://ws-rpc.paseo.myriad.social"
-    },
-    "nativeToken": {
-      "symbol": "MYRIA",
-      "decimals": 18
-    },
-    "hasChainSpecs": false
-  },
-  {
     "id": "paseo_niskala",
     "display": "Niskala(Paseo)",
     "relayChainInfo": {
@@ -304,7 +241,6 @@
       "parachain": 4022
     },
     "rpcs": {
-      "Baliola 1": "wss://mlg1.mandalachain.io",
       "Baliola 2": "wss://mlg2.mandalachain.io"
     },
     "nativeToken": {
@@ -314,40 +250,32 @@
     "hasChainSpecs": false
   },
   {
-    "id": "paseo_nodle",
-    "display": "Nodle(Paseo)",
-    "relayChainInfo": {
-      "id": "paseo",
-      "isSystem": false,
-      "parachain": 2026
-    },
+    "id": "muse",
+    "display": "Muse network",
     "rpcs": {
-      "OnFinality": "wss://node-6957502816543653888.lh.onfinality.io/ws?apikey=09b04494-3139-4b57-a5d1-e1c4c18748ce"
-    },
-    "nativeToken": {
-      "symbol": "notNodl",
-      "decimals": 11
-    },
-    "hasChainSpecs": false
+      "Parity": "wss://paseo-muse-rpc.polkadot.io"
+    }
   },
   {
-    "id": "Pop Network",
-    "display": "Pop Network",
-    "relayChainInfo": {
-      "id": "paseo",
-      "isSystem": false,
-      "parachain": 4001
-    },
+    "id": "NeuroWeb",
+    "display": "NeuroWeb Testnet",
     "rpcs": {
-      "R0GUE-RPC1": "wss://rpc1.paseo.popnetwork.xyz",
-      "R0GUE-RPC2": "wss://rpc2.paseo.popnetwork.xyz",
-      "R0GUE-RPC3": "wss://rpc3.paseo.popnetwork.xyz"
-    },
-    "nativeToken": {
-      "symbol": "PAS",
-      "decimals": 12
-    },
-    "hasChainSpecs": false
+      "TraceLabs": "wss://parachain-testnet-rpc.origin-trail.network/"
+    }
+  },
+  {
+    "id": "opal",
+    "display": "OPAL by UNIQUE",
+    "rpcs": {
+      "Geo Load Balancer": "wss://ws-opal.unique.network"
+    }
+  },
+  {
+    "id": "paseoEwx",
+    "display": "PEX",
+    "rpcs": {
+      "Energy Web": "wss://public-rpc.testnet.energywebx.com/"
+    }
   },
   {
     "id": "Xcavate",
@@ -358,7 +286,7 @@
       "parachain": 4003
     },
     "rpcs": {
-      "Xcavate": "wss://rpc-paseo.xcavate.io:443"
+      "Xcavate_OnFinality": "wss://xcavate-paseo.api.onfinality.io/public-ws"
     },
     "nativeToken": {
       "symbol": "XCAV",
