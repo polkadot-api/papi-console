@@ -2,12 +2,12 @@ import { byteArraysAreEqual } from "@/utils/byteArray"
 import { NOTIN } from "@polkadot-api/react-builder"
 import { Binary } from "@polkadot-api/substrate-bindings"
 import { FileUp } from "lucide-react"
+import { fromHex, toHex } from "polkadot-api/utils"
 import { FC, useState } from "react"
 import { twMerge } from "tailwind-merge"
 import { SwitchBinary } from "./Icons"
 import { TextInputField } from "./TextInputField"
 import { useGenericSynchronizeInput } from "./useSynchroniseInput"
-import { fromHex, toHex } from "polkadot-api/utils"
 
 export const BinaryInput: React.FC<{
   encodedValue: Uint8Array | NOTIN
@@ -88,6 +88,7 @@ export const BinaryInput: React.FC<{
                 setLocalInput(toHex(Binary.fromText(inputValue)))
               }
             }}
+            tabIndex={-1}
           >
             <SwitchBinary size={24} />
           </button>

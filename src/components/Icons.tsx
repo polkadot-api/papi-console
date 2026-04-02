@@ -12,7 +12,7 @@ import {
   LucideProps,
   User,
 } from "lucide-react"
-import { FC, useEffect, useRef } from "react"
+import { FC, useCallback, useEffect, useRef } from "react"
 import { Props, ReactSVG } from "react-svg"
 import { twMerge } from "tailwind-merge"
 import binarySvg from "./icons/binary.svg"
@@ -36,17 +36,16 @@ const CustomIcon: FC<
     ref.current.setAttribute("height", String(size))
   }, [size])
 
-  return (
-    <ReactSVG
-      {...props}
-      src={url}
-      beforeInjection={(svg) => {
-        ref.current = svg
-        svg.setAttribute("width", String(size))
-        svg.setAttribute("height", String(size))
-      }}
-    />
+  const beforeInjection = useCallback(
+    (svg: SVGSVGElement) => {
+      ref.current = svg
+      svg.setAttribute("width", String(size))
+      svg.setAttribute("height", String(size))
+    },
+    [size],
   )
+
+  return <ReactSVG {...props} src={url} beforeInjection={beforeInjection} />
 }
 
 const customIcon = (url: string) => (props: CustomIconProps) => (

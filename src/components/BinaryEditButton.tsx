@@ -6,7 +6,7 @@ import { Modal } from "@/components/Modal"
 import { useGenericSynchronizeInput } from "@/components/useSynchroniseInput"
 import { NOTIN } from "@polkadot-api/react-builder"
 import { Download, FileUp } from "lucide-react"
-import { ComponentProps, FC, useMemo, useState } from "react"
+import { ComponentProps, FC, useCallback, useMemo, useState } from "react"
 import { twMerge } from "tailwind-merge"
 // @ts-expect-error save-as typings not available
 import { saveAs } from "save-as"
@@ -37,7 +37,7 @@ export const BinaryEditButton: FC<
           "cursor-pointer hover:text-polkadot-500",
           iconProps?.className,
         )}
-        onClick={() => setOpen(true)}
+        onClick={useCallback(() => setOpen(true), [])}
       />
       <BinaryEditModal {...props} open={open} onClose={() => setOpen(false)} />
     </>
