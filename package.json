@@ -44,7 +44,7 @@
     "clsx": "^2.1.1",
     "idb-keyval": "^6.2.2",
     "lucide-react": "^1.8.0",
-    "polkadot-api": "2.0.0",
+    "polkadot-api": "^2.0.0",
     "polkahub": "^0.5.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
