@@ -2,7 +2,7 @@ import { chopsticksInstance$ } from "@/chopsticks/chopsticks"
 import { chainClient$, client$ } from "@/state/chains/chain.state"
 import { SystemEvent } from "@polkadot-api/observable-client"
 import { blockHeader, SizedHex } from "@polkadot-api/substrate-bindings"
-import { liftSuspense, state } from "@react-rxjs/core"
+import { liftSuspense, state, SUSPENSE } from "@react-rxjs/core"
 import { combineKeys, partitionByKey } from "@react-rxjs/utils"
 import {
   BlockHeader,
@@ -15,7 +15,6 @@ import {
   catchError,
   combineLatest,
   combineLatestWith,
-  concat,
   defer,
   EMPTY,
   filter,
@@ -24,19 +23,17 @@ import {
   map,
   merge,
   mergeMap,
-  NEVER,
   Observable,
   of,
+  pipe,
   repeat,
   retry,
   scan,
   share,
-  skip,
   startWith,
   Subject,
   switchMap,
   take,
-  takeUntil,
   takeWhile,
   tap,
   toArray,
@@ -83,65 +80,75 @@ finalizedBlocks$.pipe(liftSuspense(), retry()).subscribe()
 
 const MAX_HEIGHT = 600
 const sharedBlocks$ = client$.pipe(
-  switchMap((client) => client.blocks$),
+  liftSuspense(),
+  switchMap((client) => (client === SUSPENSE ? [] : client.blocks$)),
   share(),
 )
 export const [blockInfo$, recordedBlocks$] = partitionByKey(
-  client$.pipe(switchMap((client) => client.blocks$)),
+  sharedBlocks$,
   (v) => v.hash,
   (block$) =>
-    block$.pipe(
-      take(1),
-      withLatestFrom(client$),
+    combineLatest([block$.pipe(take(1)), client$.pipe(liftSuspense())]).pipe(
       switchMap(
-        ([{ hash, parent, number }, client]): Observable<BlockInfo> =>
-          concat(
-            combineLatest({
-              hash: of(hash),
-              parent: of(parent),
-              number: of(number),
-              body: client.getBlockBody$(hash).pipe(
-                startWith(null),
-                catchError((err) => {
-                  console.error("fetch body failed", err)
-                  return of(null)
-                }),
-              ),
-              events: from(
-                client.getUnsafeApi().query.System.Events.getValue({
-                  at: hash,
-                }) as Promise<SystemEvent[]>,
-              ).pipe(
-                startWith(null),
-                catchError((err) => {
-                  console.error("fetch events failed", err)
-                  return of(null)
-                }),
-              ),
-              header: from(client.getBlockHeader(hash)).pipe(
-                startWith(null),
-                catchError((err) => {
-                  console.error("fetch header failed", err)
-                  return of(null)
-                }),
-              ),
-              status: getBlockStatus$(client, hash, number, parent),
-              diff: getBlockDiff$(parent, hash),
-            }),
-            NEVER,
-          ).pipe(
-            takeUntil(
-              merge(
-                // Reset when client is changed
-                client$.pipe(skip(1)),
-                // Or after 1 hour
-                sharedBlocks$.pipe(
-                  filter((b) => b.number >= number + MAX_HEIGHT),
-                ),
-              ),
+        ([{ hash, parent, number }, client]): Observable<BlockInfo | null> => {
+          // When client is being changed for another, remove all blocks
+          if (client === SUSPENSE) return of(null)
+
+          const blockInfo$: Observable<BlockInfo> = combineLatest({
+            hash: of(hash),
+            parent: of(parent),
+            number: of(number),
+            body: client.getBlockBody$(hash).pipe(
+              startWith(null),
+              catchError((err) => {
+                console.error("fetch body failed", err)
+                return of(null)
+              }),
             ),
-          ),
+            events: from(
+              client.getUnsafeApi().query.System.Events.getValue({
+                at: hash,
+              }) as Promise<SystemEvent[]>,
+            ).pipe(
+              startWith(null),
+              catchError((err) => {
+                console.error("fetch events failed", err)
+                return of(null)
+              }),
+            ),
+            header: from(client.getBlockHeader(hash)).pipe(
+              startWith(null),
+              catchError((err) => {
+                console.error("fetch header failed", err)
+                return of(null)
+              }),
+            ),
+            status: getBlockStatus$(client, hash, number, parent),
+            diff: getBlockDiff$(parent, hash),
+          })
+
+          const resetWhenOld$ = sharedBlocks$.pipe(
+            filter((b) => b.number >= number + MAX_HEIGHT),
+            map(() => null),
+          )
+
+          return merge(
+            blockInfo$.pipe(
+              tap({
+                error: (ex) => console.log("blockInfo", ex),
+              }),
+            ),
+            resetWhenOld$.pipe(
+              tap({
+                error: (ex) => console.log("resetWhenOld", ex),
+              }),
+            ),
+          )
+        },
       ),
+      takeWhile((v) => v !== null),
+      // SUSPENSE doesn't play out well with partitionByKey: it crashes the whole observable
+      filterOutSuspense(),
     ),
 )
 
@@ -288,6 +295,9 @@ export const blockHash$ = (hashOrHeight: string): Observable<SizedHex<32>> =>
             ),
           ),
         ),
+        liftSuspense(),
+        filter((v) => v != SUSPENSE),
+        take(1),
       )
 
 export const blockInfoState$ = state(
@@ -387,6 +397,12 @@ const getBlockStatus = (
       : BlockState.Unknown
 }
 
+const filterOutSuspense = <T>() =>
+  pipe(
+    liftSuspense<T>(),
+    filter((v): v is T => v !== SUSPENSE),
+  )
+
 const getBlockStatus$ = (
   client: PolkadotClient,
   hash: string,
@@ -394,7 +410,7 @@ const getBlockStatus$ = (
   parent: string,
 ): Observable<BlockState> =>
   client.bestBlocks$.pipe(
-    combineLatestWith(finalizedBlocks$),
+    combineLatestWith(finalizedBlocks$.pipe(filterOutSuspense())),
     map(([best, finBlocks]) => {
       const status = getBlockStatus(best, finBlocks, number, hash)
       if (status === BlockState.Finalized && !finBlocks.has(parent))
@@ -447,10 +463,10 @@ const getBlockDiff$ = (
                   .filter(([, [prevVal, newVal]]) => prevVal !== newVal),
               ),
           ),
-          catchError((ex) => {
-            console.error(ex)
-            return [null]
-          }),
         )
+    }),
+    catchError((ex) => {
+      console.error(ex)
+      return [null]
     }),
   )
