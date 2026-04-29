@@ -303,23 +303,6 @@
     "hasChainSpecs": false
   },
   {
-    "id": "shiden",
-    "display": "Shiden",
-    "relayChainInfo": {
-      "id": "kusama",
-      "isSystem": false,
-      "parachain": 2007
-    },
-    "rpcs": {
-      "StakeTechnologies": "wss://rpc.shiden.astar.network"
-    },
-    "nativeToken": {
-      "symbol": "SDN",
-      "decimals": 18
-    },
-    "hasChainSpecs": false
-  },
-  {
     "id": "sora",
     "display": "SORA",
     "rpcs": {

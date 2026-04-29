@@ -1,6 +1,6 @@
 import { dynamicBuilder$ } from "@/state/chains/chain.state"
 import { RemoveSubscribe, Subscribe } from "@react-rxjs/core"
-import { PolkaHubProvider } from "polkahub"
+import { MultisigExternalSignerModal, PolkaHubProvider } from "polkahub"
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { BrowserRouter } from "react-router-dom"
@@ -27,6 +27,7 @@ createRoot(document.getElementById("root")!).render(
                 <App />
               </TooltipProvider>
             </BrowserRouter>
+            <MultisigExternalSignerModal />
           </PolkaHubProvider>
         </ThemeProvider>
       </StrictMode>
