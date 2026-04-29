@@ -13,6 +13,7 @@ import {
   firstValueFrom,
   map,
   merge,
+  of,
   switchMap,
   withLatestFrom,
 } from "rxjs"
@@ -22,26 +23,32 @@ import { encodedKey$, KeyDisplay, StorageKeysInput } from "./StorageQuery"
 const [setValue$, setValue] = createSignal<Uint8Array | "partial" | null>()
 const currentValue$ = state(
   merge(
-    combineLatest([
-      encodedKey$.pipe(filter((v) => v != null)),
-      chainClient$,
-    ]).pipe(
+    combineLatest([encodedKey$, chainClient$]).pipe(
       switchMap(([key, client]) =>
-        client.chainHead.storage$(null, "value", () => key, null),
-      ),
-      withLatestFrom(lookup$, selectedEntry$.pipe(filter((v) => v != null))),
-      map(([v, lookup, entry]) => {
-        if (v != null) return v.value
-        const pallet = lookup.metadata.pallets.find(
-          (p) => p.name == entry.pallet,
-        )!
-        const storageItem = pallet.storage!.items.find(
-          (i) => i.name === entry.entry,
-        )!
+        (key
+          ? client.chainHead
+              .storage$(null, "value", () => key, null)
+              .pipe(map(({ value }) => value))
+          : of(null)
+        ).pipe(
+          withLatestFrom(
+            lookup$,
+            selectedEntry$.pipe(filter((v) => v != null)),
+          ),
+          map(([v, lookup, entry]) => {
+            if (v != null) return fromHex(v)
 
-        return storageItem.modifier ? storageItem.fallback : null
-      }),
-      map((v) => (v != null ? fromHex(v) : v)),
+            const pallet = lookup.metadata.pallets.find(
+              (p) => p.name == entry.pallet,
+            )!
+            const storageItem = pallet.storage!.items.find(
+              (i) => i.name === entry.entry,
+            )!
+
+            return storageItem.modifier ? fromHex(storageItem.fallback) : null
+          }),
+        ),
+      ),
     ),
     setValue$,
   ).pipe(
@@ -66,7 +73,7 @@ export const StorageSet: FC = () => {
     <div className="flex flex-col gap-4 items-start w-full overflow-hidden">
       <KeyDisplay />
       <StorageKeysInput disableToggle />
-      {currentValue ? (
+      {currentValue && currentValue.encodedKey ? (
         <>
           <LookupTypeEdit
             /* A bit of a shame… this component doesn't change the value reactively... */
