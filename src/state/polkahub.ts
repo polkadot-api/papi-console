@@ -116,12 +116,12 @@ const multisigProvider$ = selectedChain$.pipe(
     }
 
     const chain =
-      source.type === "chainSpec" ? `${source.id}` : `ws-${source.endpoint}`
+      source.type === "chainSpec" ? `sm-${source.id}` : `ws-${source.endpoint}`
 
     return createMultisigProvider(
       multisigExternalSigner(
         (info, callData) =>
-          `https://multisig.usepapi.app/?chain=sm-${chain}&calldata=${callData}&signatories=${info.signatories.join("_")}&threshold=${info.threshold}`,
+          `https://multisig.usepapi.app/?chain=${chain}&calldata=${callData}&signatories=${info.signatories.join("_")}&threshold=${info.threshold}`,
       ),
     )
   }),
