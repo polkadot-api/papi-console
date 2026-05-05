@@ -1,12 +1,11 @@
 import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
 import { JsonDisplay } from "@/components/JsonDisplay"
 import { TextInputField } from "@/components/TextInputField"
-import { Button } from "@/components/ui/button"
+import { useHashParamState } from "@/hashParams"
 import { client$ } from "@/state/chains/chain.state"
 import { polkadot_people } from "@polkadot-api/descriptors"
 import { DecodedExtrinsic, getExtrinsicDecoder } from "@polkadot-api/tx-utils"
 import { state, Subscribe, useStateObservable } from "@react-rxjs/core"
-import { ChevronLeft } from "lucide-react"
 import { Binary, HexString, TxCallData } from "polkadot-api"
 import { toHex } from "polkadot-api/utils"
 import { FC, useEffect, useMemo, useState } from "react"
@@ -21,22 +20,15 @@ const extDecoder$ = state(
 )
 const selectedBlockHex$ = state(selectedBlock$.pipe(map((v) => v.hash)))
 
-export const ExtrinsicAnalyzer: FC<{ onClose: () => void }> = ({ onClose }) => {
-  const [extrinsicHex, setExtrinsicHex] = useState("")
+export const ExtrinsicAnalyzer: FC = () => {
+  const [extrinsicHex, setExtrinsicHex] = useHashParamState(
+    "extrinsic",
+    () => "",
+  )
 
   return (
     <div className="p-2 space-y-2">
-      <div className="flex items-center gap-2">
-        <Button
-          className="has-[>svg]:px-1"
-          type="button"
-          variant="ghost"
-          onClick={onClose}
-        >
-          <ChevronLeft />
-        </Button>
-        <h2 className="text-lg font-bold">Analyze Extrinsic</h2>
-      </div>
+      <h2 className="text-lg font-bold">Analyze Extrinsic</h2>
       <div className="flex items-center gap-1 flex-wrap">
         <div>
           <label>
@@ -264,10 +256,9 @@ const AnalyzePriority: FC<{
 
   const priority = (() => {
     if (!maxBlockSize) return null
-    console.log(queryInfo)
     const maxLength =
-      maxBlockSize.length[
-        queryInfo.class.type.toLocaleLowerCase() as keyof typeof maxBlockSize.length
+      maxBlockSize.length.max[
+        queryInfo.class.type.toLocaleLowerCase() as keyof typeof maxBlockSize.length.max
       ]
 
     const maxTxPerBlockWeight = divWeight(

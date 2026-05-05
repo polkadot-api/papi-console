@@ -35,6 +35,7 @@ const blockExtrinsics$ = state((hash: string) => {
     map(([body, txDecoder]) =>
       body.map((raw, idx) => ({
         idx,
+        raw,
         hash: toHex(Blake2256(raw)),
         ...txDecoder(raw),
       })),

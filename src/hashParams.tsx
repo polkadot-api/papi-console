@@ -1,4 +1,4 @@
-import { FC } from "react"
+import { FC, useLayoutEffect } from "react"
 import {
   LinkProps,
   NavigateFunction,
@@ -81,4 +81,41 @@ export const useNavigate = (): NavigateFunction => {
     }
     return navigate(persistKeys(toOrDelta), options)
   }
+}
+
+export const useSyncHashParam = <T extends any[]>(
+  key: string,
+  dependencies: T,
+  getFn: (...args: T) => string | null,
+) => {
+  const location = useLocation()
+
+  useLayoutEffect(
+    () =>
+      setHashParams({
+        [key]: getFn(...dependencies),
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    dependencies,
+  )
+
+  return getHashParams(location).get(key)
+}
+
+export const useHashParam = (key: string) =>
+  getHashParams(useLocation()).get(key)!
+
+export const useHashParamState = <T extends string | null>(
+  key: string,
+  init?: () => T,
+): [
+  null extends T ? string | null : string,
+  (value: string | null) => void,
+] => {
+  const location = useLocation()
+
+  return [
+    getHashParams(location).get(key) ?? init?.() ?? (null as any),
+    (value: string | null) => setHashParams({ [key]: value }),
+  ] as const
 }

@@ -8,7 +8,7 @@ import { Link } from "@/hashParams"
 import { shortStr } from "@/utils"
 import { SystemEvent } from "@polkadot-api/observable-client"
 import { DecodedExtrinsic } from "@polkadot-api/tx-utils"
-import { Dot, Edit } from "lucide-react"
+import { Dot, Edit, FileSearch } from "lucide-react"
 import { Enum, HexString, SS58String } from "polkadot-api"
 import { toHex } from "polkadot-api/utils"
 import { FC, useEffect, useRef, useState } from "react"
@@ -18,7 +18,11 @@ export type ApplyExtrinsicEvent = SystemEvent & {
   phase: { type: "ApplyExtrinsic" }
 }
 export const Extrinsic: FC<{
-  extrinsic: DecodedExtrinsic & { idx: number; hash: HexString }
+  extrinsic: DecodedExtrinsic & {
+    idx: number
+    raw: Uint8Array
+    hash: HexString
+  }
   highlightedEvent: SystemEvent | null
   events: ApplyExtrinsicEvent[]
   isOpen?: boolean
@@ -43,15 +47,12 @@ export const Extrinsic: FC<{
         </button>
         <div className="flex gap-2 items-center">
           <CopyBinary value={extrinsic.callData} />
-          {extrinsic.callData.length > 1024 ? (
-            <span className="opacity-50">
-              <Edit size={14} />
-            </span>
-          ) : (
-            <Link to={"/extrinsics#data=" + toHex(extrinsic.callData)}>
-              <Edit size={14} />
-            </Link>
-          )}
+          <Link to={`/extrinsics/analyzer#extrinsic=${toHex(extrinsic.raw)}`}>
+            <FileSearch size={15} />
+          </Link>
+          <Link to={"/extrinsics#data=" + toHex(extrinsic.callData)}>
+            <Edit size={14} />
+          </Link>
         </div>
       </div>
       {expanded ? (
