@@ -9,6 +9,8 @@ import {
 import { ChevronLeft } from "lucide-react"
 import {
   ManageLedger,
+  ManageMultisig,
+  ManageProxy,
   ManageReadOnly,
   ManageVault,
   ModalContext,
@@ -73,10 +75,14 @@ export const Providers = () => (
     <PjsWalletButtons />
     <ManageToDialog>
       <ul className="flex gap-2 flex-wrap items-center justify-center">
-        <ManageReadOnly />
         <ManageLedger />
         <ManageVault />
         <WalletConnectButton />
+      </ul>
+      <ul className="flex gap-2 flex-wrap items-center justify-center">
+        <ManageReadOnly />
+        <ManageProxy />
+        <ManageMultisig />
       </ul>
     </ManageToDialog>
   </div>

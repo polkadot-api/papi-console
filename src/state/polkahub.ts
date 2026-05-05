@@ -4,6 +4,8 @@ import { AccountId, SS58String } from "polkadot-api"
 import {
   Account,
   createLedgerProvider,
+  createMultisigProvider,
+  multisigExternalSigner,
   createPjsWalletProvider,
   createPolkadotVaultProvider,
   createPolkaHub,
@@ -12,6 +14,7 @@ import {
   createWalletConnectProvider,
   knownChains,
   Plugin,
+  createProxyProvider,
 } from "polkahub"
 import {
   combineLatest,
@@ -19,10 +22,17 @@ import {
   firstValueFrom,
   map,
   pipe,
+  startWith,
   switchMap,
 } from "rxjs"
 import { chainProperties$ } from "./chain-props.state"
-import { canSetStorage$, client$ } from "./chains/chain.state"
+import {
+  canSetStorage$,
+  client$,
+  getChainSource,
+  selectedChain$,
+  unsafeApi$,
+} from "./chains/chain.state"
 import { identity$, isVerified } from "./identity.state"
 
 const removeSuspense = <T>() =>
@@ -72,6 +82,51 @@ const walletConnectProvider = createWalletConnectProvider(
     knownChains.paseoAh,
   ],
 )
+const proxyProvider = createProxyProvider((address) =>
+  firstValueFrom(
+    unsafeApi$.pipe(
+      switchMap(
+        (api) => api.query.Proxy.Proxies.getValue(address) as Promise<any>,
+      ),
+      map(([v]) => v),
+    ),
+  ),
+)
+const multisigProvider$ = selectedChain$.pipe(
+  switchMap(getChainSource),
+  map((source) => {
+    if (source.type === "websocket" && source.withChopsticks) {
+      return null
+    }
+
+    if (
+      source.type === "chainSpec" &&
+      ![
+        "polkadot",
+        "westend",
+        "kusama",
+        "paseo",
+        "polkadot_asset_hub",
+        "westend_asset_hub",
+        "kusama_asset_hub",
+        "paseo_asset_hub",
+      ].includes(source.id)
+    ) {
+      return null
+    }
+
+    const chain =
+      source.type === "chainSpec" ? `sm-${source.id}` : `ws-${source.endpoint}`
+
+    return createMultisigProvider(
+      multisigExternalSigner(
+        (info, callData) =>
+          `https://multisig.usepapi.app/?chain=${chain}&calldata=${callData}&signatories=${info.signatories.join("_")}&threshold=${info.threshold}`,
+      ),
+    )
+  }),
+  startWith(null),
+)
 
 export const polkaHub = createPolkaHub(
   combineLatest([
@@ -81,6 +136,8 @@ export const polkaHub = createPolkaHub(
     readOnlyProvider$,
     [ledgerAccountProvider],
     [walletConnectProvider],
+    [proxyProvider],
+    multisigProvider$,
   ]).pipe(map((v: (Plugin<any> | null)[]) => v.filter((v) => v != null))),
   {
     getIdentity: (address) =>
