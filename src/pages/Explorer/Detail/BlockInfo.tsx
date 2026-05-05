@@ -2,58 +2,57 @@ import { CopyText } from "@/components/Copy"
 import { Link } from "@/hashParams"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { combineKeys } from "@react-rxjs/utils"
-import { FC, ReactNode } from "react"
+import { FC, ReactNode, useContext } from "react"
 import { filter, map, startWith, switchMap, take } from "rxjs"
-import {
-  BlockInfo,
-  blockInfoState$,
-  blocksByHeight$,
-  BlockState,
-} from "../block.state"
+import { blockInfoState$, blocksByHeight$, BlockState } from "../block.state"
 import { BlockAuthor } from "./BlockAuthor"
 import { BlockStatusIcon, statusText } from "./BlockState"
+import { BlockContext } from "./blockContext"
 
-export const BlockInfoView: FC<{
-  block: BlockInfo
-}> = ({ block }) => (
-  <section className="space-y-4 px-4 py-2">
-    <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div className="space-y-2">
-        <p className="text-3xl font-semibold tracking-tight">
-          #{block.number.toLocaleString()}
-        </p>
-        <div className="flex flex-wrap items-center gap-2 text-sm font-mono text-foreground/90">
-          <span className="truncate max-w-full">{block.hash}</span>
-          <CopyText className="text-foreground/70" text={block.hash} binary />
+export const BlockInfoView: FC = () => {
+  const block = useContext(BlockContext)
+  if (!block) return null
+
+  return (
+    <section className="space-y-4 px-4 py-2">
+      <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-2">
+          <p className="text-3xl font-semibold tracking-tight">
+            #{block.number.toLocaleString()}
+          </p>
+          <div className="flex flex-wrap items-center gap-2 text-sm font-mono text-foreground/90">
+            <span className="truncate max-w-full">{block.hash}</span>
+            <CopyText className="text-foreground/70" text={block.hash} binary />
+          </div>
         </div>
-      </div>
-      <div className="flex flex-wrap items-center gap-3 md:justify-end">
-        <StatusChip state={block.status} />
-      </div>
-    </header>
+        <div className="flex flex-wrap items-center gap-3 md:justify-end">
+          <StatusChip state={block.status} />
+        </div>
+      </header>
 
-    <div className="grid gap-4 md:grid-cols-2">
-      <DetailTile label="Parent block">
-        <BlockLink hash={block.parent} />
-      </DetailTile>
-      <DetailTile label="Children">
-        <BlockChildren hash={block.hash} />
-      </DetailTile>
-    </div>
-
-    {block.header && (
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-        <DetailTile label="Roots">
-          <HashPreview title="state" value={block.header.stateRoot} />
-          <HashPreview title="extrinsic" value={block.header.extrinsicRoot} />
+      <div className="grid gap-4 md:grid-cols-2">
+        <DetailTile label="Parent block">
+          <BlockLink hash={block.parent} />
         </DetailTile>
-        <DetailTile label="Block author">
-          <BlockAuthor hash={block.hash} header={block.header} />
+        <DetailTile label="Children">
+          <BlockChildren hash={block.hash} />
         </DetailTile>
       </div>
-    )}
-  </section>
-)
+
+      {block.header && (
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+          <DetailTile label="Roots">
+            <HashPreview title="state" value={block.header.stateRoot} />
+            <HashPreview title="extrinsic" value={block.header.extrinsicRoot} />
+          </DetailTile>
+          <DetailTile label="Block author">
+            <BlockAuthor hash={block.hash} header={block.header} />
+          </DetailTile>
+        </div>
+      )}
+    </section>
+  )
+}
 
 const StatusChip: FC<{ state: BlockState }> = ({ state }) => (
   <span className="inline-flex items-center gap-2 rounded-full border border-foreground/20 bg-foreground/2 px-4 py-2 text-sm font-medium">

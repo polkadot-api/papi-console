@@ -1,25 +1,31 @@
 import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
 import { JsonDisplay } from "@/components/JsonDisplay"
+import { blockInfoState$ } from "@/pages/Explorer/block.state"
+import { BlockContext } from "@/pages/Explorer/Detail/blockContext"
+import { SignedExtensions } from "@/pages/Explorer/Detail/SignedExtensions"
 import { DecodedExtrinsic, getExtrinsicDecoder } from "@polkadot-api/tx-utils"
-import { state, useStateObservable } from "@react-rxjs/core"
+import { useStateObservable, withDefault } from "@react-rxjs/core"
 import { HexString, TxCallData } from "polkadot-api"
 import { toHex } from "polkadot-api/utils"
 import { FC, useMemo } from "react"
-import { map, merge } from "rxjs"
-import { Sender, SignedExtensions } from "../../Explorer/Detail/Extrinsic"
-import { AnalyzeMortality, analyzeMortality$ } from "./Mortality"
+import { map, merge, switchMap } from "rxjs"
+import { Sender } from "../../Explorer/Detail/Extrinsic"
 import { AnalyzePriority, analyzePriority$ } from "./Priority"
-import { selectedBlock$ } from "./selectedBlock"
+import { selectedBlock$, selectedBlockHex$ } from "./selectedBlock"
 
-export const extDecoder$ = state(
-  selectedBlock$.pipe(
-    map((block) => getExtrinsicDecoder(block.ctx.metadataRaw)),
-  ),
+const extDecoder$ = selectedBlock$.pipeState(
+  map((block) => getExtrinsicDecoder(block.ctx.metadataRaw)),
+)
+
+const selectedBlockInfo$ = selectedBlockHex$.pipeState(
+  switchMap((hex) => (hex ? blockInfoState$(hex) : [null])),
+  withDefault(null),
 )
 
 export const ExtrinsicDecoder: FC<{
   extrinsic: HexString
 }> = ({ extrinsic }) => {
+  const block = useStateObservable(selectedBlockInfo$)
   const extrinsicDecoder = useStateObservable(extDecoder$)
   const decodeResult = useMemo(() => {
     try {
@@ -43,19 +49,24 @@ export const ExtrinsicDecoder: FC<{
   const decoded = decodeResult.value
 
   return (
-    <div>
-      <h2 className="capitalize text-xl font-bold">
-        {decoded.type} Transaction v{decoded.version}
-      </h2>
-      {decoded.type === "signed" ? (
-        <SignedInfo extrinsic={extrinsic} decoded={decoded} />
-      ) : decoded.type === "general" ? (
-        <div>TODO</div>
-      ) : (
-        <AnalyzePriority extrinsic={extrinsic} />
-      )}
-      <CallData call={decoded.call as TxCallData} callData={decoded.callData} />
-    </div>
+    <BlockContext value={block}>
+      <div>
+        <h2 className="capitalize text-xl font-bold">
+          {decoded.type} Transaction v{decoded.version}
+        </h2>
+        {decoded.type === "signed" ? (
+          <SignedInfo extrinsic={extrinsic} decoded={decoded} />
+        ) : decoded.type === "general" ? (
+          <div>TODO</div>
+        ) : (
+          <AnalyzePriority extrinsic={extrinsic} />
+        )}
+        <CallData
+          call={decoded.call as TxCallData}
+          callData={decoded.callData}
+        />
+      </div>
+    </BlockContext>
   )
 }
 
@@ -63,7 +74,6 @@ const SignedInfo: FC<{
   extrinsic: HexString
   decoded: DecodedExtrinsic & { type: "signed" }
 }> = ({ extrinsic, decoded }) => {
-  const mortality = decoded.extra.CheckMortality
   const txPayment =
     decoded.extra.ChargeAssetTxPayment ?? decoded.extra.ChargeTxPayment
 
@@ -71,7 +81,6 @@ const SignedInfo: FC<{
     <div className="space-y-2 mb-4">
       <Sender sender={decoded.address} />
       <SignedExtensions extra={decoded.extra} />
-      {mortality ? <AnalyzeMortality mortality={mortality} /> : null}
       <AnalyzePriority extrinsic={extrinsic} txPayment={txPayment ?? {}} />
     </div>
   )
@@ -97,8 +106,4 @@ const CallData: FC<{ call: TxCallData; callData: Uint8Array }> = ({
   </div>
 )
 
-export const extrinsicDecoder$ = merge(
-  extDecoder$,
-  analyzeMortality$,
-  analyzePriority$,
-)
+export const extrinsicDecoder$ = merge(extDecoder$, analyzePriority$)
