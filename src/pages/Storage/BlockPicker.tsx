@@ -1,6 +1,9 @@
 import { Spinner } from "@/components/Icons"
-import { runtimeCtx$, runtimeCtxAt$ } from "@/state/chains/chain.state"
-import { RuntimeContext } from "@polkadot-api/observable-client"
+import {
+  CachedRuntime,
+  runtimeCtx$,
+  runtimeCtxAt$,
+} from "@/state/chains/chain.state"
 import { Input } from "@polkahub/ui-components"
 import {
   liftSuspense,
@@ -29,7 +32,7 @@ const loadedCtx$ = state(
     debounceTime(200),
     switchMap((v) => {
       const inner$: Observable<{
-        ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">
+        ctx: CachedRuntime
         hash?: string
       }> =
         !v.trim() || v === "Latest"

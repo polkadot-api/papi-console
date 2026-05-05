@@ -1,20 +1,22 @@
 import { Chopsticks } from "@/components/Icons"
 import { Loading } from "@/components/Loading"
+import { getHashParams } from "@/hashParams"
 import { groupBy } from "@/lib/groupBy"
 import { runtimeCtx$, runtimeCtxAt$ } from "@/state/chains/chain.state"
+import { Blake2256 } from "@polkadot-api/substrate-bindings"
+import { getExtrinsicDecoder } from "@polkadot-api/tx-utils"
 import * as Tabs from "@radix-ui/react-tabs"
 import { state, useStateObservable } from "@react-rxjs/core"
-import { FC, useState } from "react"
+import { toHex } from "polkadot-api/utils"
+import { FC, useContext, useState } from "react"
 import { useLocation } from "react-router-dom"
 import { catchError, combineLatest, filter, map, take } from "rxjs"
 import { twMerge } from "tailwind-merge"
-import { BlockInfo, blockInfoState$ } from "../block.state"
+import { blockInfoState$ } from "../block.state"
 import { BlockEvents } from "./BlockEvents"
 import { BlockStorageDiff } from "./BlockStorageDiff"
 import { ApplyExtrinsicEvent, Extrinsic } from "./Extrinsic"
-import { getHashParams } from "@/hashParams"
-import { Blake2256 } from "@polkadot-api/substrate-bindings"
-import { toHex } from "polkadot-api/utils"
+import { BlockContext } from "./blockContext"
 
 const blockExtrinsics$ = state((hash: string) => {
   const body$ = blockInfoState$(hash).pipe(
@@ -25,12 +27,16 @@ const blockExtrinsics$ = state((hash: string) => {
 
   return combineLatest([
     body$,
-    runtimeCtxAt$(hash).pipe(catchError(() => runtimeCtx$)),
+    runtimeCtxAt$(hash).pipe(
+      catchError(() => runtimeCtx$),
+      map((v) => getExtrinsicDecoder(v.metadataRaw)),
+    ),
   ]).pipe(
     take(1),
-    map(([body, { txDecoder }]) =>
+    map(([body, txDecoder]) =>
       body.map((raw, idx) => ({
         idx,
+        raw,
         hash: toHex(Blake2256(raw)),
         ...txDecoder(raw),
       })),
@@ -39,9 +45,8 @@ const blockExtrinsics$ = state((hash: string) => {
 }, [])
 
 type Tab = "tx" | "events" | "diff"
-export const BlockBody: FC<{
-  block: BlockInfo
-}> = ({ block }) => {
+export const BlockBody: FC = () => {
+  const block = useContext(BlockContext)!
   const extrinsics = useStateObservable(blockExtrinsics$(block.hash))
   const [selectedTab, setSelectedTab] = useState<Tab | null>(null)
 

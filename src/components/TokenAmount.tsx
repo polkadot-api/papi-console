@@ -18,7 +18,9 @@ export const TokenAmount: FC<{
   const formattedValue = (
     Number(children) /
     10 ** properties.tokenDecimals
-  ).toLocaleString(undefined)
+  ).toLocaleString(undefined, {
+    maximumSignificantDigits: 3,
+  })
 
   return (
     <span

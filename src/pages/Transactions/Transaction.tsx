@@ -1,22 +1,24 @@
 import { CopyText } from "@/components/Copy"
 import { Link } from "@/hashParams"
 import { shortStr } from "@/utils"
+import { FileSearch, Trash2 } from "lucide-react"
 import { TxBroadcastEvent } from "polkadot-api"
+import { jsonSerialize, toHex } from "polkadot-api/utils"
 import * as React from "react"
 import { dismissTransaction, onGoingEvents } from "./transactions.state"
-import { Trash2 } from "lucide-react"
-import { jsonSerialize } from "polkadot-api/utils"
 
 export const Transaction: React.FC<{
   event:
-    | TxBroadcastEvent
+    | (TxBroadcastEvent & { raw: Uint8Array })
     | {
         type: "invalid" | "error"
         value: any
         txHash: string
+        raw: Uint8Array
       }
+  index: number
   onClose: () => void
-}> = ({ event, onClose }) => {
+}> = ({ event, index, onClose }) => {
   const getStatus = () => {
     const { type } = event
     switch (event.type) {
@@ -71,15 +73,23 @@ export const Transaction: React.FC<{
   return (
     <div className="mb-4 p-3 bg-secondary/60 text-secondary-foreground/80 border border-border rounded-lg">
       <div className="flex justify-between items-start">
-        <p className="font-medium">
-          {shortStr(txHash, 14)} <CopyText text={txHash} />
-        </p>
-        <button
-          className="text-red-500"
-          onClick={() => dismissTransaction(txHash)}
-        >
-          <Trash2 size={16} />
-        </button>
+        <div className="min-w-0">
+          <p className="font-medium">
+            <span className="text-muted-foreground">{index + 1}.</span>{" "}
+            {shortStr(txHash, 14)} <CopyText text={txHash} />
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link to={`/extrinsics/analyzer#extrinsic=${toHex(event.raw)}`}>
+            <FileSearch size={15} />
+          </Link>
+          <button
+            className="text-red-500"
+            onClick={() => dismissTransaction(txHash)}
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       </div>
       <p
         className={`text-sm ${

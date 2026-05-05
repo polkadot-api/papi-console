@@ -8,17 +8,22 @@ import { Link } from "@/hashParams"
 import { shortStr } from "@/utils"
 import { SystemEvent } from "@polkadot-api/observable-client"
 import { DecodedExtrinsic } from "@polkadot-api/tx-utils"
-import { Dot, Edit } from "lucide-react"
+import { Edit, FileSearch } from "lucide-react"
 import { Enum, HexString, SS58String } from "polkadot-api"
 import { toHex } from "polkadot-api/utils"
 import { FC, useEffect, useRef, useState } from "react"
 import { twMerge } from "tailwind-merge"
+import { SignedExtensions } from "./SignedExtensions"
 
 export type ApplyExtrinsicEvent = SystemEvent & {
   phase: { type: "ApplyExtrinsic" }
 }
 export const Extrinsic: FC<{
-  extrinsic: DecodedExtrinsic & { idx: number; hash: HexString }
+  extrinsic: DecodedExtrinsic & {
+    idx: number
+    raw: Uint8Array
+    hash: HexString
+  }
   highlightedEvent: SystemEvent | null
   events: ApplyExtrinsicEvent[]
   isOpen?: boolean
@@ -43,15 +48,12 @@ export const Extrinsic: FC<{
         </button>
         <div className="flex gap-2 items-center">
           <CopyBinary value={extrinsic.callData} />
-          {extrinsic.callData.length > 1024 ? (
-            <span className="opacity-50">
-              <Edit size={14} />
-            </span>
-          ) : (
-            <Link to={"/extrinsics#data=" + toHex(extrinsic.callData)}>
-              <Edit size={14} />
-            </Link>
-          )}
+          <Link to={`/extrinsics/analyzer#extrinsic=${toHex(extrinsic.raw)}`}>
+            <FileSearch size={15} />
+          </Link>
+          <Link to={"/extrinsics#data=" + toHex(extrinsic.callData)}>
+            <Edit size={14} />
+          </Link>
         </div>
       </div>
       {expanded ? (
@@ -92,51 +94,6 @@ export const Extrinsic: FC<{
   )
 }
 
-const SignedExtensions: FC<{ extra: Record<string, unknown> }> = ({
-  extra,
-}) => (
-  <div className="space-y-2">
-    <h3>Signed extensions</h3>
-    <ul className="space-y-2">
-      {Object.entries(extra).map(([key, value]) => (
-        <SignedExtension key={key} id={key} value={value} />
-      ))}
-    </ul>
-  </div>
-)
-
-const SignedExtension: FC<{ id: string; value: unknown }> = ({ id, value }) => {
-  const [expanded, setExpanded] = useState(false)
-  const inlineJson = JSON.stringify(value, (_, v) =>
-    typeof v === "bigint" ? String(v) : v instanceof Uint8Array ? toHex(v) : v,
-  )
-
-  if (!inlineJson || inlineJson.length < 40) {
-    return (
-      <li className="flex items-center flex-wrap gap-1">
-        <div className="flex gap-2 items-center">
-          <Dot size={16} />
-          {id}
-        </div>
-        {inlineJson ? (
-          <div className="whitespace-nowrap">
-            - <span className="font-mono text-sm">{inlineJson}</span>
-          </div>
-        ) : null}
-      </li>
-    )
-  }
-  return (
-    <li className="space-y-2">
-      <div className="flex gap-2 items-center">
-        <ExpandBtn expanded={expanded} onClick={() => setExpanded((e) => !e)} />
-        {id}
-      </div>
-      {expanded && <JsonDisplay src={value} />}
-    </li>
-  )
-}
-
 export const EventDisplay: FC<{
   evt: SystemEvent
   index: number
@@ -173,15 +130,19 @@ export const EventDisplay: FC<{
   )
 }
 
+export const senderToAddress = (
+  sender: Enum<{ Id: SS58String }> | SS58String | HexString,
+) =>
+  typeof sender === "string"
+    ? sender
+    : "type" in sender && sender.type === "Id"
+      ? sender.value
+      : null
+
 const Sender: React.FC<{
   sender: Enum<{ Id: SS58String }> | SS58String | HexString
 }> = ({ sender }) => {
-  const value: string | null =
-    typeof sender === "string"
-      ? sender
-      : "type" in sender && sender.type === "Id"
-        ? sender.value
-        : null
+  const value = senderToAddress(sender)
   return (
     value && (
       <div className="flex gap-2 items-center py-2">

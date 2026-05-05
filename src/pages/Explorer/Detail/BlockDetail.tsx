@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom"
 import { blockInfoState$ } from "../block.state"
 import { BlockBody } from "./BlockBody"
 import { BlockInfoView } from "./BlockInfo"
+import { BlockContext } from "./blockContext"
 
 export const BlockDetail = () => {
   const { hashOrHeight } = useParams()
@@ -13,8 +14,10 @@ export const BlockDetail = () => {
 
   return (
     <div>
-      <BlockInfoView block={block} />
-      <BlockBody block={block} />
+      <BlockContext value={block}>
+        <BlockInfoView />
+        <BlockBody />
+      </BlockContext>
     </div>
   )
 }

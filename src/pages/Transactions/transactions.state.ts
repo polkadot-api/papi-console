@@ -10,6 +10,7 @@ import { InvalidTxError } from "polkadot-api"
 import {
   catchError,
   filter,
+  map,
   merge,
   mergeMap,
   of,
@@ -33,6 +34,10 @@ const transactions$ = mergeWithKey({ signedTx$, unsignedTx$ }).pipe(
       tap((e) => {
         txHash = e.txHash
       }),
+      map((event) => ({
+        ...event,
+        raw: tx.payload,
+      })),
       catchError((err) => {
         console.log(err)
         console.log(tx.payload, client.getFinalizedBlock())
@@ -43,6 +48,7 @@ const transactions$ = mergeWithKey({ signedTx$, unsignedTx$ }).pipe(
               ? ("invalid" as const)
               : ("error" as const),
           txHash,
+          raw: tx.payload,
           value: err,
         })
       }),
