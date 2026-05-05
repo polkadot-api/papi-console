@@ -2,9 +2,10 @@ import { client$ } from "@/state/chains/chain.state"
 import { polkadot_people } from "@polkadot-api/descriptors"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { Binary, HexString } from "polkadot-api"
-import { FC, useEffect, useState } from "react"
+import { FC, ReactNode, useEffect, useState } from "react"
 import { combineLatest, firstValueFrom, switchMap } from "rxjs"
 import { selectedBlockHex$ } from "./selectedBlock"
+import { TokenAmount } from "@/components/TokenAmount"
 
 const maxBlockSize$ = state(
   combineLatest([selectedBlockHex$, client$]).pipe(
@@ -83,24 +84,82 @@ export const AnalyzePriority: FC<{
         ? maxTxPerBlockWeight
         : maxTxPerBlockLength
     const priority = (tip + 1n) * maxTxPerBlock
+    const limitingFactor =
+      maxTxPerBlockWeight < maxTxPerBlockLength ? "Weight" : "Length"
 
-    return { priority, maxTxPerBlockLength, maxTxPerBlockWeight }
+    return {
+      priority,
+      maxTxPerBlockLength,
+      maxTxPerBlockWeight,
+      maxTxPerBlock,
+      limitingFactor,
+    }
   })()
 
   return (
-    <div>
-      <b>Priority:</b> tip={tip.toLocaleString()} fee=
-      {queryInfo.partial_fee.toLocaleString()} class={queryInfo.class.type}{" "}
-      weight=
-      {queryInfo.weight.proof_size.toLocaleString() +
-        "/" +
-        queryInfo.weight.ref_time.toLocaleString()}{" "}
+    <div className="space-y-4">
       {priority ? (
-        <>
-          txPerBlockLength={priority.maxTxPerBlockLength.toLocaleString()}{" "}
-          txPerBlockWeight={priority.maxTxPerBlockWeight.toLocaleString()}{" "}
-          priority={priority.priority.toLocaleString()}
-        </>
+        <div className="flex flex-col gap-2 border-b border-foreground/10 pb-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
+              Computed Priority
+            </div>
+            <div className="mt-1 font-mono text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              {priority.priority.toLocaleString()}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(18rem,0.9fr)]">
+        <div className="rounded-lg border border-foreground/10 bg-foreground/5 p-3">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
+            Inputs
+          </div>
+          <div className="mt-3 space-y-2">
+            <DetailRow label="Tip" value={<TokenAmount>{tip}</TokenAmount>} />
+            <DetailRow
+              label="Partial Fee"
+              value={<TokenAmount>{queryInfo.partial_fee}</TokenAmount>}
+            />
+            <DetailRow label="Class" value={queryInfo.class.type} />
+            <DetailRow label="Encoded Length" value={length.toLocaleString()} />
+            <DetailRow
+              label="Weight"
+              value={`${(Number(queryInfo.weight.proof_size) / 1024).toLocaleString(undefined, { maximumSignificantDigits: 3 })} KB / ${(Number(queryInfo.weight.ref_time) / 1_000_000).toLocaleString(undefined, { maximumSignificantDigits: 3 })} ms`}
+            />
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-foreground/10 bg-foreground/5 p-3">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
+            Capacity
+          </div>
+          <div className="mt-3 space-y-2">
+            <DetailRow
+              label="Tx/Block by Length"
+              value={
+                priority ? priority.maxTxPerBlockLength.toLocaleString() : "N/A"
+              }
+            />
+            <DetailRow
+              label="Tx/Block by Weight"
+              value={
+                priority ? priority.maxTxPerBlockWeight.toLocaleString() : "N/A"
+              }
+            />
+            <DetailRow
+              label="Limited By"
+              value={priority ? priority.limitingFactor : "N/A"}
+            />
+          </div>
+        </div>
+      </div>
+
+      {!priority ? (
+        <div className="rounded-lg border border-foreground/10 bg-background/60 p-3 text-xs text-muted-foreground">
+          Waiting for block limits to finish the priority calculation.
+        </div>
       ) : null}
     </div>
   )
@@ -114,3 +173,13 @@ const divWeight = (a: Weight, b: Weight) => {
   const proof_size = b.proof_size === 0n ? 1n : a.proof_size / b.proof_size
   return ref_time < proof_size ? ref_time : proof_size
 }
+
+const DetailRow: FC<{ label: string; value: ReactNode }> = ({
+  label,
+  value,
+}) => (
+  <div className="flex items-baseline justify-between gap-4 border-b border-foreground/8 pb-2 last:border-b-0 last:pb-0">
+    <div className="text-sm text-muted-foreground">{label}</div>
+    <div className="text-right font-mono text-sm text-foreground">{value}</div>
+  </div>
+)

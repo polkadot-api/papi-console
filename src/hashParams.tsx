@@ -92,9 +92,12 @@ export const useSyncHashParam = <T extends any[]>(
 
   useLayoutEffect(
     () =>
-      setHashParams({
-        [key]: getFn(...dependencies),
-      }),
+      setHashParams(
+        {
+          [key]: getFn(...dependencies),
+        },
+        location,
+      ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     dependencies,
   )
@@ -116,6 +119,6 @@ export const useHashParamState = <T extends string | null>(
 
   return [
     getHashParams(location).get(key) ?? init?.() ?? (null as any),
-    (value: string | null) => setHashParams({ [key]: value }),
+    (value: string | null) => setHashParams({ [key]: value }, location),
   ] as const
 }

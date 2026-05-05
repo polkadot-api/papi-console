@@ -1,15 +1,16 @@
 import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
+import { AccountIdDisplay } from "@/components/AccountIdDisplay"
 import { JsonDisplay } from "@/components/JsonDisplay"
 import { blockInfoState$ } from "@/pages/Explorer/block.state"
 import { BlockContext } from "@/pages/Explorer/Detail/blockContext"
 import { SignedExtensions } from "@/pages/Explorer/Detail/SignedExtensions"
-import { DecodedExtrinsic, getExtrinsicDecoder } from "@polkadot-api/tx-utils"
+import { getExtrinsicDecoder } from "@polkadot-api/tx-utils"
 import { useStateObservable, withDefault } from "@react-rxjs/core"
 import { HexString, TxCallData } from "polkadot-api"
 import { toHex } from "polkadot-api/utils"
-import { FC, useMemo } from "react"
+import { FC, ReactNode, useMemo } from "react"
 import { map, merge, switchMap } from "rxjs"
-import { Sender } from "../../Explorer/Detail/Extrinsic"
+import { senderToAddress } from "../../Explorer/Detail/Extrinsic"
 import { AnalyzePriority, analyzePriority$ } from "./Priority"
 import { selectedBlock$, selectedBlockHex$ } from "./selectedBlock"
 
@@ -43,24 +44,66 @@ export const ExtrinsicDecoder: FC<{
   }, [extrinsicDecoder, extrinsic])
 
   if (decodeResult.type === "error") {
-    return <div>Can't decode: {decodeResult.value.message}</div>
+    return (
+      <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-4 text-sm text-red-700 dark:text-red-300">
+        <div className="text-xs font-semibold uppercase tracking-[0.2em]">
+          Decode Error
+        </div>
+        <div className="mt-2">
+          Can&apos;t decode: {decodeResult.value.message}
+        </div>
+      </div>
+    )
   }
 
   const decoded = decodeResult.value
+  const signerAddress =
+    decoded.type === "signed" ? senderToAddress(decoded.address) : null
 
   return (
     <BlockContext value={block}>
-      <div>
-        <h2 className="capitalize text-xl font-bold">
-          {decoded.type} Transaction v{decoded.version}
-        </h2>
+      <div className="space-y-4">
+        <SectionCard className="space-y-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-2">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
+                Decoded Extrinsic
+              </div>
+              <h2 className="text-2xl font-semibold tracking-tight capitalize">
+                {decoded.type} Transaction v{decoded.version}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {decoded.call.type}.{decoded.call.value.type}
+              </p>
+            </div>
+
+            {signerAddress ? (
+              <div className="rounded-lg border border-foreground/10 bg-foreground/5 px-3 py-2">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
+                  Signer
+                </div>
+                <div className="mt-1">
+                  <AccountIdDisplay value={signerAddress} />
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </SectionCard>
+
         {decoded.type === "signed" ? (
-          <SignedInfo extrinsic={extrinsic} decoded={decoded} />
+          <SectionCard title="Signed Extensions">
+            <SignedExtensions extra={decoded.extra} title={false} />
+          </SectionCard>
         ) : decoded.type === "general" ? (
-          <div>TODO</div>
-        ) : (
+          <SectionCard>
+            <div className="text-sm text-muted-foreground">
+              General transaction analysis is not implemented yet.
+            </div>
+          </SectionCard>
+        ) : null}
+        <SectionCard title="Priority Analysis">
           <AnalyzePriority extrinsic={extrinsic} />
-        )}
+        </SectionCard>
         <CallData
           call={decoded.call as TxCallData}
           callData={decoded.callData}
@@ -70,40 +113,60 @@ export const ExtrinsicDecoder: FC<{
   )
 }
 
-const SignedInfo: FC<{
-  extrinsic: HexString
-  decoded: DecodedExtrinsic & { type: "signed" }
-}> = ({ extrinsic, decoded }) => {
-  const txPayment =
-    decoded.extra.ChargeAssetTxPayment ?? decoded.extra.ChargeTxPayment
-
-  return (
-    <div className="space-y-2 mb-4">
-      <Sender sender={decoded.address} />
-      <SignedExtensions extra={decoded.extra} />
-      <AnalyzePriority extrinsic={extrinsic} txPayment={txPayment ?? {}} />
-    </div>
-  )
-}
-
 const CallData: FC<{ call: TxCallData; callData: Uint8Array }> = ({
   call,
   callData,
 }) => (
-  <div>
-    <div className="flex gap-2 items-baseline">
-      <div className="text-lg">
-        {call.type}.{call.value.type}
-      </div>
-      <div className="flex gap-1 items-center overflow-hidden">
-        <div className="shrink overflow-hidden text-ellipsis text-muted-foreground">
-          {toHex(callData)}
+  <SectionCard title="Call Payload">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <div className="text-lg font-semibold tracking-tight">
+            {call.type}.{call.value.type}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Decoded arguments for the call embedded in this extrinsic.
+          </p>
         </div>
-        <CopyBinary value={callData} />
+        <div className="min-w-0 rounded-lg border border-foreground/10 bg-foreground/5 px-3 py-2 lg:max-w-xl">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
+            Call Data
+          </div>
+          <div className="mt-1 flex items-start gap-2">
+            <div className="shrink overflow-auto font-mono text-xs text-muted-foreground">
+              {toHex(callData)}
+            </div>
+            <CopyBinary value={callData} />
+          </div>
+        </div>
+      </div>
+      <div className="overflow-auto rounded-xl border border-foreground/10 bg-background/60 p-3">
+        <JsonDisplay src={call.value.value} />
       </div>
     </div>
-    <JsonDisplay src={call.value.value} />
-  </div>
+  </SectionCard>
 )
 
 export const extrinsicDecoder$ = merge(extDecoder$, analyzePriority$)
+
+const SectionCard: FC<{
+  children: ReactNode
+  title?: string
+  className?: string
+}> = ({ children, title, className }) => (
+  <section
+    className={[
+      "rounded-xl border border-foreground/10 bg-card p-4 shadow-sm",
+      className,
+    ]
+      .filter(Boolean)
+      .join(" ")}
+  >
+    {title ? (
+      <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/60">
+        {title}
+      </div>
+    ) : null}
+    {children}
+  </section>
+)
