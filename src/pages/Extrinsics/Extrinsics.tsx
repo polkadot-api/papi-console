@@ -19,7 +19,7 @@ import { map } from "rxjs"
 import { twMerge } from "tailwind-merge"
 import { CustomSignedExt, customSignedExtensions$ } from "./CustomSignedExt"
 import { EditMode } from "./EditMode"
-import { ExtrinsicAnalyzer } from "./ExtrinsicAnalyzer"
+import { ExtrinsicAnalyzer } from "./Analyzer/ExtrinsicAnalyzer"
 import { JsonMode } from "./JsonMode"
 import { ExtrinsicModal } from "./SubmitTx/SubmitTx"
 
