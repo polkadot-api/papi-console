@@ -40,7 +40,7 @@ export function Transactions() {
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-        <Dialog.Content className="fixed bottom-0 border-t border-x border-border right-0 w-full sm:w-96 h-96 bg-card text-card-foreground rounded-t-xl shadow-xl focus:outline-hidden">
+        <Dialog.Content className="fixed bottom-0 border-t border-x border-border right-0 w-full sm:w-md h-96 bg-card text-card-foreground rounded-t-xl shadow-xl focus:outline-hidden">
           <div className="flex justify-between items-center p-4 border-b border-border">
             <Dialog.Title className="text-lg font-semibold">
               Transactions
@@ -52,10 +52,11 @@ export function Transactions() {
             </Dialog.Close>
           </div>
           <div className="p-4 h-[calc(100%-4rem)] overflow-y-auto">
-            {list.map((event) => (
+            {list.map((event, index) => (
               <Transaction
                 key={event.txHash}
                 event={event}
+                index={index}
                 onClose={() => setIsOpen(false)}
               />
             ))}

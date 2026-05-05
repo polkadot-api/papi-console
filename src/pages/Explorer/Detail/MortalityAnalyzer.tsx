@@ -6,8 +6,8 @@ import { map, switchMap } from "rxjs"
 import { BlockContext } from "./blockContext"
 
 const finalizedNumber$ = client$.pipeState(
-  switchMap((v) => v.finalizedBlock$),
-  map((block) => block.number),
+  switchMap((v) => v.bestBlocks$),
+  map(([block]) => block.number),
   withDefault(null),
 )
 

@@ -1,13 +1,16 @@
 import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
 import { AccountIdDisplay } from "@/components/AccountIdDisplay"
+import { CopyText } from "@/components/Copy"
 import { JsonDisplay } from "@/components/JsonDisplay"
 import { blockInfoState$ } from "@/pages/Explorer/block.state"
 import { BlockContext } from "@/pages/Explorer/Detail/blockContext"
 import { SignedExtensions } from "@/pages/Explorer/Detail/SignedExtensions"
+import { chainClient$ } from "@/state/chains/chain.state"
+import { shortStr } from "@/utils"
 import { getExtrinsicDecoder } from "@polkadot-api/tx-utils"
 import { useStateObservable, withDefault } from "@react-rxjs/core"
 import { HexString, TxCallData } from "polkadot-api"
-import { toHex } from "polkadot-api/utils"
+import { fromHex, toHex } from "polkadot-api/utils"
 import { FC, ReactNode, useMemo } from "react"
 import { map, merge, switchMap } from "rxjs"
 import { senderToAddress } from "../../Explorer/Detail/Extrinsic"
@@ -23,9 +26,15 @@ const selectedBlockInfo$ = selectedBlockHex$.pipeState(
   withDefault(null),
 )
 
+const hasher$ = chainClient$.pipeState(
+  switchMap((v) => v.chainHead.hasher$),
+  withDefault(null),
+)
+
 export const ExtrinsicDecoder: FC<{
   extrinsic: HexString
 }> = ({ extrinsic }) => {
+  const hasher = useStateObservable(hasher$)
   const block = useStateObservable(selectedBlockInfo$)
   const extrinsicDecoder = useStateObservable(extDecoder$)
   const decodeResult = useMemo(() => {
@@ -42,6 +51,10 @@ export const ExtrinsicDecoder: FC<{
       }
     }
   }, [extrinsicDecoder, extrinsic])
+  const txHash = useMemo(
+    () => (hasher ? toHex(hasher(fromHex(extrinsic))) : null),
+    [extrinsic, hasher],
+  )
 
   if (decodeResult.type === "error") {
     return (
@@ -72,9 +85,15 @@ export const ExtrinsicDecoder: FC<{
               <h2 className="text-2xl font-semibold tracking-tight capitalize">
                 {decoded.type} Transaction v{decoded.version}
               </h2>
-              <p className="text-sm text-muted-foreground">
-                {decoded.call.type}.{decoded.call.value.type}
-              </p>
+              <div className="text-sm text-muted-foreground">
+                <p>
+                  {decoded.call.type}.{decoded.call.value.type}
+                </p>
+                <p>
+                  Hash: {txHash ? shortStr(txHash, 14) : null}{" "}
+                  <CopyText text={txHash ?? ""} />
+                </p>
+              </div>
             </div>
 
             {signerAddress ? (
