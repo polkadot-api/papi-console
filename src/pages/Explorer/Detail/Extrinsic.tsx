@@ -36,6 +36,13 @@ export const Extrinsic: FC<{
     ),
   )
 
+  let sender = null
+  if (extrinsic.type === "signed") sender = extrinsic.address
+  else if (extrinsic.type === "general") {
+    if (extrinsic.extra?.VerifyMultiSignature?.type === "Signed")
+      sender = extrinsic.extra.VerifyMultiSignature.value.account
+  }
+
   return (
     <li className="p-2 border rounded mb-2 bg-card text-card-foreground">
       <div className="flex justify-between items-center">
@@ -63,9 +70,9 @@ export const Extrinsic: FC<{
             <CopyText text={extrinsic.hash} binary />
           </div>
 
-          {extrinsic.type === "signed" && (
+          {sender && (
             <div>
-              <Sender sender={extrinsic.address} />
+              <Sender sender={sender} />
             </div>
           )}
           <div className="overflow-auto max-h-[80vh] p-2">
