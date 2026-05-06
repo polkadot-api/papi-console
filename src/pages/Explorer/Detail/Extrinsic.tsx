@@ -43,6 +43,13 @@ export const Extrinsic: FC<{
         extrinsic.extra.ChargeTxPayment)
       : undefined
 
+  let sender = null
+  if (extrinsic.type === "signed") sender = extrinsic.address
+  else if (extrinsic.type === "general") {
+    if (extrinsic.extra?.VerifyMultiSignature?.type === "Signed")
+      sender = extrinsic.extra.VerifyMultiSignature.value.account
+  }
+
   return (
     <li className="overflow-hidden rounded-lg border border-foreground/10 bg-card text-card-foreground">
       <div className="flex items-center justify-between gap-2 px-2 py-2">
@@ -68,7 +75,7 @@ export const Extrinsic: FC<{
           <div className="grid gap-2 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_auto]">
             {extrinsic.type === "signed" ? (
               <CompactBlock label="Signer">
-                <Sender compact sender={extrinsic.address} />
+                <Sender compact sender={sender} />
               </CompactBlock>
             ) : null}
 
