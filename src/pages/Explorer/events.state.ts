@@ -1,9 +1,9 @@
 import { groupBy } from "@/lib/groupBy"
+import { blockInfo$, BlockState, recordedBlocks$ } from "@/state/block.state"
 import type { SystemEvent } from "@polkadot-api/observable-client"
 import { state } from "@react-rxjs/core"
 import { combineKeys } from "@react-rxjs/utils"
 import { filter, map, takeWhile } from "rxjs"
-import { blockInfo$, BlockState, recordedBlocks$ } from "./block.state"
 
 const blackList = new Set([
   "System.*",

@@ -76,7 +76,7 @@ const ExpandableLine: FC<
 
   return (
     <li className="space-y-2 rounded-lg border border-foreground/10 bg-foreground/5 px-3 py-2">
-      <div className="flex gap-2 items-center">
+      <div className="flex items-center gap-2">
         <ExpandBtn
           className="shrink-0"
           expanded={expanded}
@@ -84,7 +84,7 @@ const ExpandableLine: FC<
         />
         {id}
         {inlineContent ? (
-          <div className="max-w-full whitespace-nowrap font-mono text-sm overflow-hidden text-ellipsis">
+          <div className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap font-mono text-sm">
             - {inlineContent}
           </div>
         ) : null}
@@ -99,12 +99,12 @@ const InlineLine: FC<{ id: string; inlineContent?: ReactNode }> = ({
   inlineContent,
 }) => (
   <li className="flex items-center gap-2 rounded-lg border border-foreground/10 bg-foreground/5 px-3 py-2">
-    <div className="flex gap-2 items-center">
+    <div className="flex items-center gap-2">
       <Dot size={16} />
       {id}
     </div>
     {inlineContent ? (
-      <div className="max-w-full whitespace-nowrap  font-mono text-sm overflow-hidden text-ellipsis">
+      <div className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap font-mono text-sm">
         - {inlineContent}
       </div>
     ) : null}

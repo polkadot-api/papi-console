@@ -1,5 +1,5 @@
 import { TokenAmount } from "@/components/TokenAmount"
-import { BlockContext } from "@/pages/Explorer/Detail/blockContext"
+import { BlockContext } from "@/state/block.state"
 import { client$ } from "@/state/chains/chain.state"
 import { polkadot_people } from "@polkadot-api/descriptors"
 import { Binary, HexString } from "polkadot-api"
@@ -127,18 +127,12 @@ const getPriority = async (
 
   try {
     const [length, weights, queryInfo] = await Promise.all([
-      typedApi.constants.System.BlockLength({
-        at,
-      }),
-      typedApi.constants.System.BlockWeights({
-        at,
-      }),
+      typedApi.constants.System.BlockLength({ at }),
+      typedApi.constants.System.BlockWeights({ at }),
       typedApi.apis.TransactionPaymentApi.query_info(
         Binary.fromOpaque(extrinsic),
         extLength,
-        {
-          at,
-        },
+        { at },
       ),
     ])
 
@@ -176,6 +170,7 @@ const getPriority = async (
     return null
   }
 }
+
 type PriorityDetails = Awaited<ReturnType<typeof getPriority>>
 
 const usePriorityAnalysis = ({
@@ -192,8 +187,7 @@ const usePriorityAnalysis = ({
   useEffect(() => {
     let cancelled = false
     getPriority(extrinsic, txPayment, blockHex).then((r) => {
-      if (cancelled) return
-      setResult(r)
+      if (!cancelled) setResult(r)
     })
     return () => {
       cancelled = true

@@ -1,13 +1,17 @@
 import { CopyText } from "@/components/Copy"
 import { Link } from "@/hashParams"
+import {
+  BlockContext,
+  blockInfoState$,
+  blocksByHeight$,
+  BlockState,
+} from "@/state/block.state"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { combineKeys } from "@react-rxjs/utils"
 import { FC, ReactNode, useContext } from "react"
 import { filter, map, startWith, switchMap, take } from "rxjs"
-import { blockInfoState$, blocksByHeight$, BlockState } from "../block.state"
 import { BlockAuthor } from "./BlockAuthor"
 import { BlockStatusIcon, statusText } from "./BlockState"
-import { BlockContext } from "./blockContext"
 
 export const BlockInfoView: FC = () => {
   const block = useContext(BlockContext)

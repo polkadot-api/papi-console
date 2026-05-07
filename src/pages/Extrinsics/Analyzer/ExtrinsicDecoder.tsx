@@ -1,9 +1,12 @@
 import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
 import { CopyText } from "@/components/Copy"
+import {
+  AnalyzePriority,
+  Sender,
+  SignedExtensions,
+} from "@/components/Extrinsics"
 import { JsonDisplay } from "@/components/JsonDisplay"
-import { blockInfoState$ } from "@/pages/Explorer/block.state"
-import { BlockContext } from "@/pages/Explorer/Detail/blockContext"
-import { SignedExtensions } from "@/pages/Explorer/Detail/SignedExtensions"
+import { BlockContext, blockInfoState$ } from "@/state/block.state"
 import { chainClient$ } from "@/state/chains/chain.state"
 import { shortStr } from "@/utils"
 import { getExtrinsicDecoder } from "@polkadot-api/tx-utils"
@@ -12,8 +15,6 @@ import { HexString, TxCallData } from "polkadot-api"
 import { fromHex, toHex } from "polkadot-api/utils"
 import { FC, ReactNode, useMemo } from "react"
 import { map, switchMap } from "rxjs"
-import { Sender } from "../../Explorer/Detail/Extrinsic"
-import { AnalyzePriority } from "./Priority"
 import { selectedBlock$, selectedBlockHex$ } from "./selectedBlock"
 
 const extDecoder$ = selectedBlock$.pipeState(

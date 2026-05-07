@@ -1,9 +1,9 @@
+import { BlockContext } from "@/state/block.state"
 import { client$ } from "@/state/chains/chain.state"
 import { useStateObservable, withDefault } from "@react-rxjs/core"
 import { jsonSerialize } from "polkadot-api/utils"
 import { FC, useContext } from "react"
 import { map, switchMap } from "rxjs"
-import { BlockContext } from "./blockContext"
 
 const finalizedNumber$ = client$.pipeState(
   switchMap((v) => v.bestBlocks$),
@@ -29,8 +29,8 @@ export const MortalityAnalyzer: FC<{
     )
   }
 
-  const parseResult = /^Mortal(\d+)$/.exec(mortality.type)
-  if (parseResult === null) {
+  const decoded = decodeMortality(mortality)
+  if (decoded === null) {
     return (
       <div className="rounded-lg border border-foreground/10 bg-background/60 px-3 py-2">
         <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
@@ -43,14 +43,7 @@ export const MortalityAnalyzer: FC<{
     )
   }
 
-  const first = BigInt(parseResult[1])
-  const second = BigInt(mortality.value)
-  // from polkadot-sdk primitives runtime generic era fn decode
-  const encoded = first + (second << 8n)
-  const period = Number(2n << (encoded % (1n << 4n)))
-  const factor = period >> 12 || 1
-  const phase = Number(encoded >> 4n) * factor
-
+  const { period, phase } = decoded
   // From fn birth
   const birthBlock = selectedBlockNumber
     ? Math.floor((Math.max(selectedBlockNumber, phase) - phase) / period) *
@@ -69,12 +62,8 @@ export const MortalityAnalyzer: FC<{
 
   return (
     <div className="space-y-3 rounded-lg border border-foreground/10 bg-background/60 px-3 py-3">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
-            Lifetime
-          </div>
-        </div>
+      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
+        Lifetime
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
@@ -152,11 +141,7 @@ const Metric: FC<{ label: string; value: string }> = ({ label, value }) => (
 const formatOptional = (value: number | null) =>
   value == null ? "N/A" : value.toLocaleString()
 
-const getTimelineProgress = (
-  start: number,
-  end: number,
-  value: number,
-): number => {
+const getTimelineProgress = (start: number, end: number, value: number) => {
   if (end <= start) return 0
   const raw = ((value - start) / (end - start)) * 100
   return Math.max(0, Math.min(100, raw))
@@ -167,8 +152,15 @@ export const InlineMortality: FC<{
 }> = ({ mortality }) => {
   if (mortality.type === "Immortal") return "Immortal"
 
+  const decoded = decodeMortality(mortality)
+  if (decoded === null) return JSON.stringify(mortality, jsonSerialize)
+
+  return JSON.stringify(decoded) + " " + JSON.stringify(mortality)
+}
+
+const decodeMortality = (mortality: { type: string; value: number }) => {
   const parseResult = /^Mortal(\d+)$/.exec(mortality.type)
-  if (parseResult === null) return JSON.stringify(mortality, jsonSerialize)
+  if (!parseResult) return null
 
   const first = BigInt(parseResult[1])
   const second = BigInt(mortality.value)
@@ -177,6 +169,5 @@ export const InlineMortality: FC<{
   const period = Number(2n << (encoded % (1n << 4n)))
   const factor = period >> 12 || 1
   const phase = Number(encoded >> 4n) * factor
-
-  return JSON.stringify({ period, phase }) + " " + JSON.stringify(mortality)
+  return { period, phase }
 }

@@ -11,6 +11,7 @@ import {
   BlockInfo as RawBlockInfo,
 } from "polkadot-api"
 import { fromHex } from "polkadot-api/utils"
+import { createContext } from "react"
 import {
   catchError,
   combineLatest,
@@ -61,6 +62,7 @@ export interface BlockInfo {
   status: BlockState
   diff: Record<string, [string | null, string | null]> | null
 }
+export const BlockContext = createContext<BlockInfo | null>(null)
 
 const finalizedBlocks$ = state(
   client$.pipe(

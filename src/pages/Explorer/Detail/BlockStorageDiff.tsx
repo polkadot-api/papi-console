@@ -8,6 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { groupBy } from "@/lib/groupBy"
+import { BlockInfo, blockInfo$ } from "@/state/block.state"
 import { dynamicBuilder$, lookup$ } from "@/state/chains/chain.state"
 import {
   HexString,
@@ -19,12 +20,11 @@ import {
   u8,
   Vector,
 } from "@polkadot-api/substrate-bindings"
-import { toHex } from "polkadot-api/utils"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { Binary, Codec } from "polkadot-api"
+import { toHex } from "polkadot-api/utils"
 import { FC } from "react"
 import { combineLatest, map } from "rxjs"
-import { BlockInfo, blockInfo$ } from "../block.state"
 
 const TWOX128_LEN = 32
 

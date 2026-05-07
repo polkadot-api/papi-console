@@ -1,5 +1,5 @@
 import { FC, useState } from "react"
-import { BlockInfo } from "../block.state"
+import { BlockInfo } from "@/state/block.state"
 import { groupBy } from "@/lib/groupBy"
 import { EventDisplay } from "./Extrinsic"
 import { SystemEvent } from "@polkadot-api/observable-client"

@@ -1,4 +1,5 @@
 import { Spinner } from "@/components/Icons"
+import { blockHash$ } from "@/state/block.state"
 import {
   CachedRuntime,
   runtimeCtx$,
@@ -22,7 +23,6 @@ import {
   startWith,
   switchMap,
 } from "rxjs"
-import { blockHash$ } from "../Explorer/block.state"
 
 const [valueChange$, setValue] = createSignal<string>()
 const inputValue$ = state(valueChange$, "Latest")

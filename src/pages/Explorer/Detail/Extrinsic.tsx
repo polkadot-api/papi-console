@@ -1,19 +1,21 @@
 import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
-import { AccountIdDisplay } from "@/components/AccountIdDisplay"
 import { CopyText } from "@/components/Copy"
 import { ExpandBtn } from "@/components/Expand"
+import {
+  PriorityValue,
+  Sender,
+  SignedExtensions,
+} from "@/components/Extrinsics"
 import { JsonDisplay } from "@/components/JsonDisplay"
 import { Link } from "@/hashParams"
 import { shortStr } from "@/utils"
 import { SystemEvent } from "@polkadot-api/observable-client"
 import { DecodedExtrinsic } from "@polkadot-api/tx-utils"
 import { Edit, FileSearch } from "lucide-react"
-import { Enum, HexString, SS58String } from "polkadot-api"
+import { HexString } from "polkadot-api"
 import { toHex } from "polkadot-api/utils"
 import { FC, ReactNode, useEffect, useRef, useState } from "react"
 import { twMerge } from "tailwind-merge"
-import { PriorityValue } from "../../Extrinsics/Analyzer/Priority"
-import { SignedExtensions } from "./SignedExtensions"
 
 export type ApplyExtrinsicEvent = SystemEvent & {
   phase: { type: "ApplyExtrinsic" }
@@ -73,9 +75,11 @@ export const Extrinsic: FC<{
       {expanded ? (
         <div className="space-y-2 border-t border-foreground/10 px-2 py-2">
           <div className="grid gap-2 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_auto]">
-            <CompactBlock label="Signer">
-              <Sender sender={sender} />
-            </CompactBlock>
+            {sender ? (
+              <CompactBlock label="Signer">
+                <Sender sender={sender} />
+              </CompactBlock>
+            ) : null}
 
             <CompactBlock label="Extrinsic Hash">
               <div className="flex min-w-0 items-center gap-2">
@@ -158,23 +162,6 @@ export const EventDisplay: FC<{
       {expanded && <JsonDisplay src={evt.event.value.value} />}
     </li>
   )
-}
-
-const senderToAddress = (
-  sender: Enum<{ Id: SS58String }> | SS58String | HexString,
-) =>
-  typeof sender === "string"
-    ? sender
-    : "type" in sender && sender.type === "Id"
-      ? sender.value
-      : null
-
-export const Sender: React.FC<{
-  sender: Enum<{ Id: SS58String }> | SS58String | HexString
-}> = ({ sender }) => {
-  const value = senderToAddress(sender)
-  if (!value) return null
-  return <AccountIdDisplay value={value} />
 }
 
 const CompactSection: FC<{ title: string; children: ReactNode }> = ({
