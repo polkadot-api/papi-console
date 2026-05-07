@@ -49,7 +49,7 @@ export const AnalyzePriority: FC<{
               <DetailRow label="Class" value={details.queryInfo.class.type} />
               <DetailRow
                 label="Encoded Length"
-                value={length.toLocaleString()}
+                value={details.length.toLocaleString()}
               />
               <DetailRow
                 label="Weight"
@@ -122,7 +122,7 @@ const getPriority = async (
   const client = await client$.getValue()
   const typedApi = client.getTypedApi(polkadot_people)
 
-  const extLength = (extrinsic.length - 2) / 8
+  const extLength = (extrinsic.length - 2) / 2
   const tip = txPayment?.tip ?? 0n
 
   try {

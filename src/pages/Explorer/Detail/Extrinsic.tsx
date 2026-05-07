@@ -1,7 +1,6 @@
 import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
 import { AccountIdDisplay } from "@/components/AccountIdDisplay"
 import { CopyText } from "@/components/Copy"
-import { EthAccountDisplay } from "@/components/EthAccountDisplay"
 import { ExpandBtn } from "@/components/Expand"
 import { JsonDisplay } from "@/components/JsonDisplay"
 import { Link } from "@/hashParams"
@@ -43,11 +42,12 @@ export const Extrinsic: FC<{
         extrinsic.extra.ChargeTxPayment)
       : undefined
 
-  let sender = null
-  if (extrinsic.type === "signed") sender = extrinsic.address
-  else if (extrinsic.type === "general") {
-    if (extrinsic.extra?.VerifyMultiSignature?.type === "Signed")
-      sender = extrinsic.extra.VerifyMultiSignature.value.account
+  let sender = extrinsic.type === "signed" ? extrinsic.address : null
+  if (
+    extrinsic.type === "general" &&
+    extrinsic.extra.VerifyMultiSignature?.type === "Signed"
+  ) {
+    sender = extrinsic.extra.VerifyMultiSignature.value.account
   }
 
   return (
@@ -73,11 +73,9 @@ export const Extrinsic: FC<{
       {expanded ? (
         <div className="space-y-2 border-t border-foreground/10 px-2 py-2">
           <div className="grid gap-2 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_auto]">
-            {extrinsic.type === "signed" ? (
-              <CompactBlock label="Signer">
-                <Sender compact sender={sender} />
-              </CompactBlock>
-            ) : null}
+            <CompactBlock label="Signer">
+              <Sender sender={sender} />
+            </CompactBlock>
 
             <CompactBlock label="Extrinsic Hash">
               <div className="flex min-w-0 items-center gap-2">
@@ -162,7 +160,7 @@ export const EventDisplay: FC<{
   )
 }
 
-export const senderToAddress = (
+const senderToAddress = (
   sender: Enum<{ Id: SS58String }> | SS58String | HexString,
 ) =>
   typeof sender === "string"
@@ -171,26 +169,12 @@ export const senderToAddress = (
       ? sender.value
       : null
 
-const Sender: React.FC<{
+export const Sender: React.FC<{
   sender: Enum<{ Id: SS58String }> | SS58String | HexString
-  compact?: boolean
-}> = ({ sender, compact }) => {
+}> = ({ sender }) => {
   const value = senderToAddress(sender)
-  return (
-    value && (
-      <div
-        className={
-          compact ? "flex items-center gap-2" : "flex items-center gap-2 py-2"
-        }
-      >
-        {value.startsWith("0x") ? (
-          <EthAccountDisplay value={value} />
-        ) : (
-          <AccountIdDisplay value={value} />
-        )}
-      </div>
-    )
-  )
+  if (!value) return null
+  return <AccountIdDisplay value={value} />
 }
 
 const CompactSection: FC<{ title: string; children: ReactNode }> = ({
