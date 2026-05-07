@@ -8,7 +8,7 @@ import {
 } from "@/components/Extrinsics"
 import { JsonDisplay } from "@/components/JsonDisplay"
 import { Link } from "@/hashParams"
-import { shortStr } from "@/utils"
+import { cn, shortStr } from "@/utils"
 import { SystemEvent } from "@polkadot-api/observable-client"
 import { DecodedExtrinsic } from "@polkadot-api/tx-utils"
 import { Edit, FileSearch } from "lucide-react"
@@ -59,8 +59,10 @@ export const Extrinsic: FC<{
           onClick={() => setExpanded((e) => !e)}
           className="flex min-w-0 items-center gap-1 text-left"
         >
-          <ExpandBtn expanded={expanded} />
-          {extrinsic.idx}. {extrinsic.call.type}.{extrinsic.call.value.type}
+          <ExpandBtn expanded={expanded} className="shrink-0" />
+          <div className="whitespace-nowrap overflow-hidden text-ellipsis">
+            {extrinsic.idx}. {extrinsic.call.type}.{extrinsic.call.value.type}
+          </div>
         </button>
         <div className="flex gap-2 items-center">
           <CopyBinary value={extrinsic.callData} />
@@ -74,7 +76,7 @@ export const Extrinsic: FC<{
       </div>
       {expanded ? (
         <div className="space-y-2 border-t border-foreground/10 px-2 py-2">
-          <div className="grid gap-2 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_auto]">
+          <div className="flex gap-2 justify-stretch flex-col md:flex-row">
             {sender ? (
               <CompactBlock label="Signer">
                 <Sender sender={sender} />
@@ -90,7 +92,7 @@ export const Extrinsic: FC<{
               </div>
             </CompactBlock>
 
-            <CompactBlock label="Priority">
+            <CompactBlock label="Priority" className="grow-0">
               <PriorityValue
                 extrinsic={rawExtrinsic}
                 txPayment={txPayment ?? {}}
@@ -104,17 +106,23 @@ export const Extrinsic: FC<{
             </div>
           </CompactSection>
 
-          <CompactSection title={`Events (${events.length})`}>
-            <ol className="flex flex-col gap-1">
-              {events.map((evt, i) => (
-                <EventDisplay
-                  key={i}
-                  index={i}
-                  evt={evt}
-                  defaultOpen={highlightedEvent === evt}
-                />
-              ))}
-            </ol>
+          <CompactSection title="Events">
+            {events.length ? (
+              <ol className="flex flex-col gap-1">
+                {events.map((evt, i) => (
+                  <EventDisplay
+                    key={i}
+                    index={i}
+                    evt={evt}
+                    defaultOpen={highlightedEvent === evt}
+                  />
+                ))}
+              </ol>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Couldn't load events
+              </p>
+            )}
           </CompactSection>
 
           {"extra" in extrinsic && (
@@ -176,11 +184,17 @@ const CompactSection: FC<{ title: string; children: ReactNode }> = ({
   </div>
 )
 
-const CompactBlock: FC<{ label: string; children: ReactNode }> = ({
-  label,
-  children,
-}) => (
-  <div className="rounded-lg border border-foreground/10 bg-foreground/3 px-2 py-2">
+const CompactBlock: FC<{
+  label: string
+  children: ReactNode
+  className?: string
+}> = ({ label, children, className }) => (
+  <div
+    className={cn(
+      "rounded-lg border border-foreground/10 bg-foreground/3 px-2 py-2 grow",
+      className,
+    )}
+  >
     <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
       {label}
     </div>
