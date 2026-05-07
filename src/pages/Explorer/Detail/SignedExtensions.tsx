@@ -47,7 +47,7 @@ const SignedExtension: FC<{ id: string; value: unknown }> = ({ id, value }) => {
   }
 
   const inlineJson = JSON.stringify(value, jsonSerialize)
-  return !inlineJson || inlineJson.length < 40 ? (
+  return !inlineJson || inlineJson.length < 30 ? (
     <InlineLine id={id} inlineContent={inlineJson} />
   ) : (
     <ExpandableLine id={id} inlineContent={null}>
@@ -77,10 +77,14 @@ const ExpandableLine: FC<
   return (
     <li className="space-y-2 rounded-lg border border-foreground/10 bg-foreground/5 px-3 py-2">
       <div className="flex gap-2 items-center">
-        <ExpandBtn expanded={expanded} onClick={() => setExpanded((e) => !e)} />
+        <ExpandBtn
+          className="shrink-0"
+          expanded={expanded}
+          onClick={() => setExpanded((e) => !e)}
+        />
         {id}
         {inlineContent ? (
-          <div className="max-w-full whitespace-nowrap font-mono text-sm">
+          <div className="max-w-full whitespace-nowrap font-mono text-sm overflow-hidden text-ellipsis">
             - {inlineContent}
           </div>
         ) : null}
@@ -94,13 +98,13 @@ const InlineLine: FC<{ id: string; inlineContent?: ReactNode }> = ({
   id,
   inlineContent,
 }) => (
-  <li className="flex flex-wrap items-center gap-2 rounded-lg border border-foreground/10 bg-foreground/5 px-3 py-2">
+  <li className="flex items-center gap-2 rounded-lg border border-foreground/10 bg-foreground/5 px-3 py-2">
     <div className="flex gap-2 items-center">
       <Dot size={16} />
       {id}
     </div>
     {inlineContent ? (
-      <div className="max-w-full whitespace-nowrap  font-mono text-sm">
+      <div className="max-w-full whitespace-nowrap  font-mono text-sm overflow-hidden text-ellipsis">
         - {inlineContent}
       </div>
     ) : null}

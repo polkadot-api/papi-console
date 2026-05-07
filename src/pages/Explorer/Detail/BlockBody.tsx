@@ -131,7 +131,7 @@ export const BlockBody: FC = () => {
           )}
         </Tabs.List>
         <Tabs.Content value="tx" className="py-2">
-          <ol>
+          <ol className="space-y-2">
             {extrinsics.map((extrinsic, idx) => (
               <Extrinsic
                 key={idx}

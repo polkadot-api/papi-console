@@ -14,7 +14,7 @@ import { fromHex, toHex } from "polkadot-api/utils"
 import { FC, ReactNode, useMemo } from "react"
 import { map, merge, switchMap } from "rxjs"
 import { senderToAddress } from "../../Explorer/Detail/Extrinsic"
-import { AnalyzePriority, analyzePriority$ } from "./Priority"
+import { AnalyzePriority } from "./Priority"
 import { selectedBlock$, selectedBlockHex$ } from "./selectedBlock"
 
 const extDecoder$ = selectedBlock$.pipeState(
@@ -72,6 +72,10 @@ export const ExtrinsicDecoder: FC<{
   const decoded = decodeResult.value
   const signerAddress =
     decoded.type === "signed" ? senderToAddress(decoded.address) : null
+  const txPayment =
+    "extra" in decoded
+      ? (decoded.extra.ChargeAssetTxPayment ?? decoded.extra.ChargeTxPayment)
+      : null
 
   return (
     <BlockContext value={block}>
@@ -109,6 +113,11 @@ export const ExtrinsicDecoder: FC<{
           </div>
         </SectionCard>
 
+        <CallData
+          call={decoded.call as TxCallData}
+          callData={decoded.callData}
+        />
+
         {decoded.type === "signed" ? (
           <SectionCard title="Signed Extensions">
             <SignedExtensions extra={decoded.extra} title={false} />
@@ -121,12 +130,8 @@ export const ExtrinsicDecoder: FC<{
           </SectionCard>
         ) : null}
         <SectionCard title="Priority Analysis">
-          <AnalyzePriority extrinsic={extrinsic} />
+          <AnalyzePriority extrinsic={extrinsic} txPayment={txPayment} />
         </SectionCard>
-        <CallData
-          call={decoded.call as TxCallData}
-          callData={decoded.callData}
-        />
       </div>
     </BlockContext>
   )
@@ -166,7 +171,7 @@ const CallData: FC<{ call: TxCallData; callData: Uint8Array }> = ({
   </SectionCard>
 )
 
-export const extrinsicDecoder$ = merge(extDecoder$, analyzePriority$)
+export const extrinsicDecoder$ = extDecoder$
 
 const SectionCard: FC<{
   children: ReactNode
