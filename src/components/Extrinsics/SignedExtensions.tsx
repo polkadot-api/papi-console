@@ -2,14 +2,10 @@ import { ExpandBtn } from "@/components/Expand"
 import { JsonDisplay } from "@/components/JsonDisplay"
 import { Dot } from "lucide-react"
 import { jsonSerialize } from "polkadot-api/utils"
-import {
-  ComponentType,
-  FC,
-  PropsWithChildren,
-  ReactNode,
-  useState,
-} from "react"
+import { FC, PropsWithChildren, ReactNode, useState } from "react"
 import { InlineMortality, MortalityAnalyzer } from "./MortalityAnalyzer"
+import { canDecodeAsset, ChargeAssetTx } from "./ChargeAssetTx"
+import { TokenAmount } from "../TokenAmount"
 
 export const SignedExtensions: FC<{
   extra: Record<string, unknown>
@@ -30,20 +26,19 @@ export const SignedExtensions: FC<{
 const SignedExtension: FC<{ id: string; value: unknown }> = ({ id, value }) => {
   const knownExtension = knownSignedExtensions[id]
   if (knownExtension) {
-    const { expanded: ExpandedView, inline: InlineView } = knownExtension
-    return ExpandedView ? (
-      <ExpandableLine
-        id={id}
-        inlineContent={InlineView ? <InlineView id={id} value={value} /> : null}
-      >
-        <ExpandedView id={id} value={value} />
-      </ExpandableLine>
-    ) : InlineView ? (
-      <InlineLine
-        id={id}
-        inlineContent={InlineView ? <InlineView id={id} value={value} /> : null}
-      />
-    ) : null
+    const { expanded, inline } = knownExtension
+    const expandedElement = expanded?.(value)
+    const inlineElement = inline?.(value)
+    if (expandedElement) {
+      return (
+        <ExpandableLine id={id} inlineContent={inlineElement}>
+          {expandedElement}
+        </ExpandableLine>
+      )
+    }
+    if (inlineElement) {
+      return <InlineLine id={id} inlineContent={inlineElement} />
+    }
   }
 
   const inlineJson = JSON.stringify(value, jsonSerialize)
@@ -59,13 +54,27 @@ const SignedExtension: FC<{ id: string; value: unknown }> = ({ id, value }) => {
 export const knownSignedExtensions: Record<
   string,
   {
-    inline?: ComponentType<{ id: string; value: unknown }>
-    expanded?: ComponentType<{ id: string; value: unknown }>
+    inline?: (value: any) => ReactNode
+    expanded?: (value: any) => ReactNode
   }
 > = {
   CheckMortality: {
-    expanded: ({ value }) => <MortalityAnalyzer mortality={value as any} />,
-    inline: ({ value }) => <InlineMortality mortality={value as any} />,
+    expanded: (value) => <MortalityAnalyzer mortality={value as any} />,
+    inline: (value) => <InlineMortality mortality={value as any} />,
+  },
+  ChargeAssetTxPayment: {
+    inline: (value) =>
+      value.asset_id ? (
+        canDecodeAsset(value) ? (
+          <ChargeAssetTx chargeAssetTxPayment={value} />
+        ) : null
+      ) : (
+        <div className="inline-block">
+          <TokenAmount>{value.tip}</TokenAmount>
+          <span> {JSON.stringify(value, jsonSerialize)}</span>
+        </div>
+      ),
+    expanded: (value) => (value.asset_id ? <JsonDisplay src={value} /> : null),
   },
 }
 

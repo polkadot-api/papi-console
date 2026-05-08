@@ -3,6 +3,23 @@ import { chainProperties$ } from "@/state/chain-props.state"
 import { useStateObservable } from "@react-rxjs/core"
 import { FC } from "react"
 
+export const formatToken = (
+  amount: bigint,
+  properties: {
+    decimals: number
+    symbol?: string
+  },
+) => {
+  const formattedValue = (
+    Number(amount) /
+    10 ** properties.decimals
+  ).toLocaleString(undefined, {
+    maximumSignificantDigits: 3,
+  })
+
+  return `${formattedValue} ${properties.symbol}`
+}
+
 export const TokenAmount: FC<{
   children: bigint
   className?: string
@@ -15,16 +32,12 @@ export const TokenAmount: FC<{
     return children.toLocaleString()
   }
 
-  const formattedValue = (
-    Number(children) /
-    10 ** properties.tokenDecimals
-  ).toLocaleString(undefined, {
-    maximumSignificantDigits: 3,
-  })
-
   return (
-    <span
-      className={cn("tabular-nums", className)}
-    >{`${formattedValue} ${properties.tokenSymbol}`}</span>
+    <span className={cn("tabular-nums", className)}>
+      {formatToken(children, {
+        decimals: properties.tokenDecimals,
+        symbol: properties.tokenSymbol,
+      })}
+    </span>
   )
 }
