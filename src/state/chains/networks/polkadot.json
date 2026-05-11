@@ -135,7 +135,8 @@
     "id": "polkadot_bulletin",
     "display": "Bulletin",
     "rpcs": {
-      "Parity": "wss://polkadot-bulletin-rpc.polkadot.io"
+      "Parity": "wss://bulletin-rpc.polkadot.io",
+      "Spectrum": "wss://spectrum-03.simplystaking.xyz/cG9sa2Fkb3QtMDMtOTFkMmYwZGYtcG9sa2Fkb3Q/9QbAeudedsupNA/polkadotbulletin/mainnet/"
     },
     "relayChainInfo": {
       "id": "polkadot",
