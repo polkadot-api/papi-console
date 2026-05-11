@@ -93,10 +93,7 @@ export const Extrinsic: FC<{
             </CompactBlock>
 
             <CompactBlock label="Priority" className="grow-0">
-              <PriorityValue
-                extrinsic={rawExtrinsic}
-                txPayment={txPayment ?? {}}
-              />
+              <PriorityValue extrinsic={rawExtrinsic} txPayment={txPayment} />
             </CompactBlock>
           </div>
 
