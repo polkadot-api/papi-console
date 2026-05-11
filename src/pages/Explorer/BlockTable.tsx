@@ -1,17 +1,17 @@
 import { CopyText } from "@/components/Copy"
 import { Popover } from "@/components/Popover"
+import { Button } from "@/components/ui/button"
+import { SearchInput } from "@/components/ui/search-input"
 import { Link, useNavigate } from "@/hashParams"
+import { BlockInfo, blocksByHeight$, finalized$ } from "@/state/block.state"
 import { client$ } from "@/state/chains/chain.state"
 import { state, useStateObservable } from "@react-rxjs/core"
+import { Search } from "lucide-react"
 import { FC } from "react"
 import { combineLatest, debounceTime, map, switchMap } from "rxjs"
 import { twMerge } from "tailwind-merge"
-import { BlockInfo, blocksByHeight$, finalized$ } from "./block.state"
 import { BlockPopover } from "./BlockPopover"
 import * as Finalizing from "./FinalizingTable"
-import { Button } from "@/components/ui/button"
-import { SearchInput } from "@/components/ui/search-input"
-import { Search } from "lucide-react"
 
 const best$ = client$.pipeState(
   switchMap((client) => client.bestBlocks$.pipe(map(([best]) => best))),
@@ -174,7 +174,7 @@ export const BlockTable = () => {
                   <button
                     className={twMerge(
                       "overflow-hidden text-ellipsis whitespace-nowrap font-mono text-sm",
-                      "text-card-foreground/80 hover:text-card-foreground/100",
+                      "text-card-foreground/80 hover:text-card-foreground",
                       row.position === 0
                         ? ""
                         : row.block.number > finalized.number

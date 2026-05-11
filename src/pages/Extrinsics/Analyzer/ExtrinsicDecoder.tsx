@@ -1,10 +1,12 @@
 import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
-import { AccountIdDisplay } from "@/components/AccountIdDisplay"
 import { CopyText } from "@/components/Copy"
+import {
+  AnalyzePriority,
+  Sender,
+  SignedExtensions,
+} from "@/components/Extrinsics"
 import { JsonDisplay } from "@/components/JsonDisplay"
-import { blockInfoState$ } from "@/pages/Explorer/block.state"
-import { BlockContext } from "@/pages/Explorer/Detail/blockContext"
-import { SignedExtensions } from "@/pages/Explorer/Detail/SignedExtensions"
+import { BlockContext, blockInfoState$ } from "@/state/block.state"
 import { chainClient$ } from "@/state/chains/chain.state"
 import { shortStr } from "@/utils"
 import { getExtrinsicDecoder } from "@polkadot-api/tx-utils"
@@ -12,9 +14,7 @@ import { useStateObservable, withDefault } from "@react-rxjs/core"
 import { HexString, TxCallData } from "polkadot-api"
 import { fromHex, toHex } from "polkadot-api/utils"
 import { FC, ReactNode, useMemo } from "react"
-import { map, merge, switchMap } from "rxjs"
-import { senderToAddress } from "../../Explorer/Detail/Extrinsic"
-import { AnalyzePriority, analyzePriority$ } from "./Priority"
+import { map, switchMap } from "rxjs"
 import { selectedBlock$, selectedBlockHex$ } from "./selectedBlock"
 
 const extDecoder$ = selectedBlock$.pipeState(
@@ -70,8 +70,18 @@ export const ExtrinsicDecoder: FC<{
   }
 
   const decoded = decodeResult.value
-  const signerAddress =
-    decoded.type === "signed" ? senderToAddress(decoded.address) : null
+  const txPayment =
+    "extra" in decoded
+      ? (decoded.extra.ChargeAssetTxPayment ?? decoded.extra.ChargeTxPayment)
+      : null
+
+  let sender = decoded.type === "signed" ? decoded.address : null
+  if (
+    decoded.type === "general" &&
+    decoded.extra.VerifyMultiSignature?.type === "Signed"
+  ) {
+    sender = decoded.extra.VerifyMultiSignature.value.account
+  }
 
   return (
     <BlockContext value={block}>
@@ -96,37 +106,27 @@ export const ExtrinsicDecoder: FC<{
               </div>
             </div>
 
-            {signerAddress ? (
+            {sender ? (
               <div className="rounded-lg border border-foreground/10 bg-foreground/5 px-3 py-2">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
                   Signer
                 </div>
-                <div className="mt-1">
-                  <AccountIdDisplay value={signerAddress} />
-                </div>
+                <Sender sender={sender} />
               </div>
             ) : null}
           </div>
         </SectionCard>
 
-        {decoded.type === "signed" ? (
+        <CallData call={decoded.call} callData={decoded.callData} />
+
+        {"extra" in decoded ? (
           <SectionCard title="Signed Extensions">
             <SignedExtensions extra={decoded.extra} title={false} />
           </SectionCard>
-        ) : decoded.type === "general" ? (
-          <SectionCard>
-            <div className="text-sm text-muted-foreground">
-              General transaction analysis is not implemented yet.
-            </div>
-          </SectionCard>
         ) : null}
         <SectionCard title="Priority Analysis">
-          <AnalyzePriority extrinsic={extrinsic} />
+          <AnalyzePriority extrinsic={extrinsic} txPayment={txPayment} />
         </SectionCard>
-        <CallData
-          call={decoded.call as TxCallData}
-          callData={decoded.callData}
-        />
       </div>
     </BlockContext>
   )
@@ -166,7 +166,7 @@ const CallData: FC<{ call: TxCallData; callData: Uint8Array }> = ({
   </SectionCard>
 )
 
-export const extrinsicDecoder$ = merge(extDecoder$, analyzePriority$)
+export const extrinsicDecoder$ = extDecoder$
 
 const SectionCard: FC<{
   children: ReactNode

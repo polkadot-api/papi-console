@@ -1,5 +1,4 @@
-import { ComponentType, FC } from "react"
-import { BlockState } from "../block.state"
+import { BlockState } from "@/state/block.state"
 import {
   CircleAlert,
   CircleCheck,
@@ -8,6 +7,7 @@ import {
   Clock,
   LucideProps,
 } from "lucide-react"
+import { ComponentType, FC } from "react"
 import { twMerge } from "tailwind-merge"
 
 const statusIcon: Record<BlockState, ComponentType<LucideProps>> = {

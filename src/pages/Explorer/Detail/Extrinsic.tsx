@@ -1,19 +1,21 @@
 import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
-import { AccountIdDisplay } from "@/components/AccountIdDisplay"
 import { CopyText } from "@/components/Copy"
-import { EthAccountDisplay } from "@/components/EthAccountDisplay"
 import { ExpandBtn } from "@/components/Expand"
+import {
+  PriorityValue,
+  Sender,
+  SignedExtensions,
+} from "@/components/Extrinsics"
 import { JsonDisplay } from "@/components/JsonDisplay"
 import { Link } from "@/hashParams"
-import { shortStr } from "@/utils"
+import { cn, shortStr } from "@/utils"
 import { SystemEvent } from "@polkadot-api/observable-client"
 import { DecodedExtrinsic } from "@polkadot-api/tx-utils"
 import { Edit, FileSearch } from "lucide-react"
-import { Enum, HexString, SS58String } from "polkadot-api"
+import { HexString } from "polkadot-api"
 import { toHex } from "polkadot-api/utils"
-import { FC, useEffect, useRef, useState } from "react"
+import { FC, ReactNode, useEffect, useRef, useState } from "react"
 import { twMerge } from "tailwind-merge"
-import { SignedExtensions } from "./SignedExtensions"
 
 export type ApplyExtrinsicEvent = SystemEvent & {
   phase: { type: "ApplyExtrinsic" }
@@ -35,20 +37,36 @@ export const Extrinsic: FC<{
         events.includes(highlightedEvent as ApplyExtrinsicEvent))
     ),
   )
+  const rawExtrinsic = toHex(extrinsic.raw)
+  const txPayment =
+    "extra" in extrinsic
+      ? (extrinsic.extra.ChargeAssetTxPayment ??
+        extrinsic.extra.ChargeTxPayment)
+      : undefined
+
+  let sender = extrinsic.type === "signed" ? extrinsic.address : null
+  if (
+    extrinsic.type === "general" &&
+    extrinsic.extra.VerifyMultiSignature?.type === "Signed"
+  ) {
+    sender = extrinsic.extra.VerifyMultiSignature.value.account
+  }
 
   return (
-    <li className="p-2 border rounded mb-2 bg-card text-card-foreground">
-      <div className="flex justify-between items-center">
+    <li className="overflow-hidden rounded-lg border border-foreground/10 bg-card text-card-foreground">
+      <div className="flex items-center justify-between gap-2 px-2 py-2">
         <button
           onClick={() => setExpanded((e) => !e)}
-          className="flex gap-1 items-center"
+          className="flex min-w-0 items-center gap-1 text-left"
         >
-          <ExpandBtn expanded={expanded} />
-          {extrinsic.idx}. {extrinsic.call.type}.{extrinsic.call.value.type}
+          <ExpandBtn expanded={expanded} className="shrink-0" />
+          <div className="whitespace-nowrap overflow-hidden text-ellipsis">
+            {extrinsic.idx}. {extrinsic.call.type}.{extrinsic.call.value.type}
+          </div>
         </button>
         <div className="flex gap-2 items-center">
           <CopyBinary value={extrinsic.callData} />
-          <Link to={`/extrinsics/analyzer#extrinsic=${toHex(extrinsic.raw)}`}>
+          <Link to={`/extrinsics/analyzer#extrinsic=${rawExtrinsic}`}>
             <FileSearch size={15} />
           </Link>
           <Link to={"/extrinsics#data=" + toHex(extrinsic.callData)}>
@@ -57,36 +75,57 @@ export const Extrinsic: FC<{
         </div>
       </div>
       {expanded ? (
-        <div className="overflow-hidden">
-          <div className="flex gap-2 items-center py-2">
-            Extrinsic Hash: {shortStr(extrinsic.hash, 6)}{" "}
-            <CopyText text={extrinsic.hash} binary />
+        <div className="space-y-2 border-t border-foreground/10 px-2 py-2">
+          <div className="flex gap-2 justify-stretch flex-col md:flex-row">
+            {sender ? (
+              <CompactBlock label="Signer">
+                <Sender sender={sender} />
+              </CompactBlock>
+            ) : null}
+
+            <CompactBlock label="Extrinsic Hash">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="truncate font-mono text-sm">
+                  {shortStr(extrinsic.hash, 6)}
+                </span>
+                <CopyText text={extrinsic.hash} binary />
+              </div>
+            </CompactBlock>
+
+            <CompactBlock label="Priority" className="grow-0">
+              <PriorityValue extrinsic={rawExtrinsic} txPayment={txPayment} />
+            </CompactBlock>
           </div>
 
-          {extrinsic.type === "signed" && (
-            <div>
-              <Sender sender={extrinsic.address} />
+          <CompactSection title="Call Payload">
+            <div className="max-h-[80vh] overflow-auto">
+              <JsonDisplay src={extrinsic.call.value.value} />
             </div>
-          )}
-          <div className="overflow-auto max-h-[80vh] p-2">
-            <JsonDisplay src={extrinsic.call.value.value} />
-          </div>
-          <div className="p-2 overflow-auto max-h-[80vh] border-t">
-            <ol className="flex flex-col gap-1">
-              {events.map((evt, i) => (
-                <EventDisplay
-                  key={i}
-                  index={i}
-                  evt={evt}
-                  defaultOpen={highlightedEvent === evt}
-                />
-              ))}
-            </ol>
-          </div>
+          </CompactSection>
+
+          <CompactSection title="Events">
+            {events.length ? (
+              <ol className="flex flex-col gap-1">
+                {events.map((evt, i) => (
+                  <EventDisplay
+                    key={i}
+                    index={i}
+                    evt={evt}
+                    defaultOpen={highlightedEvent === evt}
+                  />
+                ))}
+              </ol>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Couldn't load events
+              </p>
+            )}
+          </CompactSection>
+
           {"extra" in extrinsic && (
-            <div className="p-2 overflow-auto max-h-[80vh] border-t">
-              <SignedExtensions extra={extrinsic.extra} />
-            </div>
+            <CompactSection title="Signed Extensions">
+              <SignedExtensions extra={extrinsic.extra} title={false} />
+            </CompactSection>
           )}
         </div>
       ) : null}
@@ -130,29 +169,32 @@ export const EventDisplay: FC<{
   )
 }
 
-export const senderToAddress = (
-  sender: Enum<{ Id: SS58String }> | SS58String | HexString,
-) =>
-  typeof sender === "string"
-    ? sender
-    : "type" in sender && sender.type === "Id"
-      ? sender.value
-      : null
+const CompactSection: FC<{ title: string; children: ReactNode }> = ({
+  title,
+  children,
+}) => (
+  <div className="rounded-lg border border-foreground/10 bg-foreground/3 px-2 py-2">
+    <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
+      {title}
+    </div>
+    {children}
+  </div>
+)
 
-const Sender: React.FC<{
-  sender: Enum<{ Id: SS58String }> | SS58String | HexString
-}> = ({ sender }) => {
-  const value = senderToAddress(sender)
-  return (
-    value && (
-      <div className="flex gap-2 items-center py-2">
-        Signer:
-        {value.startsWith("0x") ? (
-          <EthAccountDisplay value={value} />
-        ) : (
-          <AccountIdDisplay value={value} />
-        )}
-      </div>
-    )
-  )
-}
+const CompactBlock: FC<{
+  label: string
+  children: ReactNode
+  className?: string
+}> = ({ label, children, className }) => (
+  <div
+    className={cn(
+      "rounded-lg border border-foreground/10 bg-foreground/3 px-2 py-2 grow",
+      className,
+    )}
+  >
+    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
+      {label}
+    </div>
+    <div className="mt-1">{children}</div>
+  </div>
+)

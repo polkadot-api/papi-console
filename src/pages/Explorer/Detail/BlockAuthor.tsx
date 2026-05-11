@@ -1,3 +1,4 @@
+import { blockInfoState$, BlockState, finalized$ } from "@/state/block.state"
 import { client$ } from "@/state/chains/chain.state"
 import { Polkadot_people } from "@polkadot-api/descriptors"
 import {
@@ -23,7 +24,6 @@ import {
   switchMap,
   take,
 } from "rxjs"
-import { blockInfoState$, BlockState, finalized$ } from "../block.state"
 
 const validatorCache: WeakMap<
   PolkadotClient,
