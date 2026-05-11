@@ -132,6 +132,23 @@
     "hasChainSpecs": true
   },
   {
+    "id": "polkadot_bulletin",
+    "display": "Bulletin",
+    "rpcs": {
+      "Parity": "wss://polkadot-bulletin-rpc.polkadot.io"
+    },
+    "relayChainInfo": {
+      "id": "polkadot",
+      "isSystem": true,
+      "parachain": 1010
+    },
+    "nativeToken": {
+      "symbol": "DOT",
+      "decimals": 10
+    },
+    "hasChainSpecs": true
+  },
+  {
     "id": "acala",
     "display": "Acala",
     "relayChainInfo": {
