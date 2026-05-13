@@ -92,12 +92,9 @@ export const useSyncHashParam = <T extends any[]>(
 
   useLayoutEffect(
     () =>
-      setHashParams(
-        {
-          [key]: getFn(...dependencies),
-        },
-        location,
-      ),
+      setHashParams({
+        [key]: getFn(...dependencies),
+      }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     dependencies,
   )
