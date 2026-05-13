@@ -1,6 +1,6 @@
 import { polkadot_people } from "@polkadot-api/descriptors"
 import { liftSuspense, state, SUSPENSE, withDefault } from "@react-rxjs/core"
-import { AccountId, SS58String } from "polkadot-api"
+import { AccountId, HexString, SS58String } from "polkadot-api"
 import {
   Account,
   createLedgerProvider,
@@ -192,7 +192,7 @@ export const addrToAccount$ = polkaHub.availableAccounts$.pipeState(
 )
 
 export const accountDetail$ = state(
-  (addr: SS58String) =>
+  (addr: SS58String | HexString) =>
     addrToAccount$.pipe(map((addrToAccount) => addrToAccount[addr] ?? null)),
   null,
 )

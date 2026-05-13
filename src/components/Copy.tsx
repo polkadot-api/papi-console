@@ -1,42 +1,33 @@
+import { CopyText as GenericCopyText } from "@polkadot-api/react-components"
 import { CheckCircle, Copy } from "lucide-react"
-import { useEffect, useState } from "react"
+import { PropsWithChildren } from "react"
 import { twMerge } from "tailwind-merge"
 import { CopyBinaryIcon } from "./Icons"
 
-export const CopyText: React.FC<{
-  text: string
-  disabled?: boolean
-  className?: string
-  binary?: boolean
-}> = ({ text, className, binary = false, disabled = false }) => {
-  const [copied, setCopied] = useState(false)
-  const copy = async (evt: React.MouseEvent) => {
-    if (disabled) return
-    evt.stopPropagation()
-
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-  }
-  useEffect(() => {
-    if (copied) {
-      setTimeout(() => setCopied(false), 1000)
-    }
-  }, [copied])
-
+export const CopyText: React.FC<
+  PropsWithChildren<{
+    text: string
+    size?: number
+    disabled?: boolean
+    className?: string
+    binary?: boolean
+  }>
+> = ({ text, className, children, binary, disabled, size = 16 }) => {
   return (
-    <button
-      aria-label={binary ? "copy binary" : "copy"}
-      disabled={disabled || copied}
-      className={twMerge(className, disabled ? "opacity-50" : "")}
-      onClick={copy}
-    >
-      {copied ? (
-        <CheckCircle size={16} className="text-green-500 dark:text-green-300" />
-      ) : binary ? (
-        <CopyBinaryIcon size={16} />
-      ) : (
-        <Copy size={16} />
+    <GenericCopyText
+      className={twMerge(
+        className,
+        disabled ? "opacity-50 pointer-events-none" : "",
       )}
-    </button>
+      text={text}
+      copiedIndicator={
+        <CheckCircle
+          size={size}
+          className="text-green-500 dark:text-green-300"
+        />
+      }
+    >
+      {children ?? (binary ? <CopyBinaryIcon size={16} /> : <Copy size={16} />)}
+    </GenericCopyText>
   )
 }

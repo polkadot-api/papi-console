@@ -7,26 +7,36 @@ import { getSs58AddressInfo } from "polkadot-api"
 import { AccountAddress } from "polkahub"
 import { FC } from "react"
 import { twMerge } from "tailwind-merge"
+import { CopyText } from "./Copy"
 
 export const AccountIdDisplay: FC<{
   value: AccountAddress
   className?: string
-}> = ({ value, className }) => {
+  nonInteractive?: boolean
+}> = ({ value, className, nonInteractive }) => {
   const details = useStateObservable(accountDetail$(value))
   const identity = useStateObservable(identity$(value))
 
   const name = identity?.displayName ?? details?.name
 
+  const icon = value.startsWith("0x") ? (
+    <EthIdenticon address={value} size={28} className="rounded" />
+  ) : (
+    <PolkadotIdenticon
+      className="shrink-0"
+      publicKey={getPublicKey(value)}
+      size={28}
+    />
+  )
+
   return (
     <div className={twMerge("flex items-center gap-2", className)}>
-      {value.startsWith("0x") ? (
-        <EthIdenticon address={value} size={28} className="rounded" />
+      {nonInteractive ? (
+        icon
       ) : (
-        <PolkadotIdenticon
-          className="shrink-0"
-          publicKey={getPublicKey(value)}
-          size={28}
-        />
+        <CopyText text={value} size={28}>
+          {icon}
+        </CopyText>
       )}
       <div className="flex flex-col justify-center text-foreground leading-tight overflow-hidden">
         {name && (

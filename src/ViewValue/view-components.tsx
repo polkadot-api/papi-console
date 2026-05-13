@@ -1,14 +1,9 @@
-import { HexString } from "polkadot-api"
 import { FC } from "react"
 import { ViewValue } from "./ViewValue"
 
 export const BoolDisplay: FC<{ value: boolean }> = ({ value }) => {
   return <div className="flex gap-4">{value ? "Yes" : "No"}</div>
 }
-
-export const EthAccountDisplay: FC<{ value: HexString }> = ({ value }) => (
-  <span>{value}</span>
-)
 
 export const NoneDisplay: FC = () => (
   <span className="text-foreground/60">None</span>
