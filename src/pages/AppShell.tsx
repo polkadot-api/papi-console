@@ -31,23 +31,21 @@ const navigationGroups: Array<{
   items: NavigationItem[]
 }> = [
   {
-    label: "Core",
+    label: "Tools",
     items: [
       { path: "/explorer", label: "Explorer", icon: Blocks },
       { path: "/storage", label: "Storage", icon: Database },
       { path: "/extrinsics", label: "Extrinsics", icon: Send },
-      { path: "/constants", label: "Constants", icon: FileText },
       { path: "/runtimeCalls", label: "Runtime Calls", icon: Code2 },
-      { path: "/accounts", label: "Accounts", icon: Wallet },
-    ],
-  },
-  {
-    label: "Tools",
-    items: [
       { path: "/viewFns", label: "View Functions", icon: FileCode2 },
+      { path: "/constants", label: "Constants", icon: FileText },
       { path: "/metadata", label: "Metadata", icon: Blocks },
       { path: "/rpcCalls", label: "RPC Calls", icon: RadioTower },
     ],
+  },
+  {
+    label: "Utils",
+    items: [{ path: "/accounts", label: "Accounts", icon: Wallet }],
   },
 ]
 
@@ -104,7 +102,7 @@ const SidebarContent: FC<{ mobile?: boolean; onNavigate?: () => void }> = ({
     </div>
     {mobile ? (
       <div className="border-b px-3 py-3">
-        <NetworkSwitcher forSmallScreen className="flex w-full md:hidden" />
+        <NetworkSwitcher className="flex w-full md:hidden" />
       </div>
     ) : null}
     <nav className="flex-1 overflow-y-auto px-3 py-4">
@@ -137,9 +135,6 @@ const SidebarContent: FC<{ mobile?: boolean; onNavigate?: () => void }> = ({
 )
 
 const TopBar: FC<{ onOpenSidebar: () => void }> = ({ onOpenSidebar }) => {
-  const location = useLocation()
-  const activeItem = getActiveNavigationItem(location.pathname)
-
   return (
     <header className="flex h-16 shrink-0 items-center border-b bg-background/95 px-3 lg:px-4">
       <Button
@@ -151,16 +146,11 @@ const TopBar: FC<{ onOpenSidebar: () => void }> = ({ onOpenSidebar }) => {
       >
         <Menu className="h-5 w-5" />
       </Button>
-      <div className="mr-4 hidden min-w-36 flex-col leading-tight xl:flex">
-        <span className="text-xs text-muted-foreground">Section</span>
-        <span className="font-medium">{activeItem.label}</span>
-      </div>
-      <GlobalJumpSearch />
-      <div className="ml-3 hidden sm:block md:hidden">
-        <NetworkSwitcher forSmallScreen className="w-45" />
-      </div>
-      <div className="ml-3 hidden md:block">
-        <NetworkSwitcher className="w-55" />
+      <div className="flex-1 flex gap-4 justify-between">
+        <div className="ml-3 hidden sm:block">
+          <NetworkSwitcher className="w-55" />
+        </div>
+        <GlobalJumpSearch />
       </div>
     </header>
   )
@@ -181,13 +171,13 @@ const GlobalJumpSearch = () => {
   }
 
   return (
-    <form className="min-w-0 flex-1" onSubmit={handleSubmit}>
-      <label className="flex h-9 min-w-0 max-w-2xl items-center gap-2 rounded-md border bg-input px-3 text-sm focus-within:ring-2 focus-within:ring-ring">
+    <form className="max-w-2xl flex-1" onSubmit={handleSubmit}>
+      <label className="flex h-9 items-center gap-2 rounded-md border bg-input px-3 text-sm focus-within:ring-2 focus-within:ring-ring">
         <Search size={16} className="shrink-0 text-muted-foreground" />
         <input
           value={value}
           onChange={(evt) => setValue(evt.target.value)}
-          className="min-w-0 flex-1 bg-transparent outline-hidden placeholder:text-muted-foreground"
+          className="flex-1 bg-transparent outline-hidden placeholder:text-muted-foreground"
           placeholder="Jump to block, hash, or section"
           autoComplete="off"
           spellCheck={false}
@@ -222,10 +212,6 @@ const SidebarLink: FC<{ item: NavigationItem; onClick?: () => void }> = ({
     </Link>
   )
 }
-
-const getActiveNavigationItem = (pathname: string) =>
-  navigationItems.find((item) => isNavigationItemActive(pathname, item.path)) ??
-  navigationItems[0]
 
 const isNavigationItemActive = (pathname: string, path: string) =>
   pathname === path || pathname.startsWith(`${path}/`)
