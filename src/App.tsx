@@ -1,38 +1,35 @@
 import { VaultTxModal } from "polkahub"
 import { Navigate, Route, Routes } from "react-router-dom"
+import { ConnectionState } from "./components/ConnectionState"
 import { Accounts } from "./pages/Accounts/Accounts"
+import { AppShell } from "./pages/AppShell"
 import { Constants } from "./pages/Constants"
 import { Explorer } from "./pages/Explorer"
 import { Extrinsics } from "./pages/Extrinsics"
-import { Header } from "./pages/Header"
 import { Metadata } from "./pages/Metadata"
 import { RpcCalls } from "./pages/RpcCalls"
 import { RuntimeCalls } from "./pages/RuntimeCalls"
 import { Storage } from "./pages/Storage"
 import { Transactions } from "./pages/Transactions"
 import { ViewFns } from "./pages/ViewFns"
-import { ConnectionState } from "./components/ConnectionState"
 
 export default function App() {
   return (
-    <div className="w-full h-screen bg-background flex flex-col">
-      <Header />
-      <div className="flex-1 overflow-auto relative">
-        <div className="max-w-(--breakpoint-xl) m-auto">
-          <Routes>
-            <Route path="explorer/*" element={<Explorer />} />
-            <Route path="extrinsics/*" element={<Extrinsics />} />
-            <Route path="storage/*" element={<Storage />} />
-            <Route path="constants/*" element={<Constants />} />
-            <Route path="runtimeCalls/*" element={<RuntimeCalls />} />
-            <Route path="rpcCalls/*" element={<RpcCalls />} />
-            <Route path="metadata/*" element={<Metadata />} />
-            <Route path="accounts/*" element={<Accounts />} />
-            <Route path="viewFns/*" element={<ViewFns />} />
-            <Route path="*" element={<Navigate to="/explorer" replace />} />
-          </Routes>
-        </div>
-      </div>
+    <div className="w-full h-screen bg-background">
+      <AppShell>
+        <Routes>
+          <Route path="explorer/*" element={<Explorer />} />
+          <Route path="extrinsics/*" element={<Extrinsics />} />
+          <Route path="storage/*" element={<Storage />} />
+          <Route path="constants/*" element={<Constants />} />
+          <Route path="runtimeCalls/*" element={<RuntimeCalls />} />
+          <Route path="rpcCalls/*" element={<RpcCalls />} />
+          <Route path="metadata/*" element={<Metadata />} />
+          <Route path="accounts/*" element={<Accounts />} />
+          <Route path="viewFns/*" element={<ViewFns />} />
+          <Route path="*" element={<Navigate to="/explorer" replace />} />
+        </Routes>
+      </AppShell>
       <Transactions />
       <VaultTxModal />
       <ConnectionState />

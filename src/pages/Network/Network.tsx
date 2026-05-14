@@ -37,8 +37,10 @@ import { FC, useState } from "react"
 import { twMerge } from "tailwind-merge"
 
 export function NetworkSwitcher({
+  className,
   forSmallScreen,
 }: {
+  className?: string
   forSmallScreen?: boolean
 }) {
   const [open, setOpen] = useState(false)
@@ -93,6 +95,7 @@ export function NetworkSwitcher({
           className={twMerge(
             "w-[200px] gap-0 justify-between text-base px-3 border border-border bg-input self-center",
             forSmallScreen ? "flex md:hidden" : "hidden md:flex",
+            className,
           )}
         >
           <span className="overflow-hidden text-ellipsis">
