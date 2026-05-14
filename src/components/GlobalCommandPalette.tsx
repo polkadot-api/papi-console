@@ -13,7 +13,7 @@ import { twMerge } from "tailwind-merge"
 
 type CommandPaletteIcon = ComponentType<{ size?: number; className?: string }>
 
-export type CommandPaletteNavigationItem = {
+export type NavigationItem = {
   path: string
   label: string
   icon: CommandPaletteIcon
@@ -28,7 +28,7 @@ type CommandAction = {
 }
 
 export const GlobalCommandPalette: FC<{
-  navigationItems: CommandPaletteNavigationItem[]
+  navigationItems: NavigationItem[]
 }> = ({ navigationItems }) => {
   const navigate = useNavigate()
   const [value, setValue] = useState("")
@@ -156,7 +156,7 @@ const CommandActionItem: FC<{
 
 const getCommandActions = (
   value: string,
-  navigationItems: CommandPaletteNavigationItem[],
+  navigationItems: NavigationItem[],
 ) => {
   const query = value.trim()
   const primaryActions: CommandAction[] = []
@@ -195,7 +195,7 @@ const getCommandActions = (
 
 const getSectionActions = (
   query: string,
-  navigationItems: CommandPaletteNavigationItem[],
+  navigationItems: NavigationItem[],
 ): CommandAction[] => {
   const normalizedQuery = normalizeLabel(query)
   const items = !normalizedQuery
@@ -231,5 +231,5 @@ const normalizeLabel = (value: string) =>
 const getCommandShortcutLabel = () =>
   typeof navigator !== "undefined" &&
   /Mac|iPhone|iPad|iPod/.test(navigator.platform)
-    ? "⌘K"
+    ? "⌘ K"
     : "Ctrl K"

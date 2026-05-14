@@ -1,6 +1,6 @@
 import {
   GlobalCommandPalette,
-  type CommandPaletteNavigationItem,
+  type NavigationItem,
 } from "@/components/GlobalCommandPalette"
 import SliderToggle from "@/components/Toggle"
 import { GithubIcon } from "@/components/Icons"
@@ -25,8 +25,6 @@ import { FC, PropsWithChildren, useState } from "react"
 import { useLocation } from "react-router-dom"
 import { twMerge } from "tailwind-merge"
 import { NetworkSwitcher } from "./Network/Network"
-
-type NavigationItem = CommandPaletteNavigationItem
 
 const navigationGroups: Array<{
   label: string
@@ -102,7 +100,7 @@ export const AppShell: FC<PropsWithChildren> = ({ children }) => {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
-      <aside className="hidden w-64 shrink-0 border-r bg-card/30 lg:flex">
+      <aside className="hidden w-60 shrink-0 border-r bg-card/30 lg:flex">
         <SidebarContent />
       </aside>
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
