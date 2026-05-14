@@ -20,6 +20,8 @@ import chopsticksLogoDark from "./icons/chopsticks_dark.svg"
 import chopsticksLogoLight from "./icons/chopsticks_light.svg"
 import enumSvg from "./icons/enum.svg"
 import focusSvg from "./icons/focus.svg"
+import githubLightSvg from "./icons/github_light.svg"
+import githubDarkSvg from "./icons/github_dark.svg"
 import switchBinarySvg from "./icons/switch_binary.svg"
 
 type CustomIconProps = Omit<Props, "ref" | "src"> & { size?: number }
@@ -62,6 +64,7 @@ export const Enum = customIcon(enumSvg)
 export const BinaryEdit = customIcon(binarySvg)
 export const SwitchBinary = customIcon(switchBinarySvg)
 export const Chopsticks = themeIcon(chopsticksLogoLight, chopsticksLogoDark)
+export const GithubIcon = themeIcon(githubLightSvg, githubDarkSvg)
 
 export const Spinner = (props: LucideProps) => (
   <LoaderCircle

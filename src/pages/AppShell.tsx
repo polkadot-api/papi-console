@@ -1,19 +1,22 @@
 import SliderToggle from "@/components/Toggle"
+import { GithubIcon } from "@/components/Icons"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Link, useNavigate } from "@/hashParams"
 import { changeTheme, useTheme } from "@/ThemeProvider"
 import {
-  Blocks,
-  Code2,
-  Database,
-  FileCode2,
-  FileText,
+  BookOpenText,
+  Cable,
+  DatabaseSearch,
+  GitGraph,
   Menu,
-  RadioTower,
+  MoonStar,
   Search,
   Send,
-  Wallet,
+  ServerCog,
+  SquareEqual,
+  SquareFunction,
+  UserRound,
 } from "lucide-react"
 import { FC, FormEvent, PropsWithChildren, useState } from "react"
 import { useLocation } from "react-router-dom"
@@ -23,29 +26,74 @@ import { NetworkSwitcher } from "./Network/Network"
 type NavigationItem = {
   path: string
   label: string
-  icon: FC<{ size?: number; className?: string }>
+  icon: IconComponent
 }
+type IconComponent = FC<{ size?: number; className?: string }>
 
 const navigationGroups: Array<{
   label: string
   items: NavigationItem[]
 }> = [
   {
-    label: "Tools",
+    label: "Dev Tools",
     items: [
-      { path: "/explorer", label: "Explorer", icon: Blocks },
-      { path: "/storage", label: "Storage", icon: Database },
-      { path: "/extrinsics", label: "Extrinsics", icon: Send },
-      { path: "/runtimeCalls", label: "Runtime Calls", icon: Code2 },
-      { path: "/viewFns", label: "View Functions", icon: FileCode2 },
-      { path: "/constants", label: "Constants", icon: FileText },
-      { path: "/metadata", label: "Metadata", icon: Blocks },
-      { path: "/rpcCalls", label: "RPC Calls", icon: RadioTower },
+      {
+        path: "/explorer",
+        label: "Explorer",
+        // Alts GitFork, GitBranch
+        icon: GitGraph,
+      },
+      {
+        path: "/storage",
+        label: "Storage",
+        icon: DatabaseSearch,
+      },
+      {
+        path: "/extrinsics",
+        label: "Extrinsics",
+        icon: Send,
+      },
+      {
+        path: "/runtimeCalls",
+        label: "Runtime Calls",
+        // Alt SquareTerminal
+        icon: ServerCog,
+      },
+      {
+        path: "/viewFns",
+        label: "View Functions",
+        icon: SquareFunction,
+      },
+      {
+        path: "/constants",
+        label: "Constants",
+        // Alt Braces
+        icon: SquareEqual,
+      },
+      {
+        path: "/metadata",
+        label: "Metadata",
+        // Alt Boxes
+        icon: BookOpenText,
+      },
+      {
+        path: "/rpcCalls",
+        label: "RPC Calls",
+        // Alt RadioTower
+        icon: Cable,
+      },
     ],
   },
   {
-    label: "Utils",
-    items: [{ path: "/accounts", label: "Accounts", icon: Wallet }],
+    label: "Utilities",
+    items: [
+      {
+        path: "/accounts",
+        label: "Accounts",
+        // Alt Wallet
+        icon: UserRound,
+      },
+    ],
   },
 ]
 
@@ -127,7 +175,7 @@ const SidebarContent: FC<{ mobile?: boolean; onNavigate?: () => void }> = ({
         rel="noreferrer"
         className="mt-2 flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
       >
-        <FileCode2 size={16} />
+        <GithubIcon size={16} />
         GitHub
       </a>
     </div>
@@ -248,7 +296,10 @@ const ThemeToggle = () => {
 
   return (
     <label className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-muted-foreground">
-      <span>Dark mode</span>
+      <span className="flex items-center gap-3">
+        <MoonStar size={16} className="shrink-0" />
+        <span>Dark mode</span>
+      </span>
       <SliderToggle
         isToggled={theme === "dark"}
         toggle={() => changeTheme(theme === "dark" ? "light" : "dark")}
