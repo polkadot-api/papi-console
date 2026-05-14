@@ -1,11 +1,11 @@
 import SliderToggle from "@/components/Toggle"
+import { getDefaultValue } from "@/utils"
 import {
   EditArray,
   EditBool,
   EditOption,
   EditResult,
   EditVoid,
-  NOTIN,
 } from "@polkadot-api/react-builder"
 import { FC, ReactNode, useState } from "react"
 import { twMerge } from "tailwind-merge"
@@ -61,7 +61,12 @@ export const CArray: EditArray = ({ innerComponents, path }) => {
   )
 }
 
-export const COption: EditOption = ({ value, inner, onValueChanged }) => {
+export const COption: EditOption = ({
+  value,
+  inner,
+  shape,
+  onValueChanged,
+}) => {
   const selected = value !== undefined
   return (
     <div>
@@ -69,7 +74,9 @@ export const COption: EditOption = ({ value, inner, onValueChanged }) => {
         <SliderToggle
           isToggled={selected}
           toggle={() =>
-            !selected ? onValueChanged(NOTIN) : onValueChanged(undefined)
+            !selected
+              ? onValueChanged(getDefaultValue(shape.value))
+              : onValueChanged(undefined)
           }
         />
         <span className="text-base">

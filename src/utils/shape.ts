@@ -1,4 +1,7 @@
 import { EnumVar, StructVar, Var } from "@polkadot-api/metadata-builders"
+import { NOTIN } from "@polkadot-api/react-builder"
+import { Enum } from "polkadot-api"
+import { mapObject } from "polkadot-api/utils"
 
 const complexTypes = new Set<Var["type"]>([
   "tuple",
@@ -40,14 +43,49 @@ export const getStructInnerType = <T extends StructVar>(
   return shape.value[key].type
 }
 
-export const isEnumVoid = <T extends EnumVar>(
+const MAX_DEPTH = 5
+export const getDefaultValue = (innerVar: Var, depth = 0): any => {
+  if (depth > MAX_DEPTH) return NOTIN
+  const nextDefault = (v: Var) => getDefaultValue(v, depth + 1)
+
+  switch (innerVar.type) {
+    case "void":
+      return null
+    case "option":
+      return undefined
+    case "sequence":
+      return []
+    case "struct":
+      return mapObject(innerVar.value, (v) => nextDefault(v))
+    case "array":
+      return new Array(innerVar.len)
+        .fill(0)
+        .map(() => nextDefault(innerVar.value))
+    case "tuple":
+      return innerVar.value.map(nextDefault)
+    case "enum": {
+      const selected = Object.entries(innerVar.value)[0]
+      return selected
+        ? Enum(
+            selected[0],
+            nextDefault(
+              selected[1].type === "lookupEntry"
+                ? selected[1].value
+                : selected[1],
+            ),
+          )
+        : NOTIN
+    }
+  }
+  return NOTIN
+}
+
+export const getEnumDefaultValue = <T extends EnumVar>(
   shape: T,
   type: keyof T["value"],
-): boolean => {
-  const innerShape = shape.value[type]
-  const innerType =
-    innerShape.type === "lookupEntry" ? innerShape.value.type : innerShape.type
-  return innerType === "void"
+) => {
+  const innerVar = getEnumInnerVar(shape, type)
+  return getDefaultValue(innerVar)
 }
 
 export const getFinalType = (shape: any, name: string) => {

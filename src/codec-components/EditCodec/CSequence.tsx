@@ -3,12 +3,14 @@ import { CirclePlus } from "lucide-react"
 import { twMerge as clsx } from "tailwind-merge"
 import { ListItem } from "../common/ListItem"
 import { useSubtreeFocus } from "../common/SubtreeFocus"
+import { getDefaultValue } from "@/utils"
 
 export const CSequence: EditSequence = ({
   innerComponents,
   value,
   onValueChanged,
   path,
+  shape,
 }) => {
   const focus = useSubtreeFocus()
   const sub = focus.getNextPath(path)
@@ -18,7 +20,7 @@ export const CSequence: EditSequence = ({
 
   const addItem = () => {
     const curr = value !== NOTIN ? value.slice() : []
-    curr.push(NOTIN)
+    curr.push(getDefaultValue(shape.value))
     onValueChanged([...curr])
   }
 
