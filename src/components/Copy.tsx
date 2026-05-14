@@ -27,7 +27,8 @@ export const CopyText: React.FC<
         />
       }
     >
-      {children ?? (binary ? <CopyBinaryIcon size={16} /> : <Copy size={16} />)}
+      {children ??
+        (binary ? <CopyBinaryIcon size={size} /> : <Copy size={size} />)}
     </GenericCopyText>
   )
 }
