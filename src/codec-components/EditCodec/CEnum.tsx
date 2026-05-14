@@ -1,5 +1,5 @@
 import { SearchableSelect } from "@/components/Select"
-import { isEnumComplex, isEnumVoid } from "@/utils/shape"
+import { getEnumDefaultValue, isEnumComplex } from "@/utils/shape"
 import { EditEnum, NOTIN } from "@polkadot-api/react-builder"
 import { Marker } from "../common/Markers"
 import { useSubtreeFocus } from "../common/SubtreeFocus"
@@ -43,7 +43,7 @@ export const CEnum: EditEnum = ({
         <SearchableSelect
           setValue={(selected: string | null) => {
             if (selected && options.includes(selected)) {
-              const value = isEnumVoid(shape, selected) ? null : NOTIN
+              const value = getEnumDefaultValue(shape, selected)
               onValueChanged({ type: selected, value })
             }
           }}
