@@ -7,7 +7,6 @@ import { ArrayDisplay } from "./ListComponents"
 import { StructDisplay } from "./StructDisplay"
 import {
   BoolDisplay,
-  EthAccountDisplay,
   NoneDisplay,
   NumberDisplay,
   ResultDisplay,
@@ -22,7 +21,7 @@ export const ViewValue: FC<{
       const info = getSs58AddressInfo(value)
       if (info.isValid) return <AccountIdDisplay value={value} />
       if (value.startsWith("0x") && value.length === 42)
-        return <EthAccountDisplay value={value} />
+        return <AccountIdDisplay value={value} />
       return <StrDisplay value={value} />
     }
     case "boolean":
