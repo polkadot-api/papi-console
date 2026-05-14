@@ -1,8 +1,12 @@
+import {
+  GlobalCommandPalette,
+  type CommandPaletteNavigationItem,
+} from "@/components/GlobalCommandPalette"
 import SliderToggle from "@/components/Toggle"
 import { GithubIcon } from "@/components/Icons"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
-import { Link, useNavigate } from "@/hashParams"
+import { Link } from "@/hashParams"
 import { changeTheme, useTheme } from "@/ThemeProvider"
 import {
   BookOpenText,
@@ -11,24 +15,18 @@ import {
   GitGraph,
   Menu,
   MoonStar,
-  Search,
   Send,
   ServerCog,
   SquareEqual,
   SquareFunction,
   UserRound,
 } from "lucide-react"
-import { FC, FormEvent, PropsWithChildren, useState } from "react"
+import { FC, PropsWithChildren, useState } from "react"
 import { useLocation } from "react-router-dom"
 import { twMerge } from "tailwind-merge"
 import { NetworkSwitcher } from "./Network/Network"
 
-type NavigationItem = {
-  path: string
-  label: string
-  icon: IconComponent
-}
-type IconComponent = FC<{ size?: number; className?: string }>
+type NavigationItem = CommandPaletteNavigationItem
 
 const navigationGroups: Array<{
   label: string
@@ -198,40 +196,9 @@ const TopBar: FC<{ onOpenSidebar: () => void }> = ({ onOpenSidebar }) => {
         <div className="ml-3 hidden sm:block">
           <NetworkSwitcher className="w-55" />
         </div>
-        <GlobalJumpSearch />
+        <GlobalCommandPalette navigationItems={navigationItems} />
       </div>
     </header>
-  )
-}
-
-const GlobalJumpSearch = () => {
-  const navigate = useNavigate()
-  const [value, setValue] = useState("")
-
-  const handleSubmit = (evt: FormEvent) => {
-    evt.preventDefault()
-
-    const target = getJumpTarget(value)
-    if (!target) return
-
-    navigate(target)
-    setValue("")
-  }
-
-  return (
-    <form className="max-w-2xl flex-1" onSubmit={handleSubmit}>
-      <label className="flex h-9 items-center gap-2 rounded-md border bg-input px-3 text-sm focus-within:ring-2 focus-within:ring-ring">
-        <Search size={16} className="shrink-0 text-muted-foreground" />
-        <input
-          value={value}
-          onChange={(evt) => setValue(evt.target.value)}
-          className="flex-1 bg-transparent outline-hidden placeholder:text-muted-foreground"
-          placeholder="Jump to block, hash, or section"
-          autoComplete="off"
-          spellCheck={false}
-        />
-      </label>
-    </form>
   )
 }
 
@@ -263,33 +230,6 @@ const SidebarLink: FC<{ item: NavigationItem; onClick?: () => void }> = ({
 
 const isNavigationItemActive = (pathname: string, path: string) =>
   pathname === path || pathname.startsWith(`${path}/`)
-
-const getJumpTarget = (value: string) => {
-  const query = value.trim()
-  if (!query) return null
-
-  if (query.startsWith("/")) return query
-
-  const normalizedQuery = normalizeLabel(query)
-  const exactSection = navigationItems.find(
-    ({ label }) => normalizeLabel(label) === normalizedQuery,
-  )
-  if (exactSection) return exactSection.path
-
-  const matchingSection = navigationItems.find(({ label }) =>
-    normalizeLabel(label).startsWith(normalizedQuery),
-  )
-  if (matchingSection) return matchingSection.path
-
-  if (/^(0x[0-9a-f]+|\d+)$/i.test(query)) {
-    return `/explorer/${query}`
-  }
-
-  return null
-}
-
-const normalizeLabel = (value: string) =>
-  value.toLowerCase().replace(/[\s_-]/g, "")
 
 const ThemeToggle = () => {
   const theme = useTheme()
