@@ -39,7 +39,6 @@ import {
   addStorageSubscription,
   selectedEntry$,
   selectEntry,
-  stringifyArg,
 } from "./storage.state"
 
 export const StorageQuery: FC = () => {
@@ -62,7 +61,6 @@ export const StorageQuery: FC = () => {
     const args = keyValues.slice(0, keysEnabled)
     const storageEntry = unsafeApi.query[entry!.pallet][entry!.entry]
     const single = keyValues.length === keysEnabled
-    const argString = [...args.map(stringifyArg), ...(single ? [] : ["…"])]
 
     const at = (hash: string) => {
       const value$ = from(
@@ -127,7 +125,7 @@ export const StorageQuery: FC = () => {
 
     if (hash) {
       addStorageSubscription({
-        name: `${entry!.pallet}.${entry!.entry}(${argString})`,
+        name: `${entry!.pallet}.${entry!.entry}`,
         args,
         single,
         keyCodec,
@@ -140,7 +138,7 @@ export const StorageQuery: FC = () => {
       })
     } else {
       addStorageSubscription({
-        name: `${entry!.pallet}.${entry!.entry}(${argString})`,
+        name: `${entry!.pallet}.${entry!.entry}`,
         args,
         single,
         keyCodec,
