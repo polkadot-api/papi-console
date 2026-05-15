@@ -6,10 +6,11 @@ import {
   createSignal,
   partitionByKey,
 } from "@react-rxjs/utils"
-import { ComponentType, ReactNode } from "react"
+import { ComponentType } from "react"
 import {
   catchError,
   combineLatest,
+  EMPTY,
   map,
   Observable,
   ObservableInput,
@@ -18,6 +19,7 @@ import {
   startWith,
   switchMap,
   takeUntil,
+  tap,
 } from "rxjs"
 import { v4 as uuid } from "uuid"
 
@@ -33,31 +35,35 @@ export const [workspaceFilter$, setWorkspaceFilter] =
 
 export type OperationStatus = "live" | "pending" | "error" | "done"
 
-export type WorkspaceEntryData = {
+export type WorkspaceEntryData<T = any> = {
   // Explorer, Storage, Extrinsics, etc.
   source: string
   // The main action - usually Pallet.name
   title: string
   // A small description with additional info. E.g. block number, signer, etc.
   subtitle?: string
+  link?: string
+  icon: ComponentType<{ size?: number; className?: string }>
+  content: ComponentType<{ data: T }>
   // This is subscribed by the history drawer entry. Pass a shared/hot or
   // side-effect-free observable so rendering history does not restart work.
   progress?: Observable<OperationStatus>
-  link?: string
-  icon: ComponentType<{ size?: number; className?: string }>
-  content: ReactNode
+  contentData?: Observable<T>
 }
 
-export type WorkspaceEntry = {
+export type WorkspaceEntry<T = any> = {
   id: string
   timestamp: number
   pinned: boolean
-  data: WorkspaceEntryData
+  data: WorkspaceEntryData<T>
+  contentData: T
   status?: OperationStatus
 }
 
-export const [newWorkspaceEntry$, pushWorkspaceEntry] =
+const [newWorkspaceEntry$, _pushWorkspaceEntry] =
   createSignal<WorkspaceEntryData>()
+export const pushWorkspaceEntry: <T>(payload: WorkspaceEntryData<T>) => void =
+  _pushWorkspaceEntry
 export const [removeWorkspaceEntry$, removeWorkspaceEntry] =
   createKeyedSignal<string>()
 export const [pinWorkspaceEntry$, pinWorkspaceEntry] =
@@ -83,11 +89,20 @@ export const [workspaceEntry$, workspaceEntryKeys$] = partitionByKey(
                 return ["error"]
               }),
             ) ?? of(undefined),
+          contentData:
+            data.contentData?.pipe(
+              tap((v) => console.log("cd", v)),
+              catchError((ex) => {
+                console.error(ex)
+                return EMPTY
+              }),
+            ) ?? of(null),
         }).pipe(
           map(
-            ({ pinned, status }): WorkspaceEntry => ({
+            ({ pinned, status, contentData }): WorkspaceEntry => ({
               id,
               data,
+              contentData,
               pinned,
               timestamp,
               status,

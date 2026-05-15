@@ -177,7 +177,14 @@ const useIsDockedViewport = () => {
 }
 
 const OperationCard: FC<{ entry: WorkspaceEntry }> = ({ entry }) => {
-  const { icon: Icon, source, title, subtitle, content, link } = entry.data
+  const {
+    icon: Icon,
+    source,
+    title,
+    subtitle,
+    content: Content,
+    link,
+  } = entry.data
 
   return (
     <article className="rounded-md border bg-card text-card-foreground shadow-xs">
@@ -228,7 +235,9 @@ const OperationCard: FC<{ entry: WorkspaceEntry }> = ({ entry }) => {
         </div>
       </div>
 
-      <dl className="max-h-[60svh] overflow-auto">{content}</dl>
+      <dl className="max-h-[60svh] overflow-auto">
+        <Content data={entry.contentData} />
+      </dl>
     </article>
   )
 }
@@ -244,7 +253,7 @@ const StatusBadge: FC<{ status?: OperationStatus }> = ({ status }) => {
         statusClasses[status],
       )}
     >
-      <Icon size={11} className={status === "pending" ? "animate-spin" : ""} />
+      <Icon size={11} />
       {statusLabels[status]}
     </span>
   )

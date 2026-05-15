@@ -10,7 +10,6 @@ import { Metadata } from "./pages/Metadata"
 import { RpcCalls } from "./pages/RpcCalls"
 import { RuntimeCalls } from "./pages/RuntimeCalls"
 import { Storage } from "./pages/Storage"
-import { Transactions } from "./pages/Transactions"
 import { ViewFns } from "./pages/ViewFns"
 
 export default function App() {
@@ -30,7 +29,6 @@ export default function App() {
           <Route path="*" element={<Navigate to="/explorer" replace />} />
         </Routes>
       </AppShell>
-      <Transactions />
       <VaultTxModal />
       <ConnectionState />
     </div>

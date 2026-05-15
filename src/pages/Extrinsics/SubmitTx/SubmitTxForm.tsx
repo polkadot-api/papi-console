@@ -1,11 +1,8 @@
 import { ActionButton } from "@/components/ActionButton"
 import { Spinner } from "@/components/Icons"
 import { cn } from "@/lib/utils"
-import { trackSignedTx, trackUnsignedTx } from "@/pages/Transactions"
 import { unsafeApi$ } from "@/state/chains/chain.state"
 import { selectedAccount$ } from "@/state/polkahub"
-import { compactNumber } from "@polkadot-api/substrate-bindings"
-import { fromHex, mergeUint8 } from "polkadot-api/utils"
 import { AccountPicker } from "@polkahub/ui-components"
 import { useStateObservable } from "@react-rxjs/core"
 import { Binary } from "polkadot-api"
@@ -18,6 +15,7 @@ import { FC, useState } from "react"
 import { combineLatest, firstValueFrom } from "rxjs"
 import { twMerge } from "tailwind-merge"
 import { customSignedExtensions$ } from "../CustomSignedExt"
+import { trackTx } from "../ExtrinsicsWorkspaceEntry"
 import { ExtensionProvider } from "./ExtensionProvider"
 
 const SignAndSubmit: FC<{ callData: string; onClose: () => void }> = ({
@@ -41,7 +39,7 @@ const SignAndSubmit: FC<{ callData: string; onClose: () => void }> = ({
           const signedExtrinsic = await tx.sign(account.signer, {
             customSignedExtensions: signedExt as any,
           })
-          trackSignedTx(signedExtrinsic)
+          trackTx(signedExtrinsic, tx.decodedCall, account)
           onClose()
         } catch (ex) {
           console.error(ex)
@@ -65,14 +63,11 @@ const SubmitUnsigned: FC<{ callData: string; onClose: () => void }> = ({
 }) => {
   return (
     <ActionButton
-      onClick={() => {
-        const data = fromHex(callData)
-        const unsignedTx = mergeUint8([
-          compactNumber.enc(data.length + 1),
-          new Uint8Array([4]),
-          data,
-        ])
-        trackUnsignedTx(unsignedTx)
+      onClick={async () => {
+        const unsafeApi = await firstValueFrom(unsafeApi$)
+        const tx = await unsafeApi.txFromCallData(Binary.fromHex(callData))
+
+        trackTx(await tx.getBareTx(), tx.decodedCall)
         onClose()
       }}
       className="flex gap-2 items-center justify-center"
