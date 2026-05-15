@@ -12,7 +12,14 @@ import {
   Pin,
   X,
 } from "lucide-react"
-import { ComponentType, FC, useEffect } from "react"
+import {
+  ComponentType,
+  FC,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
 import { Link } from "react-router-dom"
 import { twMerge } from "tailwind-merge"
 import {
@@ -29,8 +36,11 @@ import {
 
 export const HistoryDrawerTrigger: FC = () => {
   const open = useStateObservable(historyOpen$)
+  const docked = useStateObservable(historyDocked$())
+  const isDockedViewport = useIsDockedViewport()
+  const effectiveDocked = docked && isDockedViewport
 
-  return open ? null : (
+  return open && effectiveDocked ? null : (
     <Button
       variant="ghost"
       size="icon"
@@ -47,74 +57,123 @@ export const HistoryDrawer = () => {
   const open = useStateObservable(historyOpen$)
   const docked = useStateObservable(historyDocked$())
   const workspaceEntries = useStateObservable(workspaceEntries$)
+  const isDockedViewport = useIsDockedViewport()
+  const effectiveDocked = docked && isDockedViewport
+  const drawerRef = useRef<HTMLElement>(null)
+
+  const closeHistory = useCallback(() => {
+    const activeElement = document.activeElement
+    if (
+      activeElement instanceof HTMLElement &&
+      drawerRef.current?.contains(activeElement)
+    ) {
+      // Move focus out before hiding the drawer; otherwise the browser warns
+      // about hiding an element that still contains the focused control.
+      activeElement.blur()
+    }
+    setHistoryOpen(false)
+  }, [])
 
   useEffect(() => {
-    if (!open || docked) return
+    if (!open || effectiveDocked) return
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setHistoryOpen(false)
+        closeHistory()
       }
     }
 
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [docked, open])
+  }, [closeHistory, effectiveDocked, open])
 
   return (
-    <aside
-      aria-label="Workspace"
-      aria-hidden={!open}
-      className={twMerge(
-        "fixed inset-y-0 right-0 z-40 flex w-[min(92vw,28rem)] translate-x-full flex-col border-l bg-background shadow-xl transition-transform duration-200",
-        docked &&
-          "xl:static xl:z-auto xl:h-screen xl:translate-x-0 xl:shadow-none",
-        open ? "translate-x-0" : "pointer-events-none xl:hidden",
-      )}
-    >
-      <div className="flex gap-1 items-center border-b px-4 py-3 h-16">
-        <h2 className="text-base font-semibold flex-1">Workspace</h2>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="hidden h-8 w-8 xl:inline-flex"
-          onClick={() => setHistoryDocked(!docked)}
-          title={docked ? "Undock workspace" : "Dock workspace"}
-          aria-label={docked ? "Undock workspace" : "Dock workspace"}
-        >
-          {docked ? <PanelRightOpen size={16} /> : <Dock size={16} />}
-        </Button>
-        <Button variant="ghost" size="sm" className="h-8 shrink-0">
-          Clear
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setHistoryOpen(false)}
-          aria-label="Close workspace drawer"
-        >
-          <X size={16} />
-        </Button>
-      </div>
-
-      <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex items-center gap-2 border-b px-4 py-2">
-          <Badge variant="default" className="bg-polkadot-500 text-white">
-            All
-          </Badge>
-          <Badge variant="outline">Pinned</Badge>
-          <Badge variant="outline">Transactions</Badge>
-          <Badge variant="outline">Queries</Badge>
+    <>
+      {open && !effectiveDocked ? (
+        // Transparent backdrop that captures clicks outside the undocked drawer.
+        // It intentionally has no visual overlay so the page stays readable.
+        <button
+          className="fixed inset-0 z-30 cursor-default bg-transparent"
+          onClick={closeHistory}
+          aria-label="Close workspace"
+        />
+      ) : null}
+      <aside
+        ref={drawerRef}
+        aria-label="Workspace"
+        inert={!open}
+        className={twMerge(
+          "fixed inset-y-0 right-0 z-40 flex w-[min(92vw,28rem)] translate-x-full flex-col border-l bg-background shadow-xl transition-transform duration-200",
+          docked &&
+            "xl:static xl:z-auto xl:h-screen xl:translate-x-0 xl:shadow-none",
+          open ? "translate-x-0" : "pointer-events-none",
+          !open && effectiveDocked && "xl:hidden",
+        )}
+      >
+        <div className="flex h-16 items-center gap-1 border-b px-4 py-3">
+          <h2 className="text-base font-semibold flex-1">Workspace</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden h-8 w-8 xl:inline-flex"
+            onClick={() => setHistoryDocked(!docked)}
+            title={docked ? "Undock workspace" : "Dock workspace"}
+            aria-label={docked ? "Undock workspace" : "Dock workspace"}
+          >
+            {docked ? <PanelRightOpen size={16} /> : <Dock size={16} />}
+          </Button>
+          <Button variant="ghost" size="sm" className="h-8 shrink-0">
+            Clear
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={closeHistory}
+            aria-label="Close workspace drawer"
+          >
+            <X size={16} />
+          </Button>
         </div>
 
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
-          {workspaceEntries.map((entry) => (
-            <OperationCard key={entry.id} entry={entry} />
-          ))}
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex items-center gap-2 border-b px-4 py-2">
+            <Badge variant="default" className="bg-polkadot-500 text-white">
+              All
+            </Badge>
+            <Badge variant="outline">Pinned</Badge>
+            <Badge variant="outline">Transactions</Badge>
+            <Badge variant="outline">Queries</Badge>
+          </div>
+
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
+            {workspaceEntries.map((entry) => (
+              <OperationCard key={entry.id} entry={entry} />
+            ))}
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   )
+}
+
+const DOCKED_DRAWER_MEDIA_QUERY = "(min-width: 80rem)"
+const useIsDockedViewport = () => {
+  const [isDockedViewport, setIsDockedViewport] = useState(() =>
+    typeof window === "undefined"
+      ? false
+      : window.matchMedia(DOCKED_DRAWER_MEDIA_QUERY).matches,
+  )
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(DOCKED_DRAWER_MEDIA_QUERY)
+    const updateDockedViewport = () => setIsDockedViewport(mediaQuery.matches)
+
+    updateDockedViewport()
+    mediaQuery.addEventListener("change", updateDockedViewport)
+    return () => mediaQuery.removeEventListener("change", updateDockedViewport)
+  }, [])
+
+  return isDockedViewport
 }
 
 const OperationCard: FC<{ entry: WorkspaceEntry }> = ({ entry }) => {
