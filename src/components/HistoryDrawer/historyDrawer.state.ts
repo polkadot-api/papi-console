@@ -40,6 +40,8 @@ export type WorkspaceEntryData = {
   title: string
   // A small description with additional info. E.g. block number, signer, etc.
   subtitle?: string
+  // This is subscribed by the history drawer entry. Pass a shared/hot or
+  // side-effect-free observable so rendering history does not restart work.
   progress?: Observable<OperationStatus>
   link?: string
   icon: ComponentType<{ size?: number; className?: string }>

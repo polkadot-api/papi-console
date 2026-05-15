@@ -8,12 +8,12 @@ import { DatabaseSearch } from "lucide-react"
 import { FC } from "react"
 import {
   catchError,
-  concatMap,
   distinct,
   endWith,
   filter,
   ignoreElements,
   map,
+  mergeMap,
   mergeAll,
   startWith,
   take,
@@ -62,7 +62,7 @@ const StorageWorkspaceEntry: FC<{
 export const storageWorkspaceEntries$ = storageSubscriptionKeys$.pipe(
   mergeAll(),
   distinct(),
-  concatMap((id) =>
+  mergeMap((id) =>
     storageSubscription$(id).pipe(
       filter((v) => v != null),
       take(1),
