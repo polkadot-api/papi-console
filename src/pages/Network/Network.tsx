@@ -36,11 +36,7 @@ import { Check, ChevronDown } from "lucide-react"
 import { FC, useState } from "react"
 import { twMerge } from "tailwind-merge"
 
-export function NetworkSwitcher({
-  forSmallScreen,
-}: {
-  forSmallScreen?: boolean
-}) {
+export function NetworkSwitcher({ className }: { className?: string }) {
   const [open, setOpen] = useState(false)
   const selectedChain = useStateObservable(selectedChain$)
 
@@ -91,8 +87,8 @@ export function NetworkSwitcher({
         <Button
           variant="outline"
           className={twMerge(
-            "w-[200px] gap-0 justify-between text-base px-3 border border-border bg-input self-center",
-            forSmallScreen ? "flex md:hidden" : "hidden md:flex",
+            "gap-0 justify-between text-base px-3 border border-border bg-input self-center",
+            className,
           )}
         >
           <span className="overflow-hidden text-ellipsis">
@@ -165,7 +161,7 @@ const NetworkSwitchDialogContent: FC<{
 
   return (
     <DialogContent
-      className="sm:max-w-[425px] sm:min-w-[425px] min-h-[450px] max-h-full flex flex-col w-auto"
+      className="sm:max-w-106.25 sm:min-w-106.25 min-h-112.5 max-h-full flex flex-col w-auto"
       onEscapeKeyDown={(evt) => {
         if (
           evt.target instanceof HTMLElement &&
@@ -191,7 +187,7 @@ const NetworkSwitchDialogContent: FC<{
               <CommandEmpty>
                 <div className="text-foreground/50">No networks found.</div>
               </CommandEmpty>
-              <ScrollArea className="h-[260px]">
+              <ScrollArea className="h-65">
                 {networkCategories.map((category) => {
                   if (category.name === "Custom") {
                     if (
