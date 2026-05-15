@@ -30,6 +30,7 @@ import {
   storageSubscription$,
   storageSubscriptionKeys$,
   StorageSubscriptionValue,
+  stringifyArg,
 } from "./storage.state"
 
 export const StorageSubscriptions: FC = () => {
@@ -262,11 +263,19 @@ const SubscriptionBox: FC<{
     className: "text-polkadot-400 cursor-pointer hover:text-polkadot-500",
   }
 
+  const argString = storageSubscription.args
+    ? `(${[
+        ...storageSubscription.args.map(stringifyArg),
+        ...(storageSubscription.single ? [] : ["…"]),
+      ]})`
+    : "(…)"
+
   return (
     <li className="border rounded bg-card text-card-foreground p-2">
       <div className="flex justify-between items-center pb-1 overflow-hidden">
         <h3 className="overflow-hidden text-ellipsis whitespace-nowrap">
           {storageSubscription.name}
+          {argString}
         </h3>
         <div className="flex items-center shrink-0 gap-2">
           {actions}

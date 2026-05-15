@@ -10,13 +10,20 @@ import { TooltipProvider } from "./components/ui/tooltip.tsx"
 import "./index.css"
 import { explorer$ } from "./pages/Explorer"
 import { storage$ } from "./pages/Storage/storage.state.ts"
+import { storageWorkspaceEntries$ } from "./pages/Storage/StorageWorkspaceEntry"
 import { transactions$ } from "./pages/Transactions"
 import { polkaHub } from "./state/polkahub.ts"
 import { ThemeProvider } from "./ThemeProvider.tsx"
 
 createRoot(document.getElementById("root")!).render(
   <Subscribe
-    source$={merge(dynamicBuilder$, explorer$, transactions$, storage$)}
+    source$={merge(
+      dynamicBuilder$,
+      explorer$,
+      transactions$,
+      storage$,
+      storageWorkspaceEntries$,
+    )}
   >
     <RemoveSubscribe>
       <StrictMode>

@@ -41,7 +41,7 @@ export const StorageDecode: FC = () => {
     )
 
     addStorageSubscription({
-      name: `${entry!.pallet}.${entry!.entry}(…)`,
+      name: `${entry!.pallet}.${entry!.entry}`,
       args: null,
       single: true,
       value: of({
