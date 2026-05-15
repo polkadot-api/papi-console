@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { useStateObservable } from "@react-rxjs/core"
 import {
   Activity,
   BookOpenText,
@@ -10,8 +11,8 @@ import {
   DatabaseSearch,
   Dock,
   GitGraph,
+  History,
   LoaderCircle,
-  PanelRightClose,
   PanelRightOpen,
   Pin,
   Send,
@@ -22,6 +23,12 @@ import {
 } from "lucide-react"
 import { ComponentType, FC, useEffect } from "react"
 import { twMerge } from "tailwind-merge"
+import {
+  historyDocked$,
+  historyOpen$,
+  setHistoryDocked,
+  setHistoryOpen,
+} from "./historyDrawer.state"
 
 type OperationIcon = ComponentType<{ size?: number; className?: string }>
 
@@ -41,118 +48,92 @@ type OperationCard = {
   }>
 }
 
-export const OperationsDrawerTrigger: FC<{
-  onClick: () => void
-  open: boolean
-}> = ({ onClick, open }) => (
-  <Button
-    variant="ghost"
-    size="icon"
-    className={twMerge(
-      "relative shrink-0 text-foreground hover:bg-accent",
-      open && "bg-accent text-accent-foreground",
-    )}
-    onClick={onClick}
-    aria-label={open ? "Close workspace" : "Open workspace"}
-  >
-    {open ? (
-      <PanelRightClose className="h-5 w-5" />
-    ) : (
-      <PanelRightOpen className="h-5 w-5" />
-    )}
-  </Button>
-)
+export const HistoryDrawerTrigger: FC = () => {
+  const open = useStateObservable(historyOpen$)
 
-export const OperationsDrawer: FC<{
-  open: boolean
-  docked: boolean
-  onOpenChange: (open: boolean) => void
-  onDockedChange: (docked: boolean) => void
-}> = ({ open, docked, onOpenChange, onDockedChange }) => {
+  return open ? null : (
+    <Button
+      variant="ghost"
+      size="icon"
+      className={twMerge("relative shrink-0 text-foreground hover:bg-accent")}
+      onClick={() => setHistoryOpen(true)}
+      aria-label="Open workspace"
+    >
+      <History className="h-5 w-5" />
+    </Button>
+  )
+}
+
+export const HistoryDrawer = () => {
+  const open = useStateObservable(historyOpen$)
+  const docked = useStateObservable(historyDocked$())
+
   useEffect(() => {
     if (!open || docked) return
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        onOpenChange(false)
+        setHistoryOpen(false)
       }
     }
 
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [docked, onOpenChange, open])
+  }, [docked, open])
 
   return (
-    <>
-      {open && !docked ? (
-        <button
-          className="fixed inset-0 z-30 cursor-default bg-transparent"
-          onClick={() => onOpenChange(false)}
-          aria-label="Close workspace"
-        />
-      ) : null}
-      <aside
-        aria-label="Workspace"
-        aria-hidden={!open}
-        className={twMerge(
-          "fixed inset-y-0 right-0 z-40 flex w-[min(92vw,28rem)] translate-x-full flex-col border-l bg-background shadow-xl transition-transform duration-200",
-          docked &&
-            "xl:static xl:z-auto xl:h-screen xl:w-[26rem] xl:translate-x-0 xl:shadow-none",
-          open ? "translate-x-0" : "pointer-events-none xl:hidden",
-        )}
-      >
-        <div className="relative border-b px-4 py-3">
-          <div className="flex items-start justify-between gap-3 pr-8">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-semibold">Workspace</h2>
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Recent operations and pinned references
-              </p>
-            </div>
-            <div className="flex shrink-0 items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hidden h-8 w-8 xl:inline-flex"
-                onClick={() => onDockedChange(!docked)}
-                title={docked ? "Undock workspace" : "Dock workspace"}
-                aria-label={docked ? "Undock workspace" : "Dock workspace"}
-              >
-                {docked ? <PanelRightOpen size={16} /> : <Dock size={16} />}
-              </Button>
-              <Button variant="ghost" size="sm" className="h-8 shrink-0">
-                Clear
-              </Button>
-            </div>
-          </div>
-          <button
-            className="absolute right-4 top-4 rounded p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-            onClick={() => onOpenChange(false)}
-            aria-label="Close workspace drawer"
-          >
-            <X size={16} />
-          </button>
+    <aside
+      aria-label="Workspace"
+      aria-hidden={!open}
+      className={twMerge(
+        "fixed inset-y-0 right-0 z-40 flex w-[min(92vw,28rem)] translate-x-full flex-col border-l bg-background shadow-xl transition-transform duration-200",
+        docked &&
+          "xl:static xl:z-auto xl:h-screen xl:translate-x-0 xl:shadow-none",
+        open ? "translate-x-0" : "pointer-events-none xl:hidden",
+      )}
+    >
+      <div className="flex gap-1 items-center border-b px-4 py-3 h-16">
+        <h2 className="text-base font-semibold flex-1">Workspace</h2>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hidden h-8 w-8 xl:inline-flex"
+          onClick={() => setHistoryDocked(!docked)}
+          title={docked ? "Undock workspace" : "Dock workspace"}
+          aria-label={docked ? "Undock workspace" : "Dock workspace"}
+        >
+          {docked ? <PanelRightOpen size={16} /> : <Dock size={16} />}
+        </Button>
+        <Button variant="ghost" size="sm" className="h-8 shrink-0">
+          Clear
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setHistoryOpen(false)}
+          aria-label="Close workspace drawer"
+        >
+          <X size={16} />
+        </Button>
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex items-center gap-2 border-b px-4 py-2">
+          <Badge variant="default" className="bg-polkadot-500 text-white">
+            All
+          </Badge>
+          <Badge variant="outline">Pinned</Badge>
+          <Badge variant="outline">Transactions</Badge>
+          <Badge variant="outline">Queries</Badge>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="flex items-center gap-2 border-b px-4 py-2">
-            <Badge variant="default" className="bg-polkadot-500 text-white">
-              Live
-            </Badge>
-            <Badge variant="outline">Pinned</Badge>
-            <Badge variant="outline">Results</Badge>
-          </div>
-
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
-            {mockOperationCards.map((operation) => (
-              <OperationCard key={operation.id} operation={operation} />
-            ))}
-          </div>
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
+          {mockOperationCards.map((operation) => (
+            <OperationCard key={operation.id} operation={operation} />
+          ))}
         </div>
-      </aside>
-    </>
+      </div>
+    </aside>
   )
 }
 

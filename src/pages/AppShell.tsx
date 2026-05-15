@@ -2,12 +2,9 @@ import {
   GlobalCommandPalette,
   type NavigationItem,
 } from "@/components/GlobalCommandPalette"
-import {
-  OperationsDrawer,
-  OperationsDrawerTrigger,
-} from "@/components/OperationsDrawer"
-import SliderToggle from "@/components/Toggle"
+import { HistoryDrawer, HistoryDrawerTrigger } from "@/components/HistoryDrawer"
 import { GithubIcon } from "@/components/Icons"
+import SliderToggle from "@/components/Toggle"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Link } from "@/hashParams"
@@ -101,17 +98,6 @@ const navigationItems = navigationGroups.flatMap((group) => group.items)
 
 export const AppShell: FC<PropsWithChildren> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [operationsOpen, setOperationsOpen] = useState(false)
-  const [operationsDocked, setOperationsDocked] = useState(false)
-
-  const handleOperationsOpenChange = (open: boolean) => {
-    setOperationsOpen(open)
-  }
-
-  const handleOperationsDockedChange = (docked: boolean) => {
-    setOperationsDocked(docked)
-    setOperationsOpen(true)
-  }
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
@@ -124,24 +110,14 @@ export const AppShell: FC<PropsWithChildren> = ({ children }) => {
         </SheetContent>
       </Sheet>
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar
-          onOpenSidebar={() => setSidebarOpen(true)}
-          operationsOpen={operationsOpen}
-          operationsDocked={operationsDocked}
-          onToggleOperations={() => handleOperationsOpenChange(!operationsOpen)}
-        />
+        <TopBar onOpenSidebar={() => setSidebarOpen(true)} />
         <div className="relative min-h-0 flex-1 overflow-auto">
           <div className="mx-auto h-full w-full max-w-(--breakpoint-xl)">
             {children}
           </div>
         </div>
       </div>
-      <OperationsDrawer
-        open={operationsOpen}
-        docked={operationsDocked}
-        onOpenChange={handleOperationsOpenChange}
-        onDockedChange={handleOperationsDockedChange}
-      />
+      <HistoryDrawer />
     </div>
   )
 }
@@ -206,15 +182,7 @@ const SidebarContent: FC<{ mobile?: boolean; onNavigate?: () => void }> = ({
 
 const TopBar: FC<{
   onOpenSidebar: () => void
-  operationsOpen: boolean
-  operationsDocked: boolean
-  onToggleOperations: () => void
-}> = ({
-  onOpenSidebar,
-  operationsOpen,
-  operationsDocked,
-  onToggleOperations,
-}) => {
+}> = ({ onOpenSidebar }) => {
   return (
     <header className="flex h-16 shrink-0 items-center border-b bg-background/95 px-3 lg:px-4">
       <Button
@@ -232,12 +200,7 @@ const TopBar: FC<{
         </div>
         <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
           <GlobalCommandPalette navigationItems={navigationItems} />
-          {operationsOpen && operationsDocked ? null : (
-            <OperationsDrawerTrigger
-              open={operationsOpen}
-              onClick={onToggleOperations}
-            />
-          )}
+          <HistoryDrawerTrigger />
         </div>
       </div>
     </header>
