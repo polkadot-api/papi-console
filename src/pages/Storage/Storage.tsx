@@ -14,6 +14,7 @@ import { StorageDecode } from "./StorageDecode"
 import { StorageQuery } from "./StorageQuery"
 import { StorageSet } from "./StorageSet"
 import { StorageSubscriptions } from "./StorageSubscriptions"
+import { Route, Routes } from "react-router-dom"
 
 const metadataStorage$ = state(
   selectedBlock$.pipe(
@@ -82,7 +83,9 @@ export const Storage = withSubscribe(
           </div>
         ) : null}
         <StorageEntry />
-        <StorageSubscriptions />
+        <Routes>
+          <Route path=":subId" element={<StorageSubscriptions />} />
+        </Routes>
       </div>
     )
   },

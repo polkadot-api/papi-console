@@ -2,7 +2,7 @@ import {
   GlobalCommandPalette,
   type NavigationItem,
 } from "@/components/GlobalCommandPalette"
-import { HistoryDrawer, HistoryDrawerTrigger } from "@/components/HistoryDrawer"
+import { HistoryDrawer, HistoryDrawerTrigger } from "@/components/Workspace"
 import { GithubIcon } from "@/components/Icons"
 import SliderToggle from "@/components/Toggle"
 import { Button } from "@/components/ui/button"

@@ -1,34 +1,13 @@
-import {
-  OperationStatus,
-  pushWorkspaceEntry,
-} from "@/components/HistoryDrawer/historyDrawer.state"
 import { JsonDisplay } from "@/components/JsonDisplay"
-import { DatabaseSearch } from "lucide-react"
+import { useStateObservable } from "@react-rxjs/core"
 import { FC } from "react"
-import {
-  catchError,
-  distinct,
-  endWith,
-  filter,
-  ignoreElements,
-  map,
-  mergeAll,
-  mergeMap,
-  startWith,
-  take,
-  takeWhile,
-  tap,
-} from "rxjs"
-import {
-  StorageSubscription,
-  storageSubscription$,
-  storageSubscriptionKeys$,
-  stringifyArg,
-} from "./storage.state"
+import type { StorageEntryContext } from "./storage.state"
 
-const StorageWorkspaceEntry: FC<{
-  status?: StorageSubscription["status"]
-}> = ({ status }) => {
+export const StorageWorkspaceEntry: FC<{
+  context: StorageEntryContext
+}> = ({ context }) => {
+  const status = useStateObservable(context.status$)
+
   if (!status) {
     return <p className="text-muted-foreground p-2">Removed</p>
   }
@@ -55,32 +34,3 @@ const StorageWorkspaceEntry: FC<{
     </div>
   )
 }
-
-export const storageWorkspaceEntries$ = storageSubscriptionKeys$.pipe(
-  mergeAll(),
-  distinct(),
-  mergeMap((id) =>
-    storageSubscription$(id).pipe(
-      filter((v) => v != null),
-      take(1),
-      map((sub) => ({ id, ...sub })),
-    ),
-  ),
-  tap((sub) =>
-    pushWorkspaceEntry({
-      source: "Storage",
-      title: sub.name,
-      subtitle: sub.args?.map(stringifyArg).join(" "),
-      icon: DatabaseSearch,
-      progress: storageSubscription$(sub.id).pipe(
-        takeWhile((v) => !!v && !v.completed),
-        catchError(() => [null]),
-        ignoreElements(),
-        startWith("live" as OperationStatus),
-        endWith("done" as OperationStatus),
-      ),
-      contentData: storageSubscription$(sub.id).pipe(map((v) => v?.status)),
-      content: ({ data }) => <StorageWorkspaceEntry status={data} />,
-    }),
-  ),
-)

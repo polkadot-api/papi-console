@@ -1,20 +1,22 @@
 import { CopyText } from "@/components/Copy"
+import { JsonDisplay } from "@/components/JsonDisplay"
 import {
   OperationStatus,
   pushWorkspaceEntry,
-  setHistoryOpen,
-} from "@/components/HistoryDrawer/historyDrawer.state"
-import { JsonDisplay } from "@/components/JsonDisplay"
+  setWorkspaceOpen,
+} from "@/components/Workspace"
 import { Link } from "@/hashParams"
 import { BlockState } from "@/state/block.state"
 import { chainClient$ } from "@/state/chains/chain.state"
 import { shortStr } from "@/utils"
-import { FileSearch, Send } from "lucide-react"
+import { state, StateObservable, useStateObservable } from "@react-rxjs/core"
+import { Send } from "lucide-react"
 import { InvalidTxError, TxBroadcastEvent, TxCallData } from "polkadot-api"
 import { jsonSerialize, toHex } from "polkadot-api/utils"
 import { Account } from "polkahub"
 import { FC } from "react"
-import { catchError, map, Observable, of, shareReplay, tap } from "rxjs"
+import { catchError, filter, map, of, tap } from "rxjs"
+import { v4 } from "uuid"
 import { BlockStatusIcon } from "../Explorer/Detail/BlockState"
 
 type TrackedTransactionEvent =
@@ -37,9 +39,8 @@ export const trackTx = async (
   const { client } = await chainClient$.getValue()
 
   let txHash: string = ""
-  const tx$: Observable<TrackedTransactionEvent> = client
-    .submitAndWatch(extrinsic)
-    .pipe(
+  const tx$: StateObservable<TrackedTransactionEvent | null> = state(
+    client.submitAndWatch(extrinsic).pipe(
       tap((e) => {
         txHash = e.txHash
       }),
@@ -63,23 +64,31 @@ export const trackTx = async (
           value: err,
         })
       }),
-      shareReplay(1),
-    )
+    ),
+    null,
+  )
 
   const title = callData ? `${callData.type}.${callData.value.type}` : null
 
   pushWorkspaceEntry({
+    id: v4(),
     source: "Extrinsics",
     title: title ?? "Transaction",
     // TODO correct format
     subtitle: signer ? `Signer ${signer.name ?? signer.address}` : undefined,
     icon: Send,
-    progress: tx$.pipe(map(getOperationStatus)),
-    contentData: tx$,
-    content: ({ data }) => <ExtrinsicsWorkspaceEntry event={data} />,
+    status: tx$.pipe(
+      filter((v) => v != null),
+      map(getOperationStatus),
+    ),
+    content: () => {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const data = useStateObservable(tx$)
+      return data && <ExtrinsicsWorkspaceEntry event={data} />
+    },
   })
   // Forcing it to open as it's the only place where Transactions are tracked
-  setHistoryOpen(true)
+  setWorkspaceOpen(true)
 }
 
 const ExtrinsicsWorkspaceEntry: FC<{ event: TrackedTransactionEvent }> = ({

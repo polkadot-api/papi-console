@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Link } from "@/hashParams"
 import { useStateObservable } from "@react-rxjs/core"
 import {
   Activity,
@@ -20,23 +21,22 @@ import {
   useRef,
   useState,
 } from "react"
-import { Link } from "react-router-dom"
 import { twMerge } from "tailwind-merge"
 import {
-  historyDocked$,
-  historyOpen$,
   OperationStatus,
   pinWorkspaceEntry,
   removeWorkspaceEntry,
-  setHistoryDocked,
-  setHistoryOpen,
+  setWorkspaceDocked,
+  setWorkspaceOpen,
+  workspaceDocked$,
   workspaceEntries$,
   WorkspaceEntry,
-} from "./historyDrawer.state"
+  workspaceOpen$,
+} from "./workspace.state"
 
 export const HistoryDrawerTrigger: FC = () => {
-  const open = useStateObservable(historyOpen$)
-  const docked = useStateObservable(historyDocked$())
+  const open = useStateObservable(workspaceOpen$)
+  const docked = useStateObservable(workspaceDocked$())
   const isDockedViewport = useIsDockedViewport()
   const effectiveDocked = docked && isDockedViewport
 
@@ -45,7 +45,7 @@ export const HistoryDrawerTrigger: FC = () => {
       variant="ghost"
       size="icon"
       className={twMerge("relative shrink-0 text-foreground hover:bg-accent")}
-      onClick={() => setHistoryOpen(true)}
+      onClick={() => setWorkspaceOpen(true)}
       aria-label="Open workspace"
     >
       <History className="h-5 w-5" />
@@ -54,8 +54,8 @@ export const HistoryDrawerTrigger: FC = () => {
 }
 
 export const HistoryDrawer = () => {
-  const open = useStateObservable(historyOpen$)
-  const docked = useStateObservable(historyDocked$())
+  const open = useStateObservable(workspaceOpen$)
+  const docked = useStateObservable(workspaceDocked$())
   const workspaceEntries = useStateObservable(workspaceEntries$)
   const isDockedViewport = useIsDockedViewport()
   const effectiveDocked = docked && isDockedViewport
@@ -71,7 +71,7 @@ export const HistoryDrawer = () => {
       // about hiding an element that still contains the focused control.
       activeElement.blur()
     }
-    setHistoryOpen(false)
+    setWorkspaceOpen(false)
   }, [])
 
   useEffect(() => {
@@ -116,7 +116,7 @@ export const HistoryDrawer = () => {
             variant="ghost"
             size="icon"
             className="hidden h-8 w-8 xl:inline-flex"
-            onClick={() => setHistoryDocked(!docked)}
+            onClick={() => setWorkspaceDocked(!docked)}
             title={docked ? "Undock workspace" : "Dock workspace"}
             aria-label={docked ? "Undock workspace" : "Dock workspace"}
           >
@@ -147,7 +147,7 @@ export const HistoryDrawer = () => {
 
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
             {workspaceEntries.map((entry) => (
-              <OperationCard key={entry.id} entry={entry} />
+              <OperationCard key={entry.data.id} entry={entry} />
             ))}
           </div>
         </div>
@@ -221,22 +221,22 @@ const OperationCard: FC<{ entry: WorkspaceEntry }> = ({ entry }) => {
                 : null,
             )}
             aria-label={`Pin ${title}`}
-            onClick={() => pinWorkspaceEntry(entry.id)}
+            onClick={() => pinWorkspaceEntry(entry.data.id)}
           >
             <Pin size={14} />
           </button>
           <button
             className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             aria-label={`Remove ${title}`}
-            onClick={() => removeWorkspaceEntry(entry.id)}
+            onClick={() => removeWorkspaceEntry(entry.data.id)}
           >
             <X size={14} />
           </button>
         </div>
       </div>
 
-      <dl className="max-h-[60svh] overflow-auto">
-        <Content data={entry.contentData} />
+      <dl className="max-h-[30svh] overflow-auto">
+        <Content id={entry.data.id} context={entry.data.context} />
       </dl>
     </article>
   )

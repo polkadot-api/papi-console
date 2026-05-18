@@ -3,38 +3,31 @@ import { ActionButton } from "@/components/ActionButton"
 import { BinaryEditButton } from "@/components/BinaryEditButton"
 import { CopyText } from "@/components/Copy"
 import SliderToggle from "@/components/Toggle"
-import {
-  chainClient$,
-  runtimeCtxAt$,
-  unsafeApi$,
-} from "@/state/chains/chain.state"
+import { useNavigate } from "@/hashParams"
 import {
   CodecComponentType,
   CodecComponentValue,
   NOTIN,
 } from "@polkadot-api/react-builder"
-import { Twox128 } from "@polkadot-api/substrate-bindings"
-import { fromHex, toHex } from "polkadot-api/utils"
 import { state, useStateObservable, withDefault } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
+import { Enum } from "polkadot-api"
+import { fromHex } from "polkadot-api/utils"
 import { FC } from "react"
 import {
   combineLatest,
   distinctUntilChanged,
   filter,
   firstValueFrom,
-  from,
   map,
-  ObservedValueOf,
-  of,
   scan,
   startWith,
   switchMap,
-  take,
   withLatestFrom,
 } from "rxjs"
 import { twMerge } from "tailwind-merge"
 import { selectedBlock$ } from "./BlockPicker"
+import { DecodedKey, decodeKey } from "./decodeKey"
 import {
   addStorageSubscription,
   selectedEntry$,
@@ -44,107 +37,24 @@ import {
 export const StorageQuery: FC = () => {
   const selectedEntry = useStateObservable(selectedEntry$)
   const isReady = useStateObservable(isReady$)
+  const navigate = useNavigate()
 
   if (!selectedEntry) return null
 
   const submit = async () => {
-    const [entry, unsafeApi, keyValues, keysEnabled, { hash }] =
-      await firstValueFrom(
-        combineLatest([
-          selectedEntry$,
-          unsafeApi$,
-          keyValues$,
-          keysEnabled$,
-          selectedBlock$,
-        ]),
-      )
+    const [entry, keyValues, keysEnabled, { hash }] = await firstValueFrom(
+      combineLatest([selectedEntry$, keyValues$, keysEnabled$, selectedBlock$]),
+    )
     const args = keyValues.slice(0, keysEnabled)
-    const storageEntry = unsafeApi.query[entry!.pallet][entry!.entry]
-    const single = keyValues.length === keysEnabled
 
-    const at = (hash: string) => {
-      const value$ = from(
-        single
-          ? storageEntry.getValue(...args, {
-              at: hash,
-            })
-          : storageEntry.getEntries(...args, {
-              at: hash,
-            }),
-      )
-      const hash$ = single
-        ? chainClient$.pipe(
-            switchMap(({ chainHead }) =>
-              chainHead
-                .storage$(hash, "hash", (ctx) =>
-                  ctx.dynamicBuilder
-                    .buildStorage(entry!.pallet, entry!.entry)
-                    .keys.enc(...args),
-                )
-                .pipe(map(({ value }) => value)),
-            ),
-          )
-        : of(null)
-      const ctxType$ = runtimeCtxAt$(hash).pipe(
-        map((ctx) => {
-          const pallet = ctx.lookup.metadata.pallets.find(
-            (p) => p.name === entry!.pallet,
-          )
-          const ctxEntry = pallet?.storage?.items.find(
-            (it) => it.name === entry!.entry,
-          )
-          if (!ctxEntry) {
-            throw new Error(
-              `Storage entry ${entry?.pallet}.${entry?.entry} not found in ${hash}`,
-            )
-          }
-          const type =
-            ctxEntry.type.tag === "plain"
-              ? ctxEntry.type.value
-              : ctxEntry.type.value.value
-
-          return { ctx, type }
-        }),
-      )
-
-      return combineLatest([
-        combineLatest({ payload: value$, hash: hash$ }),
-        ctxType$,
-      ]).pipe(
-        map(([a, b]) => ({ ...a, ...b })),
-        take(1),
-      )
-    }
-    const keyCodec = (hash: string) =>
-      runtimeCtxAt$(hash).pipe(
-        map(
-          (ctx) =>
-            ctx.dynamicBuilder.buildStorage(entry!.pallet, entry!.entry).keys,
-        ),
-      )
-
-    if (hash) {
-      addStorageSubscription({
-        name: `${entry!.pallet}.${entry!.entry}`,
-        args,
-        single,
-        keyCodec,
-        value: at(hash).pipe(
-          map((r) => ({
-            ...r,
-            blockHash: hash,
-          })),
-        ),
-      })
-    } else {
-      addStorageSubscription({
-        name: `${entry!.pallet}.${entry!.entry}`,
-        args,
-        single,
-        keyCodec,
-        at,
-      })
-    }
+    const id = await addStorageSubscription({
+      blockHash: hash ?? null,
+      pallet: entry!.pallet,
+      item: entry!.entry,
+      value: Enum("query", args),
+    })
+    console.log(id)
+    navigate(`/storage/${id}`)
   }
 
   return (
@@ -473,7 +383,13 @@ export const KeyDisplay: FC = () => {
           )
         }}
         decode={(v) => {
-          const decoded = decodeKey(builder, v)
+          const decoded = decodeKey(
+            {
+              dynamicBuilder: builder,
+              lookup: builder.lookup,
+            },
+            v,
+          )
           if (!decoded) throw null
           return decoded
         }}
@@ -481,73 +397,3 @@ export const KeyDisplay: FC = () => {
     </div>
   )
 }
-
-const textEncoder = new TextEncoder()
-const hashersToLength: Record<string, number> = {
-  Identity: 0,
-  Twox64Concat: 8,
-  Blake2128Concat: 16,
-  Blake2128: -16,
-  Blake2256: -32,
-  Twox128: -16,
-  Twox256: -32,
-}
-
-const decodeKey = (
-  builder: NonNullable<ObservedValueOf<typeof builderState$>>,
-  key: Uint8Array,
-) => {
-  const twoxHash = (v: string) => toHex(Twox128(textEncoder.encode(v)))
-
-  const keyHex = toHex(key)
-  const pallet = builder.lookup.metadata.pallets.find(
-    (p) => p.storage && keyHex.startsWith(twoxHash(p.storage.prefix)),
-  )
-  if (!pallet) return null
-
-  const keyRemaining = keyHex.replace(twoxHash(pallet.storage!.prefix), "0x")
-  const item = pallet.storage!.items.find((v) =>
-    keyRemaining.startsWith(twoxHash(v.name)),
-  )
-  if (!item) return null
-
-  const codec = builder.buildStorage(pallet.name, item.name)
-  const hasherLengths =
-    item.type.tag === "plain"
-      ? []
-      : item.type.value.hashers.map((x) => hashersToLength[x.tag])
-
-  let argsRemaining = fromHex(keyRemaining.replace(twoxHash(item.name), "0x"))
-
-  const args: any[] = []
-  const argsLen = codec.args.inner.length
-  for (let i = 0; i < argsLen && argsRemaining.length; i++) {
-    const hashLength = hasherLengths[i]
-
-    if (argsRemaining.length < Math.abs(hashLength)) return null
-    argsRemaining = argsRemaining.slice(Math.abs(hashLength))
-
-    if (hashLength < 0) {
-      // Signals a non-reversible hasher
-      args.push(null)
-    } else {
-      const argCodec = codec.args.inner[i]
-      try {
-        const value = argCodec.dec(argsRemaining)
-        // This is needed not just for the length, but see case AccountId: Can decode 0x, but then can't re-encode back. <- TODO bug?
-        const reEnc = argCodec.enc(value)
-        argsRemaining = argsRemaining.slice(reEnc.length)
-        args.push(value)
-      } catch {
-        return null
-      }
-    }
-  }
-
-  return {
-    pallet,
-    item,
-    args,
-  }
-}
-type DecodedKey = ReturnType<typeof decodeKey>

@@ -1,33 +1,37 @@
 import { createLocalStorageState, createState } from "@/lib/externalState"
-import { state } from "@react-rxjs/core"
+import { selectedChainChanged$ } from "@/state/chains/chain.state"
+import { shareLatest, state } from "@react-rxjs/core"
 import {
   combineKeys,
   createKeyedSignal,
   createSignal,
   partitionByKey,
+  toKeySet,
 } from "@react-rxjs/utils"
 import { ComponentType } from "react"
 import {
   catchError,
   combineLatest,
-  EMPTY,
+  defer,
+  from,
   map,
+  merge,
   Observable,
   ObservableInput,
   of,
   scan,
   startWith,
   switchMap,
+  take,
   takeUntil,
   tap,
 } from "rxjs"
-import { v4 as uuid } from "uuid"
 
-export const [historyDocked$, setHistoryDocked] = createLocalStorageState(
-  "history-docked",
+export const [workspaceDocked$, setWorkspaceDocked] = createLocalStorageState(
+  "workspace-docked",
   false,
 )
-export const [historyOpen$, setHistoryOpen] = createState(false)
+export const [workspaceOpen$, setWorkspaceOpen] = createState(false)
 
 export type WorkspaceFilter = "pinned" | "transactions" | "queries"
 export const [workspaceFilter$, setWorkspaceFilter] =
@@ -36,6 +40,7 @@ export const [workspaceFilter$, setWorkspaceFilter] =
 export type OperationStatus = "live" | "pending" | "error" | "done"
 
 export type WorkspaceEntryData<T = any> = {
+  id: string
   // Explorer, Storage, Extrinsics, etc.
   source: string
   // The main action - usually Pallet.name
@@ -44,19 +49,15 @@ export type WorkspaceEntryData<T = any> = {
   subtitle?: string
   link?: string
   icon: ComponentType<{ size?: number; className?: string }>
-  content: ComponentType<{ data: T }>
-  // This is subscribed by the history drawer entry. Pass a shared/hot or
-  // side-effect-free observable so rendering history does not restart work.
-  progress?: Observable<OperationStatus>
-  contentData?: Observable<T>
+  content: ComponentType<{ id: string; context: T }>
+  status?: Observable<OperationStatus>
+  context?: T
 }
 
 export type WorkspaceEntry<T = any> = {
-  id: string
   timestamp: number
   pinned: boolean
   data: WorkspaceEntryData<T>
-  contentData: T
   status?: OperationStatus
 }
 
@@ -71,7 +72,7 @@ export const [pinWorkspaceEntry$, pinWorkspaceEntry] =
 
 export const [workspaceEntry$, workspaceEntryKeys$] = partitionByKey(
   newWorkspaceEntry$,
-  () => uuid(),
+  (data) => data.id,
   (group$, id) =>
     group$.pipe(
       switchMap((data) => {
@@ -82,27 +83,17 @@ export const [workspaceEntry$, workspaceEntryKeys$] = partitionByKey(
             startWith(false),
           ),
           status:
-            data.progress?.pipe(
+            data.status?.pipe(
               startWith(undefined),
               catchError((ex): ObservableInput<OperationStatus> => {
                 console.error(ex)
                 return ["error"]
               }),
             ) ?? of(undefined),
-          contentData:
-            data.contentData?.pipe(
-              tap((v) => console.log("cd", v)),
-              catchError((ex) => {
-                console.error(ex)
-                return EMPTY
-              }),
-            ) ?? of(null),
         }).pipe(
           map(
-            ({ pinned, status, contentData }): WorkspaceEntry => ({
-              id,
+            ({ pinned, status }): WorkspaceEntry => ({
               data,
-              contentData,
               pinned,
               timestamp,
               status,
@@ -110,7 +101,7 @@ export const [workspaceEntry$, workspaceEntryKeys$] = partitionByKey(
           ),
         )
       }),
-      takeUntil(removeWorkspaceEntry$(id)),
+      takeUntil(merge(removeWorkspaceEntry$(id), selectedChainChanged$)),
     ),
 )
 
@@ -143,3 +134,45 @@ export const workspaceEntries$ = state(
   ),
   [],
 )
+
+const keySet$ = workspaceEntryKeys$.pipe(toKeySet(), shareLatest())
+
+export const workspaceEntryCtxOr$ = <T>(id: string, fallback$: Observable<T>) =>
+  keySet$.pipe(
+    take(1),
+    switchMap((keys) =>
+      keys.has(id)
+        ? workspaceEntry$(id).pipe(
+            take(1),
+            map((v) => v.data.context as T),
+          )
+        : fallback$,
+    ),
+    shareLatest(),
+  )
+
+export const workspaceEntryCtxOrAdd$ = <T>(
+  id: string,
+  fallback: () => Promise<WorkspaceEntryData<T>>,
+) =>
+  workspaceEntryCtxOr$(
+    id,
+    defer(() => {
+      const data = fallback()
+      return from(data).pipe(
+        tap((entryData) => {
+          if (entryData.id !== id) {
+            console.warn(
+              "New id doesn't match existing id. This could create multiple instances in the long run",
+              {
+                id,
+                entryData,
+              },
+            )
+          }
+          pushWorkspaceEntry(entryData)
+        }),
+        map((data) => data.context!),
+      )
+    }),
+  )
