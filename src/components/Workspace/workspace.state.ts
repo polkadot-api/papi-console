@@ -13,6 +13,7 @@ import {
   catchError,
   combineLatest,
   defer,
+  distinctUntilChanged,
   from,
   map,
   merge,
@@ -32,10 +33,6 @@ export const [workspaceDocked$, setWorkspaceDocked] = createLocalStorageState(
   false,
 )
 export const [workspaceOpen$, setWorkspaceOpen] = createState(false)
-
-export type WorkspaceFilter = "pinned" | "transactions" | "queries"
-export const [workspaceFilter$, setWorkspaceFilter] =
-  createState<WorkspaceFilter | null>(null)
 
 export type OperationStatus = "live" | "pending" | "error" | "done"
 
@@ -105,25 +102,14 @@ export const [workspaceEntry$, workspaceEntryKeys$] = partitionByKey(
     ),
 )
 
-export const workspaceEntries$ = state(
-  combineLatest([
-    combineKeys(workspaceEntryKeys$, workspaceEntry$),
-    workspaceFilter$,
-  ]).pipe(
-    map(([entryMap, workspaceFilter]) => {
-      let entries = [...entryMap.values()]
-      if (workspaceFilter) {
-        entries = entries.filter((entry) => {
-          switch (workspaceFilter) {
-            case "pinned":
-              return entry.pinned
-            case "queries":
-              return entry.data.source !== "Extrinsics"
-            case "transactions":
-              return entry.data.source === "Extrinsics"
-          }
-        })
-      }
+export const [workspaceFilter$, setWorkspaceFilter] = createState<
+  string | null
+>(null)
+
+const allWorkspaceEntries$ = state(
+  combineKeys(workspaceEntryKeys$, workspaceEntry$).pipe(
+    map((entryMap) => {
+      const entries = [...entryMap.values()]
       entries.sort((a, b) => {
         if (a.pinned && !b.pinned) return -1
         if (!a.pinned && b.pinned) return 1
@@ -133,6 +119,47 @@ export const workspaceEntries$ = state(
     }),
   ),
   [],
+)
+
+export const workspaceEntries$ = state(
+  combineLatest([
+    allWorkspaceEntries$,
+    workspaceFilter$.pipe(distinctUntilChanged()),
+  ]).pipe(
+    map(([entries, workspaceFilter]) => {
+      if (workspaceFilter) {
+        entries = entries.filter((entry) => {
+          if (workspaceFilter === "pinned") return entry.pinned
+          return entry.data.source === workspaceFilter
+        })
+      }
+      return entries
+    }),
+    tap((entries) => {
+      if (entries.length === 0) {
+        setWorkspaceFilter(null)
+      }
+    }),
+  ),
+  [],
+)
+
+export const workspaceSources$ = state(
+  allWorkspaceEntries$.pipe(
+    map((entries) =>
+      [...new Set(entries.map((entry) => entry.data.source))].sort((a, b) =>
+        a.localeCompare(b),
+      ),
+    ),
+  ),
+  [],
+)
+
+export const hasPinnedWorkspaceEntries$ = state(
+  allWorkspaceEntries$.pipe(
+    map((entries) => entries.some((entry) => entry.pinned)),
+  ),
+  false,
 )
 
 const keySet$ = workspaceEntryKeys$.pipe(toKeySet(), shareLatest())

@@ -24,6 +24,7 @@ export const StorageWorkspaceEntry: FC<{
     )
   }
 
+  if (!status.value.length) return null
   const result = status.value[status.value.length - 1].result
 
   return (

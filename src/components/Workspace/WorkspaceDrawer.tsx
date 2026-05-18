@@ -24,14 +24,18 @@ import {
 import { twMerge } from "tailwind-merge"
 import {
   OperationStatus,
+  hasPinnedWorkspaceEntries$,
   pinWorkspaceEntry,
   removeWorkspaceEntry,
+  setWorkspaceFilter,
   setWorkspaceDocked,
   setWorkspaceOpen,
   workspaceDocked$,
   workspaceEntries$,
+  workspaceFilter$,
   WorkspaceEntry,
   workspaceOpen$,
+  workspaceSources$,
 } from "./workspace.state"
 
 export const HistoryDrawerTrigger: FC = () => {
@@ -57,6 +61,11 @@ export const HistoryDrawer = () => {
   const open = useStateObservable(workspaceOpen$)
   const docked = useStateObservable(workspaceDocked$())
   const workspaceEntries = useStateObservable(workspaceEntries$)
+  const workspaceFilter = useStateObservable(workspaceFilter$)
+  const workspaceSources = useStateObservable(workspaceSources$)
+  const hasPinnedWorkspaceEntries = useStateObservable(
+    hasPinnedWorkspaceEntries$,
+  )
   const isDockedViewport = useIsDockedViewport()
   const effectiveDocked = docked && isDockedViewport
   const drawerRef = useRef<HTMLElement>(null)
@@ -122,7 +131,17 @@ export const HistoryDrawer = () => {
           >
             {docked ? <PanelRightOpen size={16} /> : <Dock size={16} />}
           </Button>
-          <Button variant="ghost" size="sm" className="h-8 shrink-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 shrink-0"
+            disabled={!workspaceEntries.length}
+            onClick={() =>
+              workspaceEntries.forEach((entry) =>
+                removeWorkspaceEntry(entry.data.id),
+              )
+            }
+          >
             Clear
           </Button>
           <Button
@@ -136,13 +155,30 @@ export const HistoryDrawer = () => {
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col">
-          <div className="flex items-center gap-2 border-b px-4 py-2">
-            <Badge variant="default" className="bg-polkadot-500 text-white">
+          <div className="flex items-center gap-2 overflow-x-auto border-b px-4 py-2">
+            <WorkspaceFilterBadge
+              active={workspaceFilter === null}
+              onClick={() => setWorkspaceFilter(null)}
+            >
               All
-            </Badge>
-            <Badge variant="outline">Pinned</Badge>
-            <Badge variant="outline">Transactions</Badge>
-            <Badge variant="outline">Queries</Badge>
+            </WorkspaceFilterBadge>
+            {hasPinnedWorkspaceEntries ? (
+              <WorkspaceFilterBadge
+                active={workspaceFilter === "pinned"}
+                onClick={() => setWorkspaceFilter("pinned")}
+              >
+                Pinned
+              </WorkspaceFilterBadge>
+            ) : null}
+            {workspaceSources.map((source) => (
+              <WorkspaceFilterBadge
+                key={source}
+                active={workspaceFilter === source}
+                onClick={() => setWorkspaceFilter(source)}
+              >
+                {source}
+              </WorkspaceFilterBadge>
+            ))}
           </div>
 
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
@@ -155,6 +191,25 @@ export const HistoryDrawer = () => {
     </>
   )
 }
+
+const WorkspaceFilterBadge: FC<{
+  active: boolean
+  onClick: () => void
+  children: string
+}> = ({ active, onClick, children }) => (
+  <Badge
+    asChild
+    variant={active ? "default" : "outline"}
+    className={twMerge(
+      "cursor-pointer select-none",
+      active && "bg-polkadot-500 text-white",
+    )}
+  >
+    <button type="button" onClick={onClick}>
+      {children}
+    </button>
+  </Badge>
+)
 
 const DOCKED_DRAWER_MEDIA_QUERY = "(min-width: 80rem)"
 const useIsDockedViewport = () => {
