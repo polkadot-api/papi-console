@@ -87,52 +87,78 @@ const ExtrinsicsWorkspaceEntry: FC<{ event: TrackedTransactionEvent }> = ({
 }) => {
   return (
     <div className="space-y-2 p-2 text-sm">
-      <div className="flex items-center gap-2">
-        <span>Hash:</span>
-        <span className="flex-1 truncate font-mono">
-          {event.txHash ? shortStr(event.txHash, 8) : "Unknown"}
-        </span>
-        <CopyText text={event.txHash} disabled={!event.txHash} size={14} />
-        <Link to={`/extrinsics/analyzer#extrinsic=${toHex(event.raw)}`}>
-          <FileSearch size={14} />
-        </Link>
-      </div>
-      {"block" in event ? (
-        <div className="flex items-center gap-1">
-          <span>Block:</span>
-          <BlockStatusIcon
-            size={20}
-            state={
-              event.type === "finalized"
-                ? BlockState.Finalized
-                : BlockState.Best
-            }
-          />
-          <Link
-            className="truncate underline font-bold"
-            to={`/explorer/${event.block.hash}#tx=${event.block.index}`}
-          >
-            {shortStr(event.block.hash, 8)}
-          </Link>
+      <dl className="grid grid-cols-[4em_minmax(0,1fr)] gap-x-3 gap-y-2">
+        <div className="contents">
+          <dt className="text-muted-foreground">Status</dt>
+          <dd className="truncate flex items-center gap-1">
+            {getStatus(event)}
+          </dd>
         </div>
-      ) : (
-        <p className={getStatusClassName(event)}>{getStatus(event)}</p>
-      )}
-      {"ok" in event ? (
-        <div className="flex items-center gap-1">
-          <span>Status:</span>
-          {event.ok ? (
-            <span className="flex-1 text-green-500">Succeeded</span>
-          ) : (
-            <span className="flex-1 truncate text-red-500">
-              Failed:{" "}
-              <span className="font-mono">
-                {JSON.stringify(event.dispatchError, jsonSerialize)}.
-              </span>
-            </span>
-          )}
+        <div className="contents">
+          <dt className="text-muted-foreground">Extrinsic</dt>
+          <dd className="truncate font-mono flex items-center gap-1">
+            <Link
+              className="underline"
+              to={`/extrinsics/analyzer#extrinsic=${toHex(event.raw)}`}
+            >
+              {shortStr(toHex(event.raw), 8)}
+            </Link>
+          </dd>
         </div>
-      ) : null}
+        <div className="contents">
+          <dt className="text-muted-foreground">Hash</dt>
+          <dd className="truncate font-mono flex items-center gap-1">
+            {event.txHash ? shortStr(event.txHash, 8) : ""}
+            <CopyText text={event.txHash} disabled={!event.txHash} size={14} />
+          </dd>
+        </div>
+        {"block" in event ? (
+          <div className="contents">
+            <dt className="text-muted-foreground">Block</dt>
+            <dd className="truncate font-mono  flex items-center gap-1">
+              <Link
+                className="truncate underline"
+                to={`/explorer/${event.block.hash}#tx=${event.block.index}`}
+              >
+                {shortStr(event.block.hash, 8)}
+              </Link>
+              <BlockStatusIcon
+                size={20}
+                state={
+                  event.type === "finalized"
+                    ? BlockState.Finalized
+                    : BlockState.Best
+                }
+              />
+            </dd>
+          </div>
+        ) : null}
+        {"ok" in event ? (
+          <div className="contents">
+            <dt className="text-muted-foreground">Result</dt>
+            <dd className="truncate font-bold">
+              {event.ok ? (
+                <span className="text-green-500">Succeeded</span>
+              ) : (
+                <span className="truncate text-red-500">
+                  Failed:{" "}
+                  <span className="font-mono">
+                    {JSON.stringify(event.dispatchError, jsonSerialize)}.
+                  </span>
+                </span>
+              )}
+            </dd>
+          </div>
+        ) : null}
+        {event.type === "error" ? (
+          <div className="contents">
+            <dt className="text-muted-foreground">Error</dt>
+            <dd className="truncate font-bold font-mono text-red-500">
+              {JSON.stringify(event.value, jsonSerialize)}
+            </dd>
+          </div>
+        ) : null}
+      </dl>
       <div className="text-xs">
         <JsonDisplay src={event.callData.value.value} />
       </div>
@@ -140,30 +166,21 @@ const ExtrinsicsWorkspaceEntry: FC<{ event: TrackedTransactionEvent }> = ({
   )
 }
 
-const getStatus = (event: TrackedTransactionEvent) => {
+const getStatus = (event: TrackedTransactionEvent): string => {
   switch (event.type) {
     case "error":
-      return "There was an unexpected error."
+      return "Unexpected error"
     case "invalid":
-      return `Invalid transaction. ${JSON.stringify(event.value, jsonSerialize)}`
+      return `Invalid`
     case "txBestBlocksState":
-      return event.found
-        ? `Transaction in best block${event.ok ? "." : ", but it's failing."}`
-        : "Transaction no longer in a best block."
+      return event.found ? `Found in best block` : "No longer in a best block"
     case "signed":
+      return `Signed`
     case "broadcasted":
-      return `Transaction ${event.type}.`
-    default:
-      return event.ok
-        ? "Transaction in finalized block."
-        : `Transaction finalized, but failed: ${JSON.stringify(event.dispatchError, jsonSerialize)}.`
+      return `Broadcasting`
+    case "finalized":
+      return "Finalized"
   }
-}
-
-const getStatusClassName = (event: TrackedTransactionEvent) => {
-  if (onGoingEvents.has(event.type)) return "text-yellow-500"
-  if (event.type === "finalized" && event.ok) return "text-green-500"
-  return "text-red-500"
 }
 
 const getOperationStatus = (
