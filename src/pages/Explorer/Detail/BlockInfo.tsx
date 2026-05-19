@@ -10,6 +10,7 @@ import { state, useStateObservable } from "@react-rxjs/core"
 import { combineKeys } from "@react-rxjs/utils"
 import { FC, ReactNode, useContext } from "react"
 import { filter, map, startWith, switchMap, take } from "rxjs"
+import { AddBlockToWorkspace } from "../ExplorerWorkspaceEntry"
 import { BlockAuthor } from "./BlockAuthor"
 import { BlockStatusIcon, statusText } from "./BlockState"
 
@@ -23,6 +24,7 @@ export const BlockInfoView: FC = () => {
         <div className="space-y-2">
           <p className="text-3xl font-semibold tracking-tight">
             #{block.number.toLocaleString()}
+            <AddBlockToWorkspace block={block} />
           </p>
           <div className="flex flex-wrap items-center gap-2 text-sm font-mono text-foreground/90">
             <span className="truncate max-w-full">{block.hash}</span>

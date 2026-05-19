@@ -1,7 +1,7 @@
 import { BinaryDisplay } from "@/codec-components/LookupTypeEdit"
 import { actionButtonClassName } from "@/components/ActionButton"
 import { ButtonGroup } from "@/components/ButtonGroup"
-import { IconActionButton, IconButton, IconLink } from "@/components/IconButton"
+import { IconActionButton, IconLink } from "@/components/IconButton"
 import { LoadingMetadata } from "@/components/Loading"
 import { withSubscribe } from "@/components/withSuspense"
 import { getHashParams, useSyncHashParam } from "@/hashParams"

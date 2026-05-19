@@ -49,7 +49,7 @@ export const IconActionButton: FC<
 )
 
 export const AddToWorkspace: FC<ComponentProps<typeof Button>> = (props) => (
-  <IconButton {...props} tooltip="Save to workspace">
-    <BookmarkPlus />
+  <IconButton {...props} tooltip="Add to workspace">
+    <BookmarkPlus className="size-5" />
   </IconButton>
 )
