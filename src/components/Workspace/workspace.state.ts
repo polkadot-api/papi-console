@@ -30,7 +30,7 @@ import {
 
 export const [workspaceDocked$, setWorkspaceDocked] = createLocalStorageState(
   "workspace-docked",
-  false,
+  true,
 )
 export const [workspaceOpen$, setWorkspaceOpen] = createState(false)
 

@@ -1,3 +1,4 @@
+import { IconButton } from "@/components/IconButton"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Link } from "@/hashParams"
@@ -24,16 +25,16 @@ import {
 import { twMerge } from "tailwind-merge"
 import {
   OperationStatus,
+  WorkspaceEntry,
   hasPinnedWorkspaceEntries$,
   pinWorkspaceEntry,
   removeWorkspaceEntry,
-  setWorkspaceFilter,
   setWorkspaceDocked,
+  setWorkspaceFilter,
   setWorkspaceOpen,
   workspaceDocked$,
   workspaceEntries$,
   workspaceFilter$,
-  WorkspaceEntry,
   workspaceOpen$,
   workspaceSources$,
 } from "./workspace.state"
@@ -45,15 +46,14 @@ export const HistoryDrawerTrigger: FC = () => {
   const effectiveDocked = docked && isDockedViewport
 
   return open && effectiveDocked ? null : (
-    <Button
-      variant="ghost"
-      size="icon"
+    <IconButton
+      tooltip="Open workspace"
       className={twMerge("relative shrink-0 text-foreground hover:bg-accent")}
       onClick={() => setWorkspaceOpen(true)}
       aria-label="Open workspace"
     >
       <History className="h-5 w-5" />
-    </Button>
+    </IconButton>
   )
 }
 
@@ -121,16 +121,15 @@ export const HistoryDrawer = () => {
       >
         <div className="flex h-16 items-center gap-1 border-b px-4 py-3">
           <h2 className="text-base font-semibold flex-1">Workspace</h2>
-          <Button
-            variant="ghost"
-            size="icon"
+          <IconButton
+            tooltip={docked ? "Undock workspace" : "Dock workspace"}
             className="hidden h-8 w-8 xl:inline-flex"
             onClick={() => setWorkspaceDocked(!docked)}
             title={docked ? "Undock workspace" : "Dock workspace"}
             aria-label={docked ? "Undock workspace" : "Dock workspace"}
           >
             {docked ? <PanelRightOpen size={16} /> : <Dock size={16} />}
-          </Button>
+          </IconButton>
           <Button
             variant="ghost"
             size="sm"
