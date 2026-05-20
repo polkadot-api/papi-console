@@ -92,7 +92,7 @@ export const SearchableSelect = <T,>({
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className={twMerge("w-[200px] p-0", contentClassName)}>
+      <PopoverContent className={twMerge("w-50 p-0", contentClassName)}>
         <Command shouldFilter={!allowCustomValue}>
           <CommandInput placeholder="Filter…" onValueChange={setFilterValue} />
           <CommandList>
@@ -104,6 +104,7 @@ export const SearchableSelect = <T,>({
                   onSelect={() => {
                     setValue(option.value)
                     setOpen(false)
+                    setFilterValue("")
                   }}
                 >
                   {option.text}

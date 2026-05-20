@@ -2,11 +2,19 @@ import { pushWorkspaceEntry, WorkspaceEntryData } from "@/components/Workspace"
 import { runtimeCtxAt$, unsafeApi$ } from "@/state/chains/chain.state"
 import { RuntimeContext } from "@polkadot-api/observable-client"
 import { UnifiedMetadata } from "@polkadot-api/substrate-bindings"
-import { state } from "@react-rxjs/core"
+import { shareLatest, state } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
 import { SquareFunction } from "lucide-react"
 import { Binary, HexString, ResultPayload } from "polkadot-api"
-import { catchError, combineLatest, firstValueFrom, from, map, of } from "rxjs"
+import {
+  catchError,
+  combineLatest,
+  firstValueFrom,
+  from,
+  map,
+  of,
+  startWith,
+} from "rxjs"
 import { stringifyArg } from "../Storage/storage.state"
 import {
   ViewFnWorkspaceContext,
@@ -58,26 +66,26 @@ export const viewFnCallToWorkspaceEntry = async (
     combineLatest([unsafeApi$, runtimeCtxAt$(call.blockHash)]),
   )
 
-  const result$ = state<ViewFnResult | null>(
-    from(
-      unsafeApi.view[call.pallet][call.name](...call.args, {
-        at: call.blockHash,
-      }),
-    ).pipe(
-      map((result) => ({
-        success: true,
-        value: result,
-      })),
-      catchError((ex) => {
-        console.error(ex)
-        return of({
-          success: false,
-          value: ex,
-        })
-      }),
-    ),
-    null,
+  const query$ = from(
+    unsafeApi.view[call.pallet][call.name](...call.args, {
+      at: call.blockHash,
+    }),
+  ).pipe(
+    map((result) => ({
+      success: true,
+      value: result,
+    })),
+    catchError((ex) => {
+      console.error(ex)
+      return of({
+        success: false,
+        value: ex,
+      })
+    }),
+    shareLatest(),
   )
+
+  const result$ = state<ViewFnResult | null>(query$, null)
   const context: ViewFnWorkspaceContext = {
     pallet: call.pallet,
     name: call.name,
@@ -92,6 +100,10 @@ export const viewFnCallToWorkspaceEntry = async (
     subtitle: `${call.args.map(stringifyArg)}`,
     icon: SquareFunction,
     link: `viewFns/${id}`,
+    status: query$.pipe(
+      map(() => "done" as const),
+      startWith("pending" as const),
+    ),
     context,
     content: ViewFnWorkspaceEntry,
   }

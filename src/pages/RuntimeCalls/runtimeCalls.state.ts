@@ -5,7 +5,15 @@ import { state } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
 import { ServerCog } from "lucide-react"
 import { Binary, HexString, ResultPayload } from "polkadot-api"
-import { catchError, combineLatest, firstValueFrom, from, map, of } from "rxjs"
+import {
+  catchError,
+  combineLatest,
+  firstValueFrom,
+  from,
+  map,
+  of,
+  startWith,
+} from "rxjs"
 import { stringifyArg } from "../Storage/storage.state"
 import {
   RuntimeCallWorkspaceContext,
@@ -68,26 +76,25 @@ export const runtimeCallToWorkspaceEntry = async (
     combineLatest([unsafeApi$, runtimeCtxAt$(query.blockHash)]),
   )
 
-  const result$ = state(
-    from(
-      unsafeApi.apis[query.api][query.method](...query.args, {
-        at: query.blockHash,
-      }),
-    ).pipe(
-      map((result) => ({
-        success: true,
-        value: result,
-      })),
-      catchError((ex) => {
-        console.error(ex)
-        return of({
-          success: false,
-          value: ex,
-        })
-      }),
-    ),
-    null,
+  const query$ = from(
+    unsafeApi.apis[query.api][query.method](...query.args, {
+      at: query.blockHash,
+    }),
+  ).pipe(
+    map((result) => ({
+      success: true,
+      value: result,
+    })),
+    catchError((ex) => {
+      console.error(ex)
+      return of({
+        success: false,
+        value: ex,
+      })
+    }),
   )
+
+  const result$ = state(query$, null)
   const context: RuntimeCallWorkspaceContext = {
     api: query.api,
     method: query.method,
@@ -101,6 +108,10 @@ export const runtimeCallToWorkspaceEntry = async (
     title: [query.api, query.method].join("."),
     subtitle: `${query.args.map(stringifyArg)}`,
     link: `/runtimeCalls/${id}`,
+    status: query$.pipe(
+      map(() => "done" as const),
+      startWith("pending" as const),
+    ),
     icon: ServerCog,
     context,
     content: RuntimeCallWorkspaceEntry,

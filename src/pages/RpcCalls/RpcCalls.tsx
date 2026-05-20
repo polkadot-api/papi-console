@@ -46,7 +46,7 @@ export const RpcCalls = withSubscribe(
       })
     }
 
-    const isReady = method !== "" && isJson(params)
+    const isReady = !!method && isJson(params)
 
     return (
       <div className="p-4 pb-0 flex flex-col gap-2 items-start">
@@ -66,9 +66,7 @@ export const RpcCalls = withSubscribe(
         </label>
         <div className="w-full">
           JSON Payload
-          <Suspense
-            fallback={<div className="border rounded h-80 w-full" />}
-          >
+          <Suspense fallback={<div className="border rounded h-80 w-full" />}>
             <Editor
               className="border rounded h-80"
               language="json"
