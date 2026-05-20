@@ -1,14 +1,11 @@
 import {
-  dynamicBuilder$,
-  lookup$,
-  unsafeApi$,
-} from "@/state/chains/chain.state"
-import {
   InlineLookupTypeEdit,
   LookupTypeEdit,
 } from "@/codec-components/LookupTypeEdit"
 import { ActionButton } from "@/components/ActionButton"
 import { ExpandBtn } from "@/components/Expand"
+import { useNavigate } from "@/hashParams"
+import { client$, dynamicBuilder$, lookup$ } from "@/state/chains/chain.state"
 import { getTypeComplexity } from "@/utils/shape"
 import { state, useStateObservable, withDefault } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
@@ -29,16 +26,17 @@ import { addViewFnCall, selectedEntry$ } from "./viewFns.state"
 export const ViewFnQuery: FC = () => {
   const selectedEntry = useStateObservable(selectedEntry$)
   const isReady = useStateObservable(isReady$)
+  const navigate = useNavigate()
 
   if (!selectedEntry) return null
 
   const submit = async () => {
-    const [entry, unsafeApi, inputValues, builder] = await firstValueFrom(
+    const [entry, inputValues, builder, block] = await firstValueFrom(
       combineLatest([
         selectedEntry$,
-        unsafeApi$,
         inputValues$,
         dynamicBuilder$,
+        client$.pipe(switchMap((client) => client.finalizedBlock$)),
       ]),
     )
     const decodedValues = inputValues.map((v, i) =>
@@ -46,13 +44,14 @@ export const ViewFnQuery: FC = () => {
         .buildDefinition(selectedEntry.inputs[i].type)
         .dec(v as Uint8Array),
     )
-    const promise = unsafeApi.view[entry!.pallet][entry!.name](...decodedValues)
 
-    addViewFnCall({
-      name: `${entry!.pallet}.${entry!.name}(…)`,
-      promise,
-      type: entry!.output,
+    const id = await addViewFnCall({
+      blockHash: block.hash,
+      pallet: entry!.pallet,
+      name: entry!.name,
+      args: decodedValues,
     })
+    navigate(`/viewFns/${id}`)
   }
 
   return (

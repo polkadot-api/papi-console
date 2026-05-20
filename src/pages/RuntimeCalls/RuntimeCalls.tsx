@@ -5,6 +5,7 @@ import { SearchableSelect } from "@/components/Select"
 import { withSubscribe } from "@/components/withSuspense"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { useEffect, useState } from "react"
+import { Route, Routes } from "react-router-dom"
 import { map } from "rxjs"
 import { RuntimeCallQuery } from "./RuntimeCallQuery"
 import { RuntimeCallResults } from "./RuntimeCallResults"
@@ -92,7 +93,9 @@ export const RuntimeCalls = withSubscribe(
           </div>
         )}
         <RuntimeCallQuery />
-        <RuntimeCallResults />
+        <Routes>
+          <Route path=":callId" element={<RuntimeCallResults />} />
+        </Routes>
       </div>
     )
   },

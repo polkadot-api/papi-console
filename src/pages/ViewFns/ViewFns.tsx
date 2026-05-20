@@ -5,6 +5,7 @@ import { SearchableSelect } from "@/components/Select"
 import { withSubscribe } from "@/components/withSuspense"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { useEffect, useState } from "react"
+import { Route, Routes } from "react-router-dom"
 import { map } from "rxjs"
 import { ViewFnResults } from "./ViewFnResults"
 import { selectedEntry$, setSelectedFn } from "./viewFns.state"
@@ -102,7 +103,9 @@ export const ViewFns = withSubscribe(
           </div>
         )}
         <ViewFnQuery />
-        <ViewFnResults />
+        <Routes>
+          <Route path=":callId" element={<ViewFnResults />} />
+        </Routes>
       </div>
     )
   },

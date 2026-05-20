@@ -1,14 +1,11 @@
 import {
-  dynamicBuilder$,
-  lookup$,
-  unsafeApi$,
-} from "@/state/chains/chain.state"
-import {
   InlineLookupTypeEdit,
   LookupTypeEdit,
 } from "@/codec-components/LookupTypeEdit"
 import { ActionButton } from "@/components/ActionButton"
 import { ExpandBtn } from "@/components/Expand"
+import { useNavigate } from "@/hashParams"
+import { client$, dynamicBuilder$, lookup$ } from "@/state/chains/chain.state"
 import { getTypeComplexity } from "@/utils/shape"
 import { state, useStateObservable, withDefault } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
@@ -29,16 +26,17 @@ import { addRuntimeCallQuery, selectedEntry$ } from "./runtimeCalls.state"
 export const RuntimeCallQuery: FC = () => {
   const selectedEntry = useStateObservable(selectedEntry$)
   const isReady = useStateObservable(isReady$)
+  const navigate = useNavigate()
 
   if (!selectedEntry) return null
 
   const submit = async () => {
-    const [entry, unsafeApi, inputValues, builder] = await firstValueFrom(
+    const [entry, inputValues, builder, block] = await firstValueFrom(
       combineLatest([
         selectedEntry$,
-        unsafeApi$,
         inputValues$,
         dynamicBuilder$,
+        client$.pipe(switchMap((client) => client.finalizedBlock$)),
       ]),
     )
     const decodedValues = inputValues.map((v, i) =>
@@ -46,13 +44,14 @@ export const RuntimeCallQuery: FC = () => {
         .buildDefinition(selectedEntry.inputs[i].type)
         .dec(v as Uint8Array),
     )
-    const promise = unsafeApi.apis[entry!.api][entry!.name](...decodedValues)
 
-    addRuntimeCallQuery({
-      name: `${entry!.api}.${entry!.name}(…)`,
-      promise,
-      type: entry!.output,
+    const id = await addRuntimeCallQuery({
+      blockHash: block.hash,
+      api: entry!.api,
+      method: entry!.name,
+      args: decodedValues,
     })
+    navigate(`/runtimeCalls/${id}`)
   }
 
   return (

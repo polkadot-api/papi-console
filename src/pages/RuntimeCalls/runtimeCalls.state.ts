@@ -1,21 +1,16 @@
+import { pushWorkspaceEntry, WorkspaceEntryData } from "@/components/Workspace"
+import { runtimeCtxAt$, unsafeApi$ } from "@/state/chains/chain.state"
+import { RuntimeContext } from "@polkadot-api/observable-client"
 import { state } from "@react-rxjs/core"
+import { createSignal } from "@react-rxjs/utils"
+import { ServerCog } from "lucide-react"
+import { Binary, HexString, ResultPayload } from "polkadot-api"
+import { catchError, combineLatest, firstValueFrom, from, map, of } from "rxjs"
+import { stringifyArg } from "../Storage/storage.state"
 import {
-  createKeyedSignal,
-  createSignal,
-  partitionByKey,
-  toKeySet,
-} from "@react-rxjs/utils"
-import {
-  catchError,
-  from,
-  map,
-  Observable,
-  of,
-  startWith,
-  switchMap,
-  takeUntil,
-} from "rxjs"
-import { v4 as uuid } from "uuid"
+  RuntimeCallWorkspaceContext,
+  RuntimeCallWorkspaceEntry,
+} from "./RuntimeCallWorkspaceEntry"
 
 export type RuntimeCallMetadataMethod = {
   api: string
@@ -32,55 +27,91 @@ export const [entryChange$, setSelectedMethod] =
   createSignal<RuntimeCallMetadataMethod | null>()
 export const selectedEntry$ = state(entryChange$, null)
 
-export const [newRuntimeCallQuery$, addRuntimeCallQuery] = createSignal<{
-  name: string
-  type: number
-  promise: Promise<unknown>
-}>()
-export const [removeRuntimeCallResult$, removeRuntimeCallResult] =
-  createKeyedSignal<string>()
+type RuntimeCallQuery = {
+  blockHash: HexString
+  api: string
+  method: string
+  args: unknown[]
+}
 
-export type RuntimeCallResult = {
-  name: string
-  type: number
-} & ({ result: unknown } | { error?: any })
-const [getRuntimeCallSubscription$, runtimeCallKeyChange$] = partitionByKey(
-  newRuntimeCallQuery$,
-  () => uuid(),
-  (src$, id) =>
-    src$.pipe(
-      switchMap(
-        ({ promise, ...props }): Observable<RuntimeCallResult> =>
-          from(promise).pipe(
-            map((result) => ({
-              ...props,
-              result,
-              paused: false,
-            })),
-            catchError((ex) => {
-              console.error(ex)
-              return of({
-                ...props,
-                error: ex,
-              })
-            }),
-            startWith(props),
-          ),
-      ),
-      takeUntil(removeRuntimeCallResult$(id)),
+const runtimeQueryToId = (
+  ctx: Pick<RuntimeContext, "dynamicBuilder" | "lookup">,
+  query: RuntimeCallQuery,
+) => {
+  const codec = ctx.dynamicBuilder.buildRuntimeCall(query.api, query.method)
+
+  return [
+    query.blockHash,
+    query.api,
+    query.method,
+    Binary.toHex(codec.args.enc(query.args)),
+  ].join(":")
+}
+export const idToRuntimeQuery = async (
+  id: string,
+): Promise<RuntimeCallQuery> => {
+  const [blockHash, api, method, args] = id.split(":")
+  const ctx = await firstValueFrom(runtimeCtxAt$(blockHash))
+  const codec = ctx.dynamicBuilder.buildRuntimeCall(api, method).args
+
+  return {
+    blockHash,
+    api,
+    method,
+    args: codec.dec(args),
+  }
+}
+export const runtimeCallToWorkspaceEntry = async (
+  query: RuntimeCallQuery,
+): Promise<WorkspaceEntryData<RuntimeCallWorkspaceContext>> => {
+  const [unsafeApi, ctx] = await firstValueFrom(
+    combineLatest([unsafeApi$, runtimeCtxAt$(query.blockHash)]),
+  )
+
+  const result$ = state(
+    from(
+      unsafeApi.apis[query.api][query.method](...query.args, {
+        at: query.blockHash,
+      }),
+    ).pipe(
+      map((result) => ({
+        success: true,
+        value: result,
+      })),
+      catchError((ex) => {
+        console.error(ex)
+        return of({
+          success: false,
+          value: ex,
+        })
+      }),
     ),
-)
+    null,
+  )
+  const context: RuntimeCallWorkspaceContext = {
+    api: query.api,
+    method: query.method,
+    result$,
+  }
+  const id = runtimeQueryToId(ctx, query)
 
-export const runtimeCallResultKeys$ = state(
-  runtimeCallKeyChange$.pipe(
-    toKeySet(),
-    map((keys) => [...keys].reverse()),
-  ),
-  [],
-)
+  return {
+    id,
+    source: "Runtime Calls",
+    title: [query.api, query.method].join("."),
+    subtitle: `${query.args.map(stringifyArg)}`,
+    link: `/runtimeCalls/${id}`,
+    icon: ServerCog,
+    context,
+    content: RuntimeCallWorkspaceEntry,
+  }
+}
 
-export const runtimeCallResult$ = state(
-  (key: string): Observable<RuntimeCallResult> =>
-    getRuntimeCallSubscription$(key),
-  null,
-)
+export type RuntimeCallResult = ResultPayload<unknown, any>
+
+export const addRuntimeCallQuery = async (query: RuntimeCallQuery) => {
+  const data = await runtimeCallToWorkspaceEntry(query)
+
+  pushWorkspaceEntry(data)
+  return data.id
+}

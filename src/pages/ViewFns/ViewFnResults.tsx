@@ -1,44 +1,56 @@
-import { ButtonGroup } from "@/components/ButtonGroup"
-import { useStateObservable, withDefault } from "@react-rxjs/core"
-import { Trash2 } from "lucide-react"
-import { FC, useState } from "react"
-import { ValueDisplay } from "../Storage/StorageSubscriptions"
-import {
-  removeViewFnResult,
-  ViewFnResult,
-  viewFnResult$,
-  viewFnResultKeys$,
-} from "./viewFns.state"
 import { PathsRoot } from "@/codec-components/common/paths.state"
+import { ButtonGroup } from "@/components/ButtonGroup"
+import { JsonDisplay } from "@/components/JsonDisplay"
+import { workspaceEntryCtxOrAdd$ } from "@/components/Workspace"
 import { runtimeCtx$ } from "@/state/chains/chain.state"
+import { state, useStateObservable, withDefault } from "@react-rxjs/core"
+import { FC, useMemo, useState } from "react"
+import { useParams } from "react-router-dom"
+import { ValueDisplay } from "../Storage/StorageSubscriptions"
+import { ViewFnWorkspaceContext } from "./ViewFnWorkspaceEntry"
+import { idToViewFnCall, viewFnCallToWorkspaceEntry } from "./viewFns.state"
 
 export const ViewFnResults: FC = () => {
-  const keys = useStateObservable(viewFnResultKeys$)
+  const { callId } = useParams()
 
-  if (!keys.length) return null
+  if (!callId) return null
 
   return (
     <div className="p-2 w-full border-t border-border">
-      <h2 className="text-lg text-foreground mb-2">Results</h2>
+      <h2 className="text-lg text-foreground mb-2">Result</h2>
       <ul className="flex flex-col gap-2">
-        {keys.map((key) => (
-          <ViewFnResultBox key={key} subscription={key} />
-        ))}
+        <ViewFnResultBox id={callId} />
       </ul>
     </div>
   )
 }
 
-const ViewFnResultBox: FC<{ subscription: string }> = ({ subscription }) => {
+const viewFnCtx$ = state(
+  (id: string) =>
+    workspaceEntryCtxOrAdd$(id, async () => {
+      const call = await idToViewFnCall(id)
+      return viewFnCallToWorkspaceEntry(call)
+    }),
+  null,
+)
+
+const ViewFnResultBox: FC<{ id: string }> = ({ id }) => {
+  const context = useStateObservable(viewFnCtx$(id))
+
+  return context ? <ViewFnResultContent id={id} context={context} /> : null
+}
+
+const ViewFnResultContent: FC<{
+  id: string
+  context: ViewFnWorkspaceContext
+}> = ({ id, context }) => {
   const [mode, setMode] = useState<"json" | "decoded">("decoded")
-  const viewFnResult = useStateObservable(viewFnResult$(subscription))
-  if (!viewFnResult) return null
 
   return (
     <li className="border rounded bg-card text-card-foreground p-2">
       <div className="flex justify-between items-center pb-1 overflow-hidden">
         <h3 className="overflow-hidden text-ellipsis whitespace-nowrap">
-          {viewFnResult.name}
+          {context.pallet}.{context.name}
         </h3>
         <div className="flex items-center shrink-0 gap-2">
           <ButtonGroup
@@ -55,16 +67,10 @@ const ViewFnResultBox: FC<{ subscription: string }> = ({ subscription }) => {
               },
             ]}
           />
-          <button onClick={() => removeViewFnResult(subscription)}>
-            <Trash2
-              size={20}
-              className="text-destructive cursor-pointer hover:text-polkadot-500"
-            />
-          </button>
         </div>
       </div>
-      <PathsRoot.Provider value={subscription}>
-        <ResultDisplay viewFnResult={viewFnResult} mode={mode} />
+      <PathsRoot.Provider value={id}>
+        <ResultDisplay context={context} mode={mode} />
       </PathsRoot.Provider>
     </li>
   )
@@ -72,34 +78,47 @@ const ViewFnResultBox: FC<{ subscription: string }> = ({ subscription }) => {
 
 const defaultedCtx$ = runtimeCtx$.pipeState(withDefault(null))
 const ResultDisplay: FC<{
-  viewFnResult: ViewFnResult
+  context: ViewFnWorkspaceContext
   mode: "json" | "decoded"
-}> = ({ viewFnResult, mode }) => {
+}> = ({ context, mode }) => {
+  const viewFnResult = useStateObservable(context.result$)
   const ctx = useStateObservable(defaultedCtx$)
+  const type = useMemo(() => {
+    const pallet = ctx?.lookup.metadata.pallets.find(
+      (pallet) => pallet.name === context.pallet,
+    )
+    const fn = pallet?.viewFns.find((fn) => fn.name === context.name)
+    return fn?.output ?? null
+  }, [context, ctx])
+
   if (!ctx) return null
 
-  if ("error" in viewFnResult) {
+  if (!viewFnResult) {
+    return <div className="text-sm text-foreground/50">Loading...</div>
+  }
+
+  if (!viewFnResult.success) {
     return (
       <div className="text-sm">
         <div>The call crashed</div>
-        <div>Message: {viewFnResult.error.message ?? "N/A"}</div>
+        <div>Message: {viewFnResult.value.message ?? "N/A"}</div>
       </div>
     )
   }
 
-  if (!("result" in viewFnResult)) {
-    return <div className="text-sm text-foreground/50">Loading…</div>
-  }
-
   return (
     <div className="max-h-[60svh] overflow-auto">
-      <ValueDisplay
-        mode={mode}
-        ctx={ctx}
-        type={viewFnResult.type}
-        value={viewFnResult.result}
-        title={"Result"}
-      />
+      {type == null ? (
+        <JsonDisplay src={viewFnResult.value} />
+      ) : (
+        <ValueDisplay
+          mode={mode}
+          ctx={ctx}
+          type={type}
+          value={viewFnResult.value}
+          title={"Result"}
+        />
+      )}
     </div>
   )
 }
