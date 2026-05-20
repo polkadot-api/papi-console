@@ -26,7 +26,6 @@ import { twMerge } from "tailwind-merge"
 import {
   OperationStatus,
   WorkspaceEntry,
-  hasPinnedWorkspaceEntries$,
   pinWorkspaceEntry,
   removeWorkspaceEntry,
   setWorkspaceDocked,
@@ -63,9 +62,6 @@ export const HistoryDrawer = () => {
   const workspaceEntries = useStateObservable(workspaceEntries$)
   const workspaceFilter = useStateObservable(workspaceFilter$)
   const workspaceSources = useStateObservable(workspaceSources$)
-  const hasPinnedWorkspaceEntries = useStateObservable(
-    hasPinnedWorkspaceEntries$,
-  )
   const isDockedViewport = useIsDockedViewport()
   const effectiveDocked = docked && isDockedViewport
   const drawerRef = useRef<HTMLElement>(null)
@@ -161,14 +157,6 @@ export const HistoryDrawer = () => {
             >
               All
             </WorkspaceFilterBadge>
-            {hasPinnedWorkspaceEntries ? (
-              <WorkspaceFilterBadge
-                active={workspaceFilter === "pinned"}
-                onClick={() => setWorkspaceFilter("pinned")}
-              >
-                Pinned
-              </WorkspaceFilterBadge>
-            ) : null}
             {workspaceSources.map((source) => (
               <WorkspaceFilterBadge
                 key={source}

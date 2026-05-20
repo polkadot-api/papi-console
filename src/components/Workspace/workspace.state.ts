@@ -128,10 +128,9 @@ export const workspaceEntries$ = state(
   ]).pipe(
     map(([entries, workspaceFilter]) => {
       if (workspaceFilter) {
-        entries = entries.filter((entry) => {
-          if (workspaceFilter === "pinned") return entry.pinned
-          return entry.data.source === workspaceFilter
-        })
+        entries = entries.filter(
+          (entry) => entry.data.source === workspaceFilter,
+        )
       }
       return entries
     }),
@@ -153,13 +152,6 @@ export const workspaceSources$ = state(
     ),
   ),
   [],
-)
-
-export const hasPinnedWorkspaceEntries$ = state(
-  allWorkspaceEntries$.pipe(
-    map((entries) => entries.some((entry) => entry.pinned)),
-  ),
-  false,
 )
 
 const keySet$ = workspaceEntryKeys$.pipe(toKeySet(), shareLatest())
