@@ -16,18 +16,23 @@ import { state, useStateObservable } from "@react-rxjs/core"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Enum } from "polkadot-api"
 import { fromHex } from "polkadot-api/utils"
-import { FC, MouseEvent, ReactNode, useMemo, useState } from "react"
+import { FC, MouseEvent, ReactNode, useEffect, useMemo, useState } from "react"
 import { useParams } from "react-router-dom"
 import { Virtuoso } from "react-virtuoso"
 import { filter, switchMap } from "rxjs"
 import { BlockStatusIcon } from "../Explorer/Detail/BlockState"
+import { setBlockHashValue } from "./BlockPicker"
+import { setMode } from "./Storage"
 import {
   idToStorageSubscription,
   KeyCodec,
+  selectEntry,
   storageSubscriptionToWorkspaceEntry,
   StorageSubscriptionValue,
   stringifyArg,
 } from "./storage.state"
+import { setValue } from "./StorageDecode"
+import { setKeysEnabled, setKeyValue } from "./StorageQuery"
 
 export const StorageSubscriptions: FC = () => {
   const params = useParams()
@@ -63,6 +68,7 @@ const storageSubscriptionStatus$ = state(
 
 const StorageSubscriptionBox: FC<{ id: string }> = ({ id }) => {
   const status = useStateObservable(storageSubscriptionStatus$(id))
+  useSynchronizeInputs(id)
 
   switch (status.type) {
     case "loading":
@@ -473,4 +479,34 @@ const KeyDisplay: FC<{
       </ol>
     </div>
   )
+}
+
+const useSynchronizeInputs = (id: string) => {
+  useEffect(() => {
+    let cancelled = false
+    const run = async () => {
+      const params = await idToStorageSubscription(id)
+      if (cancelled) return
+      setBlockHashValue(params.blockHash ?? "Latest")
+      selectEntry({
+        pallet: params.pallet,
+        entry: params.item,
+      })
+      setMode(params.value.type)
+      // Let entry settle
+      await Promise.resolve()
+      if (params.value.type === "query") {
+        if (cancelled) return
+        setKeysEnabled(params.value.value.length)
+        params.value.value.forEach((value, idx) => setKeyValue({ idx, value }))
+      } else {
+        setValue(params.value.value)
+      }
+    }
+    run()
+
+    return () => {
+      cancelled = true
+    }
+  }, [id])
 }

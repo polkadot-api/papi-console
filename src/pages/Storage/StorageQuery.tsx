@@ -10,7 +10,7 @@ import {
   NOTIN,
 } from "@polkadot-api/react-builder"
 import { state, useStateObservable, withDefault } from "@react-rxjs/core"
-import { createSignal } from "@react-rxjs/utils"
+import { createSignal, mergeWithKey } from "@react-rxjs/utils"
 import { Enum } from "polkadot-api"
 import { fromHex } from "polkadot-api/utils"
 import { FC } from "react"
@@ -82,9 +82,13 @@ const hashers$ = selectedEntry$.pipeState(
 )
 
 const [toggleKey$, toggleKey] = createSignal<number>()
+export const [changeKeysEnabled$, setKeysEnabled] = createSignal<number>()
 const keysEnabled$ = keys$.pipeState(
   switchMap((k) =>
-    toggleKey$.pipe(
+    mergeWithKey({
+      toggle: toggleKey$,
+      set: changeKeysEnabled$,
+    }).pipe(
       /*
       acc=2
       [X,X, , ]
@@ -94,14 +98,20 @@ const keysEnabled$ = keys$.pipeState(
       toggle 2 => acc=3
       toggle 3 => acc=4
       */
-      scan((acc, toggle) => (acc <= toggle ? toggle + 1 : toggle), k.length),
+      scan(
+        (acc, evt) =>
+          evt.type === "set" || acc > evt.payload
+            ? evt.payload
+            : evt.payload + 1,
+        k.length,
+      ),
       startWith(k.length),
     ),
   ),
   withDefault(0),
 )
 
-const [keyValueChange$, setKeyValue] = createSignal<{
+export const [keyValueChange$, setKeyValue] = createSignal<{
   idx: number
   value: unknown | NOTIN
 }>()

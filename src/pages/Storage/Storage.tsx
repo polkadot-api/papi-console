@@ -15,6 +15,7 @@ import { StorageQuery } from "./StorageQuery"
 import { StorageSet } from "./StorageSet"
 import { StorageSubscriptions } from "./StorageSubscriptions"
 import { Route, Routes } from "react-router-dom"
+import { createState } from "@/lib/externalState"
 
 const metadataStorage$ = state(
   selectedBlock$.pipe(
@@ -94,10 +95,12 @@ export const Storage = withSubscribe(
   },
 )
 
+export const [mode$, setMode] = createState<"query" | "decode" | "set">("query")
+
 const StorageEntry: FC = () => {
   const selectedEntry = useStateObservable(selectedEntry$)
   const canSetStorage = useStateObservable(canSetStorage$)
-  const [mode, setMode] = useState<"query" | "decode" | "set">("query")
+  const mode = useStateObservable(mode$)
 
   if (!selectedEntry) return null
 

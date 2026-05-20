@@ -27,6 +27,7 @@ import {
 const [valueChange$, setValue] = createSignal<string>()
 const inputValue$ = state(valueChange$, "Latest")
 
+export const setBlockHashValue = setValue
 const loadedCtx$ = state(
   inputValue$.pipe(
     debounceTime(200),

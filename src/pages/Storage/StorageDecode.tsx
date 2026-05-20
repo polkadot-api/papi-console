@@ -1,16 +1,15 @@
 import { ActionButton } from "@/components/ActionButton"
 import { useNavigate } from "@/hashParams"
+import { createState } from "@/lib/externalState"
 import { NOTIN } from "@polkadot-api/react-builder"
 import { state, useStateObservable } from "@react-rxjs/core"
-import { createSignal } from "@react-rxjs/utils"
 import { Enum } from "polkadot-api"
 import { FC } from "react"
 import { combineLatest, firstValueFrom, map } from "rxjs"
 import { selectedBlock$ } from "./BlockPicker"
 import { addStorageSubscription, selectedEntry$ } from "./storage.state"
 
-const [valueChange, setValue] = createSignal<string>()
-const value$ = state(valueChange, "")
+export const [value$, setValue] = createState("")
 
 const valueDecoder$ = combineLatest([selectedEntry$, selectedBlock$]).pipe(
   map(([selectedEntry, { ctx }]) =>
