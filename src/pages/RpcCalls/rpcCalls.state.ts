@@ -17,7 +17,7 @@ import {
   switchMap,
   takeUntil,
 } from "rxjs"
-import { v4 as uuid, v4 } from "uuid"
+import { v4 as uuid } from "uuid"
 import { RpcCallWorkspaceEntry } from "./RpcCallWorkspaceEntry"
 
 export type RpcCallMetadataMethod = {
@@ -50,7 +50,7 @@ export const addRpcCallQuery = (value: {
 }) => {
   _addRpcCallQuery(value)
   pushWorkspaceEntry({
-    id: v4(),
+    id: uuid(),
     icon: Cable,
     content: RpcCallWorkspaceEntry,
     source: "RPC Calls",

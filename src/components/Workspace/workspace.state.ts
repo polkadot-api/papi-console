@@ -19,7 +19,6 @@ import {
   merge,
   Observable,
   ObservableInput,
-  of,
   scan,
   startWith,
   switchMap,
@@ -71,25 +70,33 @@ export const [workspaceEntry$, workspaceEntryKeys$] = partitionByKey(
   newWorkspaceEntry$,
   (data) => data.id,
   (group$, id) =>
-    group$.pipe(
-      switchMap((data) => {
+    combineLatest({
+      data: group$,
+      pinned: pinWorkspaceEntry$(id).pipe(
+        scan((acc) => !acc, false),
+        startWith(false),
+      ),
+    }).pipe(
+      switchMap(({ data, pinned }): ObservableInput<WorkspaceEntry> => {
         const timestamp = Date.now()
-        return combineLatest({
-          pinned: pinWorkspaceEntry$(id).pipe(
-            scan((acc) => !acc, false),
-            startWith(false),
-          ),
-          status:
-            data.status?.pipe(
-              startWith(undefined),
-              catchError((ex): ObservableInput<OperationStatus> => {
-                console.error(ex)
-                return ["error"]
-              }),
-            ) ?? of(undefined),
-        }).pipe(
+        if (!data.status) {
+          return [
+            {
+              data,
+              pinned,
+              timestamp,
+            },
+          ]
+        }
+
+        return data.status.pipe(
+          startWith(undefined),
+          catchError((ex): ObservableInput<OperationStatus> => {
+            console.error(ex)
+            return ["error"]
+          }),
           map(
-            ({ pinned, status }): WorkspaceEntry => ({
+            (status): WorkspaceEntry => ({
               data,
               pinned,
               timestamp,

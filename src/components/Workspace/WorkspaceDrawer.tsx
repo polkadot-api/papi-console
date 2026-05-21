@@ -98,6 +98,8 @@ export const HistoryDrawer = () => {
         // Transparent backdrop that captures clicks outside the undocked drawer.
         // It intentionally has no visual overlay so the page stays readable.
         <button
+          type="button"
+          tabIndex={-1}
           className="fixed inset-0 z-30 cursor-default bg-transparent"
           onClick={closeHistory}
           aria-label="Close workspace"
@@ -277,9 +279,9 @@ const OperationCard: FC<{ entry: WorkspaceEntry }> = ({ entry }) => {
         </div>
       </div>
 
-      <dl className="max-h-[30svh] overflow-auto">
+      <div className="max-h-[30svh] overflow-auto">
         <Content id={entry.data.id} context={entry.data.context} />
-      </dl>
+      </div>
     </article>
   )
 }

@@ -99,9 +99,9 @@ export const viewFnCallToWorkspaceEntry = async (
     title: [call.pallet, call.name].join("."),
     subtitle: `${call.args.map(stringifyArg)}`,
     icon: SquareFunction,
-    link: `viewFns/${id}`,
+    link: `/viewFns/${id}`,
     status: query$.pipe(
-      map(() => "done" as const),
+      map((v) => (v.success ? ("done" as const) : ("error" as const))),
       startWith("pending" as const),
     ),
     context,

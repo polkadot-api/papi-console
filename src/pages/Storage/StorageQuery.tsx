@@ -53,7 +53,6 @@ export const StorageQuery: FC = () => {
       item: entry!.entry,
       value: Enum("query", args),
     })
-    console.log(id)
     navigate(`/storage/${id}`)
   }
 

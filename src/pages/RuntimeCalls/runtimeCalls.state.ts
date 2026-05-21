@@ -109,7 +109,7 @@ export const runtimeCallToWorkspaceEntry = async (
     subtitle: `${query.args.map(stringifyArg)}`,
     link: `/runtimeCalls/${id}`,
     status: query$.pipe(
-      map(() => "done" as const),
+      map((v) => (v.success ? ("done" as const) : ("error" as const))),
       startWith("pending" as const),
     ),
     icon: ServerCog,
