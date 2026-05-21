@@ -4,9 +4,11 @@ import { Chopsticks } from "@/components/Icons"
 import { LoadingMetadata } from "@/components/Loading"
 import { SearchableSelect } from "@/components/Select"
 import { withSubscribe } from "@/components/withSuspense"
+import { createState } from "@/lib/externalState"
 import { canSetStorage$ } from "@/state/chains/chain.state"
 import { state, useStateObservable } from "@react-rxjs/core"
-import { FC, useState } from "react"
+import { FC } from "react"
+import { Route, Routes } from "react-router-dom"
 import { map } from "rxjs"
 import { BlockPicker, selectedBlock$ } from "./BlockPicker"
 import { partialEntry$, selectedEntry$, selectEntry } from "./storage.state"
@@ -82,7 +84,9 @@ export const Storage = withSubscribe(
           </div>
         ) : null}
         <StorageEntry />
-        <StorageSubscriptions />
+        <Routes>
+          <Route path=":subId" element={<StorageSubscriptions />} />
+        </Routes>
       </div>
     )
   },
@@ -91,10 +95,12 @@ export const Storage = withSubscribe(
   },
 )
 
+export const [mode$, setMode] = createState<"query" | "decode" | "set">("query")
+
 const StorageEntry: FC = () => {
   const selectedEntry = useStateObservable(selectedEntry$)
   const canSetStorage = useStateObservable(canSetStorage$)
-  const [mode, setMode] = useState<"query" | "decode" | "set">("query")
+  const mode = useStateObservable(mode$)
 
   if (!selectedEntry) return null
 

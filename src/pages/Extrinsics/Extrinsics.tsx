@@ -1,9 +1,10 @@
 import { BinaryDisplay } from "@/codec-components/LookupTypeEdit"
-import { ActionButton, actionButtonClassName } from "@/components/ActionButton"
+import { actionButtonClassName } from "@/components/ActionButton"
 import { ButtonGroup } from "@/components/ButtonGroup"
+import { IconActionButton, IconLink } from "@/components/IconButton"
 import { LoadingMetadata } from "@/components/Loading"
 import { withSubscribe } from "@/components/withSuspense"
-import { getHashParams, Link, useSyncHashParam } from "@/hashParams"
+import { getHashParams, useSyncHashParam } from "@/hashParams"
 import { runtimeCtx$ } from "@/state/chains/chain.state"
 import { cn } from "@/utils"
 import {
@@ -141,22 +142,21 @@ const ExtrinsicEditor: FC<{
           ]}
         />
         <div className="flex flex-row items-center gap-2">
-          <Link
+          <IconLink
+            tooltip="Analyze extrinsic"
             to="/extrinsics/analyzer"
-            className={cn(
-              actionButtonClassName(),
-              "text-foreground/70 flex items-center gap-1",
-            )}
+            className={cn(actionButtonClassName(), "text-foreground/70")}
           >
             <FileSearch />
-          </Link>
-          <ActionButton
+          </IconLink>
+          <IconActionButton
+            tooltip="Custom signed extensions"
             className="text-foreground/70 flex items-center gap-1"
             onClick={() => setPage("extensions")}
           >
             {customExtensionsCount$}
             <Settings />
-          </ActionButton>
+          </IconActionButton>
           <ExtrinsicModal callData={binaryValue ?? undefined} />
         </div>
       </div>

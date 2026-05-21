@@ -2,8 +2,9 @@ import {
   GlobalCommandPalette,
   type NavigationItem,
 } from "@/components/GlobalCommandPalette"
-import SliderToggle from "@/components/Toggle"
+import { HistoryDrawer, HistoryDrawerTrigger } from "@/components/Workspace"
 import { GithubIcon } from "@/components/Icons"
+import SliderToggle from "@/components/Toggle"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Link } from "@/hashParams"
@@ -116,6 +117,7 @@ export const AppShell: FC<PropsWithChildren> = ({ children }) => {
           </div>
         </div>
       </div>
+      <HistoryDrawer />
     </div>
   )
 }
@@ -178,7 +180,9 @@ const SidebarContent: FC<{ mobile?: boolean; onNavigate?: () => void }> = ({
   </div>
 )
 
-const TopBar: FC<{ onOpenSidebar: () => void }> = ({ onOpenSidebar }) => {
+const TopBar: FC<{
+  onOpenSidebar: () => void
+}> = ({ onOpenSidebar }) => {
   return (
     <header className="flex h-16 shrink-0 items-center border-b bg-background/95 px-3 lg:px-4">
       <Button
@@ -194,7 +198,10 @@ const TopBar: FC<{ onOpenSidebar: () => void }> = ({ onOpenSidebar }) => {
         <div className="ml-3 hidden sm:block">
           <NetworkSwitcher className="w-55" />
         </div>
-        <GlobalCommandPalette navigationItems={navigationItems} />
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
+          <GlobalCommandPalette navigationItems={navigationItems} />
+          <HistoryDrawerTrigger />
+        </div>
       </div>
     </header>
   )

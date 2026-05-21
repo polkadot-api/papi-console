@@ -120,3 +120,14 @@ export const createLocalStorageState = <T>(
 
   return [state$, setValue] as const
 }
+
+export const createState = <T>(defaultValue: T) => {
+  const [valueChange$, setValue] = createSignal<T | null>()
+
+  const state$ = state(
+    valueChange$.pipe(map((v) => (v === null ? defaultValue : v))),
+    defaultValue,
+  )
+
+  return [state$, setValue] as const
+}

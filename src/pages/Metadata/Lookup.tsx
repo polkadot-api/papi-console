@@ -1,5 +1,5 @@
 import { ExpandBtn } from "@/components/Expand"
-import { Link } from "@/hashParams"
+import { IconLink } from "@/components/IconButton"
 import { V14Lookup } from "@polkadot-api/substrate-bindings"
 import { Edit, Search } from "lucide-react"
 import {
@@ -232,12 +232,13 @@ const GenericLookupNode: FC<PropsWithChildren<{ entry: V14Entry }>> = ({
     <div className="flex flex-col gap-2 w-full py-2">
       <div>
         <div className="flex gap-2 items-center">
-          <Link
+          <IconLink
+            tooltip="Edit lookup type"
             to={`/metadata/lookup/editor/${entry.id}`}
             className="hover:text-polkadot-400"
           >
             <Edit size={20} />
-          </Link>
+          </IconLink>
           <h4 className="font-bold">Type: {entry.def.tag}</h4>
         </div>
         {entry.path.length ? <p>Path: {entry.path.join(".")}</p> : null}

@@ -262,6 +262,7 @@ export const runtimeCtxAt$ = state((atBlock: string) =>
     mergeMap((client) => {
       const pinned = client.chainHead.pinnedBlocks$.state
       return (
+        // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
         pinned.runtimes[pinned.blocks.get(atBlock)?.runtime!]?.runtime ||
         client.chainHead.getRuntimeContext$(atBlock)
       )

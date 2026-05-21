@@ -1,14 +1,15 @@
 import { ActionButton } from "@/components/ActionButton"
+import { useNavigate } from "@/hashParams"
+import { createState } from "@/lib/externalState"
 import { NOTIN } from "@polkadot-api/react-builder"
 import { state, useStateObservable } from "@react-rxjs/core"
-import { createSignal } from "@react-rxjs/utils"
+import { Enum } from "polkadot-api"
 import { FC } from "react"
-import { combineLatest, firstValueFrom, map, of } from "rxjs"
+import { combineLatest, firstValueFrom, map } from "rxjs"
 import { selectedBlock$ } from "./BlockPicker"
 import { addStorageSubscription, selectedEntry$ } from "./storage.state"
 
-const [valueChange, setValue] = createSignal<string>()
-const value$ = state(valueChange, "")
+export const [value$, setValue] = createState("")
 
 const valueDecoder$ = combineLatest([selectedEntry$, selectedBlock$]).pipe(
   map(([selectedEntry, { ctx }]) =>
@@ -34,23 +35,20 @@ const decodedValue$ = state(
 export const StorageDecode: FC = () => {
   const value = useStateObservable(value$)
   const decoded = useStateObservable(decodedValue$)
+  const navigate = useNavigate()
 
   const submit = async () => {
-    const [entry, { ctx }] = await firstValueFrom(
+    const [entry, { hash }] = await firstValueFrom(
       combineLatest([selectedEntry$, selectedBlock$]),
     )
 
-    addStorageSubscription({
-      name: `${entry!.pallet}.${entry!.entry}(…)`,
-      args: null,
-      single: true,
-      value: of({
-        type: entry!.value,
-        payload: decoded,
-        ctx: ctx!,
-        blockHash: null,
-      }),
+    const id = await addStorageSubscription({
+      blockHash: hash ?? null,
+      pallet: entry!.pallet,
+      item: entry!.entry,
+      value: Enum("decode", value),
     })
+    navigate(`/storage/${id}`)
   }
 
   return (

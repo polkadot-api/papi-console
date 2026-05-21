@@ -1,22 +1,25 @@
+import { pushWorkspaceEntry, WorkspaceEntryData } from "@/components/Workspace"
+import { runtimeCtxAt$, unsafeApi$ } from "@/state/chains/chain.state"
+import { RuntimeContext } from "@polkadot-api/observable-client"
 import { UnifiedMetadata } from "@polkadot-api/substrate-bindings"
-import { state } from "@react-rxjs/core"
-import {
-  createKeyedSignal,
-  createSignal,
-  partitionByKey,
-  toKeySet,
-} from "@react-rxjs/utils"
+import { shareLatest, state } from "@react-rxjs/core"
+import { createSignal } from "@react-rxjs/utils"
+import { SquareFunction } from "lucide-react"
+import { Binary, HexString, ResultPayload } from "polkadot-api"
 import {
   catchError,
+  combineLatest,
+  firstValueFrom,
   from,
   map,
-  Observable,
   of,
   startWith,
-  switchMap,
-  takeUntil,
 } from "rxjs"
-import { v4 as uuid } from "uuid"
+import { stringifyArg } from "../Storage/storage.state"
+import {
+  ViewFnWorkspaceContext,
+  ViewFnWorkspaceEntry,
+} from "./ViewFnWorkspaceEntry"
 
 type Pallet = UnifiedMetadata["pallets"][number]
 export type ViewFnEntry = Pallet["viewFns"][number] & {
@@ -26,54 +29,91 @@ export type ViewFnEntry = Pallet["viewFns"][number] & {
 export const [entryChange$, setSelectedFn] = createSignal<ViewFnEntry | null>()
 export const selectedEntry$ = state(entryChange$, null)
 
-export const [newViewFnCall$, addViewFnCall] = createSignal<{
+type ViewFnCall = {
+  blockHash: HexString
+  pallet: string
   name: string
-  type: number
-  promise: Promise<unknown>
-}>()
-export const [removeViewFnResult$, removeViewFnResult] =
-  createKeyedSignal<string>()
+  args: unknown[]
+}
 
-export type ViewFnResult = {
-  name: string
-  type: number
-} & ({ result: unknown } | { error?: any })
-const [getViewFnSubscription$, viewFnKeyChange$] = partitionByKey(
-  newViewFnCall$,
-  () => uuid(),
-  (src$, id) =>
-    src$.pipe(
-      switchMap(
-        ({ promise, ...props }): Observable<ViewFnResult> =>
-          from(promise).pipe(
-            map((result) => ({
-              ...props,
-              result,
-              paused: false,
-            })),
-            catchError((ex) => {
-              console.error(ex)
-              return of({
-                ...props,
-                error: ex,
-              })
-            }),
-            startWith(props),
-          ),
-      ),
-      takeUntil(removeViewFnResult$(id)),
+const viewFnCallToId = (
+  ctx: Pick<RuntimeContext, "dynamicBuilder" | "lookup">,
+  call: ViewFnCall,
+) => {
+  const codec = ctx.dynamicBuilder.buildViewFn(call.pallet, call.name).args
+
+  return [
+    call.blockHash,
+    call.pallet,
+    call.name,
+    Binary.toHex(codec.enc(call.args)),
+  ].join(":")
+}
+
+export const idToViewFnCall = async (id: string): Promise<ViewFnCall> => {
+  const [blockHash, pallet, name, encodedArgs] = id.split(":")
+  const ctx = await firstValueFrom(runtimeCtxAt$(blockHash))
+  const codec = ctx.dynamicBuilder.buildViewFn(pallet, name).args
+  const args = codec.dec(encodedArgs)
+
+  return { blockHash, pallet, name, args }
+}
+
+export const viewFnCallToWorkspaceEntry = async (
+  call: ViewFnCall,
+): Promise<WorkspaceEntryData<ViewFnWorkspaceContext>> => {
+  const [unsafeApi, ctx] = await firstValueFrom(
+    combineLatest([unsafeApi$, runtimeCtxAt$(call.blockHash)]),
+  )
+
+  const query$ = from(
+    unsafeApi.view[call.pallet][call.name](...call.args, {
+      at: call.blockHash,
+    }),
+  ).pipe(
+    map((result) => ({
+      success: true,
+      value: result,
+    })),
+    catchError((ex) => {
+      console.error(ex)
+      return of({
+        success: false,
+        value: ex,
+      })
+    }),
+    shareLatest(),
+  )
+
+  const result$ = state<ViewFnResult | null>(query$, null)
+  const context: ViewFnWorkspaceContext = {
+    pallet: call.pallet,
+    name: call.name,
+    result$,
+  }
+  const id = viewFnCallToId(ctx, call)
+
+  return {
+    id,
+    source: "View Functions",
+    title: [call.pallet, call.name].join("."),
+    subtitle: `${call.args.map(stringifyArg)}`,
+    icon: SquareFunction,
+    link: `/viewFns/${id}`,
+    status: query$.pipe(
+      map((v) => (v.success ? ("done" as const) : ("error" as const))),
+      startWith("pending" as const),
     ),
-)
+    context,
+    content: ViewFnWorkspaceEntry,
+  }
+}
 
-export const viewFnResultKeys$ = state(
-  viewFnKeyChange$.pipe(
-    toKeySet(),
-    map((keys) => [...keys].reverse()),
-  ),
-  [],
-)
+export type ViewFnResult = ResultPayload<unknown, any>
 
-export const viewFnResult$ = state(
-  (key: string): Observable<ViewFnResult> => getViewFnSubscription$(key),
-  null,
-)
+export const addViewFnCall = async (call: ViewFnCall) => {
+  const data = await viewFnCallToWorkspaceEntry(call)
+
+  pushWorkspaceEntry(data)
+  return data.id
+}

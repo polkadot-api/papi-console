@@ -1,43 +1,49 @@
 import { bytesToString } from "@/components/BinaryInput"
+import { pushWorkspaceEntry, WorkspaceEntryData } from "@/components/Workspace"
 import { getHashParams } from "@/hashParams"
-import { client$, selectedChainChanged$ } from "@/state/chains/chain.state"
+import {
+  chainClient$,
+  client$,
+  runtimeCtx$,
+  runtimeCtxAt$,
+  selectedChainChanged$,
+  unsafeApi$,
+} from "@/state/chains/chain.state"
 import {
   BlockInfo,
   concatMapEager,
   RuntimeContext,
 } from "@polkadot-api/observable-client"
-import { state } from "@react-rxjs/core"
-import {
-  createKeyedSignal,
-  createSignal,
-  mergeWithKey,
-  partitionByKey,
-  toKeySet,
-} from "@react-rxjs/utils"
-import { Enum, HexString } from "polkadot-api"
+import { DefaultedStateObservable, state } from "@react-rxjs/core"
+import { createSignal, mergeWithKey } from "@react-rxjs/utils"
+import { DatabaseSearch } from "lucide-react"
+import { Binary, Enum, HexString } from "polkadot-api"
 import {
   catchError,
   combineLatest,
   combineLatestWith,
-  concat,
   distinct,
   EMPTY,
+  endWith,
   filter,
+  firstValueFrom,
+  from,
   ignoreElements,
   map,
   merge,
   mergeMap,
   Observable,
+  ObservedValueOf,
   of,
   scan,
   shareReplay,
-  startWith,
   switchMap,
   take,
   takeUntil,
 } from "rxjs"
-import { v4 as uuid } from "uuid"
 import { selectedBlock$ } from "./BlockPicker"
+import { StorageWorkspaceEntry } from "./StorageWorkspaceEntry"
+import { getEntry, getStorageItem } from "./decodeKey"
 
 export type StorageMetadataEntry = {
   pallet: string
@@ -128,22 +134,14 @@ export const selectedEntry$ = state(
       const { type, docs } = entry
       const pallet = partialEntry.pallet!
 
+      const { keys } = getEntry(ctx, type)
+      const key = keys.map((v) => v.type)
+      const hashers = keys.map((v) => v.hasher)
+
       if (type.tag === "plain") {
         return {
           value: type.value,
-          key: [],
-          pallet,
-          entry: entry.name,
-          docs,
-          hashers: [],
-        }
-      }
-
-      const hashers = type.value.hashers.map((x) => x.tag)
-      if (hashers.length === 1) {
-        return {
-          value: type.value.value,
-          key: [type.value.key],
+          key,
           pallet,
           entry: entry.name,
           docs,
@@ -151,19 +149,9 @@ export const selectedEntry$ = state(
         }
       }
 
-      const keyDef = ctx.lookup(type.value.key)
-      const key = (() => {
-        if (keyDef.type === "array") {
-          return new Array(keyDef.len).fill(keyDef.value.id)
-        }
-        if (keyDef.type === "tuple") {
-          return keyDef.value.map((e) => e.id)
-        }
-        throw new Error("Invalid key type " + keyDef.type)
-      })()
       return {
-        key,
         value: type.value.value,
+        key,
         pallet,
         entry: entry.name,
         docs,
@@ -178,28 +166,193 @@ export type KeyCodec = {
   enc: (...args: any[]) => string
   dec: (value: string) => any[]
 }
-export const [newStorageSubscription$, addStorageSubscription] = createSignal<{
-  name: string
-  args: unknown[] | null
-  single: boolean
-  keyCodec?: (hash: HexString) => Observable<KeyCodec>
-  at?: (hash: HexString) => Observable<{
-    type: number
-    ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">
-    hash: HexString | null
-    payload: unknown
+export type StorageSubscription = {
+  blockHash: HexString | null
+  pallet: string
+  item: string
+  value: Enum<{
+    decode: HexString
+    query: unknown[]
   }>
-  value?: Observable<{
-    type: number
-    ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">
-    blockHash: HexString | null
-    payload: unknown
-  }>
-}>()
-export const [removeStorageSubscription$, removeStorageSubscription] =
-  createKeyedSignal<string>()
-export const [stopStorageSubscription$, stopStorageSubscription] =
-  createKeyedSignal<string>()
+}
+
+const storageSubscriptionId = (
+  ctx: Pick<RuntimeContext, "dynamicBuilder" | "lookup">,
+  sub: StorageSubscription,
+) => {
+  const item = getStorageItem(ctx, sub.pallet, sub.item)
+  if (!item) {
+    throw new Error(
+      `Storage entry ${sub.pallet}.${sub.item} not found in context`,
+    )
+  }
+  const entry = getEntry(ctx, item.item.type)
+
+  return [
+    sub.blockHash ?? "latest",
+    sub.pallet,
+    sub.item,
+    sub.value.type,
+    ...(sub.value.type === "decode"
+      ? [sub.value.value]
+      : sub.value.value.map((v, i) =>
+          Binary.toHex(
+            ctx.dynamicBuilder.buildDefinition(entry.keys[i].type).enc(v),
+          ),
+        )),
+  ].join("_")
+}
+export const idToStorageSubscription = async (
+  id: string,
+): Promise<StorageSubscription> => {
+  const [blockHash, pallet, item, type, ...values] = id.split("_")
+  const ctx = await firstValueFrom(
+    blockHash === "latest" ? runtimeCtx$ : runtimeCtxAt$(blockHash),
+  )
+
+  const storageItem = getStorageItem(ctx, pallet, item)
+  if (!storageItem) {
+    throw new Error(`Storage entry ${pallet}.${item} not found in context`)
+  }
+  const entry = getEntry(ctx, storageItem.item.type)
+
+  return {
+    blockHash: blockHash === "latest" ? null : blockHash,
+    pallet,
+    item,
+    value:
+      type === "decode"
+        ? Enum("decode", values[0])
+        : Enum(
+            "query",
+            values.map((v, i) =>
+              ctx.dynamicBuilder.buildDefinition(entry.keys[i].type).dec(v),
+            ),
+          ),
+  }
+}
+
+export const storageSubscriptionToWorkspaceEntry = async ({
+  blockHash,
+  pallet,
+  item,
+  value,
+}: StorageSubscription): Promise<WorkspaceEntryData<StorageEntryContext>> => {
+  const [ctx, unsafeApi] = await firstValueFrom(
+    combineLatest([
+      blockHash ? runtimeCtxAt$(blockHash) : runtimeCtx$,
+      unsafeApi$,
+    ]),
+  )
+  const entry = getEntry(ctx, getStorageItem(ctx, pallet, item)!.item.type)
+
+  const storageEntry = unsafeApi.query[pallet][item]
+  const name = `${pallet}.${item}`
+  const args = value.type === "query" ? value.value : []
+  const isEntries = value.type === "query" && args.length !== entry.keys.length
+
+  const at = (blockHash: string) => {
+    const value$ = from(
+      isEntries
+        ? storageEntry.getEntries(...args, {
+            at: blockHash,
+          })
+        : storageEntry.getValue(...args, {
+            at: blockHash,
+          }),
+    )
+    const hash$ = chainClient$.pipe(
+      switchMap(({ chainHead }) =>
+        chainHead
+          .storage$(blockHash, "hash", (ctx) =>
+            ctx.dynamicBuilder.buildStorage(pallet, item).keys.enc(...args),
+          )
+          .pipe(map(({ value }) => value)),
+      ),
+    )
+    const ctxType$ = runtimeCtxAt$(blockHash).pipe(
+      map((ctx) => {
+        const ctxEntry = getStorageItem(ctx, pallet, item)
+        if (!ctxEntry) {
+          throw new Error(
+            `Storage entry ${pallet}.${item} not found in ${blockHash}`,
+          )
+        }
+        const type =
+          ctxEntry.item.type.tag === "plain"
+            ? ctxEntry.item.type.value
+            : ctxEntry.item.type.value.value
+
+        return { ctx, type }
+      }),
+    )
+
+    return combineLatest([
+      combineLatest({ payload: value$, hash: hash$ }),
+      ctxType$,
+    ]).pipe(
+      map(([a, b]) => ({ ...a, ...b })),
+      take(1),
+    )
+  }
+  const keyCodec = (hash: string) =>
+    runtimeCtxAt$(hash).pipe(
+      map((ctx) => ctx.dynamicBuilder.buildStorage(pallet, item).keys),
+    )
+
+  const id = storageSubscriptionId(ctx, { blockHash, pallet, item, value })
+  const value$: Observable<ObservedValueOf<StorageEntryContext["status$"]>> =
+    value.type === "decode"
+      ? of(
+          Enum("value", {
+            blockHash: null,
+            ctx,
+            type: entry.value,
+            payload: ctx.dynamicBuilder
+              .buildStorage(pallet, item)
+              .value.dec(value.value),
+          }),
+        )
+      : getValues$(at, isEntries, keyCodec).pipe(
+          map((v) => Enum("values", v)),
+          takeUntil(selectedChainChanged$),
+          shareReplay({
+            bufferSize: 1,
+            refCount: true,
+          }),
+        )
+  const status$: StorageEntryContext["status$"] = state(value$, Enum("loading"))
+  const completed$ = state(value$.pipe(ignoreElements(), endWith(true)), false)
+
+  const context: StorageEntryContext = {
+    id,
+    name,
+    args,
+    isEntries,
+    completed$,
+    status$,
+  }
+
+  return {
+    id,
+    source: "Storage",
+    link: `/storage/${id}`,
+    title: context.name,
+    subtitle: context.args?.map(stringifyArg).join(" "),
+    icon: DatabaseSearch,
+    status: context.completed$.pipe(
+      map((completed) => (completed ? "done" : "live")),
+    ),
+    context,
+    content: StorageWorkspaceEntry,
+  }
+}
+
+export const addStorageSubscription = async (sub: StorageSubscription) => {
+  const entry = await storageSubscriptionToWorkspaceEntry(sub)
+  pushWorkspaceEntry(entry)
+  return entry.id
+}
 
 export type StorageSubscriptionValue = {
   height: number
@@ -216,35 +369,38 @@ export type StorageSubscriptionValue = {
     error: string
   }>
 }
-export type StorageSubscription = {
+export type StorageEntryContext = {
+  id: string
   name: string
   args: unknown[] | null
-  single: boolean
-  completed: boolean
-  status: Enum<{
-    loading: undefined
-    // Non-subscription: fetches/decodes one value, then done
-    value: {
-      blockHash: HexString | null
-      ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">
-      type: number
-      payload: unknown
-    }
-    // For subscriptions, adds one new value on every change
-    values: Array<StorageSubscriptionValue>
-  }>
+  isEntries: boolean
+  completed$: DefaultedStateObservable<boolean>
+  status$: DefaultedStateObservable<
+    Enum<{
+      loading: undefined
+      // Non-subscription: fetches/decodes one value, then done
+      value: {
+        blockHash: HexString | null
+        ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">
+        type: number
+        payload: unknown
+      }
+      // For subscriptions, adds one new value on every change
+      values: Array<StorageSubscriptionValue>
+    }>
+  >
 }
 
-const getStatus$ = (
+const getValues$ = (
   at: (hash: HexString) => Observable<{
     type: number
     ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">
     hash: HexString | null
     payload: unknown
   }>,
-  single: boolean,
+  isEntries: boolean,
   keyCodec?: (hash: HexString) => Observable<KeyCodec>,
-): Observable<StorageSubscription["status"]> => {
+): Observable<Array<StorageSubscriptionValue>> => {
   const queryAt$ = (
     block: BlockInfo,
     settled: boolean,
@@ -274,22 +430,22 @@ const getStatus$ = (
     switchMap((client) => client.finalizedBlock$),
     mergeMap((block) => queryAt$(block, true)),
     // Not supporting watchEntries for now. In case it's querying entries, we only take one
-    single ? (v) => v : take(1),
+    isEntries ? take(1) : (v) => v,
   )
-  const bestResults$ = single
-    ? client$.pipe(
+  const bestResults$ = isEntries
+    ? EMPTY
+    : client$.pipe(
         switchMap((client) => client.bestBlocks$),
         filter((v) => v.length > 1),
         mergeMap((blocks) => blocks.slice(0, -1).reverse()),
         distinct(),
         concatMapEager((block) => queryAt$(block, false)),
       )
-    : EMPTY
 
   const getValueHash = (value: StorageSubscriptionValue) =>
     value.result.type === "success" ? value.result.value.hash : null
 
-  const values$ = merge(finalizedResults$, bestResults$).pipe(
+  return merge(finalizedResults$, bestResults$).pipe(
     scan(
       (
         acc: {
@@ -360,68 +516,7 @@ const getStatus$ = (
       }),
     ]),
   )
-
-  return values$.pipe(map((values) => Enum("values", values)))
 }
-
-const [getStorageSubscription$, storageSubscriptionKeyChange$] = partitionByKey(
-  newStorageSubscription$,
-  () => uuid(),
-  (src$, id) =>
-    src$.pipe(
-      switchMap(
-        ({
-          at,
-          value,
-          keyCodec,
-          ...props
-        }): Observable<StorageSubscription> => {
-          const status$: Observable<StorageSubscription["status"]> = value
-            ? value.pipe(map((v) => Enum("value", v)))
-            : getStatus$(at!, props.single, keyCodec)
-          const result$ = status$.pipe(
-            map((status) => ({
-              ...props,
-              status,
-            })),
-            startWith({
-              ...props,
-              status: Enum("loading"),
-            }),
-            takeUntil(stopStorageSubscription$(id)),
-            shareReplay(1),
-          )
-          const completed$ = concat(
-            of(false),
-            result$.pipe(ignoreElements()),
-            of(true),
-          )
-          return combineLatest([completed$, result$]).pipe(
-            map(([completed, result]) => ({
-              ...result,
-              completed,
-            })),
-          )
-        },
-      ),
-      takeUntil(merge(removeStorageSubscription$(id), selectedChainChanged$)),
-    ),
-)
-
-export const storageSubscriptionKeys$ = state(
-  storageSubscriptionKeyChange$.pipe(
-    toKeySet(),
-    map((keys) => [...keys].reverse()),
-  ),
-  [],
-)
-export const storage$ = storageSubscriptionKeys$
-
-export const storageSubscription$ = state(
-  (key: string): Observable<StorageSubscription> =>
-    getStorageSubscription$(key),
-  null,
-)
 
 export const stringifyArg = (value: unknown) => {
   if (typeof value === "object" && value !== null) {

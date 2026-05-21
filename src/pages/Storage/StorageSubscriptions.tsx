@@ -3,11 +3,7 @@ import { ViewCodec } from "@/codec-components/ViewCodec"
 import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
 import { ButtonGroup } from "@/components/ButtonGroup"
 import { JsonDisplay } from "@/components/JsonDisplay"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { workspaceEntryCtxOrAdd$ } from "@/components/Workspace"
 import { Link } from "@/hashParams"
 import { cn } from "@/lib/utils"
 import { BlockState } from "@/state/block.state"
@@ -16,70 +12,84 @@ import { ViewValue } from "@/ViewValue"
 import { RuntimeContext } from "@polkadot-api/observable-client"
 import { CodecComponentType, NOTIN } from "@polkadot-api/react-builder"
 import { Button } from "@polkahub/ui-components"
-import { useStateObservable } from "@react-rxjs/core"
-import { ChevronLeft, ChevronRight, StopCircle, Trash2 } from "lucide-react"
+import { state, useStateObservable } from "@react-rxjs/core"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Enum } from "polkadot-api"
 import { fromHex } from "polkadot-api/utils"
-import { FC, MouseEvent, ReactNode, useMemo, useState } from "react"
+import { FC, MouseEvent, ReactNode, useEffect, useMemo, useState } from "react"
+import { useParams } from "react-router-dom"
 import { Virtuoso } from "react-virtuoso"
+import { filter, switchMap } from "rxjs"
 import { BlockStatusIcon } from "../Explorer/Detail/BlockState"
+import { setBlockHashValue } from "./BlockPicker"
+import { setMode } from "./Storage"
 import {
+  idToStorageSubscription,
   KeyCodec,
-  removeStorageSubscription,
-  stopStorageSubscription,
-  storageSubscription$,
-  storageSubscriptionKeys$,
+  selectEntry,
+  storageSubscriptionToWorkspaceEntry,
   StorageSubscriptionValue,
+  stringifyArg,
 } from "./storage.state"
+import { setValue } from "./StorageDecode"
+import { setKeysEnabled, setKeyValue } from "./StorageQuery"
 
 export const StorageSubscriptions: FC = () => {
-  const keys = useStateObservable(storageSubscriptionKeys$)
+  const params = useParams()
 
-  if (!keys.length) return null
+  if (!params.subId) return null
 
   return (
     <div className="p-2 w-full border-t border-border">
-      <h2 className="text-lg text-foreground mb-2">Results</h2>
+      <h2 className="text-lg text-foreground mb-2">Result</h2>
       <ul className="flex flex-col gap-2">
-        {keys.map((key) => (
-          <StorageSubscriptionBox key={key} subscription={key} />
-        ))}
+        <StorageSubscriptionBox id={params.subId} />
       </ul>
     </div>
   )
 }
 
-const StorageSubscriptionBox: FC<{ subscription: string }> = ({
-  subscription,
-}) => {
-  const storageSubscription = useStateObservable(
-    storageSubscription$(subscription),
-  )
-  if (!storageSubscription) return null
+const storageSubscriptionCtx$ = state(
+  (id: string) =>
+    workspaceEntryCtxOrAdd$(id, async () => {
+      const sub = await idToStorageSubscription(id)
+      return storageSubscriptionToWorkspaceEntry(sub)
+    }),
+  null,
+)
+const storageSubscriptionStatus$ = state(
+  (id: string) =>
+    storageSubscriptionCtx$(id).pipe(
+      filter((v) => v != null),
+      switchMap((v) => v.status$),
+    ),
+  Enum("loading"),
+)
 
-  switch (storageSubscription.status.type) {
+const StorageSubscriptionBox: FC<{ id: string }> = ({ id }) => {
+  const status = useStateObservable(storageSubscriptionStatus$(id))
+  useSynchronizeInputs(id)
+
+  switch (status.type) {
     case "loading":
       return (
-        <SubscriptionBox subscription={subscription}>
+        <SubscriptionBox subscription={id}>
           {() => <div>Loading…</div>}
         </SubscriptionBox>
       )
     case "value":
-      return <ValueSubscriptionBox subscription={subscription} />
+      return <ValueSubscriptionBox subscription={id} />
     case "values":
-      return <ValuesSubscriptionBox subscription={subscription} />
+      return <ValuesSubscriptionBox subscription={id} />
   }
 }
 
 const ValueSubscriptionBox: FC<{ subscription: string }> = ({
   subscription,
 }) => {
-  const storageSubscription = useStateObservable(
-    storageSubscription$(subscription),
-  )
-  if (!storageSubscription) return null
-  const status = storageSubscription.status
-  if (status.type !== "value") return null
+  const status = useStateObservable(storageSubscriptionStatus$(subscription))
+  const subCtx = useStateObservable(storageSubscriptionCtx$(subscription))
+  if (status.type !== "value" || !subCtx) return null
   const { ctx, payload, type, blockHash } = status.value
 
   return (
@@ -107,7 +117,7 @@ const ValueSubscriptionBox: FC<{ subscription: string }> = ({
               hash: null,
             }),
           }}
-          single={storageSubscription.single}
+          single={!subCtx.isEntries}
           mode={mode}
         />
       )}
@@ -151,14 +161,11 @@ const onHold = (cb: () => void) => (evt: MouseEvent) => {
 const ValuesSubscriptionBox: FC<{ subscription: string }> = ({
   subscription,
 }) => {
-  const storageSubscription = useStateObservable(
-    storageSubscription$(subscription),
-  )
+  const ctx = useStateObservable(storageSubscriptionCtx$(subscription))
+  const status = useStateObservable(storageSubscriptionStatus$(subscription))
   const [target, setTarget] = useState<number | "best">("best")
 
-  if (!storageSubscription) return null
-  const status = storageSubscription.status
-  if (status.type !== "values") return null
+  if (status.type !== "values" || !ctx) return null
 
   const targetValueIdx =
     target === "best"
@@ -236,7 +243,7 @@ const ValuesSubscriptionBox: FC<{ subscription: string }> = ({
           <ResultDisplay
             id={subscription}
             subValue={targetValue}
-            single={storageSubscription.single}
+            single={!ctx.isEntries}
             mode={mode}
           />
         ) : null
@@ -252,21 +259,20 @@ const SubscriptionBox: FC<{
 }> = ({ actions, subscription, children }) => {
   const [mode, setMode] = useState<"json" | "decoded">("decoded")
 
-  const storageSubscription = useStateObservable(
-    storageSubscription$(subscription),
-  )
-  if (!storageSubscription) return null
+  const ctx = useStateObservable(storageSubscriptionCtx$(subscription))
+  const status = useStateObservable(storageSubscriptionStatus$(subscription))
+  if (!status || !ctx) return null
 
-  const iconButtonProps = {
-    size: 20,
-    className: "text-polkadot-400 cursor-pointer hover:text-polkadot-500",
-  }
+  const argString = ctx.args
+    ? `(${[...ctx.args.map(stringifyArg), ...(ctx.isEntries ? ["…"] : [])]})`
+    : "(…)"
 
   return (
     <li className="border rounded bg-card text-card-foreground p-2">
       <div className="flex justify-between items-center pb-1 overflow-hidden">
         <h3 className="overflow-hidden text-ellipsis whitespace-nowrap">
-          {storageSubscription.name}
+          {ctx.name}
+          {argString}
         </h3>
         <div className="flex items-center shrink-0 gap-2">
           {actions}
@@ -284,20 +290,6 @@ const SubscriptionBox: FC<{
               },
             ]}
           />
-          {storageSubscription.completed ? (
-            <button onClick={() => removeStorageSubscription(subscription)}>
-              <Trash2 {...iconButtonProps} />
-            </button>
-          ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button onClick={() => stopStorageSubscription(subscription)}>
-                  <StopCircle {...iconButtonProps} />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Stop subscription</TooltipContent>
-            </Tooltip>
-          )}
         </div>
       </div>
       {children(mode)}
@@ -487,4 +479,34 @@ const KeyDisplay: FC<{
       </ol>
     </div>
   )
+}
+
+const useSynchronizeInputs = (id: string) => {
+  useEffect(() => {
+    let cancelled = false
+    const run = async () => {
+      const params = await idToStorageSubscription(id)
+      if (cancelled) return
+      setBlockHashValue(params.blockHash ?? "Latest")
+      selectEntry({
+        pallet: params.pallet,
+        entry: params.item,
+      })
+      setMode(params.value.type)
+      // Let entry settle
+      await Promise.resolve()
+      if (params.value.type === "query") {
+        if (cancelled) return
+        setKeysEnabled(params.value.value.length)
+        params.value.value.forEach((value, idx) => setKeyValue({ idx, value }))
+      } else {
+        setValue(params.value.value)
+      }
+    }
+    run()
+
+    return () => {
+      cancelled = true
+    }
+  }, [id])
 }

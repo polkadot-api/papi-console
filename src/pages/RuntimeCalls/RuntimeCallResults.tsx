@@ -1,46 +1,59 @@
 import { PathsRoot } from "@/codec-components/common/paths.state"
 import { ButtonGroup } from "@/components/ButtonGroup"
+import { JsonDisplay } from "@/components/JsonDisplay"
+import { workspaceEntryCtxOrAdd$ } from "@/components/Workspace"
 import { runtimeCtx$ } from "@/state/chains/chain.state"
-import { useStateObservable, withDefault } from "@react-rxjs/core"
-import { Trash2 } from "lucide-react"
-import { FC, useState } from "react"
+import { state, useStateObservable, withDefault } from "@react-rxjs/core"
+import { FC, useMemo, useState } from "react"
+import { useParams } from "react-router-dom"
 import { ValueDisplay } from "../Storage/StorageSubscriptions"
+import { RuntimeCallWorkspaceContext } from "./RuntimeCallWorkspaceEntry"
 import {
-  removeRuntimeCallResult,
-  RuntimeCallResult,
-  runtimeCallResult$,
-  runtimeCallResultKeys$,
+  idToRuntimeQuery,
+  runtimeCallToWorkspaceEntry,
 } from "./runtimeCalls.state"
 
 export const RuntimeCallResults: FC = () => {
-  const keys = useStateObservable(runtimeCallResultKeys$)
+  const { callId } = useParams()
 
-  if (!keys.length) return null
+  if (!callId) return null
 
   return (
     <div className="p-2 w-full border-t border-border">
-      <h2 className="text-lg text-foreground mb-2">Results</h2>
+      <h2 className="text-lg text-foreground mb-2">Result</h2>
       <ul className="flex flex-col gap-2">
-        {keys.map((key) => (
-          <RuntimeCallResultBox key={key} subscription={key} />
-        ))}
+        <RuntimeCallResultBox id={callId} />
       </ul>
     </div>
   )
 }
 
-const RuntimeCallResultBox: FC<{ subscription: string }> = ({
-  subscription,
-}) => {
+const runtimeCallCtx$ = state(
+  (id: string) =>
+    workspaceEntryCtxOrAdd$(id, async () => {
+      const query = await idToRuntimeQuery(id)
+      return runtimeCallToWorkspaceEntry(query)
+    }),
+  null,
+)
+
+const RuntimeCallResultBox: FC<{ id: string }> = ({ id }) => {
+  const context = useStateObservable(runtimeCallCtx$(id))
+
+  return context ? <RuntimeCallResultContent id={id} context={context} /> : null
+}
+
+const RuntimeCallResultContent: FC<{
+  id: string
+  context: RuntimeCallWorkspaceContext
+}> = ({ id, context }) => {
   const [mode, setMode] = useState<"json" | "decoded">("decoded")
-  const runtimeCallResult = useStateObservable(runtimeCallResult$(subscription))
-  if (!runtimeCallResult) return null
 
   return (
     <li className="border rounded bg-card text-card-foreground p-2">
       <div className="flex justify-between items-center pb-1 overflow-hidden">
         <h3 className="overflow-hidden text-ellipsis whitespace-nowrap">
-          {runtimeCallResult.name}
+          {context.api}.{context.method}
         </h3>
         <div className="flex items-center shrink-0 gap-2">
           <ButtonGroup
@@ -57,16 +70,10 @@ const RuntimeCallResultBox: FC<{ subscription: string }> = ({
               },
             ]}
           />
-          <button onClick={() => removeRuntimeCallResult(subscription)}>
-            <Trash2
-              size={20}
-              className="text-destructive cursor-pointer hover:text-polkadot-500"
-            />
-          </button>
         </div>
       </div>
-      <PathsRoot.Provider value={subscription}>
-        <ResultDisplay runtimeCallResult={runtimeCallResult} mode={mode} />
+      <PathsRoot.Provider value={id}>
+        <ResultDisplay context={context} mode={mode} />
       </PathsRoot.Provider>
     </li>
   )
@@ -74,34 +81,47 @@ const RuntimeCallResultBox: FC<{ subscription: string }> = ({
 
 const defaultedCtx$ = runtimeCtx$.pipeState(withDefault(null))
 const ResultDisplay: FC<{
-  runtimeCallResult: RuntimeCallResult
+  context: RuntimeCallWorkspaceContext
   mode: "json" | "decoded"
-}> = ({ runtimeCallResult, mode }) => {
+}> = ({ context, mode }) => {
+  const runtimeCallResult = useStateObservable(context.result$)
   const ctx = useStateObservable(defaultedCtx$)
+  const type = useMemo(() => {
+    const api = ctx?.lookup.metadata.apis.find(
+      (api) => api.name === context.api,
+    )
+    const method = api?.methods.find((method) => method.name === context.method)
+    return method?.output ?? null
+  }, [context, ctx])
+
   if (!ctx) return null
 
-  if ("error" in runtimeCallResult) {
+  if (!runtimeCallResult) {
+    return <div className="text-sm text-foreground/50">Loading…</div>
+  }
+
+  if (!runtimeCallResult.success) {
     return (
       <div className="text-sm">
         <div>The call crashed</div>
-        <div>Message: {runtimeCallResult.error.message ?? "N/A"}</div>
+        <div>Message: {runtimeCallResult.value.message ?? "N/A"}</div>
       </div>
     )
   }
 
-  if (!("result" in runtimeCallResult)) {
-    return <div className="text-sm text-foreground/50">Loading…</div>
-  }
-
   return (
     <div className="max-h-[60svh] overflow-auto">
-      <ValueDisplay
-        mode={mode}
-        ctx={ctx}
-        type={runtimeCallResult.type}
-        value={runtimeCallResult.result}
-        title={"Result"}
-      />
+      {type == null ? (
+        <JsonDisplay src={runtimeCallResult.value} />
+      ) : (
+        <ValueDisplay
+          mode={mode}
+          ctx={ctx}
+          type={type}
+          value={runtimeCallResult.value}
+          title={"Result"}
+        />
+      )}
     </div>
   )
 }

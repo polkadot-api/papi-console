@@ -2,6 +2,8 @@ import { ViewCodec } from "@/codec-components/ViewCodec"
 import { ButtonGroup } from "@/components/ButtonGroup"
 import { DocsRenderer } from "@/components/DocsRenderer"
 import { ExpandBtn } from "@/components/Expand"
+import { AddToWorkspace } from "@/components/IconButton"
+import { JsonDisplay } from "@/components/JsonDisplay"
 import { LoadingMetadata } from "@/components/Loading"
 import {
   Tooltip,
@@ -9,15 +11,17 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { withSubscribe } from "@/components/withSuspense"
+import { pushWorkspaceEntry, setWorkspaceOpen } from "@/components/Workspace"
 import { lookup$, runtimeCtx$ } from "@/state/chains/chain.state"
 import { getTypeComplexity } from "@/utils/shape"
 import { CodecComponentType } from "@polkadot-api/react-builder"
 import { state, useStateObservable, withDefault } from "@react-rxjs/core"
-import { Dot } from "lucide-react"
+import { Dot, SquareEqual } from "lucide-react"
 import { HexString } from "polkadot-api"
 import { FC, useState } from "react"
-import { map } from "rxjs"
+import { firstValueFrom, map } from "rxjs"
 import { twMerge } from "tailwind-merge"
+import { v4 } from "uuid"
 import { ValueDisplay } from "./Storage/StorageSubscriptions"
 
 const metadataConstants$ = state(
@@ -42,7 +46,7 @@ export const Constants = withSubscribe(
       <div className="p-4 pb-0 flex flex-col gap-2 items-start leading-relaxed">
         <ul>
           {entries.map(({ name, constants }) => (
-            <PalletConstants key={name} name={name} entries={constants} />
+            <PalletConstants key={name} pallet={name} entries={constants} />
           ))}
         </ul>
       </div>
@@ -54,24 +58,44 @@ export const Constants = withSubscribe(
 )
 
 const PalletConstants: FC<{
-  name: string
+  pallet: string
   entries: Array<{
     name: string
     type: number
     value: HexString
     docs: string[]
   }>
-}> = ({ name, entries }) => {
+}> = ({ pallet, entries }) => {
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <li>
+    <li className="group">
       <div
         className="flex items-center gap-2 cursor-pointer"
         onClick={() => setExpanded((e) => !e)}
       >
         <ExpandBtn expanded={expanded} />
-        <div>{name}</div>
+        <div>{pallet}</div>
+        <AddToWorkspace
+          className="h-7 w-7 opacity-0 group-hover:opacity-100"
+          onClick={async (evt) => {
+            evt.stopPropagation()
+            const ctx = await firstValueFrom(runtimeCtx$)
+
+            addPalletConstantsToWorkspace(
+              pallet,
+              Object.fromEntries(
+                entries.map((entry) => [
+                  entry.name,
+                  ctx.dynamicBuilder
+                    .buildConstant(pallet, entry.name)
+                    .dec(entry.value),
+                ]),
+              ),
+            )
+            setWorkspaceOpen(true)
+          }}
+        />
       </div>
       {expanded && (
         <ul>
@@ -81,6 +105,34 @@ const PalletConstants: FC<{
         </ul>
       )}
     </li>
+  )
+}
+
+type ConstantsWorkspaceContext = {
+  values: Record<string, unknown>
+}
+
+const addPalletConstantsToWorkspace = (
+  pallet: string,
+  values: Record<string, unknown>,
+) => {
+  pushWorkspaceEntry({
+    id: v4(),
+    source: "Constants",
+    title: `${pallet}`,
+    icon: SquareEqual,
+    context: { values },
+    content: ConstantsWorkspaceEntry,
+  })
+}
+
+const ConstantsWorkspaceEntry: FC<{ context: ConstantsWorkspaceContext }> = ({
+  context,
+}) => {
+  return (
+    <div className="space-y-3 p-3 text-sm">
+      <JsonDisplay collapsed={1} src={context.values} />
+    </div>
   )
 }
 

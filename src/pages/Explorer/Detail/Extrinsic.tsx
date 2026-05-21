@@ -1,13 +1,13 @@
 import { CopyBinary } from "@/codec-components/ViewCodec/CopyBinary"
 import { CopyText } from "@/components/Copy"
 import { ExpandBtn } from "@/components/Expand"
+import { IconLink } from "@/components/IconButton"
 import {
   PriorityValue,
   Sender,
   SignedExtensions,
 } from "@/components/Extrinsics"
 import { JsonDisplay } from "@/components/JsonDisplay"
-import { Link } from "@/hashParams"
 import { cn, shortStr } from "@/utils"
 import { SystemEvent } from "@polkadot-api/observable-client"
 import { DecodedExtrinsic } from "@polkadot-api/tx-utils"
@@ -66,12 +66,18 @@ export const Extrinsic: FC<{
         </button>
         <div className="flex gap-2 items-center">
           <CopyBinary value={extrinsic.callData} />
-          <Link to={`/extrinsics/analyzer#extrinsic=${rawExtrinsic}`}>
+          <IconLink
+            tooltip="Analyze extrinsic"
+            to={`/extrinsics/analyzer#extrinsic=${rawExtrinsic}`}
+          >
             <FileSearch size={15} />
-          </Link>
-          <Link to={"/extrinsics#data=" + toHex(extrinsic.callData)}>
+          </IconLink>
+          <IconLink
+            tooltip="Edit extrinsic"
+            to={"/extrinsics#data=" + toHex(extrinsic.callData)}
+          >
             <Edit size={14} />
-          </Link>
+          </IconLink>
         </div>
       </div>
       {expanded ? (
