@@ -1,9 +1,21 @@
 .json-view .json-view--copy {
-  opacity: 0.4;
+  position: sticky;
+  right: 0;
+  backdrop-filter: brightness(10);
+  border-radius: 4px;
 }
-.json-view .json-view--copy:hover {
+.dark .json-view .json-view--copy {
+  backdrop-filter: brightness(0);
+}
+.json-view .json-view--copy path {
+  opacity: 0.6;
+}
+.json-view .json-view--copy:hover path {
   opacity: 1;
 }
 .json-view .jv-button {
   padding: 0 0.3rem;
+}
+.json-view .json-view--pair {
+  white-space: nowrap;
 }
