@@ -199,6 +199,10 @@ export const workspaceEntryCtxOrAdd$ = <T>(
           pushWorkspaceEntry(entryData)
         }),
         map((data) => data.context!),
+        catchError((ex) => {
+          console.error(ex)
+          return [null]
+        }),
       )
     }),
   )

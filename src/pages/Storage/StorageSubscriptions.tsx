@@ -81,6 +81,8 @@ const StorageSubscriptionBox: FC<{ id: string }> = ({ id }) => {
       return <ValueSubscriptionBox subscription={id} />
     case "values":
       return <ValuesSubscriptionBox subscription={id} />
+    case "error":
+      return <div>Error: {status.value}</div>
   }
 }
 
