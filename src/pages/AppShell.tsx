@@ -112,7 +112,7 @@ export const AppShell: FC<PropsWithChildren> = ({ children }) => {
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar onOpenSidebar={() => setSidebarOpen(true)} />
         <div className="relative min-h-0 flex-1 overflow-auto">
-          <div className="mx-auto h-full w-full max-w-(--breakpoint-xl)">
+          <div className="mx-auto h-full w-full max-w-(--breakpoint-xl) @container">
             {children}
           </div>
         </div>

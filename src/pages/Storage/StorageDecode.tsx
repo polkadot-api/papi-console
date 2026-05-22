@@ -8,6 +8,8 @@ import { FC } from "react"
 import { combineLatest, firstValueFrom, map } from "rxjs"
 import { selectedBlock$ } from "./BlockPicker"
 import { addStorageSubscription, selectedEntry$ } from "./storage.state"
+import { StorageEntryPicker } from "./StorageEntryPicker"
+import { Textarea } from "@/components/ui/textarea"
 
 export const [value$, setValue] = createState("")
 
@@ -52,13 +54,17 @@ export const StorageDecode: FC = () => {
   }
 
   return (
-    <div className="w-full">
-      <textarea
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        className="w-full bg-polkadot-100 p-2 rounded tabular-nums text-polkadot-800"
-        placeholder="Enter hex …"
-      />
+    <div className="w-full space-y-2">
+      <StorageEntryPicker />
+      <label className="block">
+        Data
+        <Textarea
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className="w-full tabular-nums"
+          placeholder="Enter hex …"
+        />
+      </label>
       <ActionButton disabled={decoded === NOTIN} onClick={submit}>
         Decode
       </ActionButton>

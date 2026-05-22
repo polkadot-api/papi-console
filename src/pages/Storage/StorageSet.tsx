@@ -18,7 +18,7 @@ import {
   withLatestFrom,
 } from "rxjs"
 import { selectedEntry$ } from "./storage.state"
-import { encodedKey$, KeyDisplay, StorageKeysInput } from "./StorageQuery"
+import { encodedKey$, KeyInput, StorageKeysInput } from "./StorageQuery"
 
 const [setValue$, setValue] = createSignal<Uint8Array | "partial" | null>()
 const currentValue$ = state(
@@ -71,7 +71,7 @@ export const StorageSet: FC = () => {
 
   return (
     <div className="flex flex-col gap-4 items-start w-full overflow-hidden">
-      <KeyDisplay />
+      <KeyInput />
       <StorageKeysInput disableToggle />
       {currentValue && currentValue.encodedKey ? (
         <>
