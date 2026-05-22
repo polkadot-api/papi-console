@@ -24,6 +24,10 @@ export const StorageWorkspaceEntry: FC<{
     )
   }
 
+  if (status.type === "error") {
+    return <p className="text-red-950 p-2">Error: {status.value}</p>
+  }
+
   if (!status.value.length) return null
   const result = status.value[status.value.length - 1].result
 

@@ -312,17 +312,44 @@ export const storageSubscriptionToWorkspaceEntry = async ({
               .buildStorage(pallet, item)
               .value.dec(value.value),
           }),
-        )
-      : getValues$(at, isEntries, keyCodec).pipe(
-          map((v) => Enum("values", v)),
-          takeUntil(selectedChainChanged$),
-          shareReplay({
-            bufferSize: 1,
-            refCount: true,
+        ).pipe(
+          catchError((ex) => {
+            console.error(ex)
+            return [Enum("error", String(ex))]
           }),
         )
-  const status$: StorageEntryContext["status$"] = state(value$, Enum("loading"))
-  const completed$ = state(value$.pipe(ignoreElements(), endWith(true)), false)
+      : blockHash
+        ? at(blockHash).pipe(
+            map((v) =>
+              Enum("value", {
+                blockHash,
+                ...v,
+              }),
+            ),
+            catchError((ex) => {
+              console.error(ex)
+              return [Enum("error", String(ex))]
+            }),
+          )
+        : getValues$(at, isEntries, keyCodec).pipe(
+            map((v) => Enum("values", v)),
+          )
+  const sharedValue$ = value$.pipe(
+    takeUntil(selectedChainChanged$),
+    shareReplay({
+      bufferSize: 1,
+      refCount: true,
+    }),
+  )
+
+  const status$: StorageEntryContext["status$"] = state(
+    sharedValue$,
+    Enum("loading"),
+  )
+  const completed$ = state(
+    sharedValue$.pipe(ignoreElements(), endWith(true)),
+    false,
+  )
 
   const context: StorageEntryContext = {
     id,
@@ -387,6 +414,7 @@ export type StorageEntryContext = {
       }
       // For subscriptions, adds one new value on every change
       values: Array<StorageSubscriptionValue>
+      error: string
     }>
   >
 }
