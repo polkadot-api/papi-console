@@ -12,14 +12,23 @@ export const FocusPath: FC<{
   onFocus: (value: string[] | null) => void
   collapsed?: boolean
   onToggleCollapse?: () => void
-}> = ({ metadata, typeId, value, onFocus, collapsed, onToggleCollapse }) => {
+  collapsibleBreak?: `${string}:hidden`
+}> = ({
+  metadata,
+  typeId,
+  value,
+  onFocus,
+  collapsed,
+  collapsibleBreak = "max-sm:hidden",
+  onToggleCollapse,
+}) => {
   const breadcrumbs = getBreadcrumbs(metadata, typeId, value ?? [], onFocus)
 
   return (
     <div className="shrink-0 px-2">
       <div className="flex max-w-full flex-wrap gap-1 items-center border border-border text-sm px-2 py-1">
         {onToggleCollapse ? (
-          <button onClick={onToggleCollapse} className="max-sm:hidden">
+          <button onClick={onToggleCollapse} className={collapsibleBreak}>
             {collapsed ? (
               <ArrowRightToLine size={16} />
             ) : (
