@@ -41,7 +41,7 @@ import {
   usePolkaHubModalState,
   useSelectedAccount,
 } from "polkahub"
-import { FC, ReactNode, useState } from "react"
+import { FC, forwardRef, ReactNode, useState } from "react"
 import {
   catchError,
   combineLatest,
@@ -226,7 +226,7 @@ const accountBalance$ = state(
   null,
 )
 
-export const SubmitExtrinsic: FC = () => {
+export const SubmitExtrinsic = forwardRef<HTMLElement>((_, ref) => {
   const [account] = useSelectedAccount()
   const nonce = useStateObservable(nonce$)
   const mortality = useStateObservable(mortality$)
@@ -263,128 +263,131 @@ export const SubmitExtrinsic: FC = () => {
   }
 
   return (
-    <aside className="max-w-lg mx-auto overflow-auto @4xl:w-full @4xl:border-l border-border bg-background/80 p-2">
-      <div className="@4xl:sticky @4xl:top-2 rounded-lg border border-border bg-card shadow-sm">
-        <div className="border-b border-border px-4 py-3">
-          <h2 className="text-base font-semibold">Submit</h2>
-        </div>
+    <aside
+      ref={ref}
+      className="mx-auto max-w-md overflow-auto rounded-lg border border-border bg-background shadow-sm @4xl:mx-0 @4xl:w-full @4xl:rounded-none @4xl:border-y-0 @4xl:border-r-0 @4xl:shadow-none"
+    >
+      <div className="px-4 py-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Submit
+        </h2>
+      </div>
 
-        <div className="space-y-4 p-4">
-          <SubmitRow label="Signer">
-            <div className="flex gap-2 items-center">
-              <SelectAccount />
-              <SignerSetupDialog />
-            </div>
-          </SubmitRow>
+      <section className="mx-4 space-y-3 border-t border-border py-4">
+        <SubmitRow label="Signer">
+          <div className="flex gap-2 items-center">
+            <SelectAccount />
+            <SignerSetupDialog />
+          </div>
+        </SubmitRow>
 
-          <SubmitRow label="Nonce">
-            <Input
-              type="number"
-              min={0}
-              value={nonce}
-              onChange={(evt) => setNonce(evt.target.value)}
-              onBlur={blurNonce}
-              className="tabular-nums"
-            />
-          </SubmitRow>
+        <SubmitRow label="Nonce">
+          <Input
+            type="number"
+            min={0}
+            value={nonce}
+            onChange={(evt) => setNonce(evt.target.value)}
+            onBlur={blurNonce}
+            className="tabular-nums"
+          />
+        </SubmitRow>
 
-          <SubmitRow label="Mortality">
-            <div className="flex-1 flex items-center rounded focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+        <SubmitRow label="Mortality">
+          <div className="flex-1 flex items-center rounded focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+            <Select
+              value={mortality.mortal ? "mortal" : "immortal"}
+              onValueChange={(v) =>
+                setMortality(
+                  v === "mortal" ? DEFAULT_MORTAL : { mortal: false },
+                )
+              }
+            >
+              <SelectTrigger className="flex-2 focus:ring-0 not-last:rounded-r-none not-last:border-r-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="mortal">Mortal</SelectItem>
+                <SelectItem value="immortal">Immortal</SelectItem>
+              </SelectContent>
+            </Select>
+            {mortality.mortal ? (
               <Select
-                value={mortality.mortal ? "mortal" : "immortal"}
+                value={mortality.period.toString()}
                 onValueChange={(v) =>
-                  setMortality(
-                    v === "mortal" ? DEFAULT_MORTAL : { mortal: false },
-                  )
+                  setMortality({ mortal: true, period: Number(v) })
                 }
               >
-                <SelectTrigger className="flex-2 focus:ring-0 not-last:rounded-r-none not-last:border-r-0">
+                <SelectTrigger className="flex-1 focus:ring-0 rounded-l-none">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="mortal">Mortal</SelectItem>
-                  <SelectItem value="immortal">Immortal</SelectItem>
+                  {periodOptions.map((period) => (
+                    <SelectItem key={period} value={period.toString()}>
+                      {period} blocks
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-              {mortality.mortal ? (
-                <Select
-                  value={mortality.period.toString()}
-                  onValueChange={(v) =>
-                    setMortality({ mortal: true, period: Number(v) })
-                  }
-                >
-                  <SelectTrigger className="flex-1 focus:ring-0 rounded-l-none">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {periodOptions.map((period) => (
-                      <SelectItem key={period} value={period.toString()}>
-                        {period} blocks
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : null}
-            </div>
-          </SubmitRow>
-
-          <SubmitRow label="Tip">
-            <div className="flex-1 flex items-center gap-2">
-              <Input
-                type="number"
-                min={0}
-                value={tip}
-                onChange={(evt) => setTip(evt.target.value)}
-                className="font-mono"
-              />
-              <p>Plank</p>
-            </div>
-          </SubmitRow>
-
-          <CustomSignedExtDialog />
-
-          <div className="rounded-md border border-border bg-foreground/5 p-3">
-            <FeeRow
-              label="Estimated fee"
-              value={
-                paymentInfo ? (
-                  <TokenAmount>{paymentInfo.partial_fee}</TokenAmount>
-                ) : (
-                  "…"
-                )
-              }
-            />
-            <FeeRow
-              label="Account spendable balance"
-              value={
-                balance == null ? "…" : <TokenAmount>{balance}</TokenAmount>
-              }
-            />
+            ) : null}
           </div>
+        </SubmitRow>
 
-          <ActionButton
-            className="flex w-full items-center justify-center gap-2 rounded-md py-2.5 text-sm font-semibold"
-            disabled={!account || isSigning}
-            onClick={signAndSubmit}
-          >
-            <Send className="h-4 w-4" />
-            Sign & Submit
-            {isSigning && <Spinner size={16} />}
-          </ActionButton>
+        <SubmitRow label="Tip">
+          <div className="flex-1 flex items-center gap-2">
+            <Input
+              type="number"
+              min={0}
+              value={tip}
+              onChange={(evt) => setTip(evt.target.value)}
+              className="font-mono"
+            />
+            <p>Planck</p>
+          </div>
+        </SubmitRow>
 
-          <hr />
-          <ActionButton
-            className="flex w-full items-center justify-center gap-2 rounded-md py-2.5 text-sm font-semibold"
-            onClick={submitUnsigned}
-            disabled={!account || isSigning}
-          >
-            Submit without signing
-          </ActionButton>
-        </div>
-      </div>
+        <CustomSignedExtDialog />
+      </section>
+
+      <section className="mx-4 space-y-3 border-t border-border py-4">
+        <h3 className="text-sm font-medium">Fees</h3>
+        <FeeRow
+          label="Estimated fee"
+          value={
+            paymentInfo ? (
+              <TokenAmount>{paymentInfo.partial_fee}</TokenAmount>
+            ) : (
+              "…"
+            )
+          }
+        />
+        <FeeRow
+          label="Account spendable balance"
+          value={balance == null ? "…" : <TokenAmount>{balance}</TokenAmount>}
+        />
+      </section>
+
+      <section className="mx-4 space-y-3 border-t border-border py-4">
+        <ActionButton
+          className="flex w-full items-center justify-center gap-2 rounded-md py-2.5 text-sm font-semibold"
+          disabled={!account || isSigning}
+          onClick={signAndSubmit}
+        >
+          <Send className="h-4 w-4" />
+          Sign & Submit
+          {isSigning && <Spinner size={16} />}
+        </ActionButton>
+
+        <ActionButton
+          className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-background py-2.5 text-sm font-semibold text-foreground hover:bg-foreground/5"
+          onClick={submitUnsigned}
+          disabled={!account || isSigning}
+        >
+          Submit without signing
+        </ActionButton>
+      </section>
     </aside>
   )
-}
+})
 
 const SignerSetupDialog: FC = () => {
   const [open, setOpen] = useState(false)
@@ -405,7 +408,7 @@ const SignerSetupDialog: FC = () => {
     >
       <DialogTrigger asChild>
         <button
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-background shadow-sm hover:bg-foreground/5"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-background hover:bg-foreground/5"
           type="button"
           aria-label="Configure signers"
         >
@@ -459,7 +462,7 @@ const CustomSignedExtDialog: FC = () => {
     <Dialog>
       <DialogTrigger asChild>
         <button
-          className="flex w-full items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-left text-sm shadow-sm hover:bg-foreground/5"
+          className="flex w-full items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-left text-sm hover:bg-foreground/5"
           type="button"
         >
           <Settings className="h-4 w-4" />
@@ -492,7 +495,7 @@ const SubmitRow: FC<{
 )
 
 const FeeRow: FC<{ label: string; value: ReactNode }> = ({ label, value }) => (
-  <div className="flex items-center justify-between gap-3 border-b border-border py-2 first:pt-0 last:border-b-0 last:pb-0">
+  <div className="flex items-center justify-between gap-3 py-1.5">
     <span className="text-sm text-muted-foreground">{label}</span>
     <span className="text-right font-mono text-sm">{value}</span>
   </div>

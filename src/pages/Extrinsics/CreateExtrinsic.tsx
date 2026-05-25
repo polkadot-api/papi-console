@@ -5,7 +5,7 @@ import { runtimeCtx$ } from "@/state/chains/chain.state"
 import { CodecComponentType } from "@polkadot-api/react-builder"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { fromHex, toHex } from "polkadot-api/utils"
-import { FC, useState } from "react"
+import { FC, useRef, useState } from "react"
 import { map } from "rxjs"
 import { EditMode } from "./EditMode"
 import { JsonMode } from "./JsonMode"
@@ -15,6 +15,7 @@ import {
   getBinaryValue,
   setComponentValue,
 } from "./componentValue.state"
+import { ActionButton } from "@/components/ActionButton"
 
 const extrinsicProps$ = state(
   runtimeCtx$.pipe(
@@ -34,15 +35,26 @@ const extrinsicProps$ = state(
 )
 
 export const CreateExtrinsic: FC = () => {
+  const submitRef = useRef<HTMLElement>(null)
+
   return (
     <div className="border border-accent overflow-hidden @max-6xl:overflow-auto @max-6xl:space-y-2 @4xl:flex-1 @4xl:flex @4xl:gap-2">
-      <ExtrinsicEditor />
-      <SubmitExtrinsic />
+      <ExtrinsicEditor
+        onScrollToSubmit={() =>
+          submitRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          })
+        }
+      />
+      <SubmitExtrinsic ref={submitRef} />
     </div>
   )
 }
 
-const ExtrinsicEditor: FC = () => {
+const ExtrinsicEditor: FC<{ onScrollToSubmit: () => void }> = ({
+  onScrollToSubmit,
+}) => {
   const [viewMode, setViewMode] = useState<"edit" | "json">("edit")
   const componentValue = useStateObservable(codecComponentValue$)
   const binaryValue = getBinaryValue(componentValue)
@@ -79,6 +91,11 @@ const ExtrinsicEditor: FC = () => {
             },
           ]}
         />
+        <div className="flex flex-row items-center gap-2 @4xl:hidden">
+          <ActionButton onClick={onScrollToSubmit}>
+            Scroll to submit
+          </ActionButton>
+        </div>
       </div>
 
       {viewMode === "edit" ? (
