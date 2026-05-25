@@ -1,95 +1,26 @@
 import { ButtonGroup } from "@/components/ButtonGroup"
-import { DocsRenderer } from "@/components/DocsRenderer"
 import { Chopsticks } from "@/components/Icons"
 import { LoadingMetadata } from "@/components/Loading"
-import { SearchableSelect } from "@/components/Select"
 import { withSubscribe } from "@/components/withSuspense"
 import { createState } from "@/lib/externalState"
 import { canSetStorage$ } from "@/state/chains/chain.state"
-import { state, useStateObservable } from "@react-rxjs/core"
+import { useStateObservable } from "@react-rxjs/core"
 import { FC } from "react"
 import { Route, Routes } from "react-router-dom"
-import { map } from "rxjs"
-import { BlockPicker, selectedBlock$ } from "./BlockPicker"
-import { partialEntry$, selectedEntry$, selectEntry } from "./storage.state"
 import { StorageDecode } from "./StorageDecode"
 import { StorageQuery } from "./StorageQuery"
 import { StorageSet } from "./StorageSet"
 import { StorageSubscriptions } from "./StorageSubscriptions"
 
-const metadataStorage$ = state(
-  selectedBlock$.pipe(
-    map(({ ctx }) => ({
-      lookup: ctx.lookup,
-      entries: Object.fromEntries(
-        ctx.lookup.metadata.pallets
-          .filter((p) => p.storage)
-          .map((p) => [
-            p.name,
-            Object.fromEntries(
-              p.storage!.items.map((item) => [item.name, item.type]),
-            ),
-          ]),
-      ),
-    })),
-  ),
-)
-
 export const Storage = withSubscribe(
-  () => {
-    const { entries } = useStateObservable(metadataStorage$)
-    const partialEntry = useStateObservable(partialEntry$)
-    const selectedEntry = useStateObservable(selectedEntry$)
-
-    return (
-      <div className="p-4 pb-0 flex flex-col gap-2 items-start">
-        <div className="flex items-center gap-1 flex-wrap">
-          <label>
-            Block
-            <BlockPicker />
-          </label>
-          <div className="flex items-center gap-2 flex-wrap">
-            <label>
-              Pallet
-              <SearchableSelect
-                value={partialEntry.pallet}
-                setValue={(v) => selectEntry({ pallet: v })}
-                options={Object.keys(entries).map((e) => ({
-                  text: e,
-                  value: e,
-                }))}
-              />
-            </label>
-            {partialEntry.pallet && entries[partialEntry.pallet] && (
-              <label>
-                Entry
-                <SearchableSelect
-                  value={partialEntry.entry}
-                  setValue={(v) => selectEntry({ entry: v })}
-                  options={
-                    Object.keys(entries[partialEntry.pallet]).map((s) => ({
-                      text: s,
-                      value: s,
-                    })) ?? []
-                  }
-                />
-              </label>
-            )}
-          </div>
-        </div>
-        {selectedEntry?.docs.length ? (
-          <div className="w-full">
-            Docs
-            <DocsRenderer docs={selectedEntry.docs} />
-          </div>
-        ) : null}
-        <StorageEntry />
-        <Routes>
-          <Route path=":subId" element={<StorageSubscriptions />} />
-        </Routes>
-      </div>
-    )
-  },
+  () => (
+    <div className="p-4 pb-0 flex flex-col gap-2 items-start">
+      <StorageEntry />
+      <Routes>
+        <Route path=":subId" element={<StorageSubscriptions />} />
+      </Routes>
+    </div>
+  ),
   {
     fallback: <LoadingMetadata />,
   },
@@ -98,21 +29,18 @@ export const Storage = withSubscribe(
 export const [mode$, setMode] = createState<"query" | "decode" | "set">("query")
 
 const StorageEntry: FC = () => {
-  const selectedEntry = useStateObservable(selectedEntry$)
   const canSetStorage = useStateObservable(canSetStorage$)
   const mode = useStateObservable(mode$)
 
-  if (!selectedEntry) return null
-
   return (
-    <>
+    <div className="w-full">
       <ButtonGroup
         value={mode}
         onValueChange={setMode as any}
         items={[
           {
             value: "query",
-            content: "Query",
+            content: "Storage Query",
           },
           {
             value: "decode",
@@ -124,7 +52,7 @@ const StorageEntry: FC = () => {
                   value: "set",
                   content: (
                     <>
-                      Set
+                      Set Value
                       <Chopsticks
                         className="inline-block align-middle ml-2"
                         size={20}
@@ -136,13 +64,15 @@ const StorageEntry: FC = () => {
             : []),
         ]}
       />
-      {mode === "query" ? (
-        <StorageQuery />
-      ) : mode === "decode" ? (
-        <StorageDecode />
-      ) : (
-        <StorageSet />
-      )}
-    </>
+      <div className="border border-accent p-3 w-full">
+        {mode === "query" ? (
+          <StorageQuery />
+        ) : mode === "decode" ? (
+          <StorageDecode />
+        ) : (
+          <StorageSet />
+        )}
+      </div>
+    </div>
   )
 }

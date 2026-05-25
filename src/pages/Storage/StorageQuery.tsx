@@ -1,7 +1,6 @@
 import { EditCodec } from "@/codec-components/EditCodec"
 import { ActionButton } from "@/components/ActionButton"
 import { BinaryEditButton } from "@/components/BinaryEditButton"
-import { CopyText } from "@/components/Copy"
 import SliderToggle from "@/components/Toggle"
 import { useNavigate } from "@/hashParams"
 import {
@@ -9,17 +8,19 @@ import {
   CodecComponentValue,
   NOTIN,
 } from "@polkadot-api/react-builder"
+import { Input } from "@polkahub/ui-components"
 import { state, useStateObservable, withDefault } from "@react-rxjs/core"
 import { createSignal, mergeWithKey } from "@react-rxjs/utils"
-import { Enum } from "polkadot-api"
+import { Binary, Enum } from "polkadot-api"
 import { fromHex } from "polkadot-api/utils"
-import { FC } from "react"
+import { ChangeEvent, FC } from "react"
 import {
   combineLatest,
   distinctUntilChanged,
   filter,
   firstValueFrom,
   map,
+  merge,
   scan,
   startWith,
   switchMap,
@@ -27,23 +28,21 @@ import {
 } from "rxjs"
 import { twMerge } from "tailwind-merge"
 import { selectedBlock$ } from "./BlockPicker"
-import { DecodedKey, decodeKey } from "./decodeKey"
+import { decodeKey } from "./decodeKey"
 import {
   addStorageSubscription,
   selectedEntry$,
   selectEntry,
 } from "./storage.state"
+import { StorageEntryPicker } from "./StorageEntryPicker"
 
 export const StorageQuery: FC = () => {
-  const selectedEntry = useStateObservable(selectedEntry$)
   const isReady = useStateObservable(isReady$)
   const navigate = useNavigate()
 
-  if (!selectedEntry) return null
-
   const submit = async () => {
     const [entry, keyValues, keysEnabled, { hash }] = await firstValueFrom(
-      combineLatest([selectedEntry$, keyValues$, keysEnabled$, selectedBlock$]),
+      combineLatest([selectedEntry$, keyValues$, argsEnabled$, selectedBlock$]),
     )
     const args = keyValues.slice(0, keysEnabled)
 
@@ -58,8 +57,9 @@ export const StorageQuery: FC = () => {
 
   return (
     <div className="flex flex-col gap-4 items-start w-full">
-      <KeyDisplay />
+      <StorageEntryPicker />
       <StorageKeysInput />
+      <KeyInput />
       <ActionButton disabled={!isReady} onClick={submit}>
         Query
       </ActionButton>
@@ -82,7 +82,7 @@ const hashers$ = selectedEntry$.pipeState(
 
 const [toggleKey$, toggleKey] = createSignal<number>()
 export const [changeKeysEnabled$, setKeysEnabled] = createSignal<number>()
-const keysEnabled$ = keys$.pipeState(
+const argsEnabled$ = keys$.pipeState(
   switchMap((k) =>
     mergeWithKey({
       toggle: toggleKey$,
@@ -130,7 +130,7 @@ export const keyValues$ = keys$.pipeState(
 )
 
 const isReady$ = state(
-  combineLatest([keyValues$, keysEnabled$]).pipe(
+  combineLatest([keyValues$, argsEnabled$]).pipe(
     map(
       ([keyValues, keysEnabled]) =>
         keyValues.length >= keysEnabled &&
@@ -145,27 +145,30 @@ export const StorageKeysInput: FC<{
 }> = ({ disableToggle }) => {
   const keys = useStateObservable(keys$)
   const hashers = useStateObservable(hashers$)
-  const keysEnabled = useStateObservable(keysEnabled$)
+  const argsEnabled = useStateObservable(argsEnabled$)
 
   return (
-    <ol className="flex flex-col gap-2">
-      {keys.map((type, idx) => (
-        <li key={idx} className="flex flex-row gap-2 items-center">
-          {disableToggle ? null : (
-            <SliderToggle
-              isToggled={keysEnabled > idx}
-              toggle={() => toggleKey(idx)}
+    <div>
+      <label>Params</label>
+      <ol className="flex flex-col gap-2">
+        {keys.map((type, idx) => (
+          <li key={idx} className="flex flex-row gap-2 items-center">
+            {disableToggle ? null : (
+              <SliderToggle
+                isToggled={argsEnabled > idx}
+                toggle={() => toggleKey(idx)}
+              />
+            )}
+            <StorageArgInput
+              idx={idx}
+              hasher={hashers[idx]}
+              type={type}
+              disabled={argsEnabled <= idx}
             />
-          )}
-          <StorageKeyInput
-            idx={idx}
-            hasher={hashers[idx]}
-            type={type}
-            disabled={keysEnabled <= idx}
-          />
-        </li>
-      ))}
-    </ol>
+          </li>
+        ))}
+      </ol>
+    </div>
   )
 }
 
@@ -181,7 +184,7 @@ const builderState$ = state(
 const keysCodec$ = combineLatest([keys$, builderState$]).pipe(
   map(([keys, builder]) => keys.map((type) => builder?.buildDefinition(type))),
 )
-const keyInputValue$ = state(
+const argInputValue$ = state(
   (idx: number) =>
     keyValues$.pipe(
       withLatestFrom(keysCodec$),
@@ -217,14 +220,14 @@ const keyInputValue$ = state(
     type: CodecComponentType.Initial,
   } satisfies CodecComponentValue,
 )
-const StorageKeyInput: FC<{
+const StorageArgInput: FC<{
   idx: number
   type: number
   disabled: boolean
   hasher: string
 }> = ({ idx, type, disabled, hasher }) => {
   const builder = useStateObservable(builderState$)
-  const value = useStateObservable(keyInputValue$(idx))
+  const value = useStateObservable(argInputValue$(idx))
 
   if (!builder) return null
 
@@ -317,7 +320,7 @@ const keyCodec$ = state(
 )
 
 export const encodedKey$ = state(
-  combineLatest([keyCodec$, keyValues$, keysEnabled$]).pipe(
+  combineLatest([keyCodec$, keyValues$, argsEnabled$]).pipe(
     map(([codec, keyValues, keysEnabled]) => {
       const args = keyValues.slice(0, keysEnabled)
       if (
@@ -338,69 +341,103 @@ export const encodedKey$ = state(
   null,
 )
 
-export const KeyDisplay: FC = () => {
-  const key = useStateObservable(encodedKey$)
+const [keyInputChange$, onKeyInputChange] =
+  createSignal<ChangeEvent<HTMLInputElement>>()
+const [keyInputBlur$, onKeyInputBlur] = createSignal<void>()
+const keyInput$ = state(
+  merge(
+    keyInputChange$.pipe(
+      map((v) => v.currentTarget.value),
+      withLatestFrom(selectedBlock$.pipe(map((v) => v.ctx))),
+      map(([value, ctx]) => {
+        const error =
+          value.length > 3 &&
+          (() => {
+            try {
+              return !decodeKey(ctx, Binary.fromHex(value))
+            } catch {
+              return true
+            }
+          })()
+
+        return { value, error }
+      }),
+    ),
+    merge(encodedKey$, keyInputBlur$.pipe(switchMap(() => encodedKey$))).pipe(
+      map((value) => ({ value: value ?? "", error: false })),
+    ),
+  ),
+  {
+    value: "",
+    error: false,
+  },
+)
+
+export const KeyInput: FC = () => {
+  const keyInput = useStateObservable(keyInput$)
   const builder = useStateObservable(builderState$)
   const selectedEntry = useStateObservable(selectedEntry$)
-  const keysEnabled = useStateObservable(keysEnabled$)
+  const keysEnabled = useStateObservable(argsEnabled$)
 
   if (!builder || !selectedEntry) return null
 
   return (
-    <div className="flex w-full overflow-hidden border border-card-foreground/60 px-3 p-2 gap-2 items-center bg-card text-card-foreground">
-      <div className="shrink-0 text-sm font-bold">Encoded key:</div>
-      <div
+    <div className="w-full">
+      <label>Encoded key</label>
+      <Input
+        type="text"
         className={twMerge(
-          "flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-sm tabular-nums",
-          key === null ? "text-card-foreground/60" : null,
+          "min-w-0 w-full tabular-nums text-muted-foreground",
+          keyInput.error && "text-red-600",
         )}
-      >
-        {key ?? "Fill in all the storage keys to calculate the encoded key"}
-      </div>
-      <CopyText text={key ?? ""} disabled={key === null} binary />
-      <BinaryEditButton
-        initialValue={key ? fromHex(key) : undefined}
-        onValueChange={(value: NonNullable<DecodedKey>) => {
-          let newKeysEnabled = keysEnabled
-          if (
-            value.pallet.name !== selectedEntry.pallet ||
-            value.item.name !== selectedEntry.entry
-          ) {
-            selectEntry({
-              pallet: value.pallet.name,
-              entry: value.item.name,
-            })
-            newKeysEnabled =
-              value.item.type.tag === "plain"
-                ? 0
-                : value.item.type.value.hashers.length
-          }
+        placeholder="Fill in all the storage keys to calculate the encoded key"
+        value={keyInput.value}
+        onChange={onKeyInputChange}
+        onBlur={() => {
+          onKeyInputBlur()
 
-          if (value.args.length !== newKeysEnabled) {
-            if (value.args.length > newKeysEnabled) {
-              toggleKey(value.args.length - 1)
-            } else {
-              toggleKey(value.args.length)
+          try {
+            const decoded = decodeKey(
+              {
+                dynamicBuilder: builder,
+                lookup: builder.lookup,
+              },
+              Binary.fromHex(keyInput.value),
+            )
+            if (!decoded) return
+
+            let newKeysEnabled = keysEnabled
+            if (
+              decoded.pallet.name !== selectedEntry.pallet ||
+              decoded.item.name !== selectedEntry.entry
+            ) {
+              selectEntry({
+                pallet: decoded.pallet.name,
+                entry: decoded.item.name,
+              })
+              newKeysEnabled =
+                decoded.item.type.tag === "plain"
+                  ? 0
+                  : decoded.item.type.value.hashers.length
             }
-          }
 
-          value.args.forEach((value, idx) =>
-            setKeyValue({
-              idx,
-              value,
-            }),
-          )
-        }}
-        decode={(v) => {
-          const decoded = decodeKey(
-            {
-              dynamicBuilder: builder,
-              lookup: builder.lookup,
-            },
-            v,
-          )
-          if (!decoded) throw null
-          return decoded
+            if (decoded.args.length !== newKeysEnabled) {
+              if (decoded.args.length > newKeysEnabled) {
+                toggleKey(decoded.args.length - 1)
+              } else {
+                toggleKey(decoded.args.length)
+              }
+            }
+
+            decoded.args.forEach((value, idx) =>
+              setKeyValue({
+                idx,
+                value,
+              }),
+            )
+          } catch {
+            return
+          }
         }}
       />
     </div>
