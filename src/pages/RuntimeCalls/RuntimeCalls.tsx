@@ -10,6 +10,7 @@ import { map } from "rxjs"
 import { RuntimeCallQuery } from "./RuntimeCallQuery"
 import { RuntimeCallResults } from "./RuntimeCallResults"
 import { selectedEntry$, setSelectedMethod } from "./runtimeCalls.state"
+import { CenteredScrollContainer } from "../AppShell"
 
 const metadataRuntimeCalls$ = state(
   lookup$.pipe(
@@ -57,7 +58,7 @@ export const RuntimeCalls = withSubscribe(
     }, [selectedApi, method])
 
     return (
-      <div className="p-4 pb-0 flex flex-col gap-2 items-start">
+      <CenteredScrollContainer className="p-4 pb-0 flex flex-col gap-2 items-start">
         <div className="flex items-center gap-2">
           <label>
             API
@@ -96,7 +97,7 @@ export const RuntimeCalls = withSubscribe(
         <Routes>
           <Route path=":callId" element={<RuntimeCallResults />} />
         </Routes>
-      </div>
+      </CenteredScrollContainer>
     )
   },
   {

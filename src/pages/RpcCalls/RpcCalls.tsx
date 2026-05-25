@@ -3,12 +3,13 @@ import { LoadingMetadata } from "@/components/Loading"
 import { SearchableSelect } from "@/components/Select"
 import { withSubscribe } from "@/components/withSuspense"
 import { chainClient$ } from "@/state/chains/chain.state"
+import { useTheme } from "@/ThemeProvider"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { lazy, Suspense, useRef, useState } from "react"
 import { firstValueFrom, map, switchMap } from "rxjs"
+import { CenteredScrollContainer } from "../AppShell"
 import { RpcCallResults } from "./RpcCallResults"
 import { addRpcCallQuery } from "./rpcCalls.state"
-import { useTheme } from "@/ThemeProvider"
 
 const Editor = lazy(() => import("@monaco-editor/react"))
 
@@ -49,7 +50,7 @@ export const RpcCalls = withSubscribe(
     const isReady = !!method && isJson(params)
 
     return (
-      <div className="p-4 pb-0 flex flex-col gap-2 items-start">
+      <CenteredScrollContainer className="p-4 pb-0 flex flex-col gap-2 items-start">
         <label className="w-full">
           RPC
           <SearchableSelect
@@ -116,7 +117,7 @@ export const RpcCalls = withSubscribe(
           Call
         </ActionButton>
         <RpcCallResults />
-      </div>
+      </CenteredScrollContainer>
     )
   },
   {

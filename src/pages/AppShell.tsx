@@ -26,6 +26,7 @@ import { FC, PropsWithChildren, useState } from "react"
 import { useLocation } from "react-router-dom"
 import { twMerge } from "tailwind-merge"
 import { NetworkSwitcher } from "./Network/Network"
+import { cn } from "@/lib/utils"
 
 const navigationGroups: Array<{
   label: string
@@ -118,11 +119,18 @@ export const AppShell: FC<PropsWithChildren> = ({ children }) => {
   )
 }
 
-export const CenteredScrollContainer: FC<PropsWithChildren> = ({
-  children,
-}) => (
+export const CenteredScrollContainer: FC<
+  PropsWithChildren<{
+    className?: string
+  }>
+> = ({ className, children }) => (
   <div className="relative min-h-0 flex-1 overflow-auto">
-    <div className="mx-auto h-full w-full max-w-(--breakpoint-xl) @container">
+    <div
+      className={cn(
+        "mx-auto h-full w-full max-w-(--breakpoint-xl) @container",
+        className,
+      )}
+    >
       {children}
     </div>
   </div>

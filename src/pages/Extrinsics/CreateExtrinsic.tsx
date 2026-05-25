@@ -1,21 +1,20 @@
 import { BinaryDisplay } from "@/codec-components/LookupTypeEdit"
 import { ButtonGroup } from "@/components/ButtonGroup"
-import { getHashParams, useSyncHashParam } from "@/hashParams"
-import { runtimeCtx$, unsafeApi$ } from "@/state/chains/chain.state"
-import {
-  CodecComponentType,
-  CodecComponentValue,
-} from "@polkadot-api/react-builder"
+import { useSyncHashParam } from "@/hashParams"
+import { runtimeCtx$ } from "@/state/chains/chain.state"
+import { CodecComponentType } from "@polkadot-api/react-builder"
 import { state, useStateObservable } from "@react-rxjs/core"
-import { createSignal } from "@react-rxjs/utils"
-import { Binary } from "polkadot-api"
 import { fromHex, toHex } from "polkadot-api/utils"
 import { FC, useState } from "react"
-import { catchError, concat, defer, map, of, switchMap, take } from "rxjs"
-import { customSignedExtensions$ } from "./CustomSignedExt"
+import { map } from "rxjs"
 import { EditMode } from "./EditMode"
 import { JsonMode } from "./JsonMode"
-import { ExtrinsicModal } from "./SubmitTx/SubmitTx"
+import { SubmitExtrinsic } from "./SubmitTx/SubmitExtrinsic"
+import {
+  codecComponentValue$,
+  getBinaryValue,
+  setComponentValue,
+} from "./componentValue.state"
 
 const extrinsicProps$ = state(
   runtimeCtx$.pipe(
@@ -34,64 +33,11 @@ const extrinsicProps$ = state(
   ),
 )
 
-const customExtensionsCount$ = state(
-  customSignedExtensions$.pipe(
-    map((v) => Object.keys(v).length),
-    map((v) =>
-      v ? (
-        <div className="px-1.5 rounded-full bg-chart-1 text-white text-sm">
-          {v}
-        </div>
-      ) : null,
-    ),
-  ),
-  null,
-)
-
-const [codecComponentChange$, setComponentValue] =
-  createSignal<CodecComponentValue>()
-const codecComponentValue$ = state(
-  defer(() => {
-    const hashParamsData = getHashParams(location).get("data")
-    const initial$ = hashParamsData
-      ? of(hashParamsData)
-      : unsafeApi$.pipe(
-          take(1),
-          switchMap((v) =>
-            v.tx.System.remark({ remark: new Uint8Array() }).getEncodedData(),
-          ),
-          catchError(() => [new Uint8Array()]),
-          map(Binary.toHex),
-        )
-
-    return concat(
-      initial$.pipe(
-        map(
-          (value): CodecComponentValue => ({
-            type: CodecComponentType.Initial,
-            value,
-          }),
-        ),
-      ),
-      codecComponentChange$,
-    )
-  }),
-)
-
-const getBinaryValue = (componentValue: CodecComponentValue) =>
-  (componentValue.type === CodecComponentType.Initial
-    ? typeof componentValue.value === "string"
-      ? fromHex(componentValue.value)
-      : componentValue.value
-    : componentValue.value.empty
-      ? null
-      : componentValue.value.encoded) ?? null
-
 export const CreateExtrinsic: FC = () => {
   return (
-    <div className="border border-accent @max-3xl:space-y-2 @3xl:flex-1 @3xl:flex @3xl:gap-2">
+    <div className="border border-accent overflow-hidden @max-6xl:overflow-auto @max-6xl:space-y-2 @4xl:flex-1 @4xl:flex @4xl:gap-2">
       <ExtrinsicEditor />
-      <SumbitExtrinsic />
+      <SubmitExtrinsic />
     </div>
   )
 }
@@ -108,7 +54,7 @@ const ExtrinsicEditor: FC = () => {
   const extrinsicProps = useStateObservable(extrinsicProps$)
 
   return (
-    <div className="flex flex-col overflow-hidden gap-2 pt-2 w-full @3xl:h-full">
+    <div className="flex flex-col overflow-hidden gap-2 pt-2 w-full @6xl:h-full">
       <BinaryDisplay
         {...extrinsicProps}
         value={componentValue}
@@ -133,9 +79,6 @@ const ExtrinsicEditor: FC = () => {
             },
           ]}
         />
-        <div className="flex flex-row items-center gap-2">
-          <ExtrinsicModal callData={binaryValue ?? undefined} />
-        </div>
       </div>
 
       {viewMode === "edit" ? (
@@ -145,7 +88,7 @@ const ExtrinsicEditor: FC = () => {
           onUpdate={(value) =>
             setComponentValue({ type: CodecComponentType.Updated, value })
           }
-          treeViewBreak="@max-3xl:hidden"
+          treeViewBreak="@max-6xl:hidden"
         />
       ) : (
         <JsonMode
@@ -157,8 +100,4 @@ const ExtrinsicEditor: FC = () => {
       )}
     </div>
   )
-}
-
-const SumbitExtrinsic: FC = () => {
-  return <div>Submit</div>
 }

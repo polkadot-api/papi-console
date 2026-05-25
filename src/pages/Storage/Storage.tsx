@@ -11,15 +11,16 @@ import { StorageDecode } from "./StorageDecode"
 import { StorageQuery } from "./StorageQuery"
 import { StorageSet } from "./StorageSet"
 import { StorageSubscriptions } from "./StorageSubscriptions"
+import { CenteredScrollContainer } from "../AppShell"
 
 export const Storage = withSubscribe(
   () => (
-    <div className="p-4 pb-0 flex flex-col gap-2 items-start">
+    <CenteredScrollContainer className="p-4 pb-0 flex flex-col gap-2 items-start">
       <StorageEntry />
       <Routes>
         <Route path=":subId" element={<StorageSubscriptions />} />
       </Routes>
-    </div>
+    </CenteredScrollContainer>
   ),
   {
     fallback: <LoadingMetadata />,

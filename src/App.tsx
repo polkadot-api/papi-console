@@ -18,14 +18,14 @@ export default function App() {
       <AppShell>
         <Routes>
           <Route path="explorer/*" element={<Explorer />} />
-          <Route path="extrinsics/*" element={<Extrinsics />} />
           <Route path="storage/*" element={<Storage />} />
-          <Route path="constants/*" element={<Constants />} />
+          <Route path="extrinsics/*" element={<Extrinsics />} />
           <Route path="runtimeCalls/*" element={<RuntimeCalls />} />
-          <Route path="rpcCalls/*" element={<RpcCalls />} />
-          <Route path="metadata/*" element={<Metadata />} />
-          <Route path="accounts/*" element={<Accounts />} />
           <Route path="viewFns/*" element={<ViewFns />} />
+          <Route path="constants/*" element={<Constants />} />
+          <Route path="metadata/*" element={<Metadata />} />
+          <Route path="rpcCalls/*" element={<RpcCalls />} />
+          <Route path="accounts/*" element={<Accounts />} />
           <Route path="*" element={<Navigate to="/explorer" replace />} />
         </Routes>
       </AppShell>
