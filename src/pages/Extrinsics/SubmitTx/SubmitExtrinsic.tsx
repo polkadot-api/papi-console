@@ -75,20 +75,16 @@ const [nonceBlurred$, blurNonce] = createSignal()
 const chainNonce$ = unsafeApi$.pipe(
   switchMapSuspended((api) =>
     selectedAccount$.pipe(
-      switchMapSuspended((account) => {
-        if (account) console.log(account.address)
-        if (account?.signer)
-          console.log(account, AccountId(0).dec(account.signer.publicKey))
-
-        return account?.signer
+      switchMapSuspended((account) =>
+        account?.signer
           ? api.apis.AccountNonceApi.account_nonce(
               AccountId(42).dec(account.signer.publicKey),
               {
                 at: "best",
               },
             )
-          : []
-      }),
+          : [],
+      ),
       liftSuspense(),
       catchError((ex) => {
         console.error(ex)
@@ -369,7 +365,7 @@ export const SubmitExtrinsic = forwardRef<HTMLElement>((_, ref) => {
       <section className="mx-4 space-y-3 border-t border-border py-4">
         <ActionButton
           className="flex w-full items-center justify-center gap-2 rounded-md py-2.5 text-sm font-semibold"
-          disabled={!account || isSigning}
+          disabled={!tx || !account?.signer || isSigning}
           onClick={signAndSubmit}
         >
           <Send className="h-4 w-4" />
@@ -380,7 +376,7 @@ export const SubmitExtrinsic = forwardRef<HTMLElement>((_, ref) => {
         <ActionButton
           className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-background py-2.5 text-sm font-semibold text-foreground hover:bg-foreground/5"
           onClick={submitUnsigned}
-          disabled={!account || isSigning}
+          disabled={!tx || isSigning}
         >
           Submit without signing
         </ActionButton>
