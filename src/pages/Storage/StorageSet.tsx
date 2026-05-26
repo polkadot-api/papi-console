@@ -3,9 +3,9 @@ import { Chopsticks } from "@/components/Icons"
 import { Button } from "@/components/ui/button"
 import { chainClient$, client$, lookup$ } from "@/state/chains/chain.state"
 import { getTypeComplexity } from "@/utils"
-import { fromHex, toHex } from "polkadot-api/utils"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
+import { fromHex, toHex } from "polkadot-api/utils"
 import { FC, useState } from "react"
 import {
   combineLatest,
@@ -17,8 +17,8 @@ import {
   switchMap,
   withLatestFrom,
 } from "rxjs"
-import { selectedEntry$ } from "./storage.state"
 import { encodedKey$, KeyInput, StorageKeysInput } from "./StorageQuery"
+import { storageEntryState } from "./storage.state"
 
 const [setValue$, setValue] = createSignal<Uint8Array | "partial" | null>()
 const currentValue$ = state(
@@ -33,7 +33,7 @@ const currentValue$ = state(
         ).pipe(
           withLatestFrom(
             lookup$,
-            selectedEntry$.pipe(filter((v) => v != null)),
+            storageEntryState.selectedEntry$.pipe(filter((v) => v != null)),
           ),
           map(([v, lookup, entry]) => {
             if (v != null) return fromHex(v)
@@ -59,7 +59,7 @@ const currentValue$ = state(
 )
 
 export const StorageSet: FC = () => {
-  const selectedEntry = useStateObservable(selectedEntry$)
+  const selectedEntry = useStateObservable(storageEntryState.selectedEntry$)
   const lookup = useStateObservable(lookup$)
   const currentValue = useStateObservable(currentValue$)
   const [isLoading, setIsLoading] = useState(false)

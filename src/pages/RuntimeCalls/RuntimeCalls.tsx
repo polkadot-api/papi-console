@@ -11,6 +11,7 @@ import { RuntimeCallQuery } from "./RuntimeCallQuery"
 import { RuntimeCallResults } from "./RuntimeCallResults"
 import { selectedEntry$, setSelectedMethod } from "./runtimeCalls.state"
 import { CenteredScrollContainer } from "../AppShell"
+import { BlockPicker } from "../Storage/BlockPicker"
 
 const metadataRuntimeCalls$ = state(
   lookup$.pipe(
@@ -60,6 +61,7 @@ export const RuntimeCalls = withSubscribe(
     return (
       <CenteredScrollContainer className="p-4 pb-0 flex flex-col gap-2 items-start">
         <div className="flex items-center gap-2">
+          <BlockPicker />
           <label>
             API
             <SearchableSelect

@@ -1,6 +1,7 @@
 import { EditCodec } from "@/codec-components/EditCodec"
 import { ActionButton } from "@/components/ActionButton"
 import { BinaryEditButton } from "@/components/BinaryEditButton"
+import { MetadataEntryInput } from "@/components/MetadataEntryInput"
 import SliderToggle from "@/components/Toggle"
 import { useNavigate } from "@/hashParams"
 import {
@@ -29,12 +30,7 @@ import {
 import { twMerge } from "tailwind-merge"
 import { selectedBlock$ } from "./BlockPicker"
 import { decodeKey } from "./decodeKey"
-import {
-  addStorageSubscription,
-  selectedEntry$,
-  selectEntry,
-} from "./storage.state"
-import { StorageEntryPicker } from "./StorageEntryPicker"
+import { addStorageSubscription, storageEntryState } from "./storage.state"
 
 export const StorageQuery: FC = () => {
   const isReady = useStateObservable(isReady$)
@@ -42,7 +38,12 @@ export const StorageQuery: FC = () => {
 
   const submit = async () => {
     const [entry, keyValues, keysEnabled, { hash }] = await firstValueFrom(
-      combineLatest([selectedEntry$, keyValues$, argsEnabled$, selectedBlock$]),
+      combineLatest([
+        storageEntryState.selectedEntry$,
+        keyValues$,
+        argsEnabled$,
+        selectedBlock$,
+      ]),
     )
     const args = keyValues.slice(0, keysEnabled)
 
@@ -57,7 +58,13 @@ export const StorageQuery: FC = () => {
 
   return (
     <div className="flex flex-col gap-4 items-start w-full">
-      <StorageEntryPicker />
+      <MetadataEntryInput
+        state={storageEntryState}
+        labels={{
+          group: "Pallet",
+          item: "Entry",
+        }}
+      />
       <StorageKeysInput />
       <KeyInput />
       <ActionButton disabled={!isReady} onClick={submit}>
@@ -67,14 +74,14 @@ export const StorageQuery: FC = () => {
   )
 }
 
-const keys$ = selectedEntry$.pipeState(
+const keys$ = storageEntryState.selectedEntry$.pipeState(
   filter((e) => !!e),
   map((entry) => entry.key),
   withDefault([] as number[]),
   distinctUntilChanged((a, b) => a.join(",") === b.join(",")),
 )
 
-const hashers$ = selectedEntry$.pipeState(
+const hashers$ = storageEntryState.selectedEntry$.pipeState(
   filter((e) => !!e),
   map((entry) => entry.hashers),
   withDefault([] as string[]),
@@ -307,7 +314,7 @@ const StorageArgInput: FC<{
 }
 
 const keyCodec$ = state(
-  combineLatest([selectedBlock$, selectedEntry$]).pipe(
+  combineLatest([selectedBlock$, storageEntryState.selectedEntry$]).pipe(
     map(([{ ctx }, selectedEntry]) =>
       selectedEntry
         ? ctx.dynamicBuilder.buildStorage(
@@ -376,7 +383,7 @@ const keyInput$ = state(
 export const KeyInput: FC = () => {
   const keyInput = useStateObservable(keyInput$)
   const builder = useStateObservable(builderState$)
-  const selectedEntry = useStateObservable(selectedEntry$)
+  const selectedEntry = useStateObservable(storageEntryState.selectedEntry$)
   const keysEnabled = useStateObservable(argsEnabled$)
 
   if (!builder || !selectedEntry) return null
@@ -411,9 +418,9 @@ export const KeyInput: FC = () => {
               decoded.pallet.name !== selectedEntry.pallet ||
               decoded.item.name !== selectedEntry.entry
             ) {
-              selectEntry({
-                pallet: decoded.pallet.name,
-                entry: decoded.item.name,
+              storageEntryState.selectEntry({
+                group: decoded.pallet.name,
+                item: decoded.item.name,
               })
               newKeysEnabled =
                 decoded.item.type.tag === "plain"

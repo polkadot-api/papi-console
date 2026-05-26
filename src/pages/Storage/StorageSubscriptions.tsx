@@ -26,7 +26,7 @@ import { setMode } from "./Storage"
 import {
   idToStorageSubscription,
   KeyCodec,
-  selectEntry,
+  storageEntryState,
   storageSubscriptionToWorkspaceEntry,
   StorageSubscriptionValue,
   stringifyArg,
@@ -490,9 +490,9 @@ const useSynchronizeInputs = (id: string) => {
       const params = await idToStorageSubscription(id)
       if (cancelled) return
       setBlockHashValue(params.blockHash ?? "Latest")
-      selectEntry({
-        pallet: params.pallet,
-        entry: params.item,
+      storageEntryState.selectEntry({
+        group: params.pallet,
+        item: params.item,
       })
       setMode(params.value.type)
       // Let entry settle
