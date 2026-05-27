@@ -9,6 +9,7 @@ import { getTypeComplexity } from "@/utils/shape"
 import { useStateObservable } from "@react-rxjs/core"
 import { useState } from "react"
 import { Route, Routes, useParams } from "react-router-dom"
+import { CenteredScrollContainer } from "../AppShell"
 import { Extrinsic } from "./Extrinsic"
 import { Lookup, LookupContext } from "./Lookup"
 import { Pallets } from "./Pallets"
@@ -81,7 +82,7 @@ const MetadataExplorer = () => {
   ].filter((v) => !v.disabled)
 
   return (
-    <div className="p-4 pb-0 flex flex-col overflow-auto items-start gap-2">
+    <CenteredScrollContainer className="p-4 pb-0 flex flex-col overflow-auto items-start gap-2">
       <ButtonGroup
         value={mode}
         onValueChange={setMode as any}
@@ -95,7 +96,7 @@ const MetadataExplorer = () => {
           {tabs.find((t) => t.id === mode)?.element}
         </div>
       </LookupContext.Provider>
-    </div>
+    </CenteredScrollContainer>
   )
 }
 

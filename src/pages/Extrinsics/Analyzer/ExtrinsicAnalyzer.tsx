@@ -12,7 +12,7 @@ export const ExtrinsicAnalyzer: FC = () => {
   )
 
   return (
-    <div className="space-y-4 p-3 md:p-4">
+    <div className="space-y-4 p-3 md:p-4 overflow-auto">
       <header className="space-y-2">
         <h2 className="text-2xl font-semibold tracking-tight">
           Analyze Extrinsic

@@ -26,6 +26,7 @@ import { FC, PropsWithChildren, useState } from "react"
 import { useLocation } from "react-router-dom"
 import { twMerge } from "tailwind-merge"
 import { NetworkSwitcher } from "./Network/Network"
+import { cn } from "@/lib/utils"
 
 const navigationGroups: Array<{
   label: string
@@ -111,16 +112,29 @@ export const AppShell: FC<PropsWithChildren> = ({ children }) => {
       </Sheet>
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar onOpenSidebar={() => setSidebarOpen(true)} />
-        <div className="relative min-h-0 flex-1 overflow-auto">
-          <div className="mx-auto h-full w-full max-w-(--breakpoint-xl) @container">
-            {children}
-          </div>
-        </div>
+        {children}
       </div>
       <HistoryDrawer />
     </div>
   )
 }
+
+export const CenteredScrollContainer: FC<
+  PropsWithChildren<{
+    className?: string
+  }>
+> = ({ className, children }) => (
+  <div className="relative min-h-0 flex-1 overflow-auto">
+    <div
+      className={cn(
+        "mx-auto h-full w-full max-w-(--breakpoint-xl) @container",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  </div>
+)
 
 const SidebarContent: FC<{ mobile?: boolean; onNavigate?: () => void }> = ({
   mobile,

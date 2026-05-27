@@ -21,8 +21,9 @@ export const EditMode: React.FC<{
   metadata: UnifiedMetadata
   value: CodecComponentValue
   onUpdate: (value: CodecComponentUpdate) => void
+  treeViewBreak?: `${string}:hidden`
 }> = (props) => {
-  const { metadata, codecType, value } = props
+  const { metadata, codecType, value, treeViewBreak = "max-sm:hidden" } = props
   const treeRef = useRef<HTMLDivElement | null>(null)
   const listRef = useRef<HTMLDivElement | null>(null)
 
@@ -43,6 +44,7 @@ export const EditMode: React.FC<{
         onFocus={setFocusingSubtree}
         collapsed={collapsed}
         onToggleCollapse={() => setCollapsed((c) => !c)}
+        collapsibleBreak={treeViewBreak}
       />
       <SubtreeFocus
         value={{ callback: setFocusingSubtree, path: focusingSubtree }}
@@ -55,7 +57,8 @@ export const EditMode: React.FC<{
             <div
               ref={treeRef}
               className={cn(
-                "min-w-fit w-96 sticky top-0 pl-2 pb-16 leading-loose overflow-hidden max-sm:hidden text-sm",
+                "min-w-fit w-96 sticky top-0 pl-2 pb-16 leading-loose overflow-hidden text-sm",
+                treeViewBreak,
                 {
                   hidden: collapsed,
                 },

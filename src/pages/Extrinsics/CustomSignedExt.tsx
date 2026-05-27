@@ -6,39 +6,25 @@ import { ActionButton } from "@/components/ActionButton"
 import { ExpandBtn } from "@/components/Expand"
 import { lookup$, metadata$ } from "@/state/chains/chain.state"
 import { getTypeComplexity } from "@/utils"
-import { Button } from "@polkahub/ui-components"
 import { state, Subscribe, useStateObservable } from "@react-rxjs/core"
 import { combineKeys, createSignal, mergeWithKey } from "@react-rxjs/utils"
-import { ChevronLeft, Circle } from "lucide-react"
+import { Circle } from "lucide-react"
 import { FC, useState } from "react"
 import { combineLatest, defer, map, merge, scan, startWith } from "rxjs"
 import { twMerge } from "tailwind-merge"
 
-export const CustomSignedExt: FC<{ onClose: () => void }> = ({ onClose }) => {
+export const CustomSignedExt: FC = () => {
   const metadata = useStateObservable(metadata$)
 
   return (
-    <div className="p-2 space-y-2">
-      <div className="flex items-center gap-2">
-        <Button
-          className="has-[>svg]:px-1"
-          type="button"
-          variant="ghost"
-          onClick={onClose}
-        >
-          <ChevronLeft />
-        </Button>
-        <h2 className="text-lg font-bold">Custom Signed Extensions</h2>
-      </div>
-      <Subscribe source$={extSub$}>
-        <ul className="space-y-2">
-          {/* TODO: adapt for different extrinsic versions */}
-          {metadata.extrinsic.signedExtensions[0].map((ext) => (
-            <ExtensionInput key={ext.identifier} {...ext} />
-          ))}
-        </ul>
-      </Subscribe>
-    </div>
+    <Subscribe source$={extSub$}>
+      <ul className="space-y-2">
+        {/* TODO: adapt for different extrinsic versions */}
+        {metadata.extrinsic.signedExtensions[0].map((ext) => (
+          <ExtensionInput key={ext.identifier} {...ext} />
+        ))}
+      </ul>
+    </Subscribe>
   )
 }
 

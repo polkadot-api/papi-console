@@ -1,15 +1,16 @@
-import { lookup$ } from "@/state/chains/chain.state"
 import { DocsRenderer } from "@/components/DocsRenderer"
 import { LoadingMetadata } from "@/components/Loading"
 import { SearchableSelect } from "@/components/Select"
 import { withSubscribe } from "@/components/withSuspense"
+import { lookup$ } from "@/state/chains/chain.state"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { useEffect, useState } from "react"
 import { Route, Routes } from "react-router-dom"
 import { map } from "rxjs"
+import { CenteredScrollContainer } from "../AppShell"
+import { ViewFnQuery } from "./ViewFnQuery"
 import { ViewFnResults } from "./ViewFnResults"
 import { selectedEntry$, setSelectedFn } from "./viewFns.state"
-import { ViewFnQuery } from "./ViewFnQuery"
 
 const metadataViewFns$ = state(
   lookup$.pipe(
@@ -67,7 +68,7 @@ export const ViewFns = withSubscribe(
     }, [selectedPallet, fnName])
 
     return (
-      <div className="p-4 pb-0 flex flex-col gap-2 items-start">
+      <CenteredScrollContainer className="p-4 pb-0 flex flex-col gap-2 items-start">
         <div className="flex items-center gap-2">
           <label>
             Pallet
@@ -106,7 +107,7 @@ export const ViewFns = withSubscribe(
         <Routes>
           <Route path=":callId" element={<ViewFnResults />} />
         </Routes>
-      </div>
+      </CenteredScrollContainer>
     )
   },
   {

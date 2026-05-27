@@ -69,21 +69,27 @@ const ManageToDialog: FC<PropsWithChildren> = ({ children }) => {
   )
 }
 
+export const PolkahubModalBasedManagers = () => (
+  <>
+    <ul className="flex gap-2 flex-wrap items-center justify-center">
+      <ManageLedger />
+      <ManageVault />
+      <WalletConnectButton />
+    </ul>
+    <ul className="flex gap-2 flex-wrap items-center justify-center">
+      <ManageReadOnly />
+      <ManageProxy />
+      <ManageMultisig />
+    </ul>
+  </>
+)
+
 export const Providers = () => (
   <div className="bg-card p-4 rounded-xl space-y-2">
     <h3 className="text-xl font-bold">Account Providers</h3>
     <PjsWalletButtons />
     <ManageToDialog>
-      <ul className="flex gap-2 flex-wrap items-center justify-center">
-        <ManageLedger />
-        <ManageVault />
-        <WalletConnectButton />
-      </ul>
-      <ul className="flex gap-2 flex-wrap items-center justify-center">
-        <ManageReadOnly />
-        <ManageProxy />
-        <ManageMultisig />
-      </ul>
+      <PolkahubModalBasedManagers />
     </ManageToDialog>
   </div>
 )
