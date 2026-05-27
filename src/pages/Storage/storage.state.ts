@@ -1,4 +1,5 @@
 import { bytesToString } from "@/components/BinaryInput"
+import { createMetadataEntryState } from "@/components/MetadataEntryInput"
 import { pushWorkspaceEntry, WorkspaceEntryData } from "@/components/Workspace"
 import { getHashParams } from "@/hashParams"
 import {
@@ -15,13 +16,11 @@ import {
   RuntimeContext,
 } from "@polkadot-api/observable-client"
 import { DefaultedStateObservable, state } from "@react-rxjs/core"
-import { createSignal, mergeWithKey } from "@react-rxjs/utils"
 import { DatabaseSearch } from "lucide-react"
 import { Binary, Enum, HexString } from "polkadot-api"
 import {
   catchError,
   combineLatest,
-  combineLatestWith,
   distinct,
   EMPTY,
   endWith,
@@ -41,10 +40,8 @@ import {
   take,
   takeUntil,
 } from "rxjs"
-import { selectedBlock$ } from "./BlockPicker"
 import { StorageWorkspaceEntry } from "./StorageWorkspaceEntry"
 import { getEntry, getStorageItem } from "./decodeKey"
-import { createMetadataEntryState } from "@/components/MetadataEntryInput"
 
 export type StorageMetadataEntry = {
   pallet: string

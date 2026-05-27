@@ -21,10 +21,14 @@ import {
   switchMap,
 } from "rxjs"
 import { twMerge } from "tailwind-merge"
-import { addRuntimeCallQuery, selectedEntry$ } from "./runtimeCalls.state"
+import {
+  addRuntimeCallQuery,
+  runtimeCallEntryState,
+} from "./runtimeCalls.state"
+import { selectedBlock$ } from "../Storage/BlockPicker"
 
 export const RuntimeCallQuery: FC = () => {
-  const selectedEntry = useStateObservable(selectedEntry$)
+  const selectedEntry = useStateObservable(runtimeCallEntryState.selectedEntry$)
   const isReady = useStateObservable(isReady$)
   const navigate = useNavigate()
 
@@ -33,10 +37,27 @@ export const RuntimeCallQuery: FC = () => {
   const submit = async () => {
     const [entry, inputValues, builder, block] = await firstValueFrom(
       combineLatest([
-        selectedEntry$,
+        runtimeCallEntryState.selectedEntry$,
         inputValues$,
         dynamicBuilder$,
-        client$.pipe(switchMap((client) => client.finalizedBlock$)),
+        selectedBlock$.pipe(
+          switchMap((block) =>
+            block.hash
+              ? [
+                  {
+                    latest: false,
+                    hash: block.hash,
+                  },
+                ]
+              : client$.pipe(
+                  switchMap((client) => client.finalizedBlock$),
+                  map((v) => ({
+                    latest: true,
+                    hash: v.hash,
+                  })),
+                ),
+          ),
+        ),
       ]),
     )
     const decodedValues = inputValues.map((v, i) =>
@@ -46,6 +67,7 @@ export const RuntimeCallQuery: FC = () => {
     )
 
     const id = await addRuntimeCallQuery({
+      latestBlock: block.latest,
       blockHash: block.hash,
       api: entry!.api,
       method: entry!.name,
@@ -64,11 +86,11 @@ export const RuntimeCallQuery: FC = () => {
   )
 }
 
-const [inputValueChange$, setInputValue] = createSignal<{
+export const [inputValueChange$, setInputValue] = createSignal<{
   idx: number
   value: Uint8Array | "partial" | null
 }>()
-const inputValues$ = selectedEntry$.pipeState(
+const inputValues$ = runtimeCallEntryState.selectedEntry$.pipeState(
   filter((v) => !!v),
   map((v) => v.inputs),
   switchMap((inputs) => {
@@ -91,7 +113,7 @@ const isReady$ = inputValues$.pipeState(
 )
 
 const RuntimeInputValues: FC = () => {
-  const selectedEntry = useStateObservable(selectedEntry$)
+  const selectedEntry = useStateObservable(runtimeCallEntryState.selectedEntry$)
   if (!selectedEntry || !selectedEntry.inputs.length) return null
 
   return (

@@ -5,6 +5,7 @@ import { FC } from "react"
 import type { RuntimeCallResult } from "./runtimeCalls.state"
 
 export type RuntimeCallWorkspaceContext = {
+  blockHash: string
   api: string
   method: string
   result$: DefaultedStateObservable<RuntimeCallResult | null>
