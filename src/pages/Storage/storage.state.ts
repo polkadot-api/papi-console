@@ -56,10 +56,9 @@ const getPalletEntries = (
   ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">,
 ) =>
   Object.fromEntries(
-    ctx.lookup.metadata.pallets.map((p) => [
-      p.name,
-      p.storage?.items.map((item) => item.name) ?? [],
-    ]),
+    ctx.lookup.metadata.pallets
+      .filter((p) => p.storage?.items.length)
+      .map((p) => [p.name, p.storage?.items.map((item) => item.name) ?? []]),
   )
 
 export const storageEntryState = createMetadataEntryState(
