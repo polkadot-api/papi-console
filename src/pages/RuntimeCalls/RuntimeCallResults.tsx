@@ -3,9 +3,11 @@ import { ButtonGroup } from "@/components/ButtonGroup"
 import { JsonDisplay } from "@/components/JsonDisplay"
 import { workspaceEntryCtxOrAdd$ } from "@/components/Workspace"
 import { runtimeCtx$ } from "@/state/chains/chain.state"
+import { shortStr } from "@/utils"
 import { state, useStateObservable, withDefault } from "@react-rxjs/core"
 import { FC, useEffect, useMemo, useState } from "react"
 import { useParams } from "react-router-dom"
+import { filter, firstValueFrom } from "rxjs"
 import { setBlockHashValue } from "../Storage/BlockPicker"
 import { ValueDisplay } from "../Storage/StorageSubscriptions"
 import { setInputValue } from "./RuntimeCallQuery"
@@ -15,7 +17,6 @@ import {
   runtimeCallEntryState,
   runtimeCallToWorkspaceEntry,
 } from "./runtimeCalls.state"
-import { shortStr } from "@/utils"
 
 export const RuntimeCallResults: FC = () => {
   const { callId } = useParams()
@@ -147,7 +148,13 @@ const useSynchronizeInputs = (id: string) => {
         item: params.method,
       })
       // Let entry settle
-      await Promise.resolve()
+      await firstValueFrom(
+        runtimeCallEntryState.selectedEntry$.pipe(
+          filter(
+            (v) => !!v && v.api === params.api && v.name === params.method,
+          ),
+        ),
+      )
       if (cancelled) return
       const encodedArgs = params.args.map((arg, i) =>
         params.codec.inner[i].enc(arg),

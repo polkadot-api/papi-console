@@ -13,6 +13,7 @@ import { Circle, Dot } from "lucide-react"
 import { FC, useState } from "react"
 import {
   combineLatest,
+  distinctUntilChanged,
   filter,
   firstValueFrom,
   map,
@@ -21,11 +22,11 @@ import {
   switchMap,
 } from "rxjs"
 import { twMerge } from "tailwind-merge"
+import { selectedBlock$ } from "../Storage/BlockPicker"
 import {
   addRuntimeCallQuery,
   runtimeCallEntryState,
 } from "./runtimeCalls.state"
-import { selectedBlock$ } from "../Storage/BlockPicker"
 
 export const RuntimeCallQuery: FC = () => {
   const selectedEntry = useStateObservable(runtimeCallEntryState.selectedEntry$)
@@ -93,6 +94,9 @@ export const [inputValueChange$, setInputValue] = createSignal<{
 const inputValues$ = runtimeCallEntryState.selectedEntry$.pipeState(
   filter((v) => !!v),
   map((v) => v.inputs),
+  distinctUntilChanged(
+    (a, b) => a.length === b.length && a.every((v, i) => b[i].type === v.type),
+  ),
   switchMap((inputs) => {
     const values: Array<Uint8Array | "partial" | null> = inputs.map(() => null)
     return inputValueChange$.pipe(
