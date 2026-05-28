@@ -13,6 +13,7 @@ import { Circle, Dot } from "lucide-react"
 import { FC, useState } from "react"
 import {
   combineLatest,
+  distinctUntilChanged,
   filter,
   firstValueFrom,
   map,
@@ -21,10 +22,11 @@ import {
   switchMap,
 } from "rxjs"
 import { twMerge } from "tailwind-merge"
-import { addViewFnCall, selectedEntry$ } from "./viewFns.state"
+import { selectedBlock$ } from "../Storage/BlockPicker"
+import { addViewFnCall, viewFnEntryState } from "./viewFns.state"
 
 export const ViewFnQuery: FC = () => {
-  const selectedEntry = useStateObservable(selectedEntry$)
+  const selectedEntry = useStateObservable(viewFnEntryState.selectedEntry$)
   const isReady = useStateObservable(isReady$)
   const navigate = useNavigate()
 
@@ -33,10 +35,27 @@ export const ViewFnQuery: FC = () => {
   const submit = async () => {
     const [entry, inputValues, builder, block] = await firstValueFrom(
       combineLatest([
-        selectedEntry$,
+        viewFnEntryState.selectedEntry$,
         inputValues$,
         dynamicBuilder$,
-        client$.pipe(switchMap((client) => client.finalizedBlock$)),
+        selectedBlock$.pipe(
+          switchMap((block) =>
+            block.hash
+              ? [
+                  {
+                    latest: false,
+                    hash: block.hash,
+                  },
+                ]
+              : client$.pipe(
+                  switchMap((client) => client.finalizedBlock$),
+                  map((v) => ({
+                    latest: true,
+                    hash: v.hash,
+                  })),
+                ),
+          ),
+        ),
       ]),
     )
     const decodedValues = inputValues.map((v, i) =>
@@ -46,6 +65,7 @@ export const ViewFnQuery: FC = () => {
     )
 
     const id = await addViewFnCall({
+      latestBlock: block.latest,
       blockHash: block.hash,
       pallet: entry!.pallet,
       name: entry!.name,
@@ -64,13 +84,16 @@ export const ViewFnQuery: FC = () => {
   )
 }
 
-const [inputValueChange$, setInputValue] = createSignal<{
+export const [inputValueChange$, setInputValue] = createSignal<{
   idx: number
   value: Uint8Array | "partial" | null
 }>()
-const inputValues$ = selectedEntry$.pipeState(
+const inputValues$ = viewFnEntryState.selectedEntry$.pipeState(
   filter((v) => !!v),
   map((v) => v.inputs),
+  distinctUntilChanged(
+    (a, b) => a.length === b.length && a.every((v, i) => b[i].type === v.type),
+  ),
   switchMap((inputs) => {
     const values: Array<Uint8Array | "partial" | null> = inputs.map(() => null)
     return inputValueChange$.pipe(
@@ -91,7 +114,7 @@ const isReady$ = inputValues$.pipeState(
 )
 
 const ViewFnInputValues: FC = () => {
-  const selectedEntry = useStateObservable(selectedEntry$)
+  const selectedEntry = useStateObservable(viewFnEntryState.selectedEntry$)
   if (!selectedEntry || !selectedEntry.inputs.length) return null
 
   return (

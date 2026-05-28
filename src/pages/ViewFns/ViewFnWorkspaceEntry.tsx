@@ -5,6 +5,7 @@ import { FC } from "react"
 import type { ViewFnResult } from "./viewFns.state"
 
 export type ViewFnWorkspaceContext = {
+  blockHash: string
   pallet: string
   name: string
   result$: DefaultedStateObservable<ViewFnResult | null>

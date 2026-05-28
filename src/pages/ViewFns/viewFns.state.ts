@@ -1,11 +1,11 @@
+import { createMetadataEntryState } from "@/components/MetadataEntryInput"
 import { pushWorkspaceEntry, WorkspaceEntryData } from "@/components/Workspace"
+import { getHashParams } from "@/hashParams"
 import { runtimeCtxAt$, unsafeApi$ } from "@/state/chains/chain.state"
 import { RuntimeContext } from "@polkadot-api/observable-client"
-import { UnifiedMetadata } from "@polkadot-api/substrate-bindings"
 import { shareLatest, state } from "@react-rxjs/core"
-import { createSignal } from "@react-rxjs/utils"
 import { SquareFunction } from "lucide-react"
-import { Binary, HexString, ResultPayload } from "polkadot-api"
+import { Binary, Codec, HexString, ResultPayload } from "polkadot-api"
 import {
   catchError,
   combineLatest,
@@ -21,16 +21,52 @@ import {
   ViewFnWorkspaceEntry,
 } from "./ViewFnWorkspaceEntry"
 
-type Pallet = UnifiedMetadata["pallets"][number]
-export type ViewFnEntry = Pallet["viewFns"][number] & {
+export type ViewFnEntry = {
   pallet: string
+  name: string
+  inputs: {
+    name: string
+    type: number
+  }[]
+  output: number
+  docs: string[]
 }
 
-export const [entryChange$, setSelectedFn] = createSignal<ViewFnEntry | null>()
-export const selectedEntry$ = state(entryChange$, null)
+export const viewFnEntryState = createMetadataEntryState(
+  (ctx) =>
+    Object.fromEntries(
+      ctx.lookup.metadata.pallets
+        .filter((pallet) => pallet.viewFns.length)
+        .map((pallet) => [
+          pallet.name,
+          pallet.viewFns.map((viewFn) => viewFn.name),
+        ]),
+    ),
+  (entries) => {
+    const params = getHashParams()
+    const group = params.get("pallet") ?? Object.keys(entries)[0] ?? null
+    const item =
+      params.get("fn") ??
+      params.get("function") ??
+      (group ? entries[group]?.[0] : null) ??
+      null
+    return { item, group }
+  },
+  (ctx, entry): ViewFnEntry => {
+    const pallet = ctx.lookup.metadata.pallets.find(
+      (pallet) => pallet.name === entry.group,
+    )!
+    const viewFn = pallet.viewFns.find((i) => i.name === entry.item)!
+    return {
+      pallet: pallet.name,
+      ...viewFn,
+    }
+  },
+)
 
 type ViewFnCall = {
   blockHash: HexString
+  latestBlock: boolean
   pallet: string
   name: string
   args: unknown[]
@@ -43,20 +79,31 @@ const viewFnCallToId = (
   const codec = ctx.dynamicBuilder.buildViewFn(call.pallet, call.name).args
 
   return [
-    call.blockHash,
+    (call.latestBlock ? "latest_" : "") + call.blockHash,
     call.pallet,
     call.name,
     Binary.toHex(codec.enc(call.args)),
   ].join(":")
 }
 
-export const idToViewFnCall = async (id: string): Promise<ViewFnCall> => {
-  const [blockHash, pallet, name, encodedArgs] = id.split(":")
+export const idToViewFnCall = async (
+  id: string,
+): Promise<
+  ViewFnCall & {
+    codec: Codec<any> & {
+      inner: Codec<any>[]
+    }
+  }
+> => {
+  const [blockHashStr, pallet, name, encodedArgs] = id.split(":")
+  const latestBlock = blockHashStr.startsWith("latest_")
+  const blockHash = blockHashStr.replace("latest_", "")
+
   const ctx = await firstValueFrom(runtimeCtxAt$(blockHash))
   const codec = ctx.dynamicBuilder.buildViewFn(pallet, name).args
   const args = codec.dec(encodedArgs)
 
-  return { blockHash, pallet, name, args }
+  return { latestBlock, blockHash, pallet, name, args, codec }
 }
 
 export const viewFnCallToWorkspaceEntry = async (
@@ -89,6 +136,7 @@ export const viewFnCallToWorkspaceEntry = async (
   const context: ViewFnWorkspaceContext = {
     pallet: call.pallet,
     name: call.name,
+    blockHash: call.blockHash,
     result$,
   }
   const id = viewFnCallToId(ctx, call)
