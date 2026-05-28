@@ -1,4 +1,6 @@
 import { ActionButton } from "@/components/ActionButton"
+import { MetadataEntryInput } from "@/components/MetadataEntryInput"
+import { Textarea } from "@/components/ui/textarea"
 import { useNavigate } from "@/hashParams"
 import { createState } from "@/lib/externalState"
 import { NOTIN } from "@polkadot-api/react-builder"
@@ -7,13 +9,14 @@ import { Enum } from "polkadot-api"
 import { FC } from "react"
 import { combineLatest, firstValueFrom, map } from "rxjs"
 import { selectedBlock$ } from "./BlockPicker"
-import { addStorageSubscription, selectedEntry$ } from "./storage.state"
-import { StorageEntryPicker } from "./StorageEntryPicker"
-import { Textarea } from "@/components/ui/textarea"
+import { addStorageSubscription, storageEntryState } from "./storage.state"
 
 export const [value$, setValue] = createState("")
 
-const valueDecoder$ = combineLatest([selectedEntry$, selectedBlock$]).pipe(
+const valueDecoder$ = combineLatest([
+  storageEntryState.selectedEntry$,
+  selectedBlock$,
+]).pipe(
   map(([selectedEntry, { ctx }]) =>
     selectedEntry
       ? ctx.dynamicBuilder.buildDefinition(selectedEntry.value).dec
@@ -41,7 +44,7 @@ export const StorageDecode: FC = () => {
 
   const submit = async () => {
     const [entry, { hash }] = await firstValueFrom(
-      combineLatest([selectedEntry$, selectedBlock$]),
+      combineLatest([storageEntryState.selectedEntry$, selectedBlock$]),
     )
 
     const id = await addStorageSubscription({
@@ -55,7 +58,13 @@ export const StorageDecode: FC = () => {
 
   return (
     <div className="w-full space-y-2">
-      <StorageEntryPicker />
+      <MetadataEntryInput
+        state={storageEntryState}
+        labels={{
+          group: "Pallet",
+          item: "Entry",
+        }}
+      />
       <label className="block">
         Data
         <Textarea

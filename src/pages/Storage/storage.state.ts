@@ -1,4 +1,5 @@
 import { bytesToString } from "@/components/BinaryInput"
+import { createMetadataEntryState } from "@/components/MetadataEntryInput"
 import { pushWorkspaceEntry, WorkspaceEntryData } from "@/components/Workspace"
 import { getHashParams } from "@/hashParams"
 import {
@@ -15,13 +16,11 @@ import {
   RuntimeContext,
 } from "@polkadot-api/observable-client"
 import { DefaultedStateObservable, state } from "@react-rxjs/core"
-import { createSignal, mergeWithKey } from "@react-rxjs/utils"
 import { DatabaseSearch } from "lucide-react"
 import { Binary, Enum, HexString } from "polkadot-api"
 import {
   catchError,
   combineLatest,
-  combineLatestWith,
   distinct,
   EMPTY,
   endWith,
@@ -41,7 +40,6 @@ import {
   take,
   takeUntil,
 } from "rxjs"
-import { selectedBlock$ } from "./BlockPicker"
 import { StorageWorkspaceEntry } from "./StorageWorkspaceEntry"
 import { getEntry, getStorageItem } from "./decodeKey"
 
@@ -54,112 +52,53 @@ export type StorageMetadataEntry = {
   hashers: string[]
 }
 
-export const [entryChange$, selectEntry] = createSignal<{
-  pallet?: string | null
-  entry?: string | null
-}>()
-
 const getPalletEntries = (
   ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">,
 ) =>
   Object.fromEntries(
-    ctx.lookup.metadata.pallets.map((p) => [p.name, p.storage?.items ?? []]),
+    ctx.lookup.metadata.pallets
+      .filter((p) => p.storage?.items.length)
+      .map((p) => [p.name, p.storage?.items.map((item) => item.name) ?? []]),
   )
 
-const palletEntries$ = selectedBlock$.pipe(
-  map(({ ctx }) => getPalletEntries(ctx)),
-)
-
-const initialValue$ = palletEntries$.pipe(
-  map(() => {
+export const storageEntryState = createMetadataEntryState(
+  getPalletEntries,
+  () => {
     const params = getHashParams()
-    const pallet = params.get("pallet") ?? "System"
-    const entry = params.get("entry") ?? "Account"
-    return { entry, pallet }
-  }),
-)
-
-export const partialEntry$ = state(
-  mergeWithKey({ entryChange$, initialValue$ }).pipe(
-    combineLatestWith(palletEntries$),
-    scan(
-      (acc, [evt, pallets]) => {
-        const newValue =
-          evt.type === "entryChange$"
-            ? { ...acc, ...evt.payload }
-            : {
-                pallet: acc.pallet ?? evt.payload.pallet,
-                entry: acc.entry ?? evt.payload.entry,
-              }
-        let selectedPallet = newValue.pallet ? pallets[newValue.pallet] : null
-        if (!selectedPallet) {
-          newValue.pallet = Object.keys(pallets)[0] ?? null
-          selectedPallet = pallets[newValue.pallet] ?? null
-        }
-        if (!selectedPallet?.find((it) => it.name === newValue.entry)) {
-          newValue.entry = selectedPallet?.[0]?.name ?? null
-        }
-        return newValue
-      },
-      {
-        pallet: null as string | null,
-        entry: null as string | null,
-      },
-    ),
-  ),
-  {
-    pallet: null,
-    entry: null,
+    const group = params.get("pallet") ?? "System"
+    const item = params.get("entry") ?? "Account"
+    return { item, group }
   },
-)
+  (ctx, entry): StorageMetadataEntry => {
+    const pallet = ctx.lookup.metadata.pallets.find(
+      (p) => p.name === entry.group,
+    )!
+    const item = pallet.storage!.items.find((i) => i.name === entry.item)!
 
-export const selectedEntry$ = state(
-  combineLatest([
-    partialEntry$,
-    selectedBlock$.pipe(
-      map(({ ctx }) => {
-        const entries = getPalletEntries(ctx)
-        return { ctx, entries }
-      }),
-    ),
-  ]).pipe(
-    map(([partialEntry, { ctx, entries }]): StorageMetadataEntry | null => {
-      const entry = partialEntry.pallet
-        ? entries[partialEntry.pallet]?.find(
-            (v) => v.name === partialEntry.entry,
-          )
-        : null
-      if (!entry?.type) return null
+    const { keys } = getEntry(ctx, item.type)
+    const key = keys.map((v) => v.type)
+    const hashers = keys.map((v) => v.hasher)
 
-      const { type, docs } = entry
-      const pallet = partialEntry.pallet!
-
-      const { keys } = getEntry(ctx, type)
-      const key = keys.map((v) => v.type)
-      const hashers = keys.map((v) => v.hasher)
-
-      if (type.tag === "plain") {
-        return {
-          value: type.value,
-          key,
-          pallet,
-          entry: entry.name,
-          docs,
-          hashers,
-        }
-      }
-
+    if (item.type.tag === "plain") {
       return {
-        value: type.value.value,
+        value: item.type.value,
         key,
-        pallet,
-        entry: entry.name,
-        docs,
+        pallet: pallet.name,
+        entry: item.name,
+        docs: item.docs,
         hashers,
       }
-    }),
-  ),
-  null,
+    }
+
+    return {
+      value: item.type.value.value,
+      key,
+      pallet: pallet.name,
+      entry: item.name,
+      docs: item.docs,
+      hashers,
+    }
+  },
 )
 
 export type KeyCodec = {
