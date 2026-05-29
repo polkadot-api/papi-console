@@ -3,12 +3,20 @@ import { ButtonGroup } from "@/components/ButtonGroup"
 import { JsonDisplay } from "@/components/JsonDisplay"
 import { workspaceEntryCtxOrAdd$ } from "@/components/Workspace"
 import { runtimeCtx$ } from "@/state/chains/chain.state"
+import { shortStr } from "@/utils"
 import { state, useStateObservable, withDefault } from "@react-rxjs/core"
-import { FC, useMemo, useState } from "react"
+import { FC, useEffect, useMemo, useState } from "react"
 import { useParams } from "react-router-dom"
+import { filter, firstValueFrom } from "rxjs"
+import { setBlockHashValue } from "../Storage/BlockPicker"
 import { ValueDisplay } from "../Storage/StorageSubscriptions"
+import { setInputValue } from "./ViewFnQuery"
 import { ViewFnWorkspaceContext } from "./ViewFnWorkspaceEntry"
-import { idToViewFnCall, viewFnCallToWorkspaceEntry } from "./viewFns.state"
+import {
+  idToViewFnCall,
+  viewFnCallToWorkspaceEntry,
+  viewFnEntryState,
+} from "./viewFns.state"
 
 export const ViewFnResults: FC = () => {
   const { callId } = useParams()
@@ -36,6 +44,7 @@ const viewFnCtx$ = state(
 
 const ViewFnResultBox: FC<{ id: string }> = ({ id }) => {
   const context = useStateObservable(viewFnCtx$(id))
+  useSynchronizeInputs(id)
 
   return context ? <ViewFnResultContent id={id} context={context} /> : null
 }
@@ -53,6 +62,10 @@ const ViewFnResultContent: FC<{
           {context.pallet}.{context.name}
         </h3>
         <div className="flex items-center shrink-0 gap-2">
+          <div className="text-xs text-center">
+            <p>Block</p>
+            <p>{shortStr(context.blockHash, 6)}</p>
+          </div>
           <ButtonGroup
             value={mode}
             onValueChange={setMode as any}
@@ -121,4 +134,37 @@ const ResultDisplay: FC<{
       )}
     </div>
   )
+}
+
+const useSynchronizeInputs = (id: string) => {
+  useEffect(() => {
+    let cancelled = false
+    const run = async () => {
+      const params = await idToViewFnCall(id)
+      if (cancelled) return
+      setBlockHashValue(params.latestBlock ? "Latest" : params.blockHash)
+      viewFnEntryState.selectEntry({
+        group: params.pallet,
+        item: params.name,
+      })
+      // Let entry settle
+      await firstValueFrom(
+        viewFnEntryState.selectedEntry$.pipe(
+          filter(
+            (v) => !!v && v.pallet === params.pallet && v.name === params.name,
+          ),
+        ),
+      )
+      if (cancelled) return
+      const encodedArgs = params.args.map((arg, i) =>
+        params.codec.inner[i].enc(arg),
+      )
+      encodedArgs.forEach((value, idx) => setInputValue({ idx, value }))
+    }
+    run()
+
+    return () => {
+      cancelled = true
+    }
+  }, [id])
 }
