@@ -46,7 +46,7 @@ export const Constants = withSubscribe(
     const entries = useStateObservable(metadataConstants$)
 
     return (
-      <div className="p-4 space-y-2 items-start overflow-auto @container">
+      <div className="p-4 space-y-2 overflow-auto @container">
         <div className="w-full border-b border-border pb-3">
           <label className="inline-flex flex-col gap-1 text-sm font-medium">
             Block
@@ -80,8 +80,7 @@ const PalletConstants: FC<{
       <div className="flex min-h-14 items-center gap-3 border-b border-border px-3">
         <h2 className="truncate flex-1">{pallet}</h2>
         <AddToWorkspace
-          onClick={async (evt) => {
-            evt.stopPropagation()
+          onClick={async () => {
             const { ctx } = await firstValueFrom(selectedBlock$)
 
             addPalletConstantsToWorkspace(
