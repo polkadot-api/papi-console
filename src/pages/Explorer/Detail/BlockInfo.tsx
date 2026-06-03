@@ -6,13 +6,16 @@ import {
   blocksByHeight$,
   BlockState,
 } from "@/state/block.state"
+import { shortStr } from "@/utils"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { combineKeys } from "@react-rxjs/utils"
+import { BlockHeader, HexString } from "polkadot-api"
 import { FC, ReactNode, useContext } from "react"
 import { filter, map, startWith, switchMap, take } from "rxjs"
 import { AddBlockToWorkspace } from "../ExplorerWorkspaceEntry"
 import { BlockAuthor } from "./BlockAuthor"
 import { BlockStatusIcon, statusText } from "./BlockState"
+import { DigestDetails } from "./DigestDetails"
 
 export const BlockInfoView: FC = () => {
   const block = useContext(BlockContext)
@@ -46,17 +49,31 @@ export const BlockInfoView: FC = () => {
       </div>
 
       {block.header && (
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-          <DetailTile label="Roots">
-            <HashPreview title="state" value={block.header.stateRoot} />
-            <HashPreview title="extrinsic" value={block.header.extrinsicRoot} />
-          </DetailTile>
-          <DetailTile label="Block author">
-            <BlockAuthor hash={block.hash} header={block.header} />
-          </DetailTile>
-        </div>
+        <HeaderDetails hash={block.hash as HexString} header={block.header} />
       )}
     </section>
+  )
+}
+
+const HeaderDetails: FC<{ hash: HexString; header: BlockHeader }> = ({
+  hash,
+  header,
+}) => {
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <DetailTile label="Header commitments">
+        <div className="space-y-3">
+          <HashPreview title="Storage root" value={header.stateRoot} />
+          <HashPreview title="Extrinsics root" value={header.extrinsicRoot} />
+        </div>
+      </DetailTile>
+      <DetailTile label="Block author">
+        <BlockAuthor hash={hash} header={header} />
+      </DetailTile>
+      <DetailTile label="Digest details" className="md:col-span-2">
+        <DigestDetails header={header} />
+      </DetailTile>
+    </div>
   )
 }
 
@@ -71,17 +88,23 @@ const HashPreview: FC<{ title: string; value: string }> = ({
   title,
   value,
 }) => (
-  <div className="font-mono text-sm">
-    {title}: {value.slice(0, 18)}…
-    <CopyText className="align-middle" text={value} binary />
+  <div className="flex min-w-0 items-center gap-2">
+    <span className="w-28 shrink-0 text-xs text-foreground/55">{title}</span>
+    <span className="min-w-0 truncate font-mono text-sm text-foreground">
+      {shortStr(value, 10)}
+    </span>
+    <CopyText className="shrink-0 text-foreground/65" text={value} binary />
   </div>
 )
 
-const DetailTile: FC<{ label: string; children: ReactNode }> = ({
-  label,
-  children,
-}) => (
-  <div className="rounded-xl border border-foreground/10 bg-foreground/2 p-4">
+const DetailTile: FC<{
+  label: string
+  children: ReactNode
+  className?: string
+}> = ({ label, children, className = "" }) => (
+  <div
+    className={`rounded-lg border border-foreground/10 bg-foreground/2 p-4 ${className}`}
+  >
     <p className="text-xs uppercase tracking-widest text-foreground/60">
       {label}
     </p>

@@ -1,15 +1,7 @@
 import { blockInfoState$, BlockState, finalized$ } from "@/state/block.state"
 import { client$ } from "@/state/chains/chain.state"
 import { Polkadot_people } from "@polkadot-api/descriptors"
-import {
-  _void,
-  Bytes,
-  HexString,
-  Struct,
-  u32,
-  u64,
-  Variant,
-} from "@polkadot-api/substrate-bindings"
+import { HexString } from "@polkadot-api/substrate-bindings"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { BlockHeader, PolkadotClient } from "polkadot-api"
 import { AddressIdentity } from "polkahub"
@@ -24,6 +16,8 @@ import {
   switchMap,
   take,
 } from "rxjs"
+import { decodeAuraPreRuntime } from "./digests/aura"
+import { decodeBabePreRuntime } from "./digests/babe"
 
 const validatorCache: WeakMap<
   PolkadotClient,
@@ -108,24 +102,6 @@ export const BlockAuthor: FC<{ hash: HexString; header: BlockHeader }> = ({
   )
 }
 
-const DigestWithVRF = Struct({
-  authority_index: u32,
-  slot: u64,
-  vrf_signature: Struct({
-    pre_output: Bytes(32),
-    proof: Bytes(64),
-  }),
-})
-const BabePreDigest = Variant({
-  Uknown: _void,
-  Primary: DigestWithVRF,
-  SecondaryPlain: Struct({
-    authority_index: u32,
-    slot: u64,
-  }),
-  SecondaryVRF: DigestWithVRF,
-})
-
 const getAuthorityIdx = (header: BlockHeader) => {
   const preRuntime = header.digests.find(
     (d) => d.type === "preRuntime" && ["BABE", "aura"].includes(d.value.engine),
@@ -138,12 +114,12 @@ const getAuthorityIdx = (header: BlockHeader) => {
 
   switch (preRuntime?.engine) {
     case "BABE": {
-      const babe = BabePreDigest.dec(preRuntime.payload)
-      if (!babe.value) return null
+      const babe = decodeBabePreRuntime(preRuntime.payload)
+      if (!babe?.value) return null
       return BigInt(babe.value.authority_index)
     }
     case "aura": {
-      return u64.dec(preRuntime.payload)
+      return decodeAuraPreRuntime(preRuntime.payload)?.slot ?? null
     }
   }
 
