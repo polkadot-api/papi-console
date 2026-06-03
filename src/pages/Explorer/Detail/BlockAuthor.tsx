@@ -1,7 +1,7 @@
 import { blockInfoState$, BlockState, finalized$ } from "@/state/block.state"
 import { client$ } from "@/state/chains/chain.state"
 import { Polkadot_people } from "@polkadot-api/descriptors"
-import { HexString, u64 } from "@polkadot-api/substrate-bindings"
+import { HexString } from "@polkadot-api/substrate-bindings"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { BlockHeader, PolkadotClient } from "polkadot-api"
 import { AddressIdentity } from "polkahub"
@@ -16,7 +16,8 @@ import {
   switchMap,
   take,
 } from "rxjs"
-import { decodeAuraPreRuntime, decodeBabePreRuntime } from "./DigestDetails"
+import { decodeAuraPreRuntime } from "./digests/aura"
+import { decodeBabePreRuntime } from "./digests/babe"
 
 const validatorCache: WeakMap<
   PolkadotClient,
