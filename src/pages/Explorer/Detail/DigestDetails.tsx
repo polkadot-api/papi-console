@@ -1,4 +1,5 @@
 import { CopyText } from "@/components/Copy"
+import { ExpandBtn } from "@/components/Expand"
 import { shortStr } from "@/utils"
 import {
   _void,
@@ -16,295 +17,407 @@ import {
 } from "@polkadot-api/substrate-bindings"
 import { BlockHeader, HexString } from "polkadot-api"
 import { toHex } from "polkadot-api/utils"
-import { FC, ReactNode } from "react"
-
-const HeaderBadge: FC<{ children: ReactNode }> = ({ children }) => (
-  <span className="inline-flex items-center rounded-md border border-polkadot/30 bg-polkadot/10 px-2 py-1 text-xs font-medium text-polkadot">
-    {children}
-  </span>
-)
+import { FC, ReactNode, useState } from "react"
 
 export const DigestDetails: FC<{ header: BlockHeader }> = ({ header }) => {
   if (!header.digests.length) return <span className="text-slate-400">N/A</span>
 
   return (
-    <div className="overflow-x-auto">
-      <div className="grid grid-cols-[8rem_5rem_minmax(12rem,1fr)_minmax(14rem,1fr)] gap-3 border-b border-foreground/10 pb-2 text-xs uppercase tracking-widest text-foreground/45">
-        <span>Type</span>
-        <span>Engine</span>
-        <span>Decoded</span>
-        <span>Raw</span>
-      </div>
-      <ol className="divide-y divide-foreground/10">
-        {header.digests.map((digest, idx) => (
-          <DigestRow key={idx} digest={digest} />
-        ))}
-      </ol>
-    </div>
+    <ol className="divide-y divide-foreground/10">
+      {header.digests.map((digest, idx) => (
+        <DigestRow key={idx} digest={digest} />
+      ))}
+    </ol>
   )
 }
 
 const DigestRow: FC<{ digest: HeaderDigest }> = ({ digest }) => {
-  const engine =
-    "value" in digest &&
-    typeof digest.value === "object" &&
-    "engine" in digest.value
-      ? digest.value.engine
-      : null
+  const [expanded, setExpanded] = useState(false)
+  const view = getDigestView(digest)
+  const canExpand = view.details != null
+
+  const rawValue =
+    digest.type === "other"
+      ? toHex(digest.value)
+      : (digest.value?.payload ?? null)
+  const engine = digest.type === "other" ? null : (digest.value?.engine ?? null)
 
   return (
-    <li className="grid grid-cols-[8rem_5rem_minmax(12rem,1fr)_minmax(14rem,1fr)] items-center gap-3 py-3 last:pb-0">
-      <DigestTypeLabel type={digest.type} />
-      <span className="font-mono text-sm text-foreground/80">
-        {engine ?? "-"}
-      </span>
-      <div className="min-w-0">
-        <DigestDecodedFields digest={digest} />
+    <li className="py-2.5 last:pb-0 space-y-2">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:grid sm:grid-cols-[2rem_6rem_3rem_minmax(0,1fr)_auto] sm:gap-2">
+        {canExpand ? (
+          <div>
+            <button
+              className="flex h-6 w-6 items-center justify-center rounded-md text-foreground/55 hover:bg-foreground/5 hover:text-foreground"
+              onClick={() => setExpanded((value) => !value)}
+              title={expanded ? "Hide details" : "Show details"}
+              type="button"
+            >
+              <ExpandBtn expanded={expanded} />
+            </button>
+          </div>
+        ) : (
+          <div />
+        )}
+        <div className="flex items-center gap-2">
+          <DigestTypeLabel type={digest.type} />
+        </div>
+        <span className="font-mono text-sm text-foreground/75">
+          {engine ?? "-"}
+        </span>
+        {view.summary ? (
+          <div className="flex items-baseline gap-2 text-sm text-foreground">
+            <span className="shrink-0 text-foreground/55">
+              {view.summary.label}
+            </span>
+            {view.summary.value}
+          </div>
+        ) : (
+          <div />
+        )}
+        <div className="text-sm hidden sm:block">
+          {rawValue ? <HexDisplay value={rawValue} /> : null}
+        </div>
       </div>
-      <div className="min-w-0">
-        <DigestRawPayload digest={digest} />
-      </div>
+
+      {canExpand && expanded ? (
+        <div className="rounded-md bg-foreground/5 px-3 py-2 sm:ml-48">
+          {view.details}
+          {/* <div className="grid gap-x-6 gap-y-1 md:grid-cols-2">
+            {view.details.map((field, idx) => (
+              <DigestDetailField key={idx} field={field} />
+            ))}
+          </div> */}
+        </div>
+      ) : null}
     </li>
   )
 }
 
-const DigestDecodedFields: FC<{ digest: HeaderDigest }> = ({ digest }) => {
-  switch (digest.type) {
-    case "preRuntime":
-      return <PreRuntimeDigestFields value={digest.value} />
-    case "consensus":
-      return <ConsensusDigestFields value={digest.value} />
-    default:
-      return <span className="text-sm text-foreground/45">-</span>
-  }
+type DigestView = {
+  summary: {
+    label: string
+    value: ReactNode
+  } | null
+  details: ReactNode | null
 }
 
-const PreRuntimeDigestFields: FC<{
-  value: {
-    engine: string
-    payload: HexString
-  }
-}> = ({ value }) => {
-  if (value.engine === "BABE") {
-    const decoded = decodeBabePreRuntime(value.payload)
-    if (decoded) {
-      const { authority_index: authorityIndex, slot } =
-        typeof decoded.value == "object"
+const getDigestView = (digest: HeaderDigest): DigestView => {
+  if (digest.type === "other" || digest.type === "runtimeUpdated")
+    return {
+      summary: null,
+      details: null,
+    }
+
+  const decoder = digestDecoders[digest.type][digest.value.engine]
+  return (
+    decoder?.(digest.value.payload) ?? {
+      summary: null,
+      details: null,
+    }
+  )
+}
+
+const digestDecoders: Record<
+  string,
+  Record<string, (payload: HexString) => DigestView | null>
+> = {
+  preRuntime: {
+    BABE: (payload) => {
+      const decoded = decodeBabePreRuntime(payload)
+      if (!decoded) return null
+
+      const digestValue =
+        decoded.value && typeof decoded.value == "object"
           ? decoded.value
           : {
               authority_index: null,
               slot: null,
             }
       const vrf =
-        typeof decoded.value == "object" && "vrf_signature" in decoded.value
+        decoded.value &&
+        typeof decoded.value == "object" &&
+        "vrf_signature" in decoded.value
           ? decoded.value.vrf_signature
           : null
 
-      return (
-        <div className="space-y-1">
-          {decoded.type && <DigestField label="Kind" value={decoded.type} />}
-          {authorityIndex != null && (
-            <DigestField label="Authority index" value={`#${authorityIndex}`} />
-          )}
-          {slot != null && <DigestField label="Slot" value={slot.toString()} />}
-          {vrf && (
-            <>
-              <DigestPayload label="VRF output" value={toHex(vrf.pre_output)} />
-              <DigestPayload label="VRF proof" value={toHex(vrf.proof)} />
-            </>
-          )}
-        </div>
-      )
-    }
-  }
-
-  if (value.engine === "aura") {
-    const decoded = decodeAuraPreRuntime(value.payload)
-    if (decoded) {
-      return <DigestField label="Slot" value={decoded.slot.toString()} />
-    }
-  }
-
-  if (value.engine === "CMLS") {
-    const decoded = decodeCmlsPreRuntime(value.payload)
-    if (decoded)
-      return (
-        <div className="space-y-1">
-          {decoded.type && <DigestField label="Kind" value={decoded.type} />}
-          {decoded.type === "BlockBundleInfo" ? (
-            <>
-              <DigestField label="Index" value={decoded.value.index} />
-              <DigestField
-                label="Is last"
-                value={decoded.value.isLast ? "Yes" : "No"}
-              />
-            </>
-          ) : null}
-          {decoded.type === "CoreInfo" ? (
-            <>
-              <DigestField label="Selector" value={decoded.value.selector} />
-              <DigestField
-                label="Claim Queue Offset"
-                value={decoded.value.claimQueueOffset}
-              />
-              <DigestField
-                label="Num. of cores"
-                value={decoded.value.numberOfCores}
-              />
-            </>
-          ) : null}
-          {decoded.type === "RelayParent" ? (
-            <>
-              <DigestField label="Hash" value={decoded.value} />
-            </>
-          ) : null}
-        </div>
-      )
-  }
-
-  if (value.engine === "rand") {
-    const decoded = decodeRandVrfConsensus(value.payload)
-    if (decoded)
-      return (
-        <div className="space-y-1">
-          <DigestPayload label="VRF output" value={decoded.vrf_output} />
-          <DigestPayload label="VRF proof" value={decoded.vrf_proof} />
-        </div>
-      )
-  }
-
-  return <span className="text-sm text-foreground/45">-</span>
-}
-
-const ConsensusDigestFields: FC<{
-  value: {
-    engine: string
-    payload: HexString
-  }
-}> = ({ value }) => {
-  if (value.engine === "BEEF") {
-    const decoded = decodeBeefyConsensus(value.payload)
-    if (decoded)
-      return (
-        <div className="space-y-1">
-          {decoded.type && <DigestField label="Kind" value={decoded.type} />}
-          {decoded.type === "AuthoritiesChange" ? (
-            <>
-              <DigestField label="Id" value={decoded.value.id} />
-              {/* TODO validators? */}
-            </>
-          ) : null}
-          {decoded.type === "MmrRoot" ? (
-            <>
-              <DigestPayload label="Root Hash" value={decoded.value} />
-            </>
-          ) : null}
-          {decoded.type === "OnDisabled" ? (
-            <>
-              <DigestPayload
-                label="Authority Index"
-                value={decoded.value.toString()}
-              />
-            </>
-          ) : null}
-        </div>
-      )
-  }
-  if (value.engine === "RPSR") {
-    const decoded = decodeRsprConsensus(value.payload)
-    console.log(decoded)
-    if (decoded)
-      return (
-        <div className="space-y-1">
-          <DigestPayload label="Storage Root" value={decoded.storageRoot} />
-          <DigestPayload
-            label="Block number"
-            value={decoded.blockNumber.toString()}
+      return {
+        summary:
+          digestValue.slot != null
+            ? { label: "Slot", value: digestValue.slot.toString() }
+            : { label: "Kind", value: decoded.type },
+        details: (
+          <FieldGrid
+            fields={[
+              { label: "Kind", value: decoded.type },
+              digestValue.authority_index != null
+                ? {
+                    label: "Authority",
+                    value: `#${digestValue.authority_index}`,
+                  }
+                : null,
+              vrf
+                ? {
+                    label: "VRF output",
+                    value: <HexDisplay value={toHex(vrf.pre_output)} />,
+                  }
+                : null,
+              vrf
+                ? {
+                    label: "VRF proof",
+                    value: <HexDisplay value={toHex(vrf.proof)} />,
+                  }
+                : null,
+            ]}
           />
-        </div>
-      )
-  }
-  if (value.engine === "fron") {
-    // Hydration, Moonbeam
-    const decoded = decodeFrontierConsensus(value.payload)
-    if (decoded)
-      return (
-        <div className="space-y-1">
-          {decoded.type && <DigestField label="Kind" value={decoded.type} />}
-          {decoded.type === "Hashes" ? (
-            <>
-              <DigestPayload label="Block" value={decoded.value.blockHash} />
-              {/* TODO txHashes */}
-            </>
-          ) : null}
-        </div>
-      )
-  }
-  if (value.engine === "ISMP") {
-    // Bifrost
-    const decoded = decodeIsmpConsensus(value.payload)
-    if (decoded)
-      return (
-        <div className="space-y-1">
-          <DigestPayload label="MMR Root" value={decoded.mmrRoot} />
-          <DigestPayload label="Child Trie" value={decoded.childTrieRoot} />
-        </div>
-      )
-  }
-  if (value.engine === "ISTM") {
-    // Bifrost
-    const decoded = decodeIsmpTimestampConsensus(value.payload)
-    if (decoded)
-      return (
-        <div className="space-y-1">
-          <DigestField
-            label="Timestamp"
-            value={new Date(Number(decoded.timestamp) * 1000).toISOString()}
-          />
-        </div>
-      )
-  }
-  return <span className="text-sm text-foreground/45">-</span>
+        ),
+      }
+    },
+    aura: (payload) => {
+      const decoded = decodeAuraPreRuntime(payload)
+      return decoded
+        ? {
+            summary: { label: "Slot", value: decoded.slot.toString() },
+            details: null,
+          }
+        : null
+    },
+    CMLS: (payload) => {
+      const decoded = decodeCmlsPreRuntime(payload)
+      if (!decoded) return null
+
+      if (decoded.type === "BlockBundleInfo") {
+        return {
+          summary: { label: "Bundle", value: `#${decoded.value.index}` },
+          details: (
+            <FieldGrid
+              fields={[
+                {
+                  label: "Is last",
+                  value: decoded.value.isLast ? "Yes" : "No",
+                },
+              ]}
+            />
+          ),
+        }
+      }
+      if (decoded.type === "CoreInfo") {
+        return {
+          summary: {
+            label: "Core info selector",
+            value: `${decoded.value.selector}`,
+          },
+          details: (
+            <FieldGrid
+              fields={[
+                {
+                  label: "Claim offset",
+                  value: decoded.value.claimQueueOffset.toString(),
+                },
+                {
+                  label: "Cores",
+                  value: decoded.value.numberOfCores.toString(),
+                },
+              ]}
+            />
+          ),
+        }
+      }
+      if (decoded.type === "RelayParent") {
+        return {
+          summary: {
+            label: "Relay parent",
+            value: <HexDisplay value={decoded.value} />,
+          },
+          details: null,
+        }
+      }
+      return { summary: { label: "Kind", value: decoded.type }, details: null }
+    },
+    rand: (payload) => {
+      const decoded = decodeRandVrfConsensus(payload)
+      return decoded
+        ? {
+            summary: {
+              label: "VRF output",
+              value: <HexDisplay value={decoded.vrf_output} />,
+            },
+            details: (
+              <FieldGrid
+                fields={[
+                  {
+                    label: "VRF proof",
+                    value: <HexDisplay value={decoded.vrf_proof} />,
+                  },
+                ]}
+              />
+            ),
+          }
+        : null
+    },
+  },
+  consensus: {
+    BEEF: (payload) => {
+      const decoded = decodeBeefyConsensus(payload)
+      if (!decoded) return null
+      if (decoded.type === "AuthoritiesChange") {
+        return {
+          summary: {
+            label: "AuthoritiesChange",
+            value: decoded.value.id.toString(),
+          },
+          details: (
+            <FieldList
+              title="Validators"
+              values={decoded.value.validators.map((hash) => (
+                <HexDisplay value={hash} />
+              ))}
+            />
+          )
+        }
+      }
+      if (decoded.type === "MmrRoot") {
+        return {
+          summary: {
+            label: "MMR root",
+            value: <HexDisplay value={decoded.value} />,
+          },
+          details: null,
+        }
+      }
+      if (decoded.type === "OnDisabled") {
+        return {
+          summary: { label: "OnDisabled", value: `#${decoded.value}` },
+          details: null,
+        }
+      }
+      return { summary: { label: "Kind", value: decoded.type }, details: null }
+    },
+    RPSR: (payload) => {
+      const decoded = decodeRsprConsensus(payload)
+      return decoded
+        ? {
+            summary: {
+              label: "Relay block",
+              value: decoded.blockNumber.toString(),
+            },
+            details: (
+              <FieldGrid
+                fields={[
+                  {
+                    label: "Storage root",
+                    value: <HexDisplay value={decoded.storageRoot} />,
+                  },
+                ]}
+              />
+            ),
+          }
+        : null
+    },
+    fron: (payload) => {
+      const decoded = decodeFrontierConsensus(payload)
+      if (!decoded) return null
+      if (decoded.type === "Hashes") {
+        return {
+          summary: {
+            label: "Block Hash",
+            value: <HexDisplay value={decoded.value.blockHash} />,
+          },
+          details: (
+            <FieldList
+              title="Tx Hashes"
+              values={decoded.value.txHashes.map((hash) => (
+                <HexDisplay value={hash} />
+              ))}
+            />
+          ),
+        }
+      }
+      return { summary: { label: "Kind", value: decoded.type }, details: [] }
+    },
+    ISMP: (payload) => {
+      const decoded = decodeIsmpConsensus(payload)
+      return decoded
+        ? {
+            summary: {
+              label: "Child trie",
+              value: <HexDisplay value={decoded.childTrieRoot} />,
+            },
+            details: (
+              <FieldGrid
+                fields={[
+                  {
+                    label: "MMR root",
+                    value: <HexDisplay value={decoded.mmrRoot} />,
+                  },
+                ]}
+              />
+            ),
+          }
+        : null
+    },
+    ISTM: (payload) => {
+      const decoded = decodeIsmpTimestampConsensus(payload)
+      return decoded
+        ? {
+            summary: {
+              label: "Timestamp",
+              value: new Date(Number(decoded.timestamp) * 1000).toISOString(),
+            },
+            details: [],
+          }
+        : null
+    },
+  },
+  seal: {
+    // Generally, seals are just the raw signature
+  },
 }
 
-const DigestRawPayload: FC<{ digest: HeaderDigest }> = ({ digest }) => {
-  const payload = getDigestPayload(digest)
-  if (!payload) return <span className="text-sm text-foreground/45">-</span>
-
-  return <RawDigestPayload value={payload} />
-}
-
-const DigestField: FC<{ label: string; value: ReactNode }> = ({
-  label,
-  value,
-}) => (
-  <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-2 text-sm">
-    <span className="text-foreground/55">{label}</span>
-    <span className="min-w-0 truncate font-mono text-foreground">{value}</span>
+const FieldGrid: FC<{
+  fields: Array<{
+    label: string
+    value: ReactNode
+  } | null>
+}> = ({ fields }) => (
+  <div className="grid gap-x-6 gap-y-1 md:grid-cols-2">
+    {fields.map((field, idx) =>
+      field ? <DigestDetailField key={idx} field={field} /> : null,
+    )}
   </div>
 )
 
-const DigestPayload: FC<{ label: string; value: string }> = ({
-  label,
-  value,
-}) => (
-  <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] items-center gap-2 text-sm">
-    <span className="text-foreground/55">{label}</span>
-    <span className="flex min-w-0 items-center gap-1">
-      <span className="min-w-0 truncate font-mono text-foreground">
-        {shortStr(value, 8)}
-      </span>
-      <CopyText className="shrink-0 text-foreground/65" text={value} binary />
-    </span>
+const FieldList: FC<{
+  title: string
+  values: Array<ReactNode>
+}> = ({ title, values }) => (
+  <div className="space-y-2">
+    <div className="text-xs font-medium uppercase tracking-wide">{title}</div>
+    {values.length ? (
+      <ol className="list-decimal space-y-1 pl-5">
+        {values.map((value, i) => (
+          <li key={i}>{value}</li>
+        ))}
+      </ol>
+    ) : (
+      <div className="text-sm text-foreground/50">(Empty)</div>
+    )}
   </div>
 )
 
-const RawDigestPayload: FC<{ value: string }> = ({ value }) => (
-  <span className="flex min-w-0 items-center gap-1 text-sm">
-    <span className="min-w-0 truncate font-mono text-foreground">
-      {shortStr(value, 8)}
-    </span>
-    <CopyText className="shrink-0 text-foreground/65" text={value} binary />
+const DigestDetailField: FC<{ field: { label: string; value: ReactNode } }> = ({
+  field,
+}) => (
+  <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-baseline gap-2 text-sm">
+    <span className="text-foreground/55">{field.label}</span>
+    {field.value}
+  </div>
+)
+
+const HexDisplay: FC<{ value: HexString }> = ({ value }) => (
+  <span className="flex items-center gap-1">
+    <span className="truncate font-mono">{shortStr(value, 8)}</span>
+    <CopyText className="shrink-0 text-foreground" text={value} binary={true} />
   </span>
 )
 
@@ -315,23 +428,10 @@ const formatDigestType = (type: string) =>
       ? "runtime updated"
       : type
 const DigestTypeLabel: FC<{ type: string }> = ({ type }) => (
-  <span className="w-fit rounded-md border border-foreground/15 bg-foreground/5 px-2 py-0.5 text-xs font-medium text-foreground/75">
+  <span className="w-fit whitespace-nowrap rounded-md border border-foreground/15 bg-foreground/5 px-2 py-0.5 text-xs font-medium text-foreground/75">
     {formatDigestType(type)}
   </span>
 )
-
-const getDigestPayload = (digest: HeaderDigest): HexString | null => {
-  switch (digest.type) {
-    case "preRuntime":
-    case "seal":
-    case "consensus":
-      return digest.value.payload
-    case "other":
-      return toHex(digest.value)
-    default:
-      return null
-  }
-}
 
 type HeaderDigest = BlockHeader["digests"][number]
 
