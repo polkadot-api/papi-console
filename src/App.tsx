@@ -10,6 +10,7 @@ import { Metadata } from "./pages/Metadata"
 import { RpcCalls } from "./pages/RpcCalls"
 import { RuntimeCalls } from "./pages/RuntimeCalls"
 import { Storage } from "./pages/Storage"
+import { Teleport } from "./pages/Teleport/Teleport"
 import { ViewFns } from "./pages/ViewFns"
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="metadata/*" element={<Metadata />} />
           <Route path="rpcCalls/*" element={<RpcCalls />} />
           <Route path="accounts/*" element={<Accounts />} />
+          <Route path="teleport" element={<Teleport />} />
           <Route path="*" element={<Navigate to="/explorer" replace />} />
         </Routes>
       </AppShell>

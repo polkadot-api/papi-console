@@ -22,6 +22,9 @@ importers:
       '@monaco-editor/react':
         specifier: ^4.7.0
         version: 4.7.0(monaco-editor@0.54.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@paraspell/sdk':
+        specifier: ^13.6.0
+        version: 13.6.0(bufferutil@4.1.0)(polkadot-api@2.1.4(bufferutil@4.1.0)(esbuild@0.25.12)(rxjs@7.8.2))(typescript@6.0.3)(zod@3.25.76)
       '@polkadot-api/descriptors':
         specifier: file:.papi/descriptors
         version: file:.papi/descriptors(polkadot-api@2.1.4(bufferutil@4.1.0)(esbuild@0.25.12)(rxjs@7.8.2))
@@ -622,6 +625,14 @@ packages:
     resolution: {integrity: sha512-gbKGcRUYIjA3/zCCNaWDciTMFI0dCkvou3TL8Zmy5Nc7sJ47a0jtOeZoTaMxkuqRo9cRhjOdZJXegxYE5FN/xw==}
     engines: {node: ^14.21.3 || >=16}
 
+  '@noble/curves@2.0.1':
+    resolution: {integrity: sha512-vs1Az2OOTBiP4q0pwjW5aF0xp9n4MxVrmkFBxc6EKZc6ddYx5gaZiAsZoq0uRRXWbi3AT/sBqn05eRPtn1JCPw==}
+    engines: {node: '>= 20.19.0'}
+
+  '@noble/curves@2.2.0':
+    resolution: {integrity: sha512-T/BoHgFXirb0ENSPBquzX0rcjXeM6Lo892a2jlYJkqk83LqZx0l1Of7DzlKJ6jkpvMrkHSnAcgb5JegL8SeIkQ==}
+    engines: {node: '>= 20.19.0'}
+
   '@noble/hashes@1.4.0':
     resolution: {integrity: sha512-V1JJ1WTRUqHHrOSh597hURcMqVKVGL/ea3kv0gSnEdsEZ0/+VyPghM1lMNGc00z7CIQorSvbKpuJkxvuHbvdbg==}
     engines: {node: '>= 16'}
@@ -634,12 +645,33 @@ packages:
     resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
     engines: {node: ^14.21.3 || >=16}
 
+  '@noble/hashes@2.0.1':
+    resolution: {integrity: sha512-XlOlEbQcE9fmuXxrVTXCTlG2nlRXa9Rj3rr5Ue/+tX+nmkgbX720YHh0VR3hBF9xDvwnb8D2shVGOwNx+ulArw==}
+    engines: {node: '>= 20.19.0'}
+
   '@noble/hashes@2.2.0':
     resolution: {integrity: sha512-IYqDGiTXab6FniAgnSdZwgWbomxpy9FtYvLKs7wCUs2a8RkITG+DFGO1DM9cr+E3/RgADRpFjrKVaJ1z6sjtEg==}
     engines: {node: '>= 20.19.0'}
 
   '@oxc-project/types@0.133.0':
     resolution: {integrity: sha512-KzkdCd6Uxqnf6l3HOw1xfatAlUURA0g14cvBYFyJ5SaNOQbOUvBr9PKArcPcrNIeRsBdgcUzOGrhKveVpvOIGA==}
+
+  '@paraspell/assets@13.6.0':
+    resolution: {integrity: sha512-b8RPvBtjEKp5QfErqfDKqY46F+wLlSw296ZmuYaVTeAsjemcP2NIXTTz5QkI2AdjfmcZZBLaKyLiMISUqDTmuQ==}
+
+  '@paraspell/pallets@13.6.0':
+    resolution: {integrity: sha512-0PJL/wgSVY0SK7yt0m2OQ8S/Ml/5jEoMS5/vSJRSCffQHqpZA5taRgxD3/F9zGBVoWkcoJkfgv3e6bBlardYow==}
+
+  '@paraspell/sdk-common@13.6.0':
+    resolution: {integrity: sha512-QM8MAFvHVMO5OCtxE0eIsDGh+T8SgK/yIv/GtPaLsCvfFE74e2KPRI5VxGoL3Z7fhCA/vh4XakHA4jNBTJge+A==}
+
+  '@paraspell/sdk-core@13.6.0':
+    resolution: {integrity: sha512-ySU0YLdSzbIhMGHkCRoV8EBsZTdyPoSyjMUHZ55kGnMs8e0UjvBIvJxzNX6VuS15HBx2IdF2ZU7dqyzBl2qo8w==}
+
+  '@paraspell/sdk@13.6.0':
+    resolution: {integrity: sha512-xFscla/27FTJDGi+wM4n2mNzeTgbbPAbYznSB2NA1go1Z2qCx0Sl0Zw79aoR00dJDbejDkKJ3O2de7MoMswLBw==}
+    peerDependencies:
+      polkadot-api: '>= 2 < 3'
 
   '@phosphor-icons/webcomponents@2.1.5':
     resolution: {integrity: sha512-JcvQkZxvcX2jK+QCclm8+e8HXqtdFW9xV4/kk2aL9Y3dJA2oQVt+pzbv1orkumz3rfx4K9mn9fDoMr1He1yr7Q==}
@@ -784,6 +816,12 @@ packages:
     resolution: {integrity: sha512-czTLgHEJPqx+6t5sb5OJpXDaSmbDTr8zYngBdUI47QYqcNB225zo/GdYakiNiGThtxVp1MLK7QsNXcT6XgqQNQ==}
     peerDependencies:
       rxjs: '>=7.8.0'
+
+  '@polkadot-labs/hdkd-helpers@0.0.30':
+    resolution: {integrity: sha512-qWmmD6ayj14RenDuDFfjF3sHS7ObqPzwIIMPcSVoDeKFSeQV7RY0HwyhC5CG4i6FoguMzak2dbtjYpNN5XQiwQ==}
+
+  '@polkadot-labs/hdkd@0.0.28':
+    resolution: {integrity: sha512-LpdqtQRpcgZQ5Mr8J0ddMA5ZufsbI4W3KuJkVdoYMnSmWs4179LigDb1rTYAOtyCg2jWUjf7rWP0mGxQQvNrHw==}
 
   '@polkadot/keyring@14.0.3':
     resolution: {integrity: sha512-ozp1dQwaHCjgX/fpTTORmHjxdUNQnyiTVJszpzUaUpvtH/IGZhSU/mSHXMqNETS/g57vQa7NatIDcWfyR9abyA==}
@@ -1795,6 +1833,10 @@ packages:
 
   '@scure/sr25519@0.2.0':
     resolution: {integrity: sha512-uUuLP7Z126XdSizKtrCGqYyR3b3hYtJ6Fg/XFUXmc2//k2aXHDLqZwFeXxL97gg4XydPROPVnuaHGF2+xriSKg==}
+
+  '@scure/sr25519@1.0.0':
+    resolution: {integrity: sha512-b+uhK5akMINXZP95F3gJGcb5CMKYxf+q55fwMl0GoBwZDbWolmGNi1FrBSwuaZX5AhqS2byHiAueZgtDNpot2A==}
+    engines: {node: '>= 20.19.0'}
 
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
@@ -4714,6 +4756,14 @@ snapshots:
     dependencies:
       '@noble/hashes': 1.8.0
 
+  '@noble/curves@2.0.1':
+    dependencies:
+      '@noble/hashes': 2.0.1
+
+  '@noble/curves@2.2.0':
+    dependencies:
+      '@noble/hashes': 2.2.0
+
   '@noble/hashes@1.4.0':
     optional: true
 
@@ -4721,9 +4771,50 @@ snapshots:
 
   '@noble/hashes@1.8.0': {}
 
+  '@noble/hashes@2.0.1': {}
+
   '@noble/hashes@2.2.0': {}
 
   '@oxc-project/types@0.133.0': {}
+
+  '@paraspell/assets@13.6.0':
+    dependencies:
+      '@paraspell/sdk-common': 13.6.0
+
+  '@paraspell/pallets@13.6.0':
+    dependencies:
+      '@paraspell/sdk-common': 13.6.0
+
+  '@paraspell/sdk-common@13.6.0': {}
+
+  '@paraspell/sdk-core@13.6.0(bufferutil@4.1.0)(typescript@6.0.3)(zod@3.25.76)':
+    dependencies:
+      '@noble/hashes': 2.2.0
+      '@paraspell/assets': 13.6.0
+      '@paraspell/pallets': 13.6.0
+      '@paraspell/sdk-common': 13.6.0
+      '@scure/base': 2.2.0
+      viem: 2.52.0(bufferutil@4.1.0)(typescript@6.0.3)(zod@3.25.76)
+    transitivePeerDependencies:
+      - bufferutil
+      - typescript
+      - utf-8-validate
+      - zod
+
+  '@paraspell/sdk@13.6.0(bufferutil@4.1.0)(polkadot-api@2.1.4(bufferutil@4.1.0)(esbuild@0.25.12)(rxjs@7.8.2))(typescript@6.0.3)(zod@3.25.76)':
+    dependencies:
+      '@noble/hashes': 2.2.0
+      '@paraspell/sdk-core': 13.6.0(bufferutil@4.1.0)(typescript@6.0.3)(zod@3.25.76)
+      '@polkadot-api/substrate-bindings': 0.20.3
+      '@polkadot-labs/hdkd': 0.0.28
+      '@polkadot-labs/hdkd-helpers': 0.0.30
+      polkadot-api: 2.1.4(bufferutil@4.1.0)(esbuild@0.25.12)(rxjs@7.8.2)
+      viem: 2.52.0(bufferutil@4.1.0)(typescript@6.0.3)(zod@3.25.76)
+    transitivePeerDependencies:
+      - bufferutil
+      - typescript
+      - utf-8-validate
+      - zod
 
   '@phosphor-icons/webcomponents@2.1.5':
     dependencies:
@@ -4982,6 +5073,18 @@ snapshots:
       '@polkadot-api/json-rpc-provider-proxy': 0.4.0
       '@polkadot-api/utils': 0.4.0
       rxjs: 7.8.2
+
+  '@polkadot-labs/hdkd-helpers@0.0.30':
+    dependencies:
+      '@noble/curves': 2.2.0
+      '@noble/hashes': 2.2.0
+      '@scure/base': 2.2.0
+      '@scure/sr25519': 1.0.0
+      scale-ts: 1.6.1
+
+  '@polkadot-labs/hdkd@0.0.28':
+    dependencies:
+      '@polkadot-labs/hdkd-helpers': 0.0.30
 
   '@polkadot/keyring@14.0.3(@polkadot/util-crypto@14.0.3(@polkadot/util@14.0.3))(@polkadot/util@14.0.3)':
     dependencies:
@@ -6495,6 +6598,11 @@ snapshots:
     dependencies:
       '@noble/curves': 1.9.7
       '@noble/hashes': 1.8.0
+
+  '@scure/sr25519@1.0.0':
+    dependencies:
+      '@noble/curves': 2.0.1
+      '@noble/hashes': 2.0.1
 
   '@sec-ant/readable-stream@0.4.1': {}
 
