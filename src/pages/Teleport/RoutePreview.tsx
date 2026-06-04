@@ -9,18 +9,25 @@ import {
   Route,
 } from "lucide-react"
 import { FC, ReactNode } from "react"
-import { switchMap } from "rxjs"
+import { from, startWith, switchMap } from "rxjs"
 import { paraspellBuilder$ } from "./Setup"
 
 export const routeInfo$ = paraspellBuilder$.pipeState(
-  switchMap((builder) => (builder ? builder.getTransferInfo() : [null])),
+  switchMap((builder) =>
+    builder
+      ? from(
+          builder.getTransferInfo().catch((ex) => {
+            console.error(ex)
+            return null
+          }),
+        ).pipe(startWith("loading" as const))
+      : [null],
+  ),
 )
 
 export const RoutePreview = () => {
-  const builder = useStateObservable(paraspellBuilder$)
   const routeInfo = useStateObservable(routeInfo$)
-
-  if (!builder)
+  if (!routeInfo)
     return (
       <Panel title="Route preview">
         <EmptyState
@@ -31,7 +38,7 @@ export const RoutePreview = () => {
       </Panel>
     )
 
-  if (!routeInfo)
+  if (routeInfo === "loading")
     return (
       <Panel title="Route preview">
         <EmptyState
@@ -43,112 +50,160 @@ export const RoutePreview = () => {
     )
 
   const routeNodes = [
-    {
-      label: routeInfo.chain.origin,
-      detail: routeInfo.chain.ecosystem,
-    },
-    ...routeInfo.hops.map((hop) => ({
-      label: hop.chain,
-      detail: "Hop",
-    })),
-    {
-      label: routeInfo.chain.destination,
-      detail: "Destination",
-    },
+    routeInfo.chain.origin,
+    ...routeInfo.hops.map((hop) => hop.chain),
+    routeInfo.chain.destination,
   ]
 
   return (
     <Panel title="Route preview">
-      <ol className="space-y-2 @lg:flex @lg:items-stretch @lg:space-y-0">
-        {routeNodes.map((node, i) => (
-          <li
-            key={`${node.label}-${i}`}
-            className="flex min-w-0 items-center gap-2 @lg:flex-1"
-          >
-            <div className="flex min-w-0 flex-1 items-center gap-3 rounded-md border border-border bg-background px-3 py-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-foreground/5 text-muted-foreground">
-                {i === 0 ? (
-                  <CircleDot className="h-4 w-4" />
-                ) : i === routeNodes.length - 1 ? (
-                  <CheckCircle2 className="h-4 w-4" />
-                ) : (
-                  <Route className="h-4 w-4" />
-                )}
-              </div>
-              <div className="min-w-0">
-                <div className="truncate text-sm font-medium">{node.label}</div>
-                <div className="truncate text-xs text-muted-foreground">
-                  {node.detail}
-                </div>
-              </div>
-            </div>
-            {i < routeNodes.length - 1 ? (
-              <ArrowRight className="hidden h-4 w-4 shrink-0 text-muted-foreground @lg:block" />
-            ) : null}
-          </li>
-        ))}
-      </ol>
+      <RoutePath nodes={routeNodes} />
 
-      <div className="grid gap-3 @2xl:grid-cols-2">
-        <DetailGroup title="Origin">
-          <DetailRow label="Chain" value={routeInfo.chain.origin} />
+      <DetailGroup title="Origin">
+        <DetailRow label="Chain" value={routeInfo.chain.origin} />
+        <DetailRow
+          label="XCM fee"
+          value={<XcmFee fee={routeInfo.origin.xcmFee} />}
+        />
+        <DetailRow
+          label="Balance"
+          value={formatValue(routeInfo.origin.xcmFee.balance)}
+        />
+        <DetailRow
+          label="Balance after"
+          value={formatValue(routeInfo.origin.xcmFee.balanceAfter)}
+        />
+      </DetailGroup>
+
+      {routeInfo.hops.map((hop, i) => (
+        <DetailGroup title={`Hop ${i + 1}`} key={i}>
+          <DetailRow label="Chain" value={hop.chain} />
           <DetailRow
             label="XCM fee"
-            value={<XcmFee fee={routeInfo.origin.xcmFee} />}
+            value={<XcmFee fee={hop.result.xcmFee} />}
           />
           <DetailRow
-            label="Balance"
-            value={formatValue(routeInfo.origin.xcmFee.balance)}
-          />
-          <DetailRow
-            label="Balance after"
-            value={formatValue(routeInfo.origin.xcmFee.balanceAfter)}
+            label="Asset"
+            value={<AssetDisplay asset={hop.result.asset} />}
           />
         </DetailGroup>
+      ))}
 
-        <DetailGroup title="Destination">
-          <DetailRow label="Chain" value={routeInfo.chain.destination} />
-          <DetailRow
-            label="XCM fee"
-            value={<XcmFee fee={routeInfo.destination.xcmFee} />}
-          />
-          <DetailRow
-            label="Received"
-            value={formatValue(
-              routeInfo.destination.receivedCurrency.receivedAmount,
-            )}
-          />
-          <DetailRow
-            label="Balance after"
-            value={formatValue(
-              routeInfo.destination.receivedCurrency.balanceAfter,
-            )}
-          />
-        </DetailGroup>
-      </div>
-
-      {routeInfo.hops.length ? (
-        <DetailGroup title="Hops">
-          {routeInfo.hops.map((hop, i) => (
-            <div
-              key={`${hop.chain}-${i}`}
-              className="grid gap-2 rounded-md border border-border/70 bg-background/70 p-2"
-            >
-              <DetailRow label="Chain" value={hop.chain} />
-              <DetailRow
-                label="XCM fee"
-                value={<XcmFee fee={hop.result.xcmFee} />}
-              />
-              <DetailRow
-                label="Asset"
-                value={<AssetDisplay asset={hop.result.asset} />}
-              />
-            </div>
-          ))}
-        </DetailGroup>
-      ) : null}
+      <DetailGroup title="Destination">
+        <DetailRow label="Chain" value={routeInfo.chain.destination} />
+        <DetailRow
+          label="XCM fee"
+          value={<XcmFee fee={routeInfo.destination.xcmFee} />}
+        />
+        <DetailRow
+          label="Received"
+          value={formatValue(
+            routeInfo.destination.receivedCurrency.receivedAmount,
+          )}
+        />
+        <DetailRow
+          label="Balance after"
+          value={formatValue(
+            routeInfo.destination.receivedCurrency.balanceAfter,
+          )}
+        />
+      </DetailGroup>
     </Panel>
   )
+}
+
+const RoutePath: FC<{
+  nodes: Array<string>
+}> = ({ nodes }) => {
+  if (nodes.length <= 2) return <DirectRoutePath nodes={nodes} />
+
+  return <MultiHopRoutePath nodes={nodes} />
+}
+
+const DirectRoutePath: FC<{
+  nodes: Array<string>
+}> = ({ nodes }) => (
+  <ol className="space-y-2 @lg:flex @lg:items-stretch @lg:space-y-0 @lg:gap-1">
+    {nodes.map((node, i) => (
+      <li key={i} className="flex items-center gap-1 @lg:flex-1">
+        <RouteNodeCard label={node} kind={i === 0 ? "origin" : "destination"} />
+        {i < nodes.length - 1 ? (
+          <ArrowRight className="hidden h-4 w-4 shrink-0 text-muted-foreground @lg:block" />
+        ) : null}
+      </li>
+    ))}
+  </ol>
+)
+
+const MultiHopRoutePath: FC<{
+  nodes: Array<string>
+}> = ({ nodes }) => (
+  <div className="rounded-md border border-border bg-background/60 p-3 space-y-3">
+    <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+      <h3 className="font-medium uppercase tracking-wide">Route</h3>
+      <span className="rounded-md border border-border bg-background px-2 py-0.5">
+        {nodes.length - 2} hop{nodes.length === 3 ? "" : "s"}
+      </span>
+    </div>
+    <div className="relative">
+      {/* Timeline that goes through the icons */}
+      <div
+        className="absolute bottom-8 left-4 top-8 w-px bg-border"
+        aria-hidden
+      />
+      <ol className="space-y-3">
+        {nodes.map((node, i) => {
+          const isFirst = i === 0
+          const isLast = i === nodes.length - 1
+          const kind = isFirst ? "origin" : isLast ? "destination" : "hop"
+
+          return (
+            <li
+              key={i}
+              className="relative grid grid-cols-[2rem_minmax(0,1fr)] items-center gap-3"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-muted-foreground">
+                <RouteNodeIcon kind={kind} />
+              </div>
+              <div className="flex min-h-16 items-center justify-between gap-3 rounded-md border border-border bg-background px-3 py-2">
+                <div>
+                  <div className="truncate text-sm font-medium">{node}</div>
+                  <div className="truncate text-xs text-muted-foreground">
+                    {isFirst ? "Origin" : isLast ? "Destination" : `Hop ${i}`}
+                  </div>
+                </div>
+              </div>
+            </li>
+          )
+        })}
+      </ol>
+    </div>
+  </div>
+)
+
+const RouteNodeCard: FC<{
+  label: string
+  kind: "origin" | "hop" | "destination"
+}> = ({ label, kind }) => (
+  <div className="flex flex-1 items-center gap-3 rounded-md border border-border bg-background px-3 py-2">
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-foreground/5 text-muted-foreground">
+      <RouteNodeIcon kind={kind} />
+    </div>
+    <div>
+      <div className="truncate text-sm font-medium">{label}</div>
+      <div className="truncate text-xs text-muted-foreground capitalize">
+        {kind}
+      </div>
+    </div>
+  </div>
+)
+
+const RouteNodeIcon: FC<{
+  kind: "origin" | "hop" | "destination"
+}> = ({ kind }) => {
+  if (kind === "origin") return <CircleDot className="h-4 w-4" />
+  if (kind === "destination") return <CheckCircle2 className="h-4 w-4" />
+  return <Route className="h-4 w-4" />
 }
 
 const XcmFee: FC<{

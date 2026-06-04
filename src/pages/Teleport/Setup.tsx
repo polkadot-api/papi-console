@@ -4,7 +4,6 @@ import { client$ } from "@/state/chains/chain.state"
 import { selectedAccount$ } from "@/state/polkahub"
 import {
   Builder,
-  CHAINS,
   getAssets,
   getBalance,
   getSupportedDestinations,
@@ -12,14 +11,23 @@ import {
   TChain,
 } from "@paraspell/sdk"
 import { Input } from "@polkahub/ui-components"
-import { state, useStateObservable } from "@react-rxjs/core"
+import { state, useStateObservable, withDefault } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
-import { Banknote, Coins, MapPin, Send, UserRound, Wallet } from "lucide-react"
+import {
+  Banknote,
+  CircleAlert,
+  Coins,
+  MapPin,
+  Send,
+  UserRound,
+  Wallet,
+} from "lucide-react"
 import { jsonSerialize } from "polkadot-api/utils"
 import { AddressInput } from "polkahub"
 import { FC, PropsWithChildren, ReactNode } from "react"
 import {
   combineLatest,
+  defer,
   map,
   merge,
   startWith,
@@ -27,15 +35,11 @@ import {
   withLatestFrom,
 } from "rxjs"
 import { SelectAccount } from "../Extrinsics/SubmitTx/SubmitTxForm"
-import { chainNameToParaspell } from "./chainNameToParaspell"
+import { genesisHashToParaspell } from "./chainNameToParaspell"
 
 export const origin$ = client$.pipeState(
-  switchMap((client) => client._request("system_chain", [])),
-  map(
-    (name) =>
-      chainNameToParaspell[name] ??
-      (CHAINS.includes(name) ? (name as TChain) : null),
-  ),
+  switchMap((client) => client.getChainSpecData().then((r) => r.genesisHash)),
+  map((genesis) => genesisHashToParaspell[genesis] ?? null),
 )
 
 export const Setup = () => {
@@ -77,12 +81,9 @@ const OriginChain = () => {
   const origin = useStateObservable(origin$)
 
   return (
-    <div className="flex min-w-0 items-center justify-between gap-3 rounded-md border border-border bg-background px-3 py-2">
-      <div className="min-w-0">
-        <div className="truncate text-sm font-medium">{origin}</div>
-        <div className="text-xs text-muted-foreground">Connected origin</div>
-      </div>
-      <StatusPill>Connected</StatusPill>
+    <div className="rounded-md border border-border bg-background px-3 py-2">
+      <div className="truncate text-sm font-medium">{origin}</div>
+      <div className="text-xs text-muted-foreground">Connected origin</div>
     </div>
   )
 }
@@ -163,26 +164,64 @@ const selectedDest$ = state(
     changeDest$.pipe(startWith(null)),
   ]).pipe(map(([list, asset]) => (list?.includes(asset!) ? asset : null))),
 )
+const selectedDestError$ = selectedDest$.pipeState(
+  withLatestFrom(client$, origin$, selectedAsset$, selectedAccount$),
+  switchMap(([dest, client, origin, asset, account]) =>
+    defer(async () => {
+      if (!dest || !client || !origin || !asset || !account) return null
+
+      try {
+        await Builder(client)
+          .from(origin)
+          .to(dest)
+          .currency({ location: asset.location, amount: 0n })
+          .recipient(account.address)
+          .sender(account.address)
+          .getTransferInfo()
+        return null
+      } catch (ex: any) {
+        return ex.message ?? "Uknown error"
+      }
+    }).pipe(startWith(null)),
+  ),
+  withDefault(null),
+)
 const DestPicker = () => {
   const chains = useStateObservable(supportedDestinations$)
   const selectedDest = useStateObservable(selectedDest$)
   const selectedAsset = useStateObservable(selectedAsset$)
+  const destError = useStateObservable(selectedDestError$)
 
   // TODO explore custom chains
   return (
-    <SearchableSelect
-      value={selectedDest}
-      setValue={(v) => {
-        if (v) changeDest(v)
-      }}
-      options={chains.map((chain) => ({
-        value: chain,
-        text: chain,
-      }))}
-      disabled={!selectedAsset}
-      className="h-10 w-full bg-background"
-      contentClassName="w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-2rem)]"
-    />
+    <div className="space-y-2">
+      <SearchableSelect
+        value={selectedDest}
+        setValue={(v) => {
+          if (v) changeDest(v)
+        }}
+        options={chains.map((chain) => ({
+          value: chain,
+          text: chain,
+        }))}
+        disabled={!selectedAsset}
+        className={`h-10 w-full bg-background ${
+          destError
+            ? "border-red-500/50 bg-red-500/5 text-red-950 dark:text-red-100"
+            : ""
+        }`}
+        contentClassName="w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-2rem)]"
+      />
+      {destError ? (
+        <div
+          className="flex items-start gap-2 rounded-md border border-red-500/30 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-300"
+          role="alert"
+        >
+          <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{destError}</span>
+        </div>
+      ) : null}
+    </div>
   )
 }
 

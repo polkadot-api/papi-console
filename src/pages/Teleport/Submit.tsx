@@ -1,5 +1,9 @@
 import { Link } from "@/hashParams"
-import { TDryRunChainResult, TDryRunResult } from "@paraspell/sdk"
+import {
+  TDryRunChainResult,
+  TDryRunResult,
+  TPapiTransaction,
+} from "@paraspell/sdk"
 import { Button } from "@polkahub/ui-components"
 import { state, useStateObservable, withDefault } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
@@ -12,11 +16,12 @@ import {
   Play,
   XCircle,
 } from "lucide-react"
+import { PolkadotClient } from "polkadot-api"
 import { jsonSerialize, toHex } from "polkadot-api/utils"
 import { useSelectedAccount } from "polkahub"
 import { FC, ReactNode } from "react"
 import {
-  combineLatest,
+  catchError,
   filter,
   from,
   map,
@@ -48,12 +53,14 @@ const Validation = () => {
   const routeInfo = useStateObservable(routeInfo$)
 
   const formatChecks = setupConfig ? !!routeInfo : null
-  const balanceFeeChecks = routeInfo
-    ? routeInfo.origin.xcmFee.sufficient &&
-      (typeof routeInfo.destination.receivedCurrency.receivedAmount === "bigint"
-        ? routeInfo.destination.receivedCurrency.receivedAmount > 0n
-        : null)
-    : null
+  const balanceFeeChecks =
+    routeInfo && routeInfo !== "loading"
+      ? routeInfo.origin.xcmFee.sufficient &&
+        (typeof routeInfo.destination.receivedCurrency.receivedAmount ===
+        "bigint"
+          ? routeInfo.destination.receivedCurrency.receivedAmount > 0n
+          : null)
+      : null
 
   return (
     <section className="space-y-3 rounded-md border border-border bg-background/60 p-3">
@@ -73,7 +80,13 @@ const dryRunResult$ = state(
     map(([, b]) => b),
     filter((v) => v != null),
     switchMap((builder) =>
-      from(builder.dryRun()).pipe(startWith("loading" as const)),
+      from(builder.dryRun()).pipe(
+        map((value) => ({ type: "success" as const, value })),
+        startWith({ type: "loading" as const }),
+        catchError((ex: any) => [
+          { type: "error" as const, value: ex.message },
+        ]),
+      ),
     ),
   ),
   null,
@@ -89,10 +102,10 @@ const DryRun = () => {
         <Button
           type="button"
           onClick={() => dryRun()}
-          disabled={!builder || dryRunResult === "loading"}
+          disabled={!builder || dryRunResult?.type === "loading"}
           className="inline-flex h-8 items-center gap-2 rounded-md px-3 text-xs"
         >
-          {dryRunResult === "loading" ? (
+          {dryRunResult?.type === "loading" ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
           ) : (
             <Play className="h-3.5 w-3.5" />
@@ -101,50 +114,59 @@ const DryRun = () => {
         </Button>
       </div>
       <div>
-        {dryRunResult === "loading" ? (
+        {!dryRunResult ? (
+          <div className="rounded-md border border-dashed border-border p-3 text-sm text-muted-foreground">
+            Not run
+          </div>
+        ) : dryRunResult.type === "loading" ? (
           <div className="flex items-center gap-2 rounded-md border border-dashed border-border p-3 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Running simulation
           </div>
-        ) : dryRunResult ? (
-          <DryRunResult result={dryRunResult} />
+        ) : dryRunResult.type === "success" ? (
+          <DryRunResult result={dryRunResult.value} />
         ) : (
-          <div className="rounded-md border border-dashed border-border p-3 text-sm text-muted-foreground">
-            Not run
-          </div>
+          <DryRunError message={dryRunResult.value} />
         )}
       </div>
     </section>
   )
 }
-const DryRunResult: FC<{ result: TDryRunResult }> = ({ result }) => {
-  const failedView = result.failureChain ? (
-    <div className="rounded-md border border-red-500/30 bg-red-500/5 p-3 text-sm text-red-700 dark:text-red-300">
-      <div className="font-medium">Failed on {result.failureChain}</div>
-      {result.failureReason ? <div>{result.failureReason}</div> : null}
-      {result.failureSubReason ? <div>{result.failureSubReason}</div> : null}
-    </div>
-  ) : null
 
-  return (
-    <div className="space-y-3">
-      {failedView}
-      <DryRunSection title="Origin">
-        <DryRunChainResult result={result.origin} />
-      </DryRunSection>
-      {result.hops.map((hop, i) => (
-        <DryRunSection title={hop.chain} key={i}>
-          <DryRunChainResult result={hop.result} />
-        </DryRunSection>
-      ))}
-      {result.destination ? (
-        <DryRunSection title="Destination">
-          <DryRunChainResult result={result.destination} />
-        </DryRunSection>
-      ) : null}
+const DryRunError: FC<{ message: string }> = ({ message }) => (
+  <div
+    className="rounded-md border border-red-500/30 bg-red-500/5 p-3 text-sm text-red-700 dark:text-red-300"
+    role="alert"
+  >
+    <div className="flex items-start gap-2">
+      <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+      <div className="min-w-0 space-y-1">
+        <div className="font-medium">Dry run failed</div>
+        <code className="block whitespace-pre-wrap break-words rounded-md border border-red-500/20 bg-background/70 px-2 py-1.5 text-xs text-red-800 dark:text-red-200">
+          {message || "Unknown error"}
+        </code>
+      </div>
     </div>
-  )
-}
+  </div>
+)
+
+const DryRunResult: FC<{ result: TDryRunResult }> = ({ result }) => (
+  <div className="space-y-3">
+    <DryRunSection title="Origin">
+      <DryRunChainResult result={result.origin} />
+    </DryRunSection>
+    {result.hops.map((hop, i) => (
+      <DryRunSection title={hop.chain} key={i}>
+        <DryRunChainResult result={hop.result} />
+      </DryRunSection>
+    ))}
+    {result.destination ? (
+      <DryRunSection title="Destination">
+        <DryRunChainResult result={result.destination} />
+      </DryRunSection>
+    ) : null}
+  </div>
+)
 const DryRunChainResult: FC<{ result: TDryRunChainResult }> = ({ result }) => {
   if (!result.success) {
     return (
@@ -174,47 +196,94 @@ const DryRunChainResult: FC<{ result: TDryRunChainResult }> = ({ result }) => {
   )
 }
 
-const resultTx$ = paraspellBuilder$.pipeState(
-  switchMap((builder) => builder?.build() ?? [null]),
-  switchMap((papiTx) =>
-    papiTx
-      ? combineLatest({
-          tx: [papiTx],
-          encodedData: papiTx.getEncodedData(),
-        })
-      : [null],
+const resultingTransactions$ = paraspellBuilder$.pipeState(
+  switchMap(
+    (builder) =>
+      builder?.buildAll().catch((ex) => {
+        console.error(ex)
+        return null
+      }) ?? [null],
   ),
+  switchMap(async (transactions) => {
+    if (!transactions) return null
+
+    const encodedDatas = await Promise.all(
+      transactions.map(({ tx }) => tx.getEncodedData()),
+    )
+
+    return transactions.map(({ tx, api, chain }, i) => ({
+      tx,
+      api,
+      chain,
+      encodedData: encodedDatas[i],
+    }))
+  }),
   withDefault(null),
 )
 
 const Export = () => {
-  const resultTx = useStateObservable(resultTx$)
+  const resultTransactions = useStateObservable(resultingTransactions$)
+
+  return (
+    <div className="space-y-3">
+      {resultTransactions ? (
+        resultTransactions.map((result, i) => (
+          <ExportTx
+            encodedData={result.encodedData}
+            tx={result.tx}
+            api={result.api === resultTransactions[0].api ? null : result.api}
+            number={resultTransactions.length > 1 ? i + 1 : null}
+          />
+        ))
+      ) : (
+        <Button
+          type="button"
+          disabled
+          className="flex h-10 w-full items-center justify-center gap-2 rounded-md text-sm font-semibold"
+        >
+          <LockKeyhole className="h-4 w-4" />
+          Sign and submit
+        </Button>
+      )}
+    </div>
+  )
+}
+
+const ExportTx: FC<{
+  tx: TPapiTransaction
+  encodedData: Uint8Array
+  api?: PolkadotClient | null
+  number?: number | null
+}> = ({ tx, encodedData, api, number }) => {
   const [account] = useSelectedAccount()
 
   const submit = async () => {
-    if (!resultTx || !account?.signer) return
-    const signed = await resultTx.tx.sign(account.signer)
-    trackTx(signed, resultTx.tx.decodedCall, account)
+    if (!account?.signer) return
+    const signed = await tx.sign(account.signer)
+    trackTx(signed, tx.decodedCall, account)
   }
 
   return (
     <div className="space-y-3">
+      {number != null ? <div>#{number}</div> : null}
       <Button
         type="button"
-        disabled={!resultTx || !account?.signer}
+        disabled={!account?.signer}
         onClick={submit}
         className="flex h-10 w-full items-center justify-center gap-2 rounded-md text-sm font-semibold"
       >
         <LockKeyhole className="h-4 w-4" />
         Sign and submit
       </Button>
-      <Link
-        to={`/extrinsics/#data=${resultTx ? toHex(resultTx.encodedData) : ""}`}
-        className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-border bg-background text-sm font-medium text-foreground hover:bg-foreground/5"
-      >
-        <ExternalLink className="h-4 w-4" />
-        Open in extrinsics
-      </Link>
+      {api ? null : (
+        <Link
+          to={`/extrinsics/#data=${toHex(encodedData)}`}
+          className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-border bg-background text-sm font-medium text-foreground hover:bg-foreground/5"
+        >
+          <ExternalLink className="h-4 w-4" />
+          Open in extrinsics
+        </Link>
+      )}
     </div>
   )
 }
