@@ -3,9 +3,18 @@ import { TDryRunChainResult, TDryRunResult } from "@paraspell/sdk"
 import { Button } from "@polkahub/ui-components"
 import { state, useStateObservable, withDefault } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
+import {
+  CheckCircle2,
+  CircleAlert,
+  ExternalLink,
+  Loader2,
+  LockKeyhole,
+  Play,
+  XCircle,
+} from "lucide-react"
 import { jsonSerialize, toHex } from "polkadot-api/utils"
 import { useSelectedAccount } from "polkahub"
-import { FC } from "react"
+import { FC, ReactNode } from "react"
 import {
   combineLatest,
   filter,
@@ -21,11 +30,16 @@ import { paraspellBuilder$, setupConfig$ } from "./Setup"
 
 export const Submit = () => {
   return (
-    <div>
-      <Validation />
-      <DryRun />
-      <Export />
-    </div>
+    <section className="min-w-0 rounded-lg border border-border bg-card text-card-foreground shadow-sm">
+      <div className="border-b border-border px-4 py-3">
+        <h2 className="text-sm font-semibold">Validation & submit</h2>
+      </div>
+      <div className="space-y-4 p-4">
+        <Validation />
+        <DryRun />
+        <Export />
+      </div>
+    </section>
   )
 }
 
@@ -42,25 +56,13 @@ const Validation = () => {
     : null
 
   return (
-    <div>
-      <h3>Validation</h3>
-      <div>
-        <div>Format checks</div>
-        <div>
-          {formatChecks == null ? "-" : formatChecks ? "Passed" : "Failed"}
-        </div>
+    <section className="space-y-3 rounded-md border border-border bg-background/60 p-3">
+      <SectionTitle>Validation</SectionTitle>
+      <div className="space-y-2">
+        <ValidationRow label="Format checks" value={formatChecks} />
+        <ValidationRow label="Balances & fees" value={balanceFeeChecks} />
       </div>
-      <div>
-        <div>Balances & fees</div>
-        <div>
-          {balanceFeeChecks == null
-            ? "-"
-            : balanceFeeChecks
-              ? "Passed"
-              : "Failed"}
-        </div>
-      </div>
-    </div>
+    </section>
   )
 }
 
@@ -81,48 +83,64 @@ const DryRun = () => {
   const dryRunResult = useStateObservable(dryRunResult$)
 
   return (
-    <div>
+    <section className="space-y-3 rounded-md border border-border bg-background/60 p-3">
+      <div className="flex items-center justify-between gap-3">
+        <SectionTitle>Dry run</SectionTitle>
+        <Button
+          type="button"
+          onClick={() => dryRun()}
+          disabled={!builder || dryRunResult === "loading"}
+          className="inline-flex h-8 items-center gap-2 rounded-md px-3 text-xs"
+        >
+          {dryRunResult === "loading" ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Play className="h-3.5 w-3.5" />
+          )}
+          Dry run
+        </Button>
+      </div>
       <div>
-        <div>Dry run result</div>
         {dryRunResult === "loading" ? (
-          <div>Loading…</div>
+          <div className="flex items-center gap-2 rounded-md border border-dashed border-border p-3 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Running simulation
+          </div>
         ) : dryRunResult ? (
           <DryRunResult result={dryRunResult} />
-        ) : null}
+        ) : (
+          <div className="rounded-md border border-dashed border-border p-3 text-sm text-muted-foreground">
+            Not run
+          </div>
+        )}
       </div>
-      <Button type="button" onClick={dryRun} disabled={!builder}>
-        Dry run
-      </Button>
-    </div>
+    </section>
   )
 }
 const DryRunResult: FC<{ result: TDryRunResult }> = ({ result }) => {
   const failedView = result.failureChain ? (
-    <div>
-      <div>Chain: {result.failureChain}</div>
+    <div className="rounded-md border border-red-500/30 bg-red-500/5 p-3 text-sm text-red-700 dark:text-red-300">
+      <div className="font-medium">Failed on {result.failureChain}</div>
       {result.failureReason ? <div>{result.failureReason}</div> : null}
       {result.failureSubReason ? <div>{result.failureSubReason}</div> : null}
     </div>
   ) : null
 
   return (
-    <div>
+    <div className="space-y-3">
       {failedView}
-      <div>
-        <div>Origin</div>
+      <DryRunSection title="Origin">
         <DryRunChainResult result={result.origin} />
-      </div>
+      </DryRunSection>
       {result.hops.map((hop, i) => (
-        <div key={i}>
-          <div>{hop.chain}</div>
+        <DryRunSection title={hop.chain} key={i}>
           <DryRunChainResult result={hop.result} />
-        </div>
+        </DryRunSection>
       ))}
       {result.destination ? (
-        <div>
-          <div>Dest</div>
+        <DryRunSection title="Destination">
           <DryRunChainResult result={result.destination} />
-        </div>
+        </DryRunSection>
       ) : null}
     </div>
   )
@@ -130,20 +148,27 @@ const DryRunResult: FC<{ result: TDryRunResult }> = ({ result }) => {
 const DryRunChainResult: FC<{ result: TDryRunChainResult }> = ({ result }) => {
   if (!result.success) {
     return (
-      <div>
-        <div>Failed</div>
-        <div>{result.failureReason}</div>
+      <div className="space-y-2 text-sm">
+        <StatusBadge value={false} />
+        <div className="text-red-700 dark:text-red-300">
+          {result.failureReason}
+        </div>
         {result.failureSubReason ? <div>{result.failureSubReason}</div> : null}
       </div>
     )
   }
   return (
-    <div>
-      <div>Success</div>
-      <div>Fee: {result.fee}</div>
-      <div>Dest ParaId: {result.destParaId}</div>
-      <div>
-        ForwardedXcm: {JSON.stringify(result.forwardedXcms, jsonSerialize)}
+    <div className="space-y-2 text-sm">
+      <StatusBadge value />
+      <DetailRow label="Fee" value={formatValue(result.fee)} />
+      <DetailRow label="Dest ParaId" value={formatValue(result.destParaId)} />
+      <div className="space-y-1">
+        <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Forwarded XCM
+        </div>
+        <code className="block max-h-24 overflow-auto rounded-md border border-border bg-foreground/5 p-2 text-xs break-all">
+          {JSON.stringify(result.forwardedXcms, jsonSerialize)}
+        </code>
       </div>
     </div>
   )
@@ -173,19 +198,90 @@ const Export = () => {
   }
 
   return (
-    <div>
+    <div className="space-y-3">
       <Button
         type="button"
         disabled={!resultTx || !account?.signer}
         onClick={submit}
+        className="flex h-10 w-full items-center justify-center gap-2 rounded-md text-sm font-semibold"
       >
+        <LockKeyhole className="h-4 w-4" />
         Sign and submit
       </Button>
       <Link
         to={`/extrinsics/#data=${resultTx ? toHex(resultTx.encodedData) : ""}`}
+        className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-border bg-background text-sm font-medium text-foreground hover:bg-foreground/5"
       >
+        <ExternalLink className="h-4 w-4" />
         Open in extrinsics
       </Link>
     </div>
   )
+}
+
+const SectionTitle: FC<{ children: ReactNode }> = ({ children }) => (
+  <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+    {children}
+  </h3>
+)
+
+const ValidationRow: FC<{ label: string; value: boolean | null }> = ({
+  label,
+  value,
+}) => (
+  <div className="flex items-center justify-between gap-3 text-sm">
+    <span className="text-muted-foreground">{label}</span>
+    <StatusBadge value={value} />
+  </div>
+)
+
+const StatusBadge: FC<{ value: boolean | null }> = ({ value }) => {
+  if (value == null) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-0.5 text-xs font-medium text-muted-foreground">
+        <CircleAlert className="h-3 w-3" />
+        Not run
+      </span>
+    )
+  }
+
+  return value ? (
+    <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+      <CheckCircle2 className="h-3 w-3" />
+      Passed
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1 rounded-md border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-700 dark:text-red-300">
+      <XCircle className="h-3 w-3" />
+      Failed
+    </span>
+  )
+}
+
+const DryRunSection: FC<{
+  title: string
+  children: ReactNode
+}> = ({ title, children }) => (
+  <section className="space-y-2 rounded-md border border-border/70 bg-background/70 p-3">
+    <h4 className="text-sm font-medium">{title}</h4>
+    {children}
+  </section>
+)
+
+const DetailRow: FC<{
+  label: string
+  value: ReactNode
+}> = ({ label, value }) => (
+  <div className="flex items-center justify-between gap-3">
+    <span className="text-muted-foreground">{label}</span>
+    <span className="min-w-0 break-words text-right font-mono">{value}</span>
+  </div>
+)
+
+const formatValue = (value: unknown): ReactNode => {
+  if (value == null || value === "") return "-"
+  if (typeof value === "bigint" || typeof value === "number")
+    return value.toLocaleString()
+  if (typeof value === "string") return value
+  return String(value)
 }
