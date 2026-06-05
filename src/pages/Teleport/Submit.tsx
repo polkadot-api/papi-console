@@ -15,6 +15,7 @@ import {
   Loader2,
   LockKeyhole,
   Play,
+  TriangleAlert,
   XCircle,
 } from "lucide-react"
 import { PolkadotClient } from "polkadot-api"
@@ -28,6 +29,7 @@ import {
   map,
   startWith,
   switchMap,
+  tap,
   withLatestFrom,
 } from "rxjs"
 import { trackTx } from "../Extrinsics/ExtrinsicsWorkspaceEntry"
@@ -89,6 +91,7 @@ const dryRunResult$ = state(
         ]),
       ),
     ),
+    tap((v) => console.log(v)),
   ),
   null,
 )
@@ -233,6 +236,7 @@ const Export = () => {
 
   return (
     <div className="space-y-3">
+      <DevelopmentDisclaimer />
       {resultTransactions ? (
         resultTransactions.map((result, i) => (
           <ExportTx
@@ -255,6 +259,18 @@ const Export = () => {
     </div>
   )
 }
+
+const DevelopmentDisclaimer = () => (
+  <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+    <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+    <div className="min-w-0">
+      <div className="font-medium">This feature is under development</div>
+      <div className="mt-0.5 text-amber-800/80 dark:text-amber-200/80">
+        Verify the generated call data before signing.
+      </div>
+    </div>
+  </div>
+)
 
 const ExportTx: FC<{
   tx: TPapiTransaction

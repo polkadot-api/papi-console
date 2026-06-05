@@ -10,8 +10,10 @@ import { Metadata } from "./pages/Metadata"
 import { RpcCalls } from "./pages/RpcCalls"
 import { RuntimeCalls } from "./pages/RuntimeCalls"
 import { Storage } from "./pages/Storage"
-import { Teleport } from "./pages/Teleport/Teleport"
 import { ViewFns } from "./pages/ViewFns"
+import { lazy } from "react"
+
+const Teleport = lazy(() => import("./pages/Teleport/Teleport"))
 
 export default function App() {
   return (

@@ -6,7 +6,7 @@ import { RoutePreview } from "./RoutePreview"
 import { origin$, Setup } from "./Setup"
 import { Submit } from "./Submit"
 
-export const Teleport = withSubscribe(() => {
+const Teleport = withSubscribe(() => {
   const origin = useStateObservable(origin$)
 
   if (!origin) {
@@ -60,3 +60,4 @@ export const Teleport = withSubscribe(() => {
     </CenteredScrollContainer>
   )
 })
+export default Teleport
