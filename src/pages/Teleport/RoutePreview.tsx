@@ -1,10 +1,10 @@
-import { TAssetInfo, TXcmFeeBase } from "@paraspell/sdk"
+import { TXcmFeeBase } from "@paraspell/sdk"
+import { formatToken } from "@polkadot-api/react-components"
 import { useStateObservable } from "@react-rxjs/core"
 import {
   ArrowRight,
   CheckCircle2,
   CircleDot,
-  Coins,
   Loader2,
   Route,
 } from "lucide-react"
@@ -65,14 +65,6 @@ export const RoutePreview = () => {
           label="XCM fee"
           value={<XcmFee fee={routeInfo.origin.xcmFee} />}
         />
-        <DetailRow
-          label="Balance"
-          value={formatValue(routeInfo.origin.xcmFee.balance)}
-        />
-        <DetailRow
-          label="Balance after"
-          value={formatValue(routeInfo.origin.xcmFee.balanceAfter)}
-        />
       </DetailGroup>
 
       {routeInfo.hops.map((hop, i) => (
@@ -81,10 +73,6 @@ export const RoutePreview = () => {
           <DetailRow
             label="XCM fee"
             value={<XcmFee fee={hop.result.xcmFee} />}
-          />
-          <DetailRow
-            label="Asset"
-            value={<AssetDisplay asset={hop.result.asset} />}
           />
         </DetailGroup>
       ))}
@@ -97,15 +85,15 @@ export const RoutePreview = () => {
         />
         <DetailRow
           label="Received"
-          value={formatValue(
-            routeInfo.destination.receivedCurrency.receivedAmount,
-          )}
-        />
-        <DetailRow
-          label="Balance after"
-          value={formatValue(
-            routeInfo.destination.receivedCurrency.balanceAfter,
-          )}
+          value={
+            typeof routeInfo.destination.receivedCurrency.receivedAmount ===
+            "bigint"
+              ? formatToken(
+                  routeInfo.destination.receivedCurrency.receivedAmount,
+                  routeInfo.destination.receivedCurrency.asset,
+                )
+              : "N/A"
+          }
         />
       </DetailGroup>
     </Panel>
@@ -209,16 +197,8 @@ const RouteNodeIcon: FC<{
 const XcmFee: FC<{
   fee: TXcmFeeBase
 }> = ({ fee }) => (
-  <span className="inline-flex min-w-0 items-center gap-1">
-    <span className="truncate font-mono">{formatValue(fee.fee)}</span>
-    <AssetDisplay asset={fee.asset} />
-  </span>
-)
-
-const AssetDisplay: FC<{ asset: TAssetInfo }> = ({ asset }) => (
-  <span className="inline-flex min-w-0 items-center gap-1">
-    <Coins className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-    <span className="truncate">{asset.symbol}</span>
+  <span className="truncate tabular-nums">
+    {formatToken(fee.fee, fee.asset)}
   </span>
 )
 
@@ -268,14 +248,6 @@ const DetailRow: FC<{
 }> = ({ label, value }) => (
   <div className="flex items-start justify-between gap-3 text-sm">
     <span className="shrink-0 text-muted-foreground">{label}</span>
-    <span className="min-w-0 break-words text-right">{value}</span>
+    <span className="min-w-0 wrap-break-word text-right">{value}</span>
   </div>
 )
-
-const formatValue = (value: unknown): ReactNode => {
-  if (value == null || value === "") return "-"
-  if (typeof value === "bigint" || typeof value === "number")
-    return value.toLocaleString()
-  if (typeof value === "string") return value
-  return String(value)
-}

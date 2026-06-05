@@ -4,6 +4,7 @@ import {
   TDryRunResult,
   TPapiTransaction,
 } from "@paraspell/sdk"
+import { formatToken } from "@polkadot-api/react-components"
 import { Button } from "@polkahub/ui-components"
 import { state, useStateObservable, withDefault } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
@@ -142,7 +143,7 @@ const DryRunError: FC<{ message: string }> = ({ message }) => (
       <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
       <div className="min-w-0 space-y-1">
         <div className="font-medium">Dry run failed</div>
-        <code className="block whitespace-pre-wrap break-words rounded-md border border-red-500/20 bg-background/70 px-2 py-1.5 text-xs text-red-800 dark:text-red-200">
+        <code className="block whitespace-pre-wrap wrap-break-word rounded-md border border-red-500/20 bg-background/70 px-2 py-1.5 text-xs text-red-800 dark:text-red-200">
           {message || "Unknown error"}
         </code>
       </div>
@@ -182,16 +183,22 @@ const DryRunChainResult: FC<{ result: TDryRunChainResult }> = ({ result }) => {
   return (
     <div className="space-y-2 text-sm">
       <StatusBadge value />
-      <DetailRow label="Fee" value={formatValue(result.fee)} />
-      <DetailRow label="Dest ParaId" value={formatValue(result.destParaId)} />
-      <div className="space-y-1">
-        <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Forwarded XCM
+      <DetailRow label="Fee" value={formatToken(result.fee, result.asset)} />
+      {result.destParaId != null ? (
+        <DetailRow label="Dest ParaId" value={result.destParaId} />
+      ) : null}
+      {result.forwardedXcms &&
+      (!Array.isArray(result.forwardedXcms) ||
+        result.forwardedXcms.length > 0) ? (
+        <div className="space-y-1">
+          <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Forwarded XCM
+          </div>
+          <code className="block max-h-32 overflow-auto rounded-md border border-border bg-foreground/5 p-2 text-xs whitespace-pre-wrap break-all">
+            {JSON.stringify(result.forwardedXcms, jsonSerialize, 2)}
+          </code>
         </div>
-        <code className="block max-h-24 overflow-auto rounded-md border border-border bg-foreground/5 p-2 text-xs break-all">
-          {JSON.stringify(result.forwardedXcms, jsonSerialize)}
-        </code>
-      </div>
+      ) : null}
     </div>
   )
 }

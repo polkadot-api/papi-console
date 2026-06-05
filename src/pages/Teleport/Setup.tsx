@@ -1,4 +1,5 @@
 import { SearchableSelect } from "@/components/Select"
+import { TokenInput } from "@/components/TokenInput"
 import { createState } from "@/lib/externalState"
 import { client$ } from "@/state/chains/chain.state"
 import { selectedAccount$ } from "@/state/polkahub"
@@ -10,7 +11,7 @@ import {
   TAssetInfo,
   TChain,
 } from "@paraspell/sdk"
-import { Input } from "@polkahub/ui-components"
+import { formatToken } from "@polkadot-api/react-components"
 import { state, useStateObservable, withDefault } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
 import {
@@ -29,7 +30,6 @@ import {
   combineLatest,
   defer,
   map,
-  merge,
   startWith,
   switchMap,
   withLatestFrom,
@@ -135,13 +135,20 @@ const AssetPicker = () => {
         options={Object.entries(assets).map(([key, asset]) => ({
           value: key,
           text: asset.assetId
-            ? `${asset.symbol} (${formatValue(asset.assetId)})`
+            ? `${asset.symbol} (${asset.assetId})`
             : asset.symbol,
         }))}
         className="h-10 w-full bg-background"
         contentClassName="w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-2rem)]"
       />
-      <KeyValue label="Balance" value={formatValue(balance)} />
+      <KeyValue
+        label="Balance"
+        value={
+          balance != null && selectedAsset
+            ? formatToken(balance, selectedAsset)
+            : ""
+        }
+      />
     </div>
   )
 }
@@ -225,34 +232,26 @@ const DestPicker = () => {
   )
 }
 
-const [amountChange$, changeAmount] = createSignal<string>()
-const amountStr$ = state(
-  merge(
-    merge(origin$, selectedAccount$, selectedAsset$).pipe(map(() => "0")),
-    amountChange$,
+const [amountChange$, changeAmount] = createSignal<bigint | null>()
+const amount$ = state(
+  combineLatest([origin$, selectedAccount$, selectedAsset$]).pipe(
+    switchMap(() => amountChange$.pipe(startWith(0n))),
   ),
-  "0",
-)
-const amount$ = amountStr$.pipeState(
-  map((v) => (v && !isNaN(Number(v)) ? Number(v) : null)),
+  0n,
 )
 const AmountPicker = () => {
-  const amount = useStateObservable(amountStr$)
+  const amount = useStateObservable(amount$)
   const selectedAsset = useStateObservable(selectedAsset$)
+  const token =
+    selectedAsset && typeof selectedAsset.decimals === "number"
+      ? {
+          decimals: selectedAsset.decimals,
+          symbol: selectedAsset.symbol,
+        }
+      : undefined
 
   return (
-    <div className="flex min-w-0 items-center rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-      <Input
-        type="number"
-        value={amount}
-        onChange={(evt) => changeAmount(evt.target.value)}
-        className="min-w-0 flex-1 rounded-r-none border-r-0 bg-background font-mono focus-visible:ring-0"
-        disabled={!selectedAsset}
-      />
-      <div className="flex h-10 min-w-16 items-center justify-center rounded-r-md border border-border bg-background px-3 text-xs font-medium text-muted-foreground">
-        {selectedAsset?.symbol ?? "Asset"}
-      </div>
-    </div>
+    <TokenInput value={amount} onValueChange={changeAmount} token={token} />
   )
 }
 
@@ -330,12 +329,6 @@ const SetupCard: FC<
   </section>
 )
 
-const StatusPill: FC<PropsWithChildren> = ({ children }) => (
-  <span className="shrink-0 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
-    {children}
-  </span>
-)
-
 const KeyValue: FC<{ label: string; value: ReactNode }> = ({
   label,
   value,
@@ -345,11 +338,3 @@ const KeyValue: FC<{ label: string; value: ReactNode }> = ({
     <span className="min-w-0 truncate text-right font-mono">{value}</span>
   </div>
 )
-
-const formatValue = (value: unknown): ReactNode => {
-  if (value == null || value === "") return "-"
-  if (typeof value === "bigint" || typeof value === "number")
-    return value.toLocaleString()
-  if (typeof value === "string") return value
-  return String(value)
-}
