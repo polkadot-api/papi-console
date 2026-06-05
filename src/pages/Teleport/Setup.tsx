@@ -35,11 +35,11 @@ import {
   withLatestFrom,
 } from "rxjs"
 import { SelectAccount } from "../Extrinsics/SubmitTx/SubmitTxForm"
-import { genesisHashToParaspell } from "./chainNameToParaspell"
+import { genesisHashToParaspell } from "./genesisToParaspell"
 
 export const origin$ = client$.pipeState(
   switchMap((client) => client.getChainSpecData().then((r) => r.genesisHash)),
-  map((genesis) => genesisHashToParaspell[genesis] ?? null),
+  map((genesis) => genesisHashToParaspell[genesis.slice(0, 10)] ?? null),
 )
 
 export const Setup = () => {
