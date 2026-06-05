@@ -350,14 +350,8 @@ const DetailRow: FC<{
 }> = ({ label, value }) => (
   <div className="flex items-center justify-between gap-3">
     <span className="text-muted-foreground">{label}</span>
-    <span className="min-w-0 break-words text-right font-mono">{value}</span>
+    <span className="min-w-0 wrap-break-word text-right font-mono">
+      {value}
+    </span>
   </div>
 )
-
-const formatValue = (value: unknown): ReactNode => {
-  if (value == null || value === "") return "-"
-  if (typeof value === "bigint" || typeof value === "number")
-    return value.toLocaleString()
-  if (typeof value === "string") return value
-  return String(value)
-}

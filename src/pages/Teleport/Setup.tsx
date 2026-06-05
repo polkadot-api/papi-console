@@ -8,6 +8,7 @@ import {
   getAssets,
   getBalance,
   getSupportedDestinations,
+  InvalidAddressError,
   TAssetInfo,
   TChain,
 } from "@paraspell/sdk"
@@ -27,9 +28,13 @@ import { jsonSerialize } from "polkadot-api/utils"
 import { AddressInput } from "polkahub"
 import { FC, PropsWithChildren, ReactNode } from "react"
 import {
+  catchError,
   combineLatest,
   defer,
+  filter,
+  from,
   map,
+  ObservableInput,
   startWith,
   switchMap,
   withLatestFrom,
@@ -71,7 +76,6 @@ export const Setup = () => {
         <SetupCard title="Recipient" icon={<UserRound className="h-4 w-4" />}>
           <RecipientPicker />
         </SetupCard>
-        {/* <SetupCard title="Advanced"></SetupCard> */}
       </div>
     </section>
   )
@@ -174,21 +178,38 @@ const selectedDest$ = state(
 const selectedDestError$ = selectedDest$.pipeState(
   withLatestFrom(client$, origin$, selectedAsset$, selectedAccount$),
   switchMap(([dest, client, origin, asset, account]) =>
-    defer(async () => {
-      if (!dest || !client || !origin || !asset || !account) return null
+    defer(() => {
+      if (!dest || !client || !origin || !asset || !account) return [null]
 
-      try {
-        await Builder(client)
-          .from(origin)
-          .to(dest)
-          .currency({ location: asset.location, amount: 0n })
-          .recipient(account.address)
-          .sender(account.address)
-          .getTransferInfo()
-        return null
-      } catch (ex: any) {
-        return ex.message ?? "Uknown error"
-      }
+      const tryWithRecipient = (address: string) =>
+        from(
+          Builder(client)
+            .from(origin)
+            .to(dest)
+            .currency({ location: asset.location, amount: 0n })
+            .recipient(address)
+            .sender(account.address)
+            .getTransferInfo(),
+        ).pipe(map(() => null))
+      const mapError = catchError<null, ObservableInput<null>>((ex) => [
+        ex.message ?? "Uknown error",
+      ])
+
+      return tryWithRecipient(account.address).pipe(
+        map(() => null),
+        catchError((ex) => {
+          if (ex instanceof InvalidAddressError) {
+            return recipient$.pipe(
+              filter((v) => v != null),
+              switchMap((v) =>
+                tryWithRecipient(v).pipe(startWith(null), mapError),
+              ),
+            )
+          }
+          throw ex
+        }),
+        mapError,
+      )
     }).pipe(startWith(null)),
   ),
   withDefault(null),
