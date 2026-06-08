@@ -40,7 +40,7 @@ const Teleport = withSubscribe(() => {
             </p>
           </div>
           <a
-            href="https://paraspell.github.io/docs/"
+            href="https://paraspell.xyz/"
             target="_blank"
             rel="noreferrer"
             className="w-fit shrink-0 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-foreground/20 hover:text-foreground"

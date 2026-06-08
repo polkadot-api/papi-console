@@ -385,7 +385,7 @@ export const SubmitExtrinsic = forwardRef<HTMLElement>((_, ref) => {
   )
 })
 
-const SignerSetupDialog: FC = () => {
+export const SignerSetupDialog: FC = () => {
   const [open, setOpen] = useState(false)
 
   const { contentStack, contextValue } = usePolkaHubModalState(() =>

@@ -39,6 +39,7 @@ import {
   switchMap,
   withLatestFrom,
 } from "rxjs"
+import { SignerSetupDialog } from "../Extrinsics/SubmitTx/SubmitExtrinsic"
 import { SelectAccount } from "../Extrinsics/SubmitTx/SubmitTxForm"
 import { genesisHashToParaspell } from "./genesisToParaspell"
 
@@ -59,7 +60,10 @@ export const Setup = () => {
           <OriginChain />
         </SetupCard>
         <SetupCard title="Sender" icon={<Wallet className="h-4 w-4" />}>
-          <SelectAccount />
+          <div className="flex items-center gap-1">
+            <SelectAccount />
+            <SignerSetupDialog />
+          </div>
         </SetupCard>
         <SetupCard title="Asset" icon={<Coins className="h-4 w-4" />}>
           <AssetPicker />
