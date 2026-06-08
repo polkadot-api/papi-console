@@ -119,9 +119,7 @@ const balance$ = selectedAsset$.pipeState(
           address: selectedAccount.address,
           chain: origin,
           api: client,
-          currency: {
-            location: asset.location,
-          },
+          currency: asset,
         })
       }),
     ),
