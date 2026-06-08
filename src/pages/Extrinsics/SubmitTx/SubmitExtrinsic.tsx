@@ -47,6 +47,7 @@ import {
   combineLatest,
   defer,
   map,
+  of,
   scan,
   switchMap,
   timer,
@@ -187,6 +188,7 @@ const paymentInfo$ = state(
         switchMap(() =>
           tx.getPaymentInfo(account.signer!.publicKey, txOptions),
         ),
+        catchError(() => of(null)),
       )
     }),
     liftSuspense(),
