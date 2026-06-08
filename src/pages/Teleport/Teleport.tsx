@@ -30,8 +30,8 @@ const Teleport = withSubscribe(() => {
   }
 
   return (
-    <CenteredScrollContainer className="p-4">
-      <div className="flex min-h-full flex-col gap-4">
+    <CenteredScrollContainer>
+      <div className="flex min-h-full flex-col gap-4 p-4">
         <header className="flex flex-col gap-3 @lg:flex-row @lg:items-start @lg:justify-between">
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight">Teleport</h1>
@@ -49,7 +49,7 @@ const Teleport = withSubscribe(() => {
           </a>
         </header>
 
-        <div className="grid min-h-0 gap-4 @5xl:grid-cols-[minmax(0,1fr)_minmax(21rem,0.85fr)] @7xl:grid-cols-[minmax(0,1.05fr)_minmax(24rem,0.95fr)]">
+        <div className="grid min-h-0 gap-4 items-start @5xl:grid-cols-[minmax(0,1fr)_minmax(21rem,0.85fr)] @7xl:grid-cols-[minmax(0,1.05fr)_minmax(24rem,0.95fr)]">
           <Setup />
           <div className="flex min-w-0 flex-col gap-4">
             <RoutePreview />

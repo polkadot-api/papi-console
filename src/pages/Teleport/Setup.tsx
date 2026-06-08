@@ -1,5 +1,6 @@
 import { SearchableSelect } from "@/components/Select"
 import { TokenInput } from "@/components/TokenInput"
+import { getHashParams, setHashParams } from "@/hashParams"
 import { createState } from "@/lib/externalState"
 import { client$ } from "@/state/chains/chain.state"
 import { selectedAccount$ } from "@/state/polkahub"
@@ -30,6 +31,7 @@ import { FC, PropsWithChildren, ReactNode } from "react"
 import {
   catchError,
   combineLatest,
+  concat,
   defer,
   filter,
   from,
@@ -37,6 +39,8 @@ import {
   ObservableInput,
   startWith,
   switchMap,
+  take,
+  tap,
   withLatestFrom,
 } from "rxjs"
 import { SignerSetupDialog } from "../Extrinsics/SubmitTx/SubmitExtrinsic"
@@ -96,6 +100,8 @@ const OriginChain = () => {
   )
 }
 
+const initialHashParams = getHashParams()
+
 const assetKey = (info: TAssetInfo) =>
   JSON.stringify(info.location, jsonSerialize)
 const assetList$ = origin$.pipeState(
@@ -106,8 +112,19 @@ const assetList$ = origin$.pipeState(
 )
 const [changeAsset$, changeAsset] = createSignal<TAssetInfo>()
 const selectedAsset$ = state(
-  combineLatest([assetList$, changeAsset$.pipe(startWith(null))]).pipe(
+  combineLatest([
+    assetList$,
+    concat(
+      // Try get from hashParams
+      assetList$.pipe(
+        take(1),
+        map((assets) => assets[initialHashParams.get("asset") ?? ""] ?? null),
+      ),
+      changeAsset$,
+    ),
+  ]).pipe(
     map(([list, asset]) => (asset ? (list[assetKey(asset)] ?? null) : null)),
+    tap((v) => setHashParams({ asset: v && assetKey(v) })),
   ),
 )
 const balance$ = selectedAsset$.pipeState(
@@ -174,8 +191,13 @@ const [changeDest$, changeDest] = createSignal<TChain>()
 const selectedDest$ = state(
   combineLatest([
     supportedDestinations$,
-    changeDest$.pipe(startWith(null)),
-  ]).pipe(map(([list, asset]) => (list?.includes(asset!) ? asset : null))),
+    changeDest$.pipe(
+      startWith((initialHashParams.get("destination") as TChain) ?? null),
+    ),
+  ]).pipe(
+    map(([list, asset]) => (list?.includes(asset!) ? asset : null)),
+    tap((destination) => setHashParams({ destination })),
+  ),
 )
 const selectedDestError$ = selectedDest$.pipeState(
   withLatestFrom(client$, origin$, selectedAsset$, selectedAccount$),
@@ -257,10 +279,16 @@ const DestPicker = () => {
 
 const [amountChange$, changeAmount] = createSignal<bigint | null>()
 const amount$ = state(
-  combineLatest([origin$, selectedAccount$, selectedAsset$]).pipe(
-    switchMap(() => amountChange$.pipe(startWith(0n))),
+  combineLatest([origin$, selectedAsset$.pipe(filter((v) => v != null))]).pipe(
+    switchMap((_, i) =>
+      // If it changes afterwards, reset to 0
+      i == 0 ? amountChange$ : amountChange$.pipe(startWith(0n)),
+    ),
+    tap((amount) =>
+      setHashParams({ amount: amount == null ? null : String(amount) }),
+    ),
   ),
-  0n,
+  BigInt(initialHashParams.get("amount") ?? "0"),
 )
 const AmountPicker = () => {
   const amount = useStateObservable(amount$)
@@ -278,7 +306,10 @@ const AmountPicker = () => {
   )
 }
 
-const [recipient$, setRecipient] = createState<string | null>(null)
+const [recipient$, setRecipient] = createState<string | null>(
+  initialHashParams.get("recipient") ?? null,
+)
+recipient$.subscribe((recipient) => setHashParams({ recipient }))
 const RecipientPicker = () => {
   const recipient = useStateObservable(recipient$)
 
