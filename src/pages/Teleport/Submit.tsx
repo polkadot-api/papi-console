@@ -29,7 +29,6 @@ import {
   map,
   startWith,
   switchMap,
-  tap,
   withLatestFrom,
 } from "rxjs"
 import { trackTx } from "../Extrinsics/ExtrinsicsWorkspaceEntry"
@@ -91,7 +90,6 @@ const dryRunResult$ = state(
         ]),
       ),
     ),
-    tap((v) => console.log(v)),
   ),
   null,
 )
@@ -240,6 +238,7 @@ const Export = () => {
       {resultTransactions ? (
         resultTransactions.map((result, i) => (
           <ExportTx
+            key={i}
             encodedData={result.encodedData}
             tx={result.tx}
             api={result.api === resultTransactions[0].api ? null : result.api}

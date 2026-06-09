@@ -123,11 +123,11 @@ const parsePlanckInput = (
 } => {
   const text = value.replace(/[,. ']/g, "")
 
-  if (text === "" || text === "-") {
+  if (text === "") {
     return { accepted: true, text, value: null }
   }
 
-  if (!/^-?\d+$/.test(text)) {
+  if (!/^\d+$/.test(text)) {
     return { accepted: false, text, value: null }
   }
 
@@ -145,17 +145,15 @@ const parseTokenInput = (
   const tokenDecimals = normalizeDecimals(decimals)
   const text = value.replace(/[, ']/g, "")
 
-  if (text === "" || text === "-" || text === "." || text === "-.") {
+  if (text === "" || text === ".") {
     return { accepted: true, text, value: null }
   }
 
-  if (!/^-?(?:\d+|\d*\.\d*)$/.test(text)) {
+  if (!/^(?:\d+|\d*\.\d*)$/.test(text)) {
     return { accepted: false, text, value: null }
   }
 
-  const isNegative = text.startsWith("-")
-  const unsigned = isNegative ? text.slice(1) : text
-  const [whole = "0", fractional = ""] = unsigned.split(".")
+  const [whole = "0", fractional = ""] = text.split(".")
 
   if (fractional.length > tokenDecimals) {
     return { accepted: false, text, value: null }
@@ -170,7 +168,7 @@ const parseTokenInput = (
   return {
     accepted: true,
     text,
-    value: isNegative ? -plancks : plancks,
+    value: plancks,
   }
 }
 
@@ -193,11 +191,9 @@ const formatTokenInputValue = (
   withSeparators: boolean,
 ) => {
   const tokenDecimals = normalizeDecimals(decimals)
-  const isNegative = value < 0n
-  const absolute = isNegative ? -value : value
   const scale = getScale(tokenDecimals)
-  const whole = absolute / scale
-  const fractional = absolute % scale
+  const whole = value / scale
+  const fractional = value % scale
   const wholeText = withSeparators
     ? formatIntegerWithSeparators(whole)
     : whole.toString()
@@ -205,18 +201,11 @@ const formatTokenInputValue = (
     ? fractional.toString().padStart(tokenDecimals, "0").replace(/0+$/, "")
     : ""
 
-  return `${isNegative ? "-" : ""}${wholeText}${
-    fractionalText ? `.${fractionalText}` : ""
-  }`
+  return `${wholeText}${fractionalText ? `.${fractionalText}` : ""}`
 }
 
 const formatIntegerWithSeparators = (value: bigint) => {
-  const text = value.toString()
-  const isNegative = text.startsWith("-")
-  const digits = isNegative ? text.slice(1) : text
-  const formatted = digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-
-  return isNegative ? `-${formatted}` : formatted
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 }
 
 const normalizeDecimals = (decimals: number) =>

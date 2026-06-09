@@ -195,7 +195,7 @@ const selectedDest$ = state(
       startWith((initialHashParams.get("destination") as TChain) ?? null),
     ),
   ]).pipe(
-    map(([list, asset]) => (list?.includes(asset!) ? asset : null)),
+    map(([list, dest]) => (list?.includes(dest) ? dest : null)),
     tap((destination) => setHashParams({ destination })),
   ),
 )
@@ -215,9 +215,9 @@ const selectedDestError$ = selectedDest$.pipeState(
             .sender(account.address)
             .getTransferInfo(),
         ).pipe(map(() => null))
-      const mapError = catchError<null, ObservableInput<null>>((ex) => [
-        ex.message ?? "Uknown error",
-      ])
+      const mapError = catchError<string | null, ObservableInput<null>>(
+        (ex) => [ex.message ?? "Uknown error"],
+      )
 
       return tryWithRecipient(account.address).pipe(
         map(() => null),
