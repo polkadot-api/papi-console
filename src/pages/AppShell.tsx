@@ -3,6 +3,7 @@ import {
   type NavigationItem,
 } from "@/components/GlobalCommandPalette"
 import { GithubIcon } from "@/components/Icons"
+import { Loading } from "@/components/Loading"
 import SliderToggle from "@/components/Toggle"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
@@ -24,7 +25,7 @@ import {
   SquareFunction,
   UserRound,
 } from "lucide-react"
-import { FC, PropsWithChildren, useState } from "react"
+import { FC, PropsWithChildren, Suspense, useState } from "react"
 import { useLocation } from "react-router-dom"
 import { twMerge } from "tailwind-merge"
 import { NetworkSwitcher } from "./Network/Network"
@@ -118,7 +119,9 @@ export const AppShell: FC<PropsWithChildren> = ({ children }) => {
       </Sheet>
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar onOpenSidebar={() => setSidebarOpen(true)} />
-        {children}
+        <Suspense fallback={<Loading>Loading Section…</Loading>}>
+          {children}
+        </Suspense>
       </div>
       <HistoryDrawer />
     </div>
