@@ -2,14 +2,16 @@ import {
   GlobalCommandPalette,
   type NavigationItem,
 } from "@/components/GlobalCommandPalette"
-import { HistoryDrawer, HistoryDrawerTrigger } from "@/components/Workspace"
 import { GithubIcon } from "@/components/Icons"
 import SliderToggle from "@/components/Toggle"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { HistoryDrawer, HistoryDrawerTrigger } from "@/components/Workspace"
 import { Link } from "@/hashParams"
+import { cn } from "@/lib/utils"
 import { changeTheme, useTheme } from "@/ThemeProvider"
 import {
+  ArrowRightLeft,
   BookOpenText,
   Cable,
   DatabaseSearch,
@@ -26,7 +28,6 @@ import { FC, PropsWithChildren, useState } from "react"
 import { useLocation } from "react-router-dom"
 import { twMerge } from "tailwind-merge"
 import { NetworkSwitcher } from "./Network/Network"
-import { cn } from "@/lib/utils"
 
 const navigationGroups: Array<{
   label: string
@@ -90,6 +91,11 @@ const navigationGroups: Array<{
         label: "Accounts",
         // Alt Wallet
         icon: UserRound,
+      },
+      {
+        path: "/teleport",
+        label: "Teleport",
+        icon: ArrowRightLeft,
       },
     ],
   },

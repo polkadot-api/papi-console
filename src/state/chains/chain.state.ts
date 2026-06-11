@@ -210,6 +210,7 @@ export const chainClient$ = state(
         getMetadata: (id) => firstValueFrom(getMetadata(id)),
         setMetadata,
       })
+
       const chainHead: ChainHead$ = (client as any).___INTERNAL_DO_NOT_USE
       return concat(
         i === 0 ? EMPTY : of(SUSPENSE),

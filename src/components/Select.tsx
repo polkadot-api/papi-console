@@ -19,6 +19,7 @@ export const SearchableSelect = <T,>({
   className,
   contentClassName,
   allowCustomValue,
+  disabled,
 }: {
   value: T | null
   setValue: (val: T | null) => void
@@ -27,6 +28,7 @@ export const SearchableSelect = <T,>({
   contentClassName?: string
   // only for T=string
   allowCustomValue?: boolean
+  disabled?: boolean
 }) => {
   const [open, setOpen] = useState(false)
   const [filterValue, setFilterValue] = useState("")
@@ -80,6 +82,7 @@ export const SearchableSelect = <T,>({
             "flex w-52 justify-between overflow-hidden bg-input border border-border",
             className,
           )}
+          disabled={disabled}
         >
           {value ? (
             <span className="text-ellipsis overflow-hidden">

@@ -11,6 +11,9 @@ import { RpcCalls } from "./pages/RpcCalls"
 import { RuntimeCalls } from "./pages/RuntimeCalls"
 import { Storage } from "./pages/Storage"
 import { ViewFns } from "./pages/ViewFns"
+import { lazy } from "react"
+
+const Teleport = lazy(() => import("./pages/Teleport/Teleport"))
 
 export default function App() {
   return (
@@ -26,6 +29,7 @@ export default function App() {
           <Route path="metadata/*" element={<Metadata />} />
           <Route path="rpcCalls/*" element={<RpcCalls />} />
           <Route path="accounts/*" element={<Accounts />} />
+          <Route path="teleport" element={<Teleport />} />
           <Route path="*" element={<Navigate to="/explorer" replace />} />
         </Routes>
       </AppShell>
