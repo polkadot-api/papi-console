@@ -9,6 +9,9 @@ overrides:
   polkahub: link:../polkahub/packages/polkahub
 
 patchedDependencies:
+  '@paraspell/sdk@13.7.1':
+    hash: 983bd17a25d679b5d7188c367518aed64780a177d4a07613ce9e33e950d2a629
+    path: patches/@paraspell__sdk@13.7.1.patch
   react18-json-view:
     hash: 962696fac5fe7ad3e94fd36dad07521c6c3eafd52f219ab335d52438387f6b66
     path: patches/react18-json-view.patch

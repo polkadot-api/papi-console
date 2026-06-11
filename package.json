@@ -87,7 +87,8 @@
       "polkahub": "link:../polkahub/packages/polkahub"
     },
     "patchedDependencies": {
-      "react18-json-view": "patches/react18-json-view.patch"
+      "react18-json-view": "patches/react18-json-view.patch",
+      "@paraspell/sdk@13.7.1": "patches/@paraspell__sdk@13.7.1.patch"
     },
     "onlyBuiltDependencies": [
       "@reown/appkit",
