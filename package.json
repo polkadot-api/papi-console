@@ -19,13 +19,15 @@
     "@monaco-editor/react": "^4.7.0",
     "@paraspell/sdk": "^13.7.1",
     "@polkadot-api/descriptors": "file:.papi/descriptors",
-    "@polkadot-api/json-rpc-provider-proxy": "^0.4.0",
-    "@polkadot-api/metadata-builders": "^0.14.3",
-    "@polkadot-api/observable-client": "^0.18.7",
-    "@polkadot-api/react-builder": "0.5.3",
+    "@polkadot-api/json-rpc-provider-proxy": "canary",
+    "@polkadot-api/metadata-builders": "canary",
+    "@polkadot-api/observable-client": "canary",
+    "@polkadot-api/polkadot-signer": "canary",
+    "@polkadot-api/react-builder": "canary",
     "@polkadot-api/react-components": "^0.4.2",
-    "@polkadot-api/substrate-bindings": "^0.20.3",
-    "@polkadot-api/tx-utils": "^0.3.3",
+    "@polkadot-api/signers-common": "canary",
+    "@polkadot-api/substrate-bindings": "canary",
+    "@polkadot-api/tx-utils": "canary",
     "@polkahub/ui-components": "^0.7.0",
     "@radix-ui/react-accordion": "^1.2.13",
     "@radix-ui/react-dialog": "^1.1.16",
@@ -45,7 +47,7 @@
     "clsx": "^2.1.1",
     "idb-keyval": "^6.2.5",
     "lucide-react": "^1.17.0",
-    "polkadot-api": "^2.1.6",
+    "polkadot-api": "canary",
     "polkahub": "^0.7.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
@@ -80,6 +82,10 @@
   },
   "packageManager": "pnpm@10.30.3+sha512.c961d1e0a2d8e354ecaa5166b822516668b7f44cb5bd95122d590dd81922f606f5473b6d23ec4a5be05e7fcd18e8488d47d978bbe981872f1145d06e9a740017",
   "pnpm": {
+    "overrides": {
+      "@polkahub/ui-components": "link:../polkahub/packages/ui-components",
+      "polkahub": "link:../polkahub/packages/polkahub"
+    },
     "patchedDependencies": {
       "react18-json-view": "patches/react18-json-view.patch"
     },
