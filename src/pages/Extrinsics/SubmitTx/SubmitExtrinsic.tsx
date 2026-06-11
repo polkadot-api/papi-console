@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select"
 import { createState } from "@/lib/externalState"
 import { PolkahubModalBasedManagers } from "@/pages/Accounts/Providers"
+import { finalized$ } from "@/state/block.state"
 import { client$, unsafeApi$ } from "@/state/chains/chain.state"
 import { selectedAccount$ } from "@/state/polkahub"
 import { polkadot_people } from "@polkadot-api/descriptors"
@@ -34,10 +35,12 @@ import {
   switchMapSuspended,
 } from "@react-rxjs/utils"
 import { ChevronLeft, Send, Settings, WalletCards } from "lucide-react"
-import { AccountId, TxOptions } from "polkadot-api"
+import { withCommonExtensions, withNonce } from "@polkadot-api/signers-common"
+import { AccountId } from "polkadot-api"
 import {
   ModalContext,
   PjsWalletButtons,
+  type Account,
   usePolkaHubModalState,
   useSelectedAccount,
 } from "polkahub"
@@ -56,6 +59,7 @@ import { callData$ } from "../componentValue.state"
 import { CustomSignedExt, customSignedExtensions$ } from "../CustomSignedExt"
 import { trackTx } from "../ExtrinsicsWorkspaceEntry"
 import { SelectAccount } from "./SubmitTxForm"
+import { ArgsForCreator } from "@polkadot-api/polkadot-signer"
 
 const customExtensionsCount$ = state(
   customSignedExtensions$.pipe(
@@ -76,16 +80,17 @@ const [nonceBlurred$, blurNonce] = createSignal()
 const chainNonce$ = unsafeApi$.pipe(
   switchMapSuspended((api) =>
     selectedAccount$.pipe(
-      switchMapSuspended((account) =>
-        account?.signer
+      switchMapSuspended((account) => {
+        const publicKey = getTxCreatorPublicKey(account)
+        return publicKey
           ? api.apis.AccountNonceApi.account_nonce(
-              AccountId(42).dec(account.signer.publicKey),
+              AccountId(42).dec(publicKey),
               {
                 at: "best",
               },
             )
-          : [],
-      ),
+          : []
+      }),
       liftSuspense(),
       catchError((ex) => {
         console.error(ex)
@@ -138,15 +143,33 @@ const nonce$ = state(
   "",
 )
 
-type Mortality = NonNullable<TxOptions<any, any>["mortality"]>
+type CommonOpts = ArgsForCreator<ReturnType<typeof withCommonExtensions>, any> &
+  ArgsForCreator<ReturnType<ReturnType<typeof withNonce>>, any>
+type CustomSignedExtensions = Record<
+  string,
+  {
+    value?: Uint8Array
+    additionalSigned?: Uint8Array
+  }
+>
+type SubmitTxOptions = CommonOpts & {
+  customSignedExtensions?: CustomSignedExtensions
+}
+
+type Mortality = NonNullable<CommonOpts["mortality"]>
 const DEFAULT_MORTAL = {
   mortal: true,
   period: 64,
-}
-// powers of 2 from 4 to 16 (incl)
-const periodOptions = new Array(16 - 4 + 1).fill(0).map((_, i) => 1 << (i + 4))
+} satisfies Mortality
+// powers of 2 from 4 to 12 (incl)
+const periodOptions = new Array(12 - 4 + 1).fill(0).map((_, i) => 1 << (i + 4))
 const [mortality$, setMortality] = createState<Mortality>(DEFAULT_MORTAL)
 const [tip$, setTip] = createState("0")
+
+const getTxCreatorPublicKey = (account: Account | null) =>
+  account?.txCreator && "publicKey" in account.txCreator
+    ? (account.txCreator.publicKey as Uint8Array)
+    : null
 
 const transaction$ = state(
   combineLatest([unsafeApi$, callData$]).pipe(
@@ -163,31 +186,40 @@ const txOptions$ = state(
   combineLatest([
     nonce$.pipe(map((v) => (isIntegerStr(v) ? Number(v) : null))),
     mortality$,
+    finalized$,
     tip$.pipe(map((v) => (isIntegerStr(v) ? BigInt(v) : null))),
     customSignedExtensions$,
   ]).pipe(
-    map(([nonce, mortality, tip, signedExt]): TxOptions<any, any> => {
+    map(([nonce, mortality, finalized, tip, signedExt]): SubmitTxOptions => {
       return {
-        mortality,
+        mortality: {
+          ...mortality,
+          ...(mortality.mortal
+            ? {
+                at: {
+                  hash: finalized.hash,
+                  number: finalized.number,
+                },
+              }
+            : {}),
+        },
         nonce: nonce ?? undefined,
         tip: tip ?? undefined,
         customSignedExtensions: signedExt,
       }
     }),
   ),
-  {} satisfies TxOptions<any, any>,
+  {} satisfies SubmitTxOptions,
 )
 
 const paymentInfo$ = state(
   combineLatest([transaction$, selectedAccount$, txOptions$]).pipe(
     switchMapSuspended(([tx, account, txOptions]) => {
-      if (!tx || !account?.signer) return [null]
+      if (!tx || !account?.txCreator) return [null]
 
       // Adding a small delay for debouncing quick input changes
       return timer(200).pipe(
-        switchMap(() =>
-          tx.getPaymentInfo(account.signer!.publicKey, txOptions),
-        ),
+        switchMap(() => tx.getPaymentInfo(account.txCreator!, txOptions)),
         catchError(() => of(null)),
       )
     }),
@@ -200,12 +232,10 @@ const paymentInfo$ = state(
 const accountBalance$ = state(
   combineLatest([selectedAccount$, client$]).pipe(
     switchMapSuspended(([account, client]) =>
-      account?.signer
+      account
         ? client
             .getTypedApi(polkadot_people)
-            .query.System.Account.getValue(
-              AccountId().dec(account.signer.publicKey),
-            )
+            .query.System.Account.getValue(account.address)
         : [],
     ),
     liftSuspense(),
@@ -236,12 +266,12 @@ export const SubmitExtrinsic = forwardRef<HTMLElement>((_, ref) => {
   const [isSigning, setIsSigning] = useState(false)
 
   const signAndSubmit = async () => {
-    if (!account?.signer || !tx) return
+    if (!account?.txCreator || !tx) return
 
     setIsSigning(true)
     try {
-      const signedExtrinsic = await tx.sign(account.signer, txOptions)
-      trackTx(signedExtrinsic, tx.decodedCall, account)
+      const signedExtrinsic = await tx.create(account.txCreator, txOptions)
+      trackTx(signedExtrinsic, tx.decodedCall, account ?? undefined)
     } catch (ex) {
       console.error(ex)
     }
@@ -367,7 +397,7 @@ export const SubmitExtrinsic = forwardRef<HTMLElement>((_, ref) => {
       <section className="mx-4 space-y-3 border-t border-border py-4">
         <ActionButton
           className="flex w-full items-center justify-center gap-2 rounded-md py-2.5 text-sm font-semibold"
-          disabled={!tx || !account?.signer || isSigning}
+          disabled={!tx || !account?.txCreator || isSigning}
           onClick={signAndSubmit}
         >
           <Send className="h-4 w-4" />

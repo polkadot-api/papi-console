@@ -40,14 +40,14 @@ export const Extrinsic: FC<{ extrinsic: ExtrinsicDescriptor }> = ({
       <div>
         <h4>Signed Extensions</h4>
         {/* TODO: adapt for different extrinsic versions */}
-        <SignedExtensions signedExtensions={extrinsic.signedExtensions[0]} />
+        <SignedExtensions signedExtensions={extrinsic.extensionsByVersion[0]} />
       </div>
     </div>
   )
 }
 
 type SignedExtension =
-  ExtrinsicDescriptor["signedExtensions"][number] extends Array<infer R>
+  ExtrinsicDescriptor["extensionsByVersion"][number] extends Array<infer R>
     ? R
     : never
 const SignedExtensions: FC<{ signedExtensions: Array<SignedExtension> }> = ({

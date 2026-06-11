@@ -280,8 +280,8 @@ const ExportTx: FC<{
   const [account] = useSelectedAccount()
 
   const submit = async () => {
-    if (!account?.signer) return
-    const signed = await tx.sign(account.signer)
+    if (!account?.txCreator) return
+    const signed = await tx.sign(account.txCreator)
     trackTx(signed, tx.decodedCall, account)
   }
 
@@ -290,7 +290,7 @@ const ExportTx: FC<{
       {number != null ? <div>#{number}</div> : null}
       <Button
         type="button"
-        disabled={!account?.signer}
+        disabled={!account?.txCreator}
         onClick={submit}
         className="flex h-10 w-full items-center justify-center gap-2 rounded-md text-sm font-semibold"
       >

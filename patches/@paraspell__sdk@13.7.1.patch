@@ -1,0 +1,54 @@
+diff --git a/dist/index.mjs b/dist/index.mjs
+index f004315bd9dcad38d8513f8a076bebe174bca701..d232fb8ef704e18c7570e7b7aa7f975044c3d24d 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -6,7 +6,6 @@ import { bytesToHex, hexToBytes } from '@noble/hashes/utils.js';
+ import { sr25519CreateDerive } from '@polkadot-labs/hdkd';
+ import { entropyToMiniSecret, mnemonicToEntropy, DEV_PHRASE } from '@polkadot-labs/hdkd-helpers';
+ import { AccountId, Binary, getSs58AddressInfo } from 'polkadot-api';
+-import { getPolkadotSigner } from 'polkadot-api/signer';
+ import { blake2b } from '@noble/hashes/blake2.js';
+ import { unifyMetadata, decAnyMetadata } from '@polkadot-api/substrate-bindings';
+ import { toHex } from 'polkadot-api/utils';
+@@ -404,41 +403,19 @@ var computeOriginFee = function computeOriginFee(dryRun, chain, executionFee) {
+   }
+ };
+ 
+-var signEcdsa = function signEcdsa(input, privateKey) {
+-  var signature = secp256k1.sign(keccak_256(input), privateKey, {
+-    prehash: false,
+-    format: 'recovered'
+-  });
+-  return Uint8Array.from([].concat(_toConsumableArray(signature.slice(1)), [signature[0]]));
+-};
+ var createSr25519Keypair = function createSr25519Keypair(path) {
+   var miniSecret = entropyToMiniSecret(mnemonicToEntropy(DEV_PHRASE));
+   var derive = sr25519CreateDerive(miniSecret);
+   return derive(path);
+ };
+-var createSr25519Signer = function createSr25519Signer(path) {
+-  var keyPair = createSr25519Keypair(path);
+-  return getPolkadotSigner(keyPair.publicKey, 'Sr25519', keyPair.sign);
+-};
+ var resolveEcdsaAddress = function resolveEcdsaAddress(privateKey) {
+   return keccak_256(secp256k1.getPublicKey(privateKey, false).slice(1)).slice(-20);
+ };
+-var createEcdsaSigner = function createEcdsaSigner(privateKey) {
+-  var publicAddress = resolveEcdsaAddress(privateKey);
+-  return getPolkadotSigner(publicAddress, 'Ecdsa', function (input) {
+-    return signEcdsa(input, privateKey);
+-  });
+-};
+ var getEvmPrivateKey = function getEvmPrivateKey(path) {
+   var pkHex = getEvmPrivateKeyHex(path);
+   if (pkHex) return hexToBytes(pkHex.slice(2));
+   return undefined;
+ };
+-var createDevSigner = function createDevSigner(path) {
+-  var evmPrivateKey = getEvmPrivateKey(path);
+-  if (evmPrivateKey) return createEcdsaSigner(evmPrivateKey);
+-  return createSr25519Signer(path);
+-};
+ var deriveAddress = function deriveAddress(sender) {
+   if (isSenderSigner(sender)) return AccountId().dec(sender.publicKey);
+   var evmPrivateKey = getEvmPrivateKey(sender);
