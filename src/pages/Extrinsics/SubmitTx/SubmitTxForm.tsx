@@ -23,7 +23,7 @@ export const SelectAccount: FC<{
   const groups = Object.entries(availableAccounts)
     .map(
       ([group, accounts]) =>
-        [group, accounts.filter((acc) => acc.signer)] as const,
+        [group, accounts.filter((acc) => acc.txCreator)] as const,
     )
     .filter(([, accounts]) => accounts.length > 0)
     .map(([key, accounts]) => ({

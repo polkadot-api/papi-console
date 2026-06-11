@@ -20,7 +20,7 @@ export const CustomSignedExt: FC = () => {
     <Subscribe source$={extSub$}>
       <ul className="space-y-2">
         {/* TODO: adapt for different extrinsic versions */}
-        {metadata.extrinsic.signedExtensions[0].map((ext) => (
+        {metadata.extrinsic.extensionsByVersion[0].map((ext) => (
           <ExtensionInput key={ext.identifier} {...ext} />
         ))}
       </ul>
@@ -84,7 +84,7 @@ export const customSignedExtensions$ = combineLatest([
             {
               /* TODO: adapt for different extrinsic versions */
             }
-            const ext = metadata.extrinsic.signedExtensions[0].find(
+            const ext = metadata.extrinsic.extensionsByVersion[0].find(
               (v) => v.identifier === id,
             )
             if (!ext) return [id, null!]
@@ -133,7 +133,9 @@ const extSub$ = merge(
   combineKeys(
     metadata$.pipe(
       // TODO: adapt for different extrinsic versions
-      map((v) => v.extrinsic.signedExtensions[0].map((ext) => ext.identifier)),
+      map((v) =>
+        v.extrinsic.extensionsByVersion[0].map((ext) => ext.identifier),
+      ),
     ),
     extensionValue$,
   ),
