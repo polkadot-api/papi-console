@@ -49,6 +49,7 @@ import {
   catchError,
   combineLatest,
   defer,
+  exhaustMap,
   map,
   of,
   scan,
@@ -77,67 +78,55 @@ const customExtensionsCount$ = state(
 
 const [nonceChanged$, setNonce] = createSignal<string>()
 const [nonceBlurred$, blurNonce] = createSignal()
-const chainNonce$ = unsafeApi$.pipe(
-  switchMapSuspended((api) =>
-    selectedAccount$.pipe(
-      switchMapSuspended((account) => {
-        const publicKey = getTxCreatorPublicKey(account)
-        return publicKey
-          ? api.apis.AccountNonceApi.account_nonce(
-              AccountId(42).dec(publicKey),
-              {
-                at: "best",
-              },
-            )
-          : []
-      }),
+const chainNonce$ = state(
+  defer(() =>
+    unsafeApi$.pipe(
+      switchMapSuspended((api) =>
+        selectedAccount$.pipe(
+          switchMapSuspended((account) => {
+            const publicKey = getTxCreatorPublicKey(account)
+            return publicKey
+              ? client$.pipe(
+                  switchMap((c) => c.bestBlocks$),
+                  exhaustMap(([{ hash }]) =>
+                    api.apis.AccountNonceApi.account_nonce(
+                      AccountId(42).dec(publicKey),
+                      { at: hash },
+                    ).then((x) => String(x)),
+                  ),
+                )
+              : []
+          }),
+          liftSuspense(),
+          catchError((ex) => {
+            console.error(ex)
+            return []
+          }),
+        ),
+      ),
       liftSuspense(),
-      catchError((ex) => {
-        console.error(ex)
-        return []
-      }),
+      map((v) => (v === SUSPENSE ? "" : v)),
     ),
   ),
-  liftSuspense(),
-  map((v) => (v === SUSPENSE ? null : (v as number))),
+  "",
 )
 const isIntegerStr = (str: string) => /^\d+$/.test(str)
 const nonce$ = state(
   defer(() =>
     mergeWithKey({
-      chainNonce$,
       nonceChanged$,
       nonceBlurred$,
     }).pipe(
-      scan(
-        (
-          acc: {
-            chain: number | null
-            inputValue: string
-          },
-          v,
-        ) => {
-          switch (v.type) {
-            case "chainNonce$":
-              if (v.payload != null)
-                return { chain: v.payload, inputValue: v.payload.toString() }
-              break
-            case "nonceBlurred$":
-              if (!isIntegerStr(acc.inputValue)) {
-                return {
-                  chain: acc.chain,
-                  inputValue: acc.chain?.toString() ?? "",
-                }
-              }
-              break
-            case "nonceChanged$":
-              return { chain: acc.chain, inputValue: v.payload }
-          }
-          return acc
-        },
-        { chain: null, inputValue: "" },
-      ),
-      map((v) => v.inputValue),
+      scan((acc, v) => {
+        switch (v.type) {
+          case "nonceBlurred$":
+            if (!isIntegerStr(acc)) return ""
+            break
+          case "nonceChanged$":
+            return v.payload
+        }
+        return acc
+      }, ""),
     ),
   ),
   "",
@@ -256,6 +245,7 @@ const accountBalance$ = state(
 
 export const SubmitExtrinsic = forwardRef<HTMLElement>((_, ref) => {
   const [account] = useSelectedAccount()
+  const chainNonce = useStateObservable(chainNonce$)
   const nonce = useStateObservable(nonce$)
   const mortality = useStateObservable(mortality$)
   const tip = useStateObservable(tip$)
@@ -316,6 +306,7 @@ export const SubmitExtrinsic = forwardRef<HTMLElement>((_, ref) => {
             value={nonce}
             onChange={(evt) => setNonce(evt.target.value)}
             onBlur={blurNonce}
+            placeholder={chainNonce}
             className="tabular-nums"
           />
         </SubmitRow>
