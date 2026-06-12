@@ -8,6 +8,7 @@ import {
   map,
   Observable,
   ObservableInput,
+  of,
   startWith,
   switchMap,
 } from "rxjs"
@@ -102,28 +103,30 @@ export const getHodls$ = (accountId: string): Observable<IdentifiedLock[]> =>
       unsafeApi.query.Balances.Holds.getValue(accountId),
     ),
     switchMap((hodls) =>
-      combineLatest(
-        hodls.map((hodl): ObservableInput<IdentifiedLock> => {
-          switch (hodl.id.type) {
-            case "Preimage": {
-              return getPreimageActions$(accountId).pipe(
-                map((unlockable) => ({
-                  id: "Preimage",
-                  amount: hodl.amount,
-                  unlockable,
-                })),
-              )
-            }
-          }
+      hodls.length
+        ? combineLatest(
+            hodls.map((hodl): ObservableInput<IdentifiedLock> => {
+              switch (hodl.id.type) {
+                case "Preimage": {
+                  return getPreimageActions$(accountId).pipe(
+                    map((unlockable) => ({
+                      id: "Preimage",
+                      amount: hodl.amount,
+                      unlockable,
+                    })),
+                  )
+                }
+              }
 
-          return [
-            {
-              id: hodl.id.type,
-              amount: hodl.amount,
-              unlockable: [],
-            },
-          ]
-        }),
-      ),
+              return [
+                {
+                  id: hodl.id.type,
+                  amount: hodl.amount,
+                  unlockable: [],
+                },
+              ]
+            }),
+          )
+        : of([]),
     ),
   )

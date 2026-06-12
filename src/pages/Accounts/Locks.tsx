@@ -8,7 +8,8 @@ import { FC } from "react"
 import { useParams } from "react-router-dom"
 import { BalanceChart } from "./BalanceChart"
 import { TransactionButton } from "./TransactionButton"
-import { accountLocks$, IdentifiedLock } from "./locks.state"
+import { accountLocks$ } from "./locks.state"
+import { IdentifiedLock } from "./lockSources/common"
 
 export const Locks = () => {
   const { accountId } = useParams()
@@ -87,24 +88,27 @@ const LockSection: FC<{ title: string; locks: IdentifiedLock[] }> = ({
 
 const LockCard: FC<{ lock: IdentifiedLock }> = ({ lock }) => {
   const unlockable = lock.unlockable.reduce(
-    (acc, action) => acc + action.amount,
+    (acc, action) => acc + (action.tx ? action.amount : 0n),
     0n,
   )
 
   return (
     <article className="rounded-lg border bg-card p-4 shadow-sm">
-      <div className="space-y-2">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <LockKeyhole className="h-4 w-4 text-muted-foreground" />
           <h4 className="font-semibold">{lock.id}</h4>
         </div>
-        <div className="flex flex-wrap text-sm">
-          <AmountRow label="Locked" value={lock.amount} />
+        <div className="flex flex-wrap text-sm gap-x-4">
           {unlockable > 0n ? (
             <AmountRow label="Unlockable" value={unlockable} />
           ) : null}
+          <AmountRow label="Locked" value={lock.amount} />
         </div>
       </div>
+      {lock.note ? (
+        <p className="text-sm text-muted-foreground">{lock.note}</p>
+      ) : null}
 
       {lock.unlockable.length ? (
         <div className="mt-4 space-y-3">
@@ -118,7 +122,7 @@ const LockCard: FC<{ lock: IdentifiedLock }> = ({ lock }) => {
 }
 
 const AmountRow: FC<{ label: string; value: bigint }> = ({ label, value }) => (
-  <div className="flex items-center gap-3 rounded-md bg-background/60 px-3 py-2">
+  <div className="flex items-center gap-3 rounded-md bg-background/60">
     <div className="text-muted-foreground">{label}</div>
     <TokenAmount className="font-medium">{value}</TokenAmount>
   </div>
