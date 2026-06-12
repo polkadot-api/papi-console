@@ -1,6 +1,7 @@
 import { AccountIdDisplay } from "@/components/AccountIdDisplay"
 import { TokenAmount } from "@/components/TokenAmount"
 import { Button } from "@/components/ui/button"
+import { Link } from "@/hashParams"
 import { chainProperties$ } from "@/state/chain-props.state"
 import { client$ } from "@/state/chains/chain.state"
 import { MultiAddress, polkadot_people } from "@polkadot-api/descriptors"
@@ -23,7 +24,6 @@ import {
   walletConnectProviderId,
 } from "polkahub"
 import { FC } from "react"
-import { Link } from "react-router-dom"
 import {
   catchError,
   combineLatest,

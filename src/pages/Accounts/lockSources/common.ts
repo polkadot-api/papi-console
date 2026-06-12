@@ -37,6 +37,7 @@ export interface UnlockAction {
 }
 export interface IdentifiedLock {
   id: string
+  note?: string
   amount: bigint
   unlockable: UnlockAction[]
 }

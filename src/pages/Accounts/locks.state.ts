@@ -37,7 +37,11 @@ export const accountLocks$ = state(
             )
           : of([])
 
-        return combineLatest({ balance: of(balance), freezes, reserves })
+        return combineLatest({
+          balance: of(balance),
+          freezes,
+          reserves,
+        })
       }),
       catchError((ex) => {
         console.error(ex)
