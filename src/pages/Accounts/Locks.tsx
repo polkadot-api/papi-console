@@ -2,12 +2,13 @@ import { AccountIdDisplay } from "@/components/AccountIdDisplay"
 import { TokenAmount } from "@/components/TokenAmount"
 import { Link } from "@/hashParams"
 import { useStateObservable } from "@react-rxjs/core"
-import { ArrowLeft, Info, LockKeyhole, TriangleAlert } from "lucide-react"
+import { ArrowLeft, LockKeyhole, TriangleAlert } from "lucide-react"
 import { SS58String } from "polkadot-api"
 import { FC } from "react"
 import { useParams } from "react-router-dom"
+import { BalanceChart } from "./BalanceChart"
 import { TransactionButton } from "./TransactionButton"
-import { AccountLocks, accountLocks$, IdentifiedLock } from "./locks.state"
+import { accountLocks$, IdentifiedLock } from "./locks.state"
 
 export const Locks = () => {
   const { accountId } = useParams()
@@ -40,9 +41,9 @@ const LocksContent: FC<{ accountId: SS58String }> = ({ accountId }) => {
         />
       ) : (
         <>
-          <LockSummary locks={locks} />
-          <LockSection title="Frozen balance" locks={locks.freezes} />
+          <BalanceChart locks={locks} />
           <LockSection title="Reserved balance" locks={locks.reserves} />
+          <LockSection title="Frozen balance" locks={locks.freezes} />
         </>
       )}
     </div>
@@ -68,47 +69,6 @@ const LocksHeader = () => {
     </div>
   )
 }
-
-const LockSummary: FC<{ locks: AccountLocks }> = ({ locks }) => {
-  const locked = locks.balance.total - locks.balance.spendable
-  const unlockable = [...locks.freezes, ...locks.reserves]
-    .flatMap((lock) => lock.unlockable)
-    .reduce((acc, action) => acc + action.amount, 0n)
-
-  return (
-    <section className="grid gap-3 rounded-lg border bg-card p-4 shadow-sm sm:grid-cols-3">
-      <SummaryMetric label="Total locked" value={locked} tone="locked" />
-      <SummaryMetric label="Frozen" value={locks.balance.frozen} />
-      <SummaryMetric label="Reserved" value={locks.balance.reserved} />
-      <SummaryMetric label="Unlockable" value={unlockable} tone="unlockable" />
-      <SummaryMetric label="Spendable" value={locks.balance.spendable} />
-      <SummaryMetric label="Total balance" value={locks.balance.total} />
-    </section>
-  )
-}
-
-const SummaryMetric: FC<{
-  label: string
-  value: bigint
-  tone?: "locked" | "unlockable"
-}> = ({ label, value, tone }) => (
-  <div className="min-w-0 rounded-md border border-border bg-background/60 p-3">
-    <div className="text-xs font-medium uppercase text-muted-foreground">
-      {label}
-    </div>
-    <div
-      className={
-        tone === "locked"
-          ? "mt-1 font-semibold text-orange-800 dark:text-orange-300"
-          : tone === "unlockable"
-            ? "mt-1 font-semibold text-green-800 dark:text-green-300"
-            : "mt-1 font-semibold"
-      }
-    >
-      <TokenAmount>{value}</TokenAmount>
-    </div>
-  </div>
-)
 
 const LockSection: FC<{ title: string; locks: IdentifiedLock[] }> = ({
   title,
