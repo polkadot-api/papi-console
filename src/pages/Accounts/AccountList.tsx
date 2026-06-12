@@ -119,9 +119,11 @@ const SourceTag: FC<{
   )
 }
 
-const typedApi$ = client$.pipeState(map((v) => v.getTypedApi(polkadot_people)))
+export const typedApi$ = client$.pipeState(
+  map((v) => v.getTypedApi(polkadot_people)),
+)
 
-const balance$ = state(
+export const balance$ = state(
   (accountId: SS58String) =>
     typedApi$.pipe(
       switchMap((typedApi) =>
