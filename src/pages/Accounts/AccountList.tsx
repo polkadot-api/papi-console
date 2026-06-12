@@ -10,7 +10,7 @@ import {
   state,
   useStateObservable,
 } from "@react-rxjs/core"
-import { Send } from "lucide-react"
+import { LockKeyhole, Send } from "lucide-react"
 import { CompatibilityLevel, SS58String } from "polkadot-api"
 import { toHex } from "polkadot-api/utils"
 import {
@@ -215,13 +215,22 @@ const Balances: FC<{
           </TokenAmount>
         </div>
       </div>
-      {getTransferCallData ? (
-        <Button variant="secondary" asChild>
-          <Link to={`/extrinsics#data=${getTransferCallData(accountId)}`}>
-            <Send /> Transfer
-          </Link>
-        </Button>
-      ) : null}
+      <div className="flex flex-col gap-2">
+        {getTransferCallData ? (
+          <Button variant="secondary" asChild>
+            <Link to={`/extrinsics#data=${getTransferCallData(accountId)}`}>
+              <Send /> Transfer
+            </Link>
+          </Button>
+        ) : null}
+        {balance.total - balance.spendable > 0n ? (
+          <Button variant="secondary" asChild>
+            <Link to={`/accounts/locks/${accountId}`}>
+              <LockKeyhole /> Locks
+            </Link>
+          </Button>
+        ) : null}
+      </div>
     </div>
   )
 }

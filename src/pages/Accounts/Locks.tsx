@@ -1,354 +1,195 @@
-/*
-Frozen:
-Locks: Vesting, OpenGov `::set_lock(` `Balances.locks`
+import { AccountIdDisplay } from "@/components/AccountIdDisplay"
+import { TokenAmount } from "@/components/TokenAmount"
+import { Link } from "@/hashParams"
+import { useStateObservable } from "@react-rxjs/core"
+import { ArrowLeft, Info, LockKeyhole, TriangleAlert } from "lucide-react"
+import { SS58String } from "polkadot-api"
+import { FC } from "react"
+import { useParams } from "react-router-dom"
+import { TransactionButton } from "./TransactionButton"
+import { AccountLocks, accountLocks$, IdentifiedLock } from "./locks.state"
 
-Reserved:
-Holds: Contracts, DelegatedStaking, Preimage `::hold(` `Balances.holds`
-Reserves: Assets, Bounties, ChildBounties, Identity, Multisig, Nfts, Proxy, Referenda, Staking  `::reserve(`
-*/
+export const Locks = () => {
+  const { accountId } = useParams()
 
-import { client$ } from "@/state/chains/chain.state"
-import { shortStr } from "@/utils"
-import { DotAh, MultiAddress } from "@polkadot-api/descriptors"
-import { getExtrinsicDecoder } from "@polkadot-api/tx-utils"
-import { Binary, HexString, Transaction, TypedApi } from "polkadot-api"
-import { filter, firstValueFrom } from "rxjs"
-import { decodeRsprConsensus } from "../Explorer/Detail/digests/rspr"
-import { balance$ } from "./AccountList"
-
-const IDS = {
-  vesting: Binary.toHex(Binary.fromText("vesting ")),
-  convictionVoting: Binary.toHex(Binary.fromText("pyconvot")),
-}
-
-const getRelayBlock = async () => {
-  const client = await client$.getValue()
-  const header = await client.getBlockHeader(
-    (await client.getBestBlocks())[0].hash,
+  return (
+    <div className="mx-auto w-full max-w-5xl pb-4">
+      {accountId ? (
+        <LocksContent accountId={accountId} />
+      ) : (
+        <EmptyState
+          title="Missing account"
+          description="No account was provided."
+        />
+      )}
+    </div>
   )
-  const RSPRDigest = header.digests.find(
-    (digest) => digest.type === "consensus" && digest.value.engine === "RPSR",
+}
+
+const LocksContent: FC<{ accountId: SS58String }> = ({ accountId }) => {
+  const locks = useStateObservable(accountLocks$(accountId))
+
+  return (
+    <div className="space-y-4">
+      <LocksHeader />
+
+      {!locks ? (
+        <EmptyState
+          title="Loading locks"
+          description="Reading freezes, holds, and reserved balance."
+        />
+      ) : (
+        <>
+          <LockSummary locks={locks} />
+          <LockSection title="Frozen balance" locks={locks.freezes} />
+          <LockSection title="Reserved balance" locks={locks.reserves} />
+        </>
+      )}
+    </div>
   )
-  if (RSPRDigest) {
-    const decoded = decodeRsprConsensus((RSPRDigest.value as any).payload)
-    if (decoded) return decoded.blockNumber
-  }
-  return null
 }
 
-const batch = (
-  api: TypedApi<DotAh, boolean>,
-  txs: Transaction[],
-): Transaction | undefined =>
-  txs.length > 1
-    ? api.tx.Utility.batch({
-        calls: txs.map((tx) => tx.decodedCall),
-      })
-    : txs[0]
+const LocksHeader = () => {
+  const { accountId } = useParams()
 
-interface IdentifiedLock {
-  id: string
-  amount: bigint
-  unlockable: {
-    amount: bigint
-    warn?: string
-    action: string
-    tx: Transaction | null
-  }[]
-}
-const getFreezes = async (accountId: string): Promise<IdentifiedLock[]> => {
-  const [client, relayBlock] = await Promise.all([
-    client$.getValue(),
-    getRelayBlock(),
-  ])
-  const unsafeApi = client.getUnsafeApi<DotAh>()
-
-  const locks = await unsafeApi.query.Balances.Locks.getValue(accountId)
-  const mappedLocks = await Promise.all(
-    locks.map(async (lock) => {
-      try {
-        if (lock.id === IDS.vesting && relayBlock != null) {
-          const vested =
-            await unsafeApi.query.Vesting.Vesting.getValue(accountId)
-          const vestLocked =
-            vested
-              ?.map((vest) => {
-                const blockCount = relayBlock - vest.starting_block
-                const unlockedAmount = BigInt(blockCount) * vest.per_block
-                const lockedAmount = vest.locked - unlockedAmount
-                return lockedAmount > 0 ? lockedAmount : 0n
-              })
-              .reduce((a, b) => a + b, 0n) ?? 0n
-
-          return {
-            id: "Vesting",
-            amount: lock.amount,
-            unlockable: [
-              {
-                amount: lock.amount - vestLocked,
-                action: "Vest",
-                tx: unsafeApi.tx.Vesting.vest(),
-              },
-            ],
-          }
-        }
-        if (lock.id === IDS.convictionVoting) {
-          const [votingFor] = await Promise.all([
-            unsafeApi.query.ConvictionVoting.VotingFor.getEntries(accountId),
-            // TODO add actions for removing vote and unlocking
-            // unsafeApi.constants.ConvictionVoting.VoteLockingPeriod(),
-          ])
-
-          const unlockableTracks = votingFor
-            .map((vote) => {
-              const [block, balance] = vote.value.value.prior
-              return {
-                track: vote.keyArgs[1],
-                balance,
-                block,
-              }
-            })
-            .filter(({ block, balance }) => block > 123 && balance > 0)
-          const unlockAmount = unlockableTracks.reduce(
-            (acc, track) => acc + track.balance,
-            0n,
-          )
-          const unlockAction = batch(
-            unsafeApi,
-            unlockableTracks.map(({ track }) =>
-              unsafeApi.tx.ConvictionVoting.unlock({
-                class: track,
-                target: MultiAddress.Id(accountId),
-              }),
-            ),
-          )
-
-          return {
-            id: "OpenGov",
-            amount: lock.amount,
-            unlockable: unlockAction
-              ? [
-                  {
-                    action: "Unlock",
-                    amount: unlockAmount,
-                    tx: unlockAction,
-                  },
-                ]
-              : [],
-          }
-        }
-      } catch (ex) {
-        console.error(ex)
-      }
-
-      return {
-        id: lock.id,
-        amount: lock.amount,
-        unlockable: [],
-      }
-    }),
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0 space-y-1">
+        <Link
+          to="/accounts"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Accounts
+        </Link>
+        <h2 className="text-xl font-semibold">Account locks</h2>
+      </div>
+      <AccountIdDisplay value={accountId!} className="min-w-0 sm:max-w-md" />
+    </div>
   )
-  return mappedLocks
 }
-const getHodls = async (accountId: string): Promise<IdentifiedLock[]> => {
-  const client = await client$.getValue()
-  const unsafeApi = client.getUnsafeApi<DotAh>()
 
-  const hodls = await unsafeApi.query.Balances.Holds.getValue(accountId)
-  const mappedHodls = await Promise.all(
-    hodls.map(async (hodl) => {
-      try {
-        switch (hodl.id.type) {
-          case "Preimage": {
-            const [statusFor, requestStatusFor] = await Promise.all([
-              unsafeApi.query.Preimage.StatusFor.getEntries(),
-              unsafeApi.query.Preimage.RequestStatusFor.getEntries(),
-            ])
-            const preimages = [
-              ...statusFor.map(({ keyArgs, value }) => ({
-                hash: keyArgs[0],
-                depositor: value.value.deposit?.[0],
-                deposit: value.value.deposit?.[1],
-                len: value.value.len,
-              })),
-              ...requestStatusFor.map(({ keyArgs, value }) =>
-                value.type === "Requested"
-                  ? {
-                      hash: keyArgs[0],
-                      depositor: value.value.maybe_ticket?.[0],
-                      deposit: value.value.maybe_ticket?.[1],
-                      len: undefined,
-                    }
-                  : {
-                      hash: keyArgs[0],
-                      depositor: value.value.ticket[0],
-                      deposit: value.value.ticket[1],
-                      len: value.value.len,
-                    },
-              ),
-            ]
-            const ownPreimages = preimages.filter(
-              ({ depositor }) => depositor === accountId,
-            )
-            console.log("preimages", preimages)
-            console.log("own", ownPreimages)
-            const totalUnlockable = ownPreimages
-              .map(({ deposit }) => deposit ?? 0n)
-              .reduce((acc, v) => acc + v, 0n)
+const LockSummary: FC<{ locks: AccountLocks }> = ({ locks }) => {
+  const locked = locks.balance.total - locks.balance.spendable
+  const unlockable = [...locks.freezes, ...locks.reserves]
+    .flatMap((lock) => lock.unlockable)
+    .reduce((acc, action) => acc + action.amount, 0n)
 
-            const individualActions = ownPreimages.map(
-              ({ hash, deposit, len }) => ({
-                action: `Unnote ${shortStr(hash, 6)} len=${len ?? "N/A"}`,
-                warn: "If this preimage is being used in a referendum or something else, removing the preimage will cause it to fail",
-                amount: deposit ?? 0n,
-                tx: unsafeApi.tx.Preimage.unnote_preimage({
-                  hash,
-                }),
-              }),
-            )
-            const unoteAllTx = batch(
-              unsafeApi,
-              ownPreimages.map(({ hash }) =>
-                unsafeApi.tx.Preimage.unnote_preimage({
-                  hash,
-                }),
-              ),
-            )
-            const unnoteAllAction = unoteAllTx
-              ? {
-                  action: "Unnote all",
-                  warn: "If any preimage is being used in a referendum or something else, removing the preimage will cause it to fail",
-                  amount: totalUnlockable,
-                  tx: unoteAllTx,
-                }
-              : null
-            const unlockable = [
-              ...(individualActions.length > 1 ? individualActions : []),
-              ...(unnoteAllAction ? [unnoteAllAction] : []),
-            ]
-
-            return {
-              id: "Preimage",
-              amount: hodl.amount,
-              unlockable,
-            }
-          }
-        }
-      } catch (ex) {
-        console.error(ex)
-      }
-
-      return {
-        id: hodl.id.type,
-        amount: hodl.amount,
-        unlockable: [],
-      }
-    }),
+  return (
+    <section className="grid gap-3 rounded-lg border bg-card p-4 shadow-sm sm:grid-cols-3">
+      <SummaryMetric label="Total locked" value={locked} tone="locked" />
+      <SummaryMetric label="Frozen" value={locks.balance.frozen} />
+      <SummaryMetric label="Reserved" value={locks.balance.reserved} />
+      <SummaryMetric label="Unlockable" value={unlockable} tone="unlockable" />
+      <SummaryMetric label="Spendable" value={locks.balance.spendable} />
+      <SummaryMetric label="Total balance" value={locks.balance.total} />
+    </section>
   )
-  return mappedHodls
 }
-const getReserveReserves = async (
-  accountId: string,
-  totalReserves: bigint,
-): Promise<IdentifiedLock[]> => {
-  const client = await client$.getValue()
-  const unsafeApi = client.getUnsafeApi<DotAh>()
-  const result: IdentifiedLock[] = []
 
-  const multisigs = await unsafeApi.query.Multisig.Multisigs.getEntries()
-  const ownMultisigs = multisigs.filter(
-    ({ value }) => value.depositor === accountId,
-  )
-  const getMultisigUnlockable = async (
-    deposit: bigint,
-    call_hash: HexString,
-    timepoint: {
-      height: number
-      index: number
-    },
-  ) => {
-    try {
-      const [hash] = await client._request("archive_v1_hashByHeight", [
-        timepoint.height,
-      ])
-      const [body, metadata] = await Promise.all([
-        client.getBlockBody(hash),
-        client.getMetadata(hash),
-      ])
-      const decoder = getExtrinsicDecoder(metadata)
-      const tx = decoder(body[timepoint.index])
-      if (tx.call.type !== "Multisig")
-        throw new Error("Target call not a multisig")
-      return {
-        action: `Cancel call ${shortStr(call_hash, 6)}`,
-        amount: deposit,
-        tx: unsafeApi.tx.Multisig.cancel_as_multi({
-          call_hash,
-          other_signatories: tx.call.value.value.other_signatories,
-          threshold: tx.call.value.value.threshold,
-          timepoint,
-        }),
+const SummaryMetric: FC<{
+  label: string
+  value: bigint
+  tone?: "locked" | "unlockable"
+}> = ({ label, value, tone }) => (
+  <div className="min-w-0 rounded-md border border-border bg-background/60 p-3">
+    <div className="text-xs font-medium uppercase text-muted-foreground">
+      {label}
+    </div>
+    <div
+      className={
+        tone === "locked"
+          ? "mt-1 font-semibold text-orange-800 dark:text-orange-300"
+          : tone === "unlockable"
+            ? "mt-1 font-semibold text-green-800 dark:text-green-300"
+            : "mt-1 font-semibold"
       }
-    } catch (ex) {
-      console.error(ex)
-      return {
-        action: `Cancel call ${shortStr(call_hash, 6)}`,
-        amount: deposit,
-        warn: "Can't access other signatories",
-        tx: null,
-      }
-    }
-  }
+    >
+      <TokenAmount>{value}</TokenAmount>
+    </div>
+  </div>
+)
 
-  if (ownMultisigs.length) {
-    const totalAmount = ownMultisigs
-      .map((v) => v.value.deposit)
-      .reduce((acc, v) => acc + v)
-    const unlockable = await Promise.all(
-      ownMultisigs.map(({ keyArgs, value }) =>
-        getMultisigUnlockable(value.deposit, keyArgs[1], value.when),
-      ),
-    )
-    result.push({
-      id: "Multisig",
-      amount: totalAmount,
-      unlockable,
-    })
-  }
+const LockSection: FC<{ title: string; locks: IdentifiedLock[] }> = ({
+  title,
+  locks,
+}) =>
+  locks.length ? (
+    <section className="space-y-3">
+      <h3 className="text-sm font-semibold uppercase text-muted-foreground">
+        {title}
+      </h3>
+      {locks.map((lock, i) => (
+        <LockCard lock={lock} key={i} />
+      ))}
+    </section>
+  ) : null
 
-  const totalIdentified = result.reduce((acc, v) => acc + v.amount, 0n)
-  if (totalIdentified < totalReserves) {
-    result.push({
-      id: "Unknown reserved",
-      amount: totalReserves - totalIdentified,
-      unlockable: [],
-    })
-  }
-
-  return result
-}
-
-const getReserves = async (accountId: string, reserved: bigint) => {
-  const hodls = await getHodls(accountId)
-  const totalReserves = reserved - hodls.reduce((acc, v) => acc + v.amount, 0n)
-  const reserves = totalReserves
-    ? await getReserveReserves(accountId, totalReserves)
-    : []
-
-  return [...hodls, ...reserves]
-}
-
-const accountLocks = async (accountId: string) => {
-  const balance = await firstValueFrom(
-    balance$(accountId).pipe(filter((v) => v !== null)),
+const LockCard: FC<{ lock: IdentifiedLock }> = ({ lock }) => {
+  const unlockable = lock.unlockable.reduce(
+    (acc, action) => acc + action.amount,
+    0n,
   )
 
-  const [freezes, reserves] = await Promise.all([
-    balance.frozen ? getFreezes(accountId) : [],
-    balance.reserved ? getReserves(accountId, balance.reserved) : [],
-  ])
+  return (
+    <article className="rounded-lg border bg-card p-4 shadow-sm">
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <LockKeyhole className="h-4 w-4 text-muted-foreground" />
+          <h4 className="font-semibold">{lock.id}</h4>
+        </div>
+        <div className="flex flex-wrap text-sm">
+          <AmountRow label="Locked" value={lock.amount} />
+          {unlockable > 0n ? (
+            <AmountRow label="Unlockable" value={unlockable} />
+          ) : null}
+        </div>
+      </div>
 
-  console.log(freezes, reserves)
+      {lock.unlockable.length ? (
+        <div className="mt-4 space-y-3">
+          {lock.unlockable.map((action, i) => (
+            <UnlockActionRow key={i} action={action} />
+          ))}
+        </div>
+      ) : null}
+    </article>
+  )
 }
 
-accountLocks("14u9dEGTLgwwzQ6oMm6bN2mt7xxwEko8qciKw9jg3Uc4pYjA")
+const AmountRow: FC<{ label: string; value: bigint }> = ({ label, value }) => (
+  <div className="flex items-center gap-3 rounded-md bg-background/60 px-3 py-2">
+    <div className="text-muted-foreground">{label}</div>
+    <TokenAmount className="font-medium">{value}</TokenAmount>
+  </div>
+)
+
+const UnlockActionRow: FC<{
+  action: IdentifiedLock["unlockable"][number]
+}> = ({ action }) => (
+  <div className="rounded-md border bg-background/60 p-3">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0 space-y-2">
+        <div className="font-medium">{action.action}</div>
+        <AmountRow label="Value" value={action.amount} />
+        {action.warn ? (
+          <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{action.warn}</span>
+          </div>
+        ) : null}
+      </div>
+      {action.tx ? <TransactionButton tx={action.tx} /> : null}
+    </div>
+  </div>
+)
+
+const EmptyState: FC<{ title: string; description: string }> = ({
+  title,
+  description,
+}) => (
+  <div className="rounded-lg border border-dashed bg-card p-6 text-center">
+    <div className="font-medium">{title}</div>
+    <div className="mt-1 text-sm text-muted-foreground">{description}</div>
+  </div>
+)
