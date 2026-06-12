@@ -24,7 +24,13 @@ import {
 } from "polkahub"
 import { FC } from "react"
 import { Link } from "react-router-dom"
-import { catchError, combineLatest, map, switchMap } from "rxjs"
+import {
+  catchError,
+  combineLatest,
+  distinctUntilChanged,
+  map,
+  switchMap,
+} from "rxjs"
 
 const knownGroupsNames: Record<string, string> = {
   "pjs-wallet": "Browser Extensions",
@@ -128,12 +134,15 @@ export const balance$ = state(
     typedApi$.pipe(
       switchMap((typedApi) =>
         combineLatest({
-          account: typedApi.query.System.Account.watchValue(accountId),
+          account: typedApi.query.System.Account.watchValue(accountId).pipe(
+            map((v) => v.value),
+            distinctUntilChanged(),
+          ),
           ed: typedApi.constants.Balances.ExistentialDeposit(),
         }),
       ),
       map(({ account, ed }) => {
-        const { reserved, free, frozen } = account.value.data
+        const { reserved, free, frozen } = account.data
         const total = reserved + free
 
         const untouchable = total == 0n ? 0n : maxBigInt(frozen - reserved, ed)
