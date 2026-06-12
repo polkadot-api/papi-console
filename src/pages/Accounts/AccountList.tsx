@@ -127,20 +127,23 @@ export const balance$ = state(
   (accountId: SS58String) =>
     typedApi$.pipe(
       switchMap((typedApi) =>
-        typedApi.query.System.Account.watchValue(accountId),
+        combineLatest({
+          account: typedApi.query.System.Account.watchValue(accountId),
+          ed: typedApi.constants.Balances.ExistentialDeposit(),
+        }),
       ),
-      map((account) => {
+      map(({ account, ed }) => {
         const { reserved, free, frozen } = account.value.data
         const total = reserved + free
 
-        // TODO ED
-        const untouchable = total == 0n ? 0n : maxBigInt(frozen - reserved, 0n)
+        const untouchable = total == 0n ? 0n : maxBigInt(frozen - reserved, ed)
 
         return {
           total,
           spendable: free - untouchable,
           frozen,
           reserved,
+          ed,
         }
       }),
       liftSuspense(),

@@ -8,6 +8,7 @@ export const whitelist: WhitelistEntriesByChain = {
     "query.System.Number",
     "const.System.BlockLength",
     "const.System.BlockWeights",
+    "const.Balances.ExistentialDeposit",
     "tx.Balances.transfer_keep_alive",
     "query.Session.Validators",
     "query.Session.CurrentIndex",
