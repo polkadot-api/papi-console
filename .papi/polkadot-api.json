@@ -7,6 +7,12 @@
       "metadata": ".papi/metadata/polkadot_people.scale",
       "genesis": "0x67fa177a097bfa18f77ea95ab56e9bcdfeb0e5b8a40e46298bb93e16b6fc5008",
       "codeHash": "0x3f0652ba1159157eff567b8e0e5987c8fc67a614f0909ce0f65f0d8a2b532864"
+    },
+    "dotAh": {
+      "chain": "polkadot_asset_hub",
+      "metadata": ".papi/metadata/dotAh.scale",
+      "genesis": "0x68d56f15f85d3136970ec16946040bc1752654e906147f7e43e9d539d7c3de2f",
+      "codeHash": "0xb160d880adc0954728ebd255ba4d8b28266fae3b564d82670a486c5c63028778"
     }
   }
 }
