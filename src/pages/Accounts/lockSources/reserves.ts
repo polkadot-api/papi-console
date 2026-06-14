@@ -23,6 +23,7 @@ import {
   unsafeClient$,
 } from "./common"
 import { createTimedCache } from "./timedCache"
+import { getPreimageUnlockables } from "./hodls"
 
 // Assets
 const assetCache = createTimedCache((unsafeApi) =>
@@ -263,6 +264,42 @@ const nftSource$ = (accountId: string): Observable<IdentifiedLock | null> =>
     ),
   )
 
+// Preimages (legacy, e.g. hydration)
+
+const preimageCache = createTimedCache(async (unsafeApi) => {
+  const statusFor = await unsafeApi.query.Preimage.StatusFor.getEntries()
+  return statusFor.map(({ keyArgs, value }) => ({
+    hash: keyArgs[0],
+    depositor: value.value.deposit?.[0],
+    deposit: value.value.deposit?.[1],
+    len: value.value.len,
+  }))
+})
+const preimageSource$ = (
+  accountId: string,
+): Observable<IdentifiedLock | null> =>
+  unsafeClient$.pipe(
+    switchMap(async ({ client, unsafeApi }) => {
+      const preimages = await preimageCache(client)
+
+      const ownPreimages = preimages.filter(
+        ({ depositor }) => depositor === accountId,
+      )
+      if (!ownPreimages.length) return null
+
+      const totalUnlockable = ownPreimages
+        .map(({ deposit }) => deposit ?? 0n)
+        .reduce((acc, v) => acc + v, 0n)
+      const unlockable = getPreimageUnlockables(unsafeApi, ownPreimages)
+
+      return {
+        id: "Preimage",
+        amount: totalUnlockable,
+        unlockable,
+      }
+    }),
+  )
+
 // Proxies
 // To support pure proxies, we need a timepoint that it's not stored anywhere on-chain… So there's really no way around it without an indexer
 const proxySource$ = (accountId: string): Observable<IdentifiedLock | null> =>
@@ -373,6 +410,7 @@ const referendaSource$ = (
 const reserveSources = [
   multisigSource$,
   referendaSource$,
+  preimageSource$,
   assetSource$,
   nftSource$,
   bountySource$,
