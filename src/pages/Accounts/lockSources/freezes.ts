@@ -48,10 +48,11 @@ const getVestingActions$ = (
             return lockedAmount > 0 ? lockedAmount : 0n
           })
           .reduce((a, b) => a + b, 0n) ?? 0n
+      const unlockable = amount - vestLocked
 
       return [
         {
-          amount: amount - vestLocked,
+          amount: unlockable > 0n ? unlockable : 0n,
           action: "Vest",
           tx: unsafeApi.tx.Vesting.vest(),
         },

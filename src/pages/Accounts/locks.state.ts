@@ -1,4 +1,4 @@
-import { state } from "@react-rxjs/core"
+import { liftSuspense, sinkSuspense, state } from "@react-rxjs/core"
 import { SS58String } from "polkadot-api"
 import {
   catchError,
@@ -43,10 +43,12 @@ export const accountLocks$ = state(
           reserves,
         })
       }),
+      liftSuspense(),
       catchError((ex) => {
         console.error(ex)
         return [null]
       }),
+      sinkSuspense(),
     ),
   null,
 )

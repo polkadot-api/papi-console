@@ -140,10 +140,10 @@ const ChartSegment: FC<{
 type BalanceTone = "reserved" | "ed" | "spendable" | "frozen"
 
 const chartTone: Record<BalanceTone, string> = {
-  reserved: "border-yellow-500/40 bg-yellow-200/80 dark:bg-yellow-500/25",
-  ed: "border-rose-500/40 bg-rose-200/80 dark:bg-rose-500/25",
-  spendable: "border-green-500/40 bg-green-200/80 dark:bg-green-500/25",
-  frozen: "border-sky-500/40 bg-sky-200/80 dark:bg-sky-500/25",
+  reserved: "border-yellow-500/10 bg-yellow-200/80 dark:bg-yellow-400/60",
+  ed: "border-rose-500/10 bg-rose-200/80 dark:bg-rose-500/40",
+  spendable: "border-green-500/10 bg-green-200/80 dark:bg-green-500/40",
+  frozen: "border-sky-500/10 bg-sky-200/80 dark:bg-sky-500/40",
 }
 
 const getPercent = (value: bigint, total: bigint) =>
