@@ -83,6 +83,13 @@ const getConvictionVoteActions$ = (
           if (!locked) return null
 
           const votes = trackVotes[track]
+          if (!votes) {
+            return {
+              track,
+              locked,
+              unlockable: locked,
+            }
+          }
           const [block, balance] = votes.value.prior
 
           const usedBalance =
@@ -106,7 +113,7 @@ const getConvictionVoteActions$ = (
           return {
             track,
             locked,
-            unlockable,
+            unlockable: unlockable > 0n ? unlockable : 0n,
           }
         })
         .filter((v) => v !== null)

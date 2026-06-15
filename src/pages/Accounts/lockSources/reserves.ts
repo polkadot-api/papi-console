@@ -66,7 +66,7 @@ const assetSource$ = (accountId: string): Observable<IdentifiedLock | null> =>
 
       return {
         id: "Assets",
-        amount: actions.reduce((acc, v) => acc + v.amount, 0n),
+        amount: ownAssets.reduce((acc, v) => acc + v.value.deposit, 0n),
         unlockable: actions,
       }
     }),
@@ -142,7 +142,7 @@ const childBountySource$ = (
       if (!ownBounties.length) return null
 
       return {
-        id: "Bounties",
+        id: "Child Bounties",
         amount: ownBounties.reduce((acc, v) => acc + v.amount, 0n),
         unlockable: ownBounties,
       }
