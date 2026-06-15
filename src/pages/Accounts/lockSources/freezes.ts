@@ -65,34 +65,65 @@ const getConvictionVoteActions$ = (
   accountId: string,
 ): Observable<UnlockAction[]> =>
   unsafeClient$.pipe(
-    switchMap(async ({ unsafeApi }) => {
+    switchMap(async ({ client, unsafeApi }) => {
       // TODO add actions for removing vote and unlocking
       // unsafeApi.constants.ConvictionVoting.VoteLockingPeriod(),
-      const votingFor =
-        await unsafeApi.query.ConvictionVoting.VotingFor.getEntries(accountId)
+      const [votingFor, locks, relayBlock] = await Promise.all([
+        unsafeApi.query.ConvictionVoting.VotingFor.getEntries(accountId),
+        unsafeApi.query.ConvictionVoting.ClassLocksFor.getValue(accountId),
+        getRelayBlock(client),
+      ])
+      const trackVotes = Object.fromEntries(
+        votingFor.map(({ value, keyArgs }) => [keyArgs[1], value]),
+      )
 
-      const unlockableTracks = votingFor
-        .map((vote) => {
-          const [block, balance] = vote.value.value.prior
+      const trackStatus = locks
+        .map(([track, locked]) => {
+          if (!locked) return null
+
+          const votes = trackVotes[track]
+          const [block, balance] = votes.value.prior
+
+          const usedBalance =
+            votes.type === "Casting"
+              ? votes.value.votes
+                  .map(([, vote]) =>
+                    vote.type === "Standard"
+                      ? vote.value.balance
+                      : vote.value.aye +
+                        vote.value.nay +
+                        (((vote.value as any).abstain as bigint) ?? 0n),
+                  )
+                  .reduce((a, b) => a + b, 0n)
+              : votes.value.balance
+          const unlocking = locked - usedBalance
+          const unlockable =
+            relayBlock != null && relayBlock > block
+              ? unlocking
+              : unlocking - balance
+
           return {
-            track: vote.keyArgs[1],
-            balance,
-            block,
+            track,
+            locked,
+            unlockable,
           }
         })
-        .filter(({ block, balance }) => block > 123 && balance > 0)
-      const unlockAmount = unlockableTracks.reduce(
-        (acc, track) => acc + track.balance,
+        .filter((v) => v !== null)
+
+      const unlockAmount = trackStatus.reduce(
+        (acc, track) => acc + track.unlockable,
         0n,
       )
       const unlockAction = batch(
         unsafeApi,
-        unlockableTracks.map(({ track }) =>
-          unsafeApi.tx.ConvictionVoting.unlock({
-            class: track,
-            target: MultiAddress.Id(accountId),
-          }),
-        ),
+        trackStatus
+          .filter((v) => v.unlockable > 0)
+          .map(({ track }) =>
+            unsafeApi.tx.ConvictionVoting.unlock({
+              class: track,
+              target: MultiAddress.Id(accountId),
+            }),
+          ),
       )
 
       return unlockAction
