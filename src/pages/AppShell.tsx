@@ -95,7 +95,7 @@ const navigationGroups: Array<{
       },
       {
         path: "/teleport",
-        label: "Teleport",
+        label: "Transfer",
         icon: ArrowRightLeft,
       },
     ],

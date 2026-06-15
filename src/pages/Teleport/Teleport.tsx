@@ -37,7 +37,7 @@ const Teleport = withSubscribe(
           <header className="flex flex-col gap-3 @lg:flex-row @lg:items-start @lg:justify-between">
             <div className="space-y-1">
               <h1 className="text-2xl font-semibold tracking-tight">
-                Teleport
+                Cross-chain Transfer
               </h1>
               <p className="text-sm text-muted-foreground">
                 Send assets from the connected chain to a supported destination.
