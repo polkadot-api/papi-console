@@ -1,6 +1,7 @@
 import { AccountIdDisplay } from "@/components/AccountIdDisplay"
 import { TokenAmount } from "@/components/TokenAmount"
 import { Button } from "@/components/ui/button"
+import { Link } from "@/hashParams"
 import { chainProperties$ } from "@/state/chain-props.state"
 import { client$ } from "@/state/chains/chain.state"
 import { MultiAddress, polkadot_people } from "@polkadot-api/descriptors"
@@ -10,7 +11,7 @@ import {
   state,
   useStateObservable,
 } from "@react-rxjs/core"
-import { Send } from "lucide-react"
+import { LockKeyhole, Send } from "lucide-react"
 import { CompatibilityLevel, SS58String } from "polkadot-api"
 import { toHex } from "polkadot-api/utils"
 import {
@@ -23,8 +24,13 @@ import {
   walletConnectProviderId,
 } from "polkahub"
 import { FC } from "react"
-import { Link } from "react-router-dom"
-import { catchError, combineLatest, map, switchMap } from "rxjs"
+import {
+  catchError,
+  combineLatest,
+  distinctUntilChanged,
+  map,
+  switchMap,
+} from "rxjs"
 
 const knownGroupsNames: Record<string, string> = {
   "pjs-wallet": "Browser Extensions",
@@ -119,26 +125,34 @@ const SourceTag: FC<{
   )
 }
 
-const typedApi$ = client$.pipeState(map((v) => v.getTypedApi(polkadot_people)))
+export const typedApi$ = client$.pipeState(
+  map((v) => v.getTypedApi(polkadot_people)),
+)
 
-const balance$ = state(
+export const balance$ = state(
   (accountId: SS58String) =>
     typedApi$.pipe(
       switchMap((typedApi) =>
-        typedApi.query.System.Account.watchValue(accountId),
+        combineLatest({
+          account: typedApi.query.System.Account.watchValue(accountId).pipe(
+            map((v) => v.value),
+            distinctUntilChanged(),
+          ),
+          ed: typedApi.constants.Balances.ExistentialDeposit(),
+        }),
       ),
-      map((account) => {
-        const { reserved, free, frozen } = account.value.data
+      map(({ account, ed }) => {
+        const { reserved, free, frozen } = account.data
         const total = reserved + free
 
-        // TODO ED
-        const untouchable = total == 0n ? 0n : maxBigInt(frozen - reserved, 0n)
+        const untouchable = total == 0n ? 0n : maxBigInt(frozen - reserved, ed)
 
         return {
           total,
           spendable: free - untouchable,
           frozen,
           reserved,
+          ed,
         }
       }),
       liftSuspense(),
@@ -213,13 +227,22 @@ const Balances: FC<{
           </TokenAmount>
         </div>
       </div>
-      {getTransferCallData ? (
-        <Button variant="secondary" asChild>
-          <Link to={`/extrinsics#data=${getTransferCallData(accountId)}`}>
-            <Send /> Transfer
-          </Link>
-        </Button>
-      ) : null}
+      <div className="flex flex-col gap-2">
+        {getTransferCallData ? (
+          <Button variant="secondary" asChild>
+            <Link to={`/extrinsics#data=${getTransferCallData(accountId)}`}>
+              <Send /> Transfer
+            </Link>
+          </Button>
+        ) : null}
+        {balance.total - balance.spendable > 0n ? (
+          <Button variant="secondary" asChild>
+            <Link to={`/accounts/locks/${accountId}`}>
+              <LockKeyhole /> Locks
+            </Link>
+          </Button>
+        ) : null}
+      </div>
     </div>
   )
 }
