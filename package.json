@@ -58,6 +58,7 @@
     "save-as": "^0.1.8",
     "tailwind-merge": "^3.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "uplot": "^1.6.32",
     "uuid": "^14.0.0"
   },
   "devDependencies": {

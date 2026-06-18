@@ -1,7 +1,7 @@
 import { blockInfo$ } from "@/state/block.state"
 import { client$ } from "@/state/chains/chain.state"
 import { DotAh } from "@polkadot-api/descriptors"
-import { withDefault } from "@react-rxjs/core"
+import { state, withDefault } from "@react-rxjs/core"
 import {
   combineLatest,
   defer,
@@ -19,9 +19,16 @@ import {
   switchMap,
   take,
   takeUntil,
+  tap,
 } from "rxjs"
 import { getBlockWeight } from "../Explorer/BlockPopover"
 
+// const logs = <T>(tag: string) =>
+//   tap<T>({
+//     next: () => console.log(tag, "next"),
+//     unsubscribe: () => console.log(tag, "unsubscribe"),
+//     subscribe: () => console.log(tag, "subscribe"),
+//   })
 const withDefer =
   <I, O>(fn: () => OperatorFunction<I, O>): OperatorFunction<I, O> =>
   (source$) =>
@@ -31,7 +38,8 @@ const withDefer =
 type BlockMap<T> = Array<Record<string, T>>
 type BlockMapType<T> = T extends BlockMap<infer R> ? R : never
 
-const blockStats$ = client$.pipeState(
+export const blockStats$ = client$.pipeState(
+  // logs("client$"),
   switchMap((client) => {
     const timeRef = Date.now()
 
@@ -61,6 +69,7 @@ const blockStats$ = client$.pipeState(
     const blocksComplete$ = client.blocks$.pipe(ignoreElements(), endWith(true))
 
     return client.blocks$.pipe(
+      // logs("blocks$"),
       mergeMap((block) => {
         const created = Date.now() - timeRef
 
@@ -115,55 +124,66 @@ const accumulate = <T>(
   eqFn: (current: T, prev: T) => boolean,
 ) =>
   blockStats$.pipeState(
+    // logs("accumulate"),
     withDefer(() =>
-      scan((acc: BlockMap<T> | null, evt) => {
-        const getValue = (block: BlockStats, accs: BlockMap<T>) => {
-          const parent = evt.stats[block.number - 1]?.[block.parent]
-          const parentAcc = accs[block.number - 1]?.[block.parent]
+      scan(
+        ({ acc }: { changed: boolean; acc: BlockMap<T> | null }, evt) => {
+          const getValue = (block: BlockStats, accs: BlockMap<T>) => {
+            const parent = evt.stats[block.number - 1]?.[block.parent]
+            const parentAcc = accs[block.number - 1]?.[block.parent]
 
-          return acumulator(block, { acc: parentAcc, stats: parent })
-        }
+            return acumulator(block, { acc: parentAcc, stats: parent })
+          }
 
-        if (!acc) {
-          const result: BlockMap<T> = []
-          for (const i in evt.stats) {
-            result[i] ??= {}
-            const blocks = evt.stats[i]
-            for (const hash in blocks) {
-              result[i][hash] = getValue(blocks[hash], result)
+          if (!acc) {
+            const result: BlockMap<T> = []
+            for (const i in evt.stats) {
+              result[i] ??= {}
+              const blocks = evt.stats[i]
+              for (const hash in blocks) {
+                result[i][hash] = getValue(blocks[hash], result)
+              }
+            }
+            return {
+              changed: true,
+              acc: result,
             }
           }
-          return result
-        }
 
-        let hasChanged = false
-        if (evt.changed) {
-          let toUpdate = [evt.changed]
-          while (toUpdate.length) {
-            const target = toUpdate.pop()!
-            acc[target.number] ??= {}
-            const oldAcc = acc[target.number][target.hash]
-            const newAcc = (acc[target.number][target.hash] = getValue(
-              target,
-              acc,
-            ))
-            const targetChanged = !oldAcc || !eqFn(oldAcc, newAcc)
-            hasChanged ||= targetChanged
-            if (targetChanged) {
-              toUpdate = [
-                ...toUpdate,
-                ...Object.values(evt.stats[target.number + 1] ?? {}).filter(
-                  (block) => block.parent === target.hash,
-                ),
-              ]
+          let hasChanged = false
+          if (evt.changed) {
+            let toUpdate = [evt.changed]
+            while (toUpdate.length) {
+              const target = toUpdate.pop()!
+              acc[target.number] ??= {}
+              const oldAcc = acc[target.number][target.hash]
+              const newAcc = (acc[target.number][target.hash] = getValue(
+                target,
+                acc,
+              ))
+              const targetChanged = !oldAcc || !eqFn(oldAcc, newAcc)
+              hasChanged ||= targetChanged
+              if (targetChanged) {
+                toUpdate = [
+                  ...toUpdate,
+                  ...Object.values(evt.stats[target.number + 1] ?? {}).filter(
+                    (block) => block.parent === target.hash,
+                  ),
+                ]
+              }
             }
           }
-        }
 
-        return hasChanged ? acc.map((v) => v) : acc
-      }, null),
+          return {
+            changed: hasChanged,
+            acc,
+          }
+        },
+        { changed: false, acc: null },
+      ),
     ),
-    distinctUntilChanged(),
+    filter((v) => v.changed),
+    map((v) => v.acc),
   )
 
 export const blockTimes$ = accumulate<{
@@ -186,6 +206,7 @@ export const blockTimes$ = accumulate<{
 
 export const AVG_BLOCKS = 50
 export const avgBlockTime$ = blockTimes$.pipeState(
+  // logs("avgBlockTimes"),
   filter((v) => v != null),
   map((blocks) =>
     blocks
@@ -365,4 +386,54 @@ export const avgBlockWeight$ = blockWeights$.pipeState(
     }
   }),
   withDefault(null),
+)
+
+const RECENT_BLOCKS = 80
+export type RecentMetricBlock = {
+  hash: string
+  parent: string
+  number: number
+  created: number
+  finalized: number | null
+  finalizationTime: number | null
+  blockTime: number | null
+  transactions: number | null
+  events: number | null
+  weight: {
+    refTime: number
+    proofSize: number
+  } | null
+}
+export const recentMetricBlocks$ = state(
+  combineLatest([
+    blockStats$,
+    blockTimes$,
+    blockFinalization$,
+    blockWeights$,
+  ]).pipe(
+    map(([{ stats }, blockTimes, blockFinalization, blockWeights]) =>
+      stats
+        .slice(-RECENT_BLOCKS)
+        .flatMap((blocks) => Object.values(blocks ?? {}))
+        .map(
+          (block): RecentMetricBlock => ({
+            hash: block.hash,
+            parent: block.parent,
+            number: block.number,
+            created: block.created,
+            finalized: block.finalized,
+            finalizationTime:
+              blockFinalization?.[block.number]?.[block.hash]?.finalized ??
+              null,
+            blockTime:
+              blockTimes?.[block.number]?.[block.hash]?.blockTime ?? null,
+            transactions: block.info.transactions,
+            events: block.info.events,
+            weight: blockWeights?.[block.number]?.[block.hash]?.weight ?? null,
+          }),
+        )
+        .sort((a, b) => a.number - b.number || a.created - b.created),
+    ),
+  ),
+  [],
 )
