@@ -1,10 +1,9 @@
 import { blockInfo$ } from "@/state/block.state"
 import { client$ } from "@/state/chains/chain.state"
+import { DotAh } from "@polkadot-api/descriptors"
 import { withDefault } from "@react-rxjs/core"
-import { mergeWithKey } from "@react-rxjs/utils"
 import {
   combineLatest,
-  debounceTime,
   defer,
   distinctUntilChanged,
   endWith,
@@ -16,8 +15,6 @@ import {
   OperatorFunction,
   repeat,
   scan,
-  share,
-  skipUntil,
   startWith,
   switchMap,
   take,
@@ -150,7 +147,7 @@ const accumulate = <T>(
               target,
               acc,
             ))
-            const targetChanged = !oldAcc || eqFn(oldAcc, newAcc)
+            const targetChanged = !oldAcc || !eqFn(oldAcc, newAcc)
             hasChanged ||= targetChanged
             if (targetChanged) {
               toUpdate = [
@@ -187,91 +184,6 @@ export const blockTimes$ = accumulate<{
   () => true,
 )
 
-export const blockFinalization$ = accumulate<{
-  finalized: number | null
-  finalizedSum: number | null
-}>(
-  (stats, prev) => {
-    const parentTimings = prev?.acc
-    const finalized = stats.finalized ? stats.finalized - stats.created : null
-
-    return {
-      finalized,
-      finalizedSum: !finalized
-        ? (parentTimings?.finalizedSum ?? null)
-        : (parentTimings?.finalizedSum ?? 0) + finalized,
-    }
-  },
-  (current, prev) => current.finalized === prev.finalizedSum,
-)
-
-export const blockTiming$ = client$.pipeState(
-  switchMap((client) => {
-    const initialBurst$ = client.blocks$.pipe(
-      debounceTime(10),
-      take(1),
-      share(),
-    )
-
-    const timeRef = Date.now()
-    // Block number -> Block -> timings
-    const acc: Array<
-      Record<
-        string,
-        {
-          created: number
-          blockTime: number | null
-          blockTimeSum: number | null
-          finalized: number | null
-          finalizedSum: number | null
-        }
-      >
-    > = []
-
-    return mergeWithKey({
-      newBlock: combineLatest({
-        isBurst: initialBurst$.pipe(
-          map(() => false),
-          startWith(true),
-        ),
-        block: client.blocks$,
-      }).pipe(map(({ block, isBurst }) => ({ ...block, isBurst }))),
-      finalized: client.finalizedBlock$.pipe(skipUntil(initialBurst$)),
-    }).pipe(
-      scan((acc, { type, payload }) => {
-        const now = Date.now() - timeRef
-        const parent = acc[payload.number - 1]?.[payload.parent]
-        if (type === "newBlock") {
-          acc[payload.number] ??= {}
-          const blockTime =
-            parent && !payload.isBurst ? now - parent.created : null
-          const blockTimeSum = blockTime
-            ? (parent?.blockTimeSum ?? 0) + blockTime
-            : null
-          acc[payload.number][payload.hash] = {
-            created: now,
-            blockTime,
-            blockTimeSum,
-            finalized: null,
-            finalizedSum: null,
-          }
-        }
-        if (type === "finalized") {
-          const current = acc[payload.number]?.[payload.hash]
-          if (!current) {
-            console.error("Unexpected finalized block", acc, payload)
-            return acc
-          }
-          const finalized = now - current.created
-          current.finalized = finalized
-          current.finalizedSum = (parent?.finalizedSum ?? 0) + finalized
-        }
-        return acc
-      }, acc),
-    )
-  }),
-)
-
 export const AVG_BLOCKS = 50
 export const avgBlockTime$ = blockTimes$.pipeState(
   filter((v) => v != null),
@@ -293,6 +205,25 @@ export const avgBlockTime$ = blockTimes$.pipeState(
   withDefault(null),
 )
 
+export const blockFinalization$ = accumulate<{
+  finalized: number | null
+  finalizedSum: number | null
+}>(
+  (stats, prev) => {
+    const parentTimings = prev?.acc
+    const finalized =
+      stats.finalized != null ? stats.finalized - stats.created : null
+
+    return {
+      finalized,
+      finalizedSum:
+        finalized == null
+          ? (parentTimings?.finalizedSum ?? null)
+          : (parentTimings?.finalizedSum ?? 0) + finalized,
+    }
+  },
+  (current, prev) => current.finalizedSum === prev.finalizedSum,
+)
 export const avgFinalizedTime$ = blockFinalization$.pipeState(
   filter((v) => v != null),
   map((blocks) =>
@@ -315,6 +246,123 @@ export const avgFinalizedTime$ = blockFinalization$.pipeState(
       (v) => v.finalized !== null && v.finalizedSum != null,
     )!
     return (last.finalizedSum! - first.finalizedSum!) / (blocks.length - 2)
+  }),
+  withDefault(null),
+)
+
+export const transactionCount$ = accumulate<{
+  created: number
+  transactionSum: number | null
+}>(
+  (stats, prev) => {
+    const parentAcc = prev?.acc
+    const transactions = stats.info.transactions
+
+    return {
+      created: stats.created,
+      transactionSum:
+        transactions == null
+          ? (parentAcc?.transactionSum ?? null)
+          : (parentAcc?.transactionSum ?? 0) + transactions,
+    }
+  },
+  (current, prev) => current.transactionSum === prev.transactionSum,
+)
+export const transactionsStats$ = transactionCount$.pipeState(
+  filter((v) => v != null),
+  map((blocks) =>
+    blocks
+      .slice(-AVG_BLOCKS)
+      // blocks is an array that starts at "block_number". filter makes it 0-based instead, which is what we need
+      .filter((v) => Object.values(v).some((v) => v.transactionSum !== null)),
+  ),
+  filter((v) => v.length >= 2),
+  map((blocks) => {
+    const first = Object.values(blocks[0]).find(
+      (v) => v.transactionSum != null,
+    )!
+    const last = Object.values(blocks.at(-1)!).find(
+      (v) => v.transactionSum !== null,
+    )!
+    const totalCount = last.transactionSum! - first.transactionSum!
+    const tpm = (totalCount * (1000 * 60)) / (last.created - first.created)
+    return { totalCount, tpm }
+  }),
+  withDefault(null),
+)
+
+export const blockWeights$ = client$.pipeState(
+  switchMap((client) =>
+    client
+      .getUnsafeApi<DotAh>()
+      .constants.System.BlockWeights()
+      .catch(() => null),
+  ),
+  map((v) => v?.max_block ?? null),
+  switchMap((max_weight) =>
+    max_weight
+      ? accumulate<{
+          weight: { refTime: number; proofSize: number } | null
+          weightSum: { refTime: number; proofSize: number } | null
+        }>(
+          (stats, prev) => {
+            const parentAcc = prev?.acc
+            const weight = stats.info.weight
+
+            const weightPct = weight
+              ? {
+                  refTime:
+                    Number(weight.ref_time) / Number(max_weight.ref_time),
+                  proofSize:
+                    Number(weight.proof_size) / Number(max_weight.proof_size),
+                }
+              : null
+
+            return {
+              weight: weightPct,
+              weightSum:
+                weightPct == null
+                  ? (parentAcc?.weightSum ?? null)
+                  : {
+                      refTime:
+                        (parentAcc?.weightSum?.refTime ?? 0) +
+                        weightPct.refTime,
+                      proofSize:
+                        (parentAcc?.weightSum?.proofSize ?? 0) +
+                        weightPct.proofSize,
+                    },
+            }
+          },
+          (current, prev) => current.weightSum === prev.weightSum,
+        )
+      : [null],
+  ),
+)
+
+export const avgBlockWeight$ = blockWeights$.pipeState(
+  filter((v) => v != null),
+  map((blocks) =>
+    blocks
+      .slice(-AVG_BLOCKS)
+      // blocks is an array that starts at "block_number". filter makes it 0-based instead, which is what we need
+      .filter((v) => Object.values(v).some((v) => v.weightSum !== null)),
+  ),
+  filter((v) => v.length >= 2),
+  map((blocks) => {
+    // Although we might match different branches, they happen very randomly and we're
+    // computing a long average, so the difference will be minimal.
+    const first = Object.values(blocks[0]).find((v) => v.weightSum != null)!
+    const last = Object.values(blocks.at(-1)!).find(
+      (v) => v.weightSum !== null,
+    )!
+    return {
+      refTime:
+        (last.weightSum!.refTime - first.weightSum!.refTime) /
+        (blocks.length - 1),
+      proofSize:
+        (last.weightSum!.proofSize - first.weightSum!.proofSize) /
+        (blocks.length - 1),
+    }
   }),
   withDefault(null),
 )

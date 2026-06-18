@@ -136,11 +136,11 @@ const WeightLimits: FC<{ weight: Weight | null }> = ({ weight }) => {
   )
 }
 
-type Weight = {
+export type Weight = {
   ref_time: bigint
   proof_size: bigint
 }
-function addWeight(a: Weight, b: Weight | null): Weight {
+export function addWeight(a: Weight, b: Weight | null): Weight {
   if (!b) {
     console.warn("some weight is undefined", { a, b })
     return a
