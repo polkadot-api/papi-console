@@ -8,7 +8,6 @@ import {
   Clock3,
   Copy,
   Flag,
-  GitFork,
   Network,
   RefreshCw,
   Scale,
@@ -24,6 +23,7 @@ import {
   avgBlockTime$,
   avgBlockWeight$,
   avgFinalizedTime$,
+  eventsStats$,
   recentMetricBlocks$,
   transactionsStats$,
 } from "./metrics.state"
@@ -60,6 +60,7 @@ export default function Metrics() {
   const avgBlockTime = useStateObservable(avgBlockTime$)
   const avgFinalizedTime = useStateObservable(avgFinalizedTime$)
   const transactionStats = useStateObservable(transactionsStats$)
+  const eventStats = useStateObservable(eventsStats$)
   const avgBlockWeight = useStateObservable(avgBlockWeight$)
   const blocks = useStateObservable(recentMetricBlocks$)
   const chainStatus = useStateObservable(chainStatus$)
@@ -112,15 +113,6 @@ export default function Metrics() {
             select={(block) => toSeconds(block.blockTime)}
           />
           <MetricCard
-            title="Transactions"
-            value={formatInteger(transactionStats?.totalCount)}
-            caption={`${formatInteger(transactionStats?.tpm)} tx/min`}
-            icon={<ArrowRight className="h-5 w-5" />}
-            color="#8b5cf6"
-            blocks={blocks}
-            select={(block) => block.transactions}
-          />
-          <MetricCard
             title="Finalization time"
             value={formatDuration(avgFinalizedTime)}
             caption={`avg over last ${AVG_BLOCKS} blocks`}
@@ -135,7 +127,6 @@ export default function Metrics() {
             caption="of max block weight"
             icon={<Scale className="h-5 w-5" />}
             color="#e6007a"
-            progress={avgWeight}
             blocks={blocks}
             select={(block) =>
               block.weight
@@ -144,9 +135,18 @@ export default function Metrics() {
             }
           />
           <MetricCard
+            title="Transactions"
+            value={formatInteger(transactionStats?.totalCount)}
+            caption={`${formatInteger(transactionStats?.tpm)} tx/min`}
+            icon={<ArrowRight className="h-5 w-5" />}
+            color="#8b5cf6"
+            blocks={blocks}
+            select={(block) => block.transactions}
+          />
+          <MetricCard
             title="Events"
-            value={formatInteger(latest?.events)}
-            caption="latest block"
+            value={formatInteger(eventStats?.totalCount)}
+            caption={`${formatInteger(eventStats?.epm)} events/min`}
             icon={<Flag className="h-5 w-5" />}
             color="#8b5cf6"
             blocks={blocks}
@@ -163,19 +163,12 @@ export default function Metrics() {
           />
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-[1fr_1fr_1.05fr]">
+        <section className="grid gap-4 xl:grid-cols-[1fr_1.05fr]">
           <RecentBlocksTable
             blocks={blocks}
             finalizedNumber={chainStatus?.finalized.number ?? null}
             latestCreated={latest?.created ?? null}
           />
-
-          <Panel
-            title="Block time & finalization"
-            action={<GitFork className="h-4 w-4" />}
-          >
-            <StackedCharts blocks={blocks} />
-          </Panel>
 
           <Panel title="Node status" action={<Copy className="h-4 w-4" />}>
             <NodeStatus
@@ -200,38 +193,26 @@ const MetricCard: FC<{
   color: string
   blocks: RecentMetricBlock[]
   select: (block: RecentMetricBlock) => number | null
-  progress?: number | null
-}> = ({ title, value, caption, icon, color, blocks, select, progress }) => (
-  <article className="min-h-32 rounded-lg border bg-card p-5 shadow-sm">
+}> = ({ title, value, caption, icon, color, blocks, select }) => (
+  <article className="min-h-36 rounded-lg border bg-card p-5 shadow-sm">
     <div className="mb-3 flex items-start justify-between gap-4">
       <h2 className="text-sm font-semibold text-card-foreground">{title}</h2>
       <div className="text-muted-foreground">{icon}</div>
     </div>
-    <div className="grid grid-cols-[minmax(0,0.85fr)_minmax(120px,1fr)] items-end gap-4">
+    <div className="grid grid-cols-[minmax(0,0.85fr)_minmax(150px,1.15fr)] items-end gap-4">
       <div className="min-w-0">
         <div className="text-3xl font-semibold leading-tight tabular-nums">
           {value}
         </div>
         <div className="mt-1 text-sm text-muted-foreground">{caption}</div>
       </div>
-      {progress != null ? (
-        <div className="h-14 py-5">
-          <div className="h-2 rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-polkadot-500"
-              style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
-            />
-          </div>
-        </div>
-      ) : (
-        <ForkChart
-          blocks={blocks}
-          select={select}
-          color={color}
-          compact
-          height={70}
-        />
-      )}
+      <ForkChart
+        blocks={blocks}
+        select={select}
+        color={color}
+        compact
+        height={112}
+      />
     </div>
   </article>
 )
@@ -321,25 +302,6 @@ const RecentBlocksTable: FC<{
   )
 }
 
-const StackedCharts: FC<{ blocks: RecentMetricBlock[] }> = ({ blocks }) => (
-  <div className="space-y-6">
-    <ChartLegend color="#ec4899" label="Block time (s)" />
-    <ForkChart
-      blocks={blocks}
-      select={(block) => toSeconds(block.blockTime)}
-      color="#ec4899"
-      height={150}
-    />
-    <ChartLegend color="#8b5cf6" label="Finalization time (s)" />
-    <ForkChart
-      blocks={blocks}
-      select={(block) => toSeconds(block.finalizationTime)}
-      color="#8b5cf6"
-      height={150}
-    />
-  </div>
-)
-
 const NodeStatus: FC<{
   best: number | null
   finalized: number | null
@@ -390,6 +352,8 @@ const ForkChart: FC<{
     <UPlotChart
       data={chart.data}
       seriesCount={chart.seriesCount}
+      primaryLane={chart.primaryLane}
+      yRange={chart.yRange}
       color={color}
       height={height}
       compact={compact}
@@ -400,10 +364,12 @@ const ForkChart: FC<{
 const UPlotChart: FC<{
   data: uPlot.AlignedData
   seriesCount: number
+  primaryLane: number
+  yRange: [number, number]
   color: string
   height: number
   compact?: boolean
-}> = ({ data, seriesCount, color, height, compact }) => {
+}> = ({ data, seriesCount, primaryLane, yRange, color, height, compact }) => {
   const ref = useRef<HTMLDivElement>(null)
   const plotRef = useRef<uPlot | null>(null)
 
@@ -417,6 +383,8 @@ const UPlotChart: FC<{
         width,
         height,
         seriesCount,
+        primaryLane,
+        yRange,
         color,
         compact: Boolean(compact),
       }),
@@ -438,7 +406,7 @@ const UPlotChart: FC<{
       plot.destroy()
       plotRef.current = null
     }
-  }, [color, compact, data, height, seriesCount])
+  }, [color, compact, data, height, primaryLane, seriesCount, yRange])
 
   return <div ref={ref} className="h-full min-h-16 w-full [&_.uplot]:w-full" />
 }
@@ -447,12 +415,16 @@ const getChartOptions = ({
   width,
   height,
   seriesCount,
+  primaryLane,
+  yRange,
   color,
   compact,
 }: {
   width: number
   height: number
   seriesCount: number
+  primaryLane: number
+  yRange: [number, number]
   color: string
   compact: boolean
 }): uPlot.Options => ({
@@ -462,30 +434,33 @@ const getChartOptions = ({
   cursor: { show: false },
   scales: {
     x: { time: false },
+    y: {
+      range: () => yRange,
+    },
   },
-  axes: compact
-    ? [{ show: false }, { show: false }]
-    : [
-        {
-          stroke: "rgba(100,116,139,0.75)",
-          grid: { stroke: "rgba(148,163,184,0.18)", width: 1 },
-          ticks: { show: false },
-          values: (_u, values) =>
-            values.map((value) => `#${Math.round(value).toLocaleString()}`),
-        },
-        {
-          stroke: "rgba(100,116,139,0.75)",
-          grid: { stroke: "rgba(148,163,184,0.18)", width: 1 },
-          ticks: { show: false },
-          values: (_u, values) =>
-            values.map((value) => Number(value).toLocaleString()),
-        },
-      ],
+  axes: [
+    { show: false },
+    {
+      side: 1,
+      size: compact ? 34 : 42,
+      gap: compact ? 3 : 5,
+      stroke: "rgba(100,116,139,0.75)",
+      grid: { stroke: "rgba(148,163,184,0.16)", width: 1 },
+      ticks: { show: false },
+      border: { show: false },
+      splits: (_plot, _axisIdx, scaleMin, scaleMax, foundIncr) =>
+        getAxisSplits(scaleMin, scaleMax, foundIncr),
+      values: (_u, values) =>
+        values.map((value) =>
+          compact ? formatCompactAxisValue(value) : formatAxisValue(value),
+        ),
+    },
+  ],
   series: [
     {},
     ...Array.from({ length: seriesCount }, (_, index) => ({
-      stroke: index === 0 ? color : withAlpha(color, 0.55),
-      width: compact ? 2 : 1.8,
+      stroke: index === primaryLane ? color : withAlpha(color, 0.5),
+      width: index === primaryLane ? (compact ? 2 : 1.8) : 1.5,
       points: { show: false },
       spanGaps: false,
     })),
@@ -496,19 +471,37 @@ const buildForkChartData = (
   blocks: RecentMetricBlock[],
   select: (block: RecentMetricBlock) => number | null,
 ) => {
-  const rows = blocks
+  const rowsByNumber = blocks
     .map((block) => ({ ...block, value: select(block) }))
     .filter((block): block is RecentMetricBlock & { value: number } =>
       Number.isFinite(block.value),
     )
+    .sort((a, b) => a.number - b.number || a.created - b.created)
 
-  const xValues = [...new Set(rows.map((block) => block.number))].sort(
-    (a, b) => a - b,
-  )
+  const xValues = [...new Set(rowsByNumber.map((block) => block.number))]
+    .sort((a, b) => a - b)
+    .slice(-AVG_BLOCKS)
+  const xValueSet = new Set(xValues)
+  const rows = rowsByNumber.filter((block) => xValueSet.has(block.number))
+
   const xIndex = new Map(xValues.map((value, index) => [value, index]))
   const rowByHash = new Map(rows.map((row) => [row.hash, row]))
+  const primaryHead = getPrimaryHead(rows)
+  const primaryHashes = new Set<string>()
+
+  for (let row = primaryHead; row; row = rowByHash.get(row.parent) ?? null) {
+    primaryHashes.add(row.hash)
+  }
+
+  const primaryLane = Array<number | null>(xValues.length).fill(null)
+  for (const row of rows) {
+    if (primaryHashes.has(row.hash)) {
+      primaryLane[xIndex.get(row.number)!] = row.value
+    }
+  }
+
   const laneByHash = new Map<string, number>()
-  const lanes: Array<Array<number | null>> = []
+  const forkLanes: Array<Array<number | null>> = []
 
   for (const number of xValues) {
     const usedLanes = new Set<number>()
@@ -517,33 +510,61 @@ const buildForkChartData = (
       .sort((a, b) => a.created - b.created)
 
     for (const row of heightRows) {
+      if (primaryHashes.has(row.hash)) continue
+
       const preferredLane = laneByHash.get(row.parent)
       const lane =
         preferredLane != null && !usedLanes.has(preferredLane)
           ? preferredLane
           : getFreeLane(usedLanes)
-      lanes[lane] ??= Array(xValues.length).fill(null)
+      forkLanes[lane] ??= Array(xValues.length).fill(null)
 
       if (preferredLane != null && lane !== preferredLane) {
         const parent = rowByHash.get(row.parent)
         const parentIndex =
           parent == null ? undefined : xIndex.get(parent.number)
         if (parent && parentIndex != null) {
-          lanes[lane][parentIndex] = parent.value
+          forkLanes[lane][parentIndex] = parent.value
+        }
+      } else if (preferredLane == null) {
+        const parent = rowByHash.get(row.parent)
+        const parentIndex =
+          parent == null ? undefined : xIndex.get(parent.number)
+        if (parent && parentIndex != null) {
+          forkLanes[lane][parentIndex] = parent.value
         }
       }
 
-      lanes[lane][xIndex.get(row.number)!] = row.value
+      forkLanes[lane][xIndex.get(row.number)!] = row.value
       laneByHash.set(row.hash, lane)
       usedLanes.add(lane)
     }
   }
 
+  const lanes = [primaryLane, ...forkLanes]
+  const yValues = lanes.flatMap((lane) =>
+    lane.filter((value): value is number => value != null),
+  )
+
   return {
     data: [xValues, ...lanes] as uPlot.AlignedData,
     seriesCount: lanes.length,
+    primaryLane: 0,
+    yRange: getRobustRange(yValues),
   }
 }
+
+type ChartRow = RecentMetricBlock & { value: number }
+const getPrimaryHead = (rows: ChartRow[]) =>
+  rows.reduce<ChartRow | null>(
+    (best, row) =>
+      !best ||
+      row.number > best.number ||
+      (row.number === best.number && row.created > best.created)
+        ? row
+        : best,
+    null,
+  )
 
 const getFreeLane = (used: Set<number>) => {
   for (let lane = 0; ; lane++) {
@@ -614,16 +635,6 @@ const HealthRow: FC<{ label: string; healthy: boolean }> = ({
   </div>
 )
 
-const ChartLegend: FC<{ color: string; label: string }> = ({
-  color,
-  label,
-}) => (
-  <div className="flex items-center gap-2 text-xs font-medium">
-    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
-    {label}
-  </div>
-)
-
 const toSeconds = (value: number | null) =>
   value == null ? null : Math.max(0, value / 1000)
 
@@ -660,4 +671,99 @@ const withAlpha = (hex: string, alpha: number) => {
   const g = Number.parseInt(value.slice(2, 4), 16)
   const b = Number.parseInt(value.slice(4, 6), 16)
   return `rgba(${r},${g},${b},${alpha})`
+}
+
+const getRobustRange = (values: number[]): [number, number] => {
+  const sorted = values
+    .filter((value) => Number.isFinite(value))
+    .sort((a, b) => a - b)
+
+  if (!sorted.length) return [0, 1]
+
+  const rangeValues = getSingleOutlierTrimmedValues(sorted)
+  let min = rangeValues[0]
+  let max = rangeValues.at(-1)!
+  const delta = max - min
+  const pad = delta > 0 ? delta * 0.12 : Math.max(Math.abs(max) * 0.12, 1)
+
+  min = min >= 0 ? Math.max(0, min - pad) : min - pad
+  max += pad
+
+  return min === max ? [min - 1, max + 1] : [min, max]
+}
+
+const getSingleOutlierTrimmedValues = (sorted: number[]) => {
+  if (sorted.length < 6) return sorted
+
+  const min = sorted[0]
+  const secondMin = sorted[1]
+  const secondMax = sorted.at(-2)!
+  const max = sorted.at(-1)!
+  const lowGap = secondMin - min
+  const highGap = max - secondMax
+  const rangeWithoutLow = max - secondMin
+  const rangeWithoutHigh = secondMax - min
+
+  const lowIsWayOff = isSingleEdgeOutlier(lowGap, rangeWithoutLow, secondMin)
+  const highIsWayOff = isSingleEdgeOutlier(highGap, rangeWithoutHigh, secondMax)
+
+  if (highIsWayOff && (!lowIsWayOff || highGap >= lowGap)) {
+    return sorted.slice(0, -1)
+  }
+  if (lowIsWayOff) {
+    return sorted.slice(1)
+  }
+
+  return sorted
+}
+
+const isSingleEdgeOutlier = (
+  edgeGap: number,
+  remainingRange: number,
+  neighbor: number,
+) => edgeGap > Math.max(remainingRange * 4, Math.abs(neighbor) * 0.5, 1)
+
+const formatAxisValue = (value: number) => {
+  if (Math.abs(value) >= 1000) return formatCompactAxisValue(value)
+  return Number.isInteger(value) ? value.toLocaleString() : value.toFixed(1)
+}
+
+const getAxisSplits = (min: number, max: number, increment: number) => {
+  if (!Number.isFinite(min) || !Number.isFinite(max) || min === max) return []
+
+  let currentIncrement = increment
+  let splits = getSplitsForIncrement(min, max, currentIncrement)
+
+  while (splits.length < 2 && currentIncrement > 0) {
+    currentIncrement /= 2
+    splits = getSplitsForIncrement(min, max, currentIncrement)
+  }
+
+  return splits
+}
+
+const getSplitsForIncrement = (min: number, max: number, increment: number) => {
+  if (!Number.isFinite(increment) || increment <= 0) return []
+
+  const precision = Math.max(0, Math.ceil(-Math.log10(increment)) + 2)
+  const result: number[] = []
+
+  for (
+    let value = Math.ceil(min / increment) * increment;
+    value <= max;
+    value += increment
+  ) {
+    result.push(Number(value.toFixed(precision)))
+  }
+
+  return result
+}
+
+const formatCompactAxisValue = (value: number) => {
+  const abs = Math.abs(value)
+  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}m`
+  if (abs >= 1_000) return `${(value / 1_000).toFixed(1)}k`
+  if (abs >= 100) return Math.round(value).toLocaleString()
+  if (abs >= 10) return value.toFixed(0)
+  return value.toFixed(1)
 }

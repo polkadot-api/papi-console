@@ -5,7 +5,6 @@ import { state, withDefault } from "@react-rxjs/core"
 import {
   combineLatest,
   defer,
-  distinctUntilChanged,
   endWith,
   filter,
   ignoreElements,
@@ -19,7 +18,6 @@ import {
   switchMap,
   take,
   takeUntil,
-  tap,
 } from "rxjs"
 import { getBlockWeight } from "../Explorer/BlockPopover"
 
@@ -308,6 +306,43 @@ export const transactionsStats$ = transactionCount$.pipeState(
     const totalCount = last.transactionSum! - first.transactionSum!
     const tpm = (totalCount * (1000 * 60)) / (last.created - first.created)
     return { totalCount, tpm }
+  }),
+  withDefault(null),
+)
+
+export const eventsCount$ = accumulate<{
+  created: number
+  eventSum: number | null
+}>(
+  (stats, prev) => {
+    const parentAcc = prev?.acc
+    const events = stats.info.events
+
+    return {
+      created: stats.created,
+      eventSum:
+        events == null
+          ? (parentAcc?.eventSum ?? null)
+          : (parentAcc?.eventSum ?? 0) + events,
+    }
+  },
+  (current, prev) => current.eventSum === prev.eventSum,
+)
+export const eventsStats$ = eventsCount$.pipeState(
+  filter((v) => v != null),
+  map((blocks) =>
+    blocks
+      .slice(-AVG_BLOCKS)
+      // blocks is an array that starts at "block_number". filter makes it 0-based instead, which is what we need
+      .filter((v) => Object.values(v).some((v) => v.eventSum !== null)),
+  ),
+  filter((v) => v.length >= 2),
+  map((blocks) => {
+    const first = Object.values(blocks[0]).find((v) => v.eventSum != null)!
+    const last = Object.values(blocks.at(-1)!).find((v) => v.eventSum !== null)!
+    const totalCount = last.eventSum! - first.eventSum!
+    const epm = (totalCount * (1000 * 60)) / (last.created - first.created)
+    return { totalCount, epm }
   }),
   withDefault(null),
 )
