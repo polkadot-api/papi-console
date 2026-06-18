@@ -2,7 +2,7 @@ import { CircularProgress } from "@/components/CircularProgress"
 import { CopyText } from "@/components/Copy"
 import { Link } from "@/hashParams"
 import { groupBy } from "@/lib/groupBy"
-import { blockInfoState$ } from "@/state/block.state"
+import { BlockInfo, blockInfoState$ } from "@/state/block.state"
 import { runtimeCtx$ } from "@/state/chains/chain.state"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { FC } from "react"
@@ -23,22 +23,14 @@ const maxBlockWeight$ = state(
   ),
   null,
 )
-export const BlockPopover: FC<{ hash: string }> = ({ hash }) => {
-  const block = useStateObservable(blockInfoState$(hash))
-  if (!block) return null
 
-  const eventGroups = block.events
-    ? groupBy(block.events, (evt) => evt.phase.type)
-    : null
-  const filteredEvents =
-    eventGroups?.["ApplyExtrinsic"]?.filter(filterEvt).length ?? 0
-
+export const getBlockWeight = (block: BlockInfo) => {
   const extrinsicEvents = block.events?.filter(
     (evt) =>
       evt.event.type === "System" &&
       ["ExtrinsicFailed", "ExtrinsicSuccess"].includes(evt.event.value.type),
   )
-  const weight =
+  return (
     extrinsicEvents
       ?.map(
         (evt) =>
@@ -49,6 +41,19 @@ export const BlockPopover: FC<{ hash: string }> = ({ hash }) => {
         proof_size: 0n,
         ref_time: 0n,
       }) ?? null
+  )
+}
+export const BlockPopover: FC<{ hash: string }> = ({ hash }) => {
+  const block = useStateObservable(blockInfoState$(hash))
+  if (!block) return null
+
+  const eventGroups = block.events
+    ? groupBy(block.events, (evt) => evt.phase.type)
+    : null
+  const filteredEvents =
+    eventGroups?.["ApplyExtrinsic"]?.filter(filterEvt).length ?? 0
+
+  const weight = getBlockWeight(block)
 
   return (
     <div>

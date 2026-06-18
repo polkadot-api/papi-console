@@ -12,6 +12,7 @@ import { Link } from "@/hashParams"
 import { cn } from "@/lib/utils"
 import { changeTheme, useTheme } from "@/ThemeProvider"
 import {
+  Activity,
   ArrowRightLeft,
   BookOpenText,
   Cable,
@@ -75,6 +76,12 @@ const navigationGroups: Array<{
         label: "Metadata",
         // Alt Boxes
         icon: BookOpenText,
+      },
+      {
+        path: "/metrics",
+        label: "Metrics",
+        // Alt Gauge
+        icon: Activity,
       },
       {
         path: "/rpcCalls",

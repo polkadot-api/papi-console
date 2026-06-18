@@ -28,18 +28,18 @@ const cache = localStorageSubject<Record<string, Identity>>(
 )
 
 const apiProm = import("./chains/chainspecs/polkadot_people").then(
-  ({ chainSpec }) =>
-    createClient(
-      getProvider({
-        id: "polkadot_people",
-        type: "chainSpec",
-        value: {
-          chainSpec,
-          relayChain: "polkadot",
-        },
-      }),
-      { getMetadata },
-    ).getTypedApi(polkadot_people),
+  ({ chainSpec }) => new Promise((resolve) => {}),
+  // createClient(
+  //   getProvider({
+  //     id: "polkadot_people",
+  //     type: "chainSpec",
+  //     value: {
+  //       chainSpec,
+  //       relayChain: "polkadot",
+  //     },
+  //   }),
+  //   { getMetadata },
+  // ).getTypedApi(polkadot_people),
 )
 
 export const getAddressName = async (
