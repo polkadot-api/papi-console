@@ -135,6 +135,7 @@ const accumulate = <T>(
     },
   ) => T,
   eqFn: (current: T, prev: T) => boolean,
+  hasValue: (value: T) => boolean,
 ) =>
   blockStats$.pipeState(
     // logs("accumulate"),
@@ -200,10 +201,16 @@ const accumulate = <T>(
       ),
     ),
     filter((v) => v.changed && v.acc !== null),
-    map((v) => v.acc!.slice(-WINDOW_SIZE)),
+    map((v) => {
+      const lastWithValue = v.acc!.findLastIndex(
+        (v) => v && Object.values(v).some(hasValue),
+      )
+      return v.acc!.slice(-(v.acc!.length - lastWithValue + WINDOW_SIZE))
+    }),
   )
 
 export const blockTimes$ = accumulate<{
+  parent: string
   blockTime: number | null
   created: number
 }>(
@@ -214,14 +221,17 @@ export const blockTimes$ = accumulate<{
     const blockTime = isBurst || !parent ? null : stats.created - parent.created
 
     return {
+      parent: stats.parent,
       blockTime,
       created: stats.created,
     }
   },
   () => true,
+  (v) => v.blockTime != null,
 )
 
 export const blockFinalization$ = accumulate<{
+  parent: string
   finalized: number | null
   finalizedSum: number | null
 }>(
@@ -231,6 +241,7 @@ export const blockFinalization$ = accumulate<{
       stats.finalized != null ? stats.finalized - stats.created : null
 
     return {
+      parent: stats.parent,
       finalized,
       finalizedSum:
         finalized == null
@@ -239,9 +250,11 @@ export const blockFinalization$ = accumulate<{
     }
   },
   (current, prev) => current.finalizedSum === prev.finalizedSum,
+  (v) => v.finalized != null,
 )
 
 export const transactionCount$ = accumulate<{
+  parent: string
   created: number
   transactions: number | null
   transactionSum: number | null
@@ -251,6 +264,7 @@ export const transactionCount$ = accumulate<{
     const transactions = stats.info.transactions
 
     return {
+      parent: stats.parent,
       created: stats.created,
       transactions,
       transactionSum:
@@ -260,9 +274,11 @@ export const transactionCount$ = accumulate<{
     }
   },
   (current, prev) => current.transactionSum === prev.transactionSum,
+  (v) => v.transactions != null,
 )
 
 export const eventsCount$ = accumulate<{
+  parent: string
   created: number
   events: number | null
   eventSum: number | null
@@ -272,6 +288,7 @@ export const eventsCount$ = accumulate<{
     const events = stats.info.events
 
     return {
+      parent: stats.parent,
       created: stats.created,
       events,
       eventSum:
@@ -281,6 +298,7 @@ export const eventsCount$ = accumulate<{
     }
   },
   (current, prev) => current.eventSum === prev.eventSum,
+  (v) => v.events != null,
 )
 
 export const blockWeights$ = client$.pipeState(
@@ -296,6 +314,7 @@ export const blockWeights$ = client$.pipeState(
       ? accumulate<{
           weight: { refTime: number; proofSize: number } | null
           weightSum: { refTime: number; proofSize: number } | null
+          parent: string
         }>(
           (stats, prev) => {
             const parentAcc = prev?.acc
@@ -311,6 +330,7 @@ export const blockWeights$ = client$.pipeState(
               : null
 
             return {
+              parent: stats.parent,
               weight: weightPct,
               weightSum:
                 weightPct == null
@@ -326,6 +346,7 @@ export const blockWeights$ = client$.pipeState(
             }
           },
           (current, prev) => current.weightSum === prev.weightSum,
+          (v) => v.weight !== null,
         )
       : [null],
   ),

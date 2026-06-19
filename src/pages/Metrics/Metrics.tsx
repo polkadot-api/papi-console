@@ -1,3 +1,5 @@
+import { LoadingBlocks } from "@/components/Loading"
+import { withSubscribe } from "@/components/withSuspense"
 import { Copy } from "lucide-react"
 import { FC, ReactNode } from "react"
 import { CenteredScrollContainer } from "../AppShell"
@@ -12,7 +14,7 @@ import {
 import { NodeStatus } from "./NodeHealth"
 import { RecentBlocksTable } from "./RecentBlocks"
 
-export default function Metrics() {
+function Metrics() {
   return (
     <CenteredScrollContainer className="max-w-360">
       <div className="p-4 space-y-5">
@@ -42,6 +44,8 @@ export default function Metrics() {
     </CenteredScrollContainer>
   )
 }
+const _Metrics = withSubscribe(Metrics, { fallback: <LoadingBlocks /> })
+export default _Metrics
 
 const Panel: FC<{
   title: string

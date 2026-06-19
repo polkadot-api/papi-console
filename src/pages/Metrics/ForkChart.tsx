@@ -1,10 +1,11 @@
 import { FC, useEffect, useMemo, useRef } from "react"
 import uPlot from "uplot"
 import "uplot/dist/uPlot.min.css"
-import type { BlockMap, RecentMetricBlock } from "./metrics.state"
+import type { BlockMap } from "./metrics.state"
 import { WINDOW_SIZE } from "./metrics.state"
+import { mapObject } from "polkadot-api/utils"
 
-export function ForkChart<T>({
+export function ForkChart<T extends { parent: string }>({
   blocks,
   select,
   color,
@@ -13,10 +14,11 @@ export function ForkChart<T>({
   select: (block: T) => number | null
   color: string
 }) {
-  const chart = useMemo(
-    () => (blocks ? buildForkChartData(blocks, select) : null),
-    [blocks, select],
-  )
+  const chart = useMemo(() => {
+    if (!blocks) return null
+    const result = buildForkChartData(blocks, select)
+    return result
+  }, [blocks, select])
 
   if (!chart?.data[0].length) {
     return <div className="h-full min-h-16 rounded bg-muted/30" />
@@ -133,108 +135,94 @@ const getChartOptions = ({
   ],
 })
 
-const buildForkChartData = <T,>(
+const buildForkChartData = <T extends { parent: string }>(
   blocks: BlockMap<T>,
   select: (block: T) => number | null,
 ) => {
-  const rowsByNumber = blocks
-    .map((block) => ({ ...block, value: select(block) }))
-    .filter((block): block is RecentMetricBlock & { value: number } =>
-      Number.isFinite(block.value),
-    )
-    .sort((a, b) => a.number - b.number || a.created - b.created)
-
-  const xValues = [...new Set(rowsByNumber.map((block) => block.number))]
-    .sort((a, b) => a - b)
-    .slice(-WINDOW_SIZE)
-  const xValueSet = new Set(xValues)
-  const rows = rowsByNumber.filter((block) => xValueSet.has(block.number))
-
-  const xIndex = new Map(xValues.map((value, index) => [value, index]))
-  const rowByHash = new Map(rows.map((row) => [row.hash, row]))
-  const primaryHead = getPrimaryHead(rows)
-  const primaryHashes = new Set<string>()
-
-  for (let row = primaryHead; row; row = rowByHash.get(row.parent) ?? null) {
-    primaryHashes.add(row.hash)
+  // We'll work in reverse order in order to ensure that the primaryLane is the longest one.
+  const forks: Array<{ data: Array<number | null>; parent: string }> = []
+  const primaryLane: { data: Array<number | null>; parent: string } = {
+    data: [],
+    parent: "",
   }
 
-  const primaryLane = Array<number | null>(xValues.length).fill(null)
-  for (const row of rows) {
-    if (primaryHashes.has(row.hash)) {
-      primaryLane[xIndex.get(row.number)!] = row.value
+  let initialEmpty = 0
+  for (let i = 0; i < WINDOW_SIZE + initialEmpty && i < 2 * WINDOW_SIZE; i++) {
+    const blocksAtHeight = blocks.at(-(i + 1))
+    if (!blocksAtHeight) break
+
+    const blockValues = mapObject(blocksAtHeight, select)
+    // Exclude first empty values to prevent the chart from continuously moving backwards
+    if (
+      !primaryLane.parent &&
+      !Object.values(blockValues).some((v) => v !== null)
+    ) {
+      initialEmpty++
+      continue
     }
-  }
 
-  const laneByHash = new Map<string, number>()
-  const forkLanes: Array<Array<number | null>> = []
+    if (!primaryLane.parent) {
+      const [first, ...others] = Object.values(blocksAtHeight)
+      if (first) {
+        primaryLane.data = [select(first)]
+        primaryLane.parent = first.parent
+      }
+      others.forEach((other) => {
+        forks.push({
+          data: [select(other)],
+          parent: other.parent,
+        })
+      })
+      continue
+    }
+    const primaryParent = blocksAtHeight[primaryLane.parent]
+    // Found a discontinuity: Stop rendering the chart as we can't know where forks follow through
+    if (!primaryParent) break
 
-  for (const number of xValues) {
-    const usedLanes = new Set<number>()
-    const heightRows = rows
-      .filter((row) => row.number === number)
-      .sort((a, b) => a.created - b.created)
+    const newForks = new Set(Object.keys(blocksAtHeight))
 
-    for (const row of heightRows) {
-      if (primaryHashes.has(row.hash)) continue
-
-      const preferredLane = laneByHash.get(row.parent)
-      const lane =
-        preferredLane != null && !usedLanes.has(preferredLane)
-          ? preferredLane
-          : getFreeLane(usedLanes)
-      forkLanes[lane] ??= Array(xValues.length).fill(null)
-
-      if (preferredLane != null && lane !== preferredLane) {
-        const parent = rowByHash.get(row.parent)
-        const parentIndex =
-          parent == null ? undefined : xIndex.get(parent.number)
-        if (parent && parentIndex != null) {
-          forkLanes[lane][parentIndex] = parent.value
-        }
-      } else if (preferredLane == null) {
-        const parent = rowByHash.get(row.parent)
-        const parentIndex =
-          parent == null ? undefined : xIndex.get(parent.number)
-        if (parent && parentIndex != null) {
-          forkLanes[lane][parentIndex] = parent.value
-        }
+    forks.forEach((fork) => {
+      if (!fork.parent) {
+        // Push null value to keep it aligned
+        fork.data.push(null)
+        return
       }
 
-      forkLanes[lane][xIndex.get(row.number)!] = row.value
-      laneByHash.set(row.hash, lane)
-      usedLanes.add(lane)
-    }
+      newForks.delete(fork.parent)
+      fork.data.push(blockValues[fork.parent])
+      if (fork.parent === primaryLane.parent) {
+        // With the previous push we have it connected, mark it as done
+        fork.parent = ""
+      } else {
+        fork.parent = blocksAtHeight[fork.parent]?.parent ?? ""
+      }
+    })
+
+    newForks.delete(primaryLane.parent)
+    primaryLane.data.push(blockValues[primaryLane.parent])
+    primaryLane.parent = primaryParent.parent
+
+    newForks.forEach((hash) => {
+      forks.push({
+        data: [blockValues[hash]],
+        parent: blocksAtHeight[hash].parent,
+      })
+    })
   }
 
-  const lanes = [primaryLane, ...forkLanes]
-  const yValues = lanes.flatMap((lane) =>
-    lane.filter((value): value is number => value != null),
-  )
+  const xValues = primaryLane.data.map((_, i) => i)
+
+  const lanes = [
+    primaryLane.data.reverse(),
+    ...forks.map((fork) => fork.data.reverse()),
+  ]
+  const yValues = lanes.flatMap((lane) => lane.filter((value) => value != null))
 
   return {
     data: [xValues, ...lanes] as uPlot.AlignedData,
     seriesCount: lanes.length,
     primaryLane: 0,
-    yRange: getRobustRange(yValues),
-  }
-}
-
-type ChartRow = RecentMetricBlock & { value: number }
-const getPrimaryHead = (rows: ChartRow[]) =>
-  rows.reduce<ChartRow | null>(
-    (best, row) =>
-      !best ||
-      row.number > best.number ||
-      (row.number === best.number && row.created > best.created)
-        ? row
-        : best,
-    null,
-  )
-
-const getFreeLane = (used: Set<number>) => {
-  for (let lane = 0; ; lane++) {
-    if (!used.has(lane)) return lane
+    yRange: getYRange(yValues),
   }
 }
 
@@ -246,16 +234,14 @@ const withAlpha = (hex: string, alpha: number) => {
   return `rgba(${r},${g},${b},${alpha})`
 }
 
-const getRobustRange = (values: number[]): [number, number] => {
+const getYRange = (values: number[]): [number, number] => {
   const sorted = values
     .filter((value) => Number.isFinite(value))
     .sort((a, b) => a - b)
 
-  if (!sorted.length) return [0, 1]
+  let [min, max] = getOutlierTrimmedBounds(sorted)
+  if (min == null || max == null) return [0, 1]
 
-  const rangeValues = getSingleOutlierTrimmedValues(sorted)
-  let min = rangeValues[0]
-  let max = rangeValues.at(-1)!
   const delta = max - min
   const pad = delta > 0 ? delta * 0.12 : Math.max(Math.abs(max) * 0.12, 1)
 
@@ -265,36 +251,33 @@ const getRobustRange = (values: number[]): [number, number] => {
   return min === max ? [min - 1, max + 1] : [min, max]
 }
 
-const getSingleOutlierTrimmedValues = (sorted: number[]) => {
-  if (sorted.length < 6) return sorted
+// In general, this is 1.5. However, we're cool with bigger outliers, since we
+// still want to keep the chart realistic, but without causing a big-ass value from
+// squishing the whole chart
+const outlierFactor = 20
+const getOutlierTrimmedBounds = (sorted: number[]) => {
+  if (sorted.length < 6) return [sorted[0], sorted.at(-1)]
 
-  const min = sorted[0]
-  const secondMin = sorted[1]
-  const secondMax = sorted.at(-2)!
-  const max = sorted.at(-1)!
-  const lowGap = secondMin - min
-  const highGap = max - secondMax
-  const rangeWithoutLow = max - secondMin
-  const rangeWithoutHigh = secondMax - min
-
-  const lowIsWayOff = isSingleEdgeOutlier(lowGap, rangeWithoutLow, secondMin)
-  const highIsWayOff = isSingleEdgeOutlier(highGap, rangeWithoutHigh, secondMax)
-
-  if (highIsWayOff && (!lowIsWayOff || highGap >= lowGap)) {
-    return sorted.slice(0, -1)
-  }
-  if (lowIsWayOff) {
-    return sorted.slice(1)
+  const getPercentile = (p: number) => {
+    const idx = sorted.length * p
+    const diff = idx - Math.floor(idx)
+    if (diff === 0) return sorted[Math.floor(idx)]
+    const low = sorted[Math.floor(idx)]
+    const high = sorted[Math.ceil(idx)]
+    return low * (1 - diff) + high * diff
   }
 
-  return sorted
+  const q1 = getPercentile(1 / 4)
+  const q3 = getPercentile(3 / 4)
+  const iqr = Math.max(q3 - q1, 1)
+  const lowBound = q1 - outlierFactor * iqr
+  const highBound = q3 + outlierFactor * iqr
+
+  const min = sorted.find((v) => v >= lowBound)
+  const max = sorted.findLast((v) => v <= highBound)
+
+  return [min, max]
 }
-
-const isSingleEdgeOutlier = (
-  edgeGap: number,
-  remainingRange: number,
-  neighbor: number,
-) => edgeGap > Math.max(remainingRange * 4, Math.abs(neighbor) * 0.5, 1)
 
 const getAxisSplits = (min: number, max: number, increment: number) => {
   if (!Number.isFinite(min) || !Number.isFinite(max) || min === max) return []
