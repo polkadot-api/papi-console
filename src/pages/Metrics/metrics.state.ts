@@ -33,8 +33,8 @@ const withDefer =
     defer(() => fn()(source$))
 
 // block number -> hash -> T
-type BlockMap<T> = Array<Record<string, T>>
-type BlockMapType<T> = T extends BlockMap<infer R> ? R : never
+export type BlockMap<T> = Array<Record<string, T>>
+export type BlockMapType<T> = T extends BlockMap<infer R> ? R : never
 
 export const blockStats$ = client$.pipeState(
   // logs("client$"),

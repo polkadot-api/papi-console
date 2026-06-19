@@ -2,22 +2,28 @@ import { Link } from "@/hashParams"
 import { client$ } from "@/state/chains/chain.state"
 import { useStateObservable, withDefault } from "@react-rxjs/core"
 import {
-  Activity,
   ArrowRight,
   CheckCircle2,
   Clock3,
   Copy,
   Flag,
   Network,
-  RefreshCw,
   Scale,
   ShieldCheck,
 } from "lucide-react"
-import { FC, ReactNode, useEffect, useMemo, useRef } from "react"
+import {
+  FC,
+  PropsWithChildren,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react"
 import { catchError, combineLatest, from, map, of, switchMap } from "rxjs"
 import uPlot from "uplot"
 import "uplot/dist/uPlot.min.css"
 import { CenteredScrollContainer } from "../AppShell"
+import type { RecentMetricBlock } from "./metrics.state"
 import {
   AVG_BLOCKS,
   avgBlockTime$,
@@ -27,7 +33,6 @@ import {
   recentMetricBlocks$,
   transactionsStats$,
 } from "./metrics.state"
-import type { RecentMetricBlock } from "./metrics.state"
 
 const chainStatus$ = client$.pipeState(
   switchMap((client) =>
@@ -62,45 +67,18 @@ export default function Metrics() {
   const transactionStats = useStateObservable(transactionsStats$)
   const eventStats = useStateObservable(eventsStats$)
   const avgBlockWeight = useStateObservable(avgBlockWeight$)
-  const blocks = useStateObservable(recentMetricBlocks$)
-  const chainStatus = useStateObservable(chainStatus$)
   const nodeHealth = useStateObservable(nodeHealth$)
 
-  const latest = blocks.at(-1) ?? null
-  const latestWeight =
-    latest?.weight &&
-    Math.max(latest.weight.refTime, latest.weight.proofSize) * 100
   const avgWeight =
     avgBlockWeight &&
     Math.max(avgBlockWeight.refTime, avgBlockWeight.proofSize) * 100
 
   return (
-    <CenteredScrollContainer className="max-w-[1440px] px-4 py-6 lg:px-6">
-      <div className="space-y-5 pb-10">
-        <header className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-normal text-foreground">
-            Chain metrics
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Live network health and throughput for the selected chain.
-          </p>
-        </header>
-
-        <section className="flex flex-wrap items-center gap-x-8 gap-y-3 rounded-lg border bg-card px-4 py-3 text-sm shadow-sm">
-          <StatusPill healthy={!nodeHealth?.isSyncing} />
-          <SummaryPair
-            label="Latest block"
-            value={formatBlockNumber(chainStatus?.best.number)}
-          />
-          <SummaryPair
-            label="Finalized"
-            value={formatBlockNumber(chainStatus?.finalized.number)}
-          />
-          <div className="ml-auto flex items-center gap-2 text-muted-foreground">
-            <span>{latest ? `${formatAge(0)} updated` : "Waiting"}</span>
-            <RefreshCw className="h-4 w-4" />
-          </div>
-        </section>
+    <CenteredScrollContainer className="max-w-360">
+      <div className="p-4 space-y-5">
+        <h1 className="text-2xl font-semibold tracking-normal text-foreground">
+          Chain metrics
+        </h1>
 
         <section className="grid gap-4 lg:grid-cols-3">
           <MetricCard
@@ -108,76 +86,67 @@ export default function Metrics() {
             value={formatDuration(avgBlockTime)}
             caption={`avg over last ${AVG_BLOCKS} blocks`}
             icon={<Clock3 className="h-5 w-5" />}
-            color="#ec4899"
-            blocks={blocks}
-            select={(block) => toSeconds(block.blockTime)}
-          />
+          >
+            <ForkChart
+              color="#ec4899"
+              select={(block) => toSeconds(block.blockTime)}
+            />
+          </MetricCard>
           <MetricCard
             title="Finalization time"
             value={formatDuration(avgFinalizedTime)}
             caption={`avg over last ${AVG_BLOCKS} blocks`}
             icon={<ShieldCheck className="h-5 w-5" />}
-            color="#ec4899"
-            blocks={blocks}
-            select={(block) => toSeconds(block.finalizationTime)}
-          />
+          >
+            <ForkChart
+              color="#ec4899"
+              select={(block) => toSeconds(block.finalizationTime)}
+            />
+          </MetricCard>
           <MetricCard
             title="Block weight"
             value={formatPercent(avgWeight)}
             caption="of max block weight"
             icon={<Scale className="h-5 w-5" />}
-            color="#e6007a"
-            blocks={blocks}
-            select={(block) =>
-              block.weight
-                ? Math.max(block.weight.refTime, block.weight.proofSize) * 100
-                : null
-            }
-          />
+          >
+            <ForkChart
+              color="#e6007a"
+              select={(block) =>
+                block.weight
+                  ? Math.max(block.weight.refTime, block.weight.proofSize) * 100
+                  : null
+              }
+            />
+          </MetricCard>
           <MetricCard
             title="Transactions"
             value={formatInteger(transactionStats?.totalCount)}
             caption={`${formatInteger(transactionStats?.tpm)} tx/min`}
             icon={<ArrowRight className="h-5 w-5" />}
-            color="#8b5cf6"
-            blocks={blocks}
-            select={(block) => block.transactions}
-          />
+          >
+            <ForkChart color="#8b5cf6" select={(block) => block.transactions} />
+          </MetricCard>
           <MetricCard
             title="Events"
             value={formatInteger(eventStats?.totalCount)}
             caption={`${formatInteger(eventStats?.epm)} events/min`}
             icon={<Flag className="h-5 w-5" />}
-            color="#8b5cf6"
-            blocks={blocks}
-            select={(block) => block.events}
-          />
+          >
+            <ForkChart color="#8b5cf6" select={(block) => block.events} />
+          </MetricCard>
           <MetricCard
             title="Connected peers"
             value={formatInteger(nodeHealth?.peers)}
             caption={nodeHealth ? nodeStatusText(nodeHealth) : "unavailable"}
             icon={<Network className="h-5 w-5" />}
-            color="#8b5cf6"
-            blocks={[]}
-            select={() => null}
           />
         </section>
 
         <section className="grid gap-4 xl:grid-cols-[1fr_1.05fr]">
-          <RecentBlocksTable
-            blocks={blocks}
-            finalizedNumber={chainStatus?.finalized.number ?? null}
-            latestCreated={latest?.created ?? null}
-          />
+          <RecentBlocksTable />
 
           <Panel title="Node status" action={<Copy className="h-4 w-4" />}>
-            <NodeStatus
-              best={chainStatus?.best.number ?? null}
-              finalized={chainStatus?.finalized.number ?? null}
-              peers={nodeHealth?.peers ?? null}
-              isSyncing={nodeHealth?.isSyncing ?? null}
-              latestWeight={latestWeight ?? null}
-            />
+            <NodeStatus />
           </Panel>
         </section>
       </div>
@@ -185,34 +154,27 @@ export default function Metrics() {
   )
 }
 
-const MetricCard: FC<{
-  title: string
-  value: string
-  caption: string
-  icon: ReactNode
-  color: string
-  blocks: RecentMetricBlock[]
-  select: (block: RecentMetricBlock) => number | null
-}> = ({ title, value, caption, icon, color, blocks, select }) => (
+const MetricCard: FC<
+  PropsWithChildren<{
+    title: string
+    value: string
+    caption: string
+    icon: ReactNode
+  }>
+> = ({ title, value, caption, icon, children }) => (
   <article className="min-h-36 rounded-lg border bg-card p-5 shadow-sm">
     <div className="mb-3 flex items-start justify-between gap-4">
       <h2 className="text-sm font-semibold text-card-foreground">{title}</h2>
       <div className="text-muted-foreground">{icon}</div>
     </div>
-    <div className="grid grid-cols-[minmax(0,0.85fr)_minmax(150px,1.15fr)] items-end gap-4">
-      <div className="min-w-0">
+    <div className="flex items-center gap-4 overflow-hidden">
+      <div className="min-w-0 w-32">
         <div className="text-3xl font-semibold leading-tight tabular-nums">
           {value}
         </div>
         <div className="mt-1 text-sm text-muted-foreground">{caption}</div>
       </div>
-      <ForkChart
-        blocks={blocks}
-        select={select}
-        color={color}
-        compact
-        height={112}
-      />
+      {children ? <div className="flex-1">{children}</div> : null}
     </div>
   </article>
 )
@@ -231,114 +193,110 @@ const Panel: FC<{
   </section>
 )
 
-const RecentBlocksTable: FC<{
-  blocks: RecentMetricBlock[]
-  finalizedNumber: number | null
-  latestCreated: number | null
-}> = ({ blocks, finalizedNumber, latestCreated }) => {
-  const rows = blocks.slice(-7).reverse()
+const RecentBlocksTable = () => {
+  const blocks = useStateObservable(recentMetricBlocks$)
+  const latest = blocks.at(-1) ?? null
+  const rows = [...blocks]
+    .sort((a, b) => b.number - a.number || b.created - a.created)
+    .slice(0, 7)
 
   return (
     <Panel title="Recent blocks" action={<Copy className="h-4 w-4" />}>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[480px] text-sm">
-          <thead>
-            <tr className="border-b text-left text-xs font-medium text-muted-foreground">
-              <th className="pb-3">Block</th>
-              <th className="pb-3">Time</th>
-              <th className="pb-3 text-right">Txs</th>
-              <th className="pb-3 text-right">Events</th>
-              <th className="pb-3 text-right">Weight</th>
-              <th className="pb-3 text-right">Finalized</th>
+      <table className="w-full min-w-120 text-sm">
+        <thead>
+          <tr className="border-b text-left text-xs font-medium text-muted-foreground">
+            <th className="pb-3">Hash</th>
+            <th className="pb-3">Time</th>
+            <th className="pb-3 text-right">Txs</th>
+            <th className="pb-3 text-right">Events</th>
+            <th className="pb-3 text-right">Weight</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((block) => (
+            <tr key={block.hash} className="border-b last:border-b-0">
+              <td className="py-3 pr-3 font-mono text-xs font-semibold text-polkadot-500">
+                <Link to={`/explorer/${block.hash}`} title={block.hash}>
+                  {shortHash(block.hash)}
+                </Link>
+              </td>
+              <td className="py-3 pr-3 text-muted-foreground">
+                {latest == null
+                  ? "-"
+                  : formatAge(latest.created - block.created)}
+              </td>
+              <td className="py-3 pr-3 text-right tabular-nums">
+                {formatInteger(block.transactions)}
+              </td>
+              <td className="py-3 pr-3 text-right tabular-nums">
+                {formatInteger(block.events)}
+              </td>
+              <td className="py-3 pr-3 text-right tabular-nums">
+                {formatPercent(
+                  block.weight
+                    ? Math.max(block.weight.refTime, block.weight.proofSize) *
+                        100
+                    : null,
+                )}
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {rows.map((block) => (
-              <tr key={block.hash} className="border-b last:border-b-0">
-                <td className="py-3 pr-3 font-mono text-xs font-semibold text-polkadot-500">
-                  <Link to={`/explorer/${block.hash}`}>
-                    #{block.number.toLocaleString()}
-                  </Link>
-                </td>
-                <td className="py-3 pr-3 text-muted-foreground">
-                  {latestCreated == null
-                    ? "-"
-                    : formatAge(latestCreated - block.created)}
-                </td>
-                <td className="py-3 pr-3 text-right tabular-nums">
-                  {formatInteger(block.transactions)}
-                </td>
-                <td className="py-3 pr-3 text-right tabular-nums">
-                  {formatInteger(block.events)}
-                </td>
-                <td className="py-3 pr-3 text-right tabular-nums">
-                  {formatPercent(
-                    block.weight
-                      ? Math.max(block.weight.refTime, block.weight.proofSize) *
-                          100
-                      : null,
-                  )}
-                </td>
-                <td className="py-3 text-right">
-                  {finalizedNumber != null &&
-                  block.number <= finalizedNumber ? (
-                    <CheckCircle2 className="ml-auto h-4 w-4 text-green-600" />
-                  ) : (
-                    <Activity className="ml-auto h-4 w-4 text-muted-foreground" />
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <Link
-        to="/explorer"
-        className="mt-4 flex items-center justify-center gap-2 border-t pt-4 text-sm font-medium text-polkadot-500 hover:text-polkadot-600"
-      >
-        View all blocks <ArrowRight className="h-4 w-4" />
-      </Link>
+          ))}
+        </tbody>
+      </table>
     </Panel>
   )
 }
 
-const NodeStatus: FC<{
-  best: number | null
-  finalized: number | null
-  peers: number | null
-  isSyncing: boolean | null
-  latestWeight: number | null
-}> = ({ best, finalized, peers, isSyncing, latestWeight }) => (
-  <div className="space-y-5 text-sm">
-    <div className="space-y-3">
-      <StatusRow label="Connected peers" value={formatInteger(peers)} />
-      <StatusRow label="Best block" value={formatBlockNumber(best)} accent />
-      <StatusRow
-        label="Finalized block"
-        value={formatBlockNumber(finalized)}
-        accent
-      />
-      <StatusRow label="Latest weight" value={formatPercent(latestWeight)} />
+const NodeStatus: FC = () => {
+  const blocks = useStateObservable(recentMetricBlocks$)
+  const chainStatus = useStateObservable(chainStatus$)
+  const nodeHealth = useStateObservable(nodeHealth$)
+
+  const latest = blocks.at(-1) ?? null
+  const latestWeight =
+    latest?.weight &&
+    Math.max(latest.weight.refTime, latest.weight.proofSize) * 100
+
+  return (
+    <div className="space-y-5 text-sm">
+      <div className="space-y-3">
+        <StatusRow
+          label="Connected peers"
+          value={formatInteger(nodeHealth?.peers)}
+        />
+        <StatusRow
+          label="Best block"
+          value={formatBlockNumber(chainStatus?.best.number)}
+          accent
+        />
+        <StatusRow
+          label="Finalized block"
+          value={formatBlockNumber(chainStatus?.finalized.number)}
+          accent
+        />
+        <StatusRow label="Latest weight" value={formatPercent(latestWeight)} />
+      </div>
+      <div className="border-t pt-4 space-y-3">
+        <HealthRow
+          label="Node sync"
+          healthy={nodeHealth?.isSyncing === false}
+        />
+        <HealthRow
+          label="Network connectivity"
+          healthy={nodeHealth?.peers == null || nodeHealth.peers > 0}
+        />
+        <HealthRow label="RPC server" healthy />
+        <HealthRow label="Metrics stream" healthy={chainStatus?.best != null} />
+      </div>
     </div>
-    <div className="border-t pt-4 space-y-3">
-      <HealthRow label="Node sync" healthy={isSyncing === false} />
-      <HealthRow
-        label="Network connectivity"
-        healthy={peers == null || peers > 0}
-      />
-      <HealthRow label="RPC server" healthy />
-      <HealthRow label="Metrics stream" healthy={best != null} />
-    </div>
-  </div>
-)
+  )
+}
 
 const ForkChart: FC<{
-  blocks: RecentMetricBlock[]
   select: (block: RecentMetricBlock) => number | null
   color: string
-  height: number
-  compact?: boolean
-}> = ({ blocks, select, color, height, compact }) => {
+}> = ({ select, color }) => {
+  const blocks = useStateObservable(recentMetricBlocks$)
   const chart = useMemo(
     () => buildForkChartData(blocks, select),
     [blocks, select],
@@ -355,8 +313,7 @@ const ForkChart: FC<{
       primaryLane={chart.primaryLane}
       yRange={chart.yRange}
       color={color}
-      height={height}
-      compact={compact}
+      height={112}
     />
   )
 }
@@ -368,8 +325,7 @@ const UPlotChart: FC<{
   yRange: [number, number]
   color: string
   height: number
-  compact?: boolean
-}> = ({ data, seriesCount, primaryLane, yRange, color, height, compact }) => {
+}> = ({ data, seriesCount, primaryLane, yRange, color, height }) => {
   const ref = useRef<HTMLDivElement>(null)
   const plotRef = useRef<uPlot | null>(null)
 
@@ -386,7 +342,6 @@ const UPlotChart: FC<{
         primaryLane,
         yRange,
         color,
-        compact: Boolean(compact),
       }),
       data,
       element,
@@ -406,7 +361,7 @@ const UPlotChart: FC<{
       plot.destroy()
       plotRef.current = null
     }
-  }, [color, compact, data, height, primaryLane, seriesCount, yRange])
+  }, [color, data, height, primaryLane, seriesCount, yRange])
 
   return <div ref={ref} className="h-full min-h-16 w-full [&_.uplot]:w-full" />
 }
@@ -418,7 +373,6 @@ const getChartOptions = ({
   primaryLane,
   yRange,
   color,
-  compact,
 }: {
   width: number
   height: number
@@ -426,7 +380,6 @@ const getChartOptions = ({
   primaryLane: number
   yRange: [number, number]
   color: string
-  compact: boolean
 }): uPlot.Options => ({
   width,
   height,
@@ -442,25 +395,22 @@ const getChartOptions = ({
     { show: false },
     {
       side: 1,
-      size: compact ? 34 : 42,
-      gap: compact ? 3 : 5,
+      size: 34,
+      gap: 3,
       stroke: "rgba(100,116,139,0.75)",
       grid: { stroke: "rgba(148,163,184,0.16)", width: 1 },
       ticks: { show: false },
       border: { show: false },
       splits: (_plot, _axisIdx, scaleMin, scaleMax, foundIncr) =>
         getAxisSplits(scaleMin, scaleMax, foundIncr),
-      values: (_u, values) =>
-        values.map((value) =>
-          compact ? formatCompactAxisValue(value) : formatAxisValue(value),
-        ),
+      values: (_u, values) => values.map(formatCompactAxisValue),
     },
   ],
   series: [
     {},
     ...Array.from({ length: seriesCount }, (_, index) => ({
       stroke: index === primaryLane ? color : withAlpha(color, 0.5),
-      width: index === primaryLane ? (compact ? 2 : 1.8) : 1.5,
+      width: index === primaryLane ? 2 : 1.5,
       points: { show: false },
       spanGaps: false,
     })),
@@ -572,25 +522,6 @@ const getFreeLane = (used: Set<number>) => {
   }
 }
 
-const StatusPill: FC<{ healthy: boolean }> = ({ healthy }) => (
-  <span className="inline-flex items-center gap-2 rounded-md border border-green-600/25 bg-green-600/10 px-3 py-1 text-sm font-medium text-green-700 dark:text-green-400">
-    <span className="h-2 w-2 rounded-full bg-green-600" />
-    {healthy ? "Live" : "Syncing"}
-  </span>
-)
-
-const SummaryPair: FC<{ label: string; value: string }> = ({
-  label,
-  value,
-}) => (
-  <div className="flex items-center gap-3 border-l pl-6">
-    <span className="text-muted-foreground">{label}</span>
-    <span className="rounded-md border bg-muted/50 px-2 py-1 font-mono text-xs">
-      {value}
-    </span>
-  </div>
-)
-
 const StatusRow: FC<{ label: string; value: string; accent?: boolean }> = ({
   label,
   value,
@@ -645,6 +576,8 @@ const formatInteger = (value: number | null | undefined) =>
 
 const formatBlockNumber = (value: number | null | undefined) =>
   value == null ? "-" : `#${value.toLocaleString()}`
+
+const shortHash = (hash: string) => `${hash.slice(0, 8)}…${hash.slice(-6)}`
 
 const formatDuration = (value: number | null | undefined) =>
   value == null || !Number.isFinite(value)
@@ -722,11 +655,6 @@ const isSingleEdgeOutlier = (
   remainingRange: number,
   neighbor: number,
 ) => edgeGap > Math.max(remainingRange * 4, Math.abs(neighbor) * 0.5, 1)
-
-const formatAxisValue = (value: number) => {
-  if (Math.abs(value) >= 1000) return formatCompactAxisValue(value)
-  return Number.isInteger(value) ? value.toLocaleString() : value.toFixed(1)
-}
 
 const getAxisSplits = (min: number, max: number, increment: number) => {
   if (!Number.isFinite(min) || !Number.isFinite(max) || min === max) return []
