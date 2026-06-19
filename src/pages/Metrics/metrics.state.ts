@@ -1,7 +1,6 @@
 import { blockInfo$ } from "@/state/block.state"
 import { client$ } from "@/state/chains/chain.state"
 import { DotAh } from "@polkadot-api/descriptors"
-import { state, withDefault } from "@react-rxjs/core"
 import {
   combineLatest,
   defer,
@@ -36,6 +35,7 @@ const withDefer =
 export type BlockMap<T> = Array<Record<string, T>>
 export type BlockMapType<T> = T extends BlockMap<infer R> ? R : never
 
+export const WINDOW_SIZE = 50
 export const blockStats$ = client$.pipeState(
   // logs("client$"),
   switchMap((client) => {
@@ -47,18 +47,22 @@ export const blockStats$ = client$.pipeState(
           (
             {
               stats,
+              cleanFrom,
             }: {
               stats: BlockMap<T>
+              cleanFrom: number
               changed: T | null
             },
             block: T,
           ) => {
             stats[block.number] ??= {}
             stats[block.number][block.hash] = block
-            return { stats, changed: block }
+            const newCleanFrom = pruneOldBlocks(stats, cleanFrom)
+            return { stats, changed: block, cleanFrom: newCleanFrom }
           },
           {
             stats: [],
+            cleanFrom: 0,
             changed: null,
           },
         ),
@@ -110,6 +114,17 @@ export const blockStats$ = client$.pipeState(
   }),
 )
 type BlockStats = BlockMapType<ObservedValueOf<typeof blockStats$>["stats"]>
+
+const pruneOldBlocks = <T>(blocks: BlockMap<T>, cleanFrom: number) => {
+  // Initial state we can skip to the first window, to include out-of-order blocks
+  if (cleanFrom === 0) return blocks.length - WINDOW_SIZE
+  // Skip if we're in a window-size length
+  if (blocks.length - cleanFrom < WINDOW_SIZE * 3) return cleanFrom
+  for (let i = cleanFrom; i < blocks.length - WINDOW_SIZE * 2; i++) {
+    delete blocks[i]
+  }
+  return blocks.length - WINDOW_SIZE * 2
+}
 
 const accumulate = <T>(
   acumulator: (
@@ -172,6 +187,10 @@ const accumulate = <T>(
             }
           }
 
+          // We could prune the sparse-array acc as well, but I'm keeping it separate
+          // as this observable only lives as long as there's a component subscribing to it
+          // (whereas blockStats$ is designed to be long-lived)
+
           return {
             changed: hasChanged,
             acc,
@@ -180,8 +199,8 @@ const accumulate = <T>(
         { changed: false, acc: null },
       ),
     ),
-    filter((v) => v.changed),
-    map((v) => v.acc),
+    filter((v) => v.changed && v.acc !== null),
+    map((v) => v.acc!.slice(-WINDOW_SIZE)),
   )
 
 export const blockTimes$ = accumulate<{
@@ -200,28 +219,6 @@ export const blockTimes$ = accumulate<{
     }
   },
   () => true,
-)
-
-export const AVG_BLOCKS = 50
-export const avgBlockTime$ = blockTimes$.pipeState(
-  // logs("avgBlockTimes"),
-  filter((v) => v != null),
-  map((blocks) =>
-    blocks
-      .slice(-AVG_BLOCKS)
-      // blocks is an array that starts at "block_number". filter makes it 0-based instead, which is what we need
-      .filter((v) => Object.values(v).some((v) => v.blockTime != null)),
-  ),
-  // TODO so many updates?
-  // tap((v) => console.log("time", v)),
-  filter((v) => v.length >= 3),
-  map((blocks) => {
-    // We're skipping the first one since it's very often an outlier
-    const first = Object.values(blocks[1]).find((v) => v.blockTime != null)!
-    const last = Object.values(blocks.at(-1)!).find((v) => v.blockTime != null)!
-    return (last.created! - first.created!) / (blocks.length - 2)
-  }),
-  withDefault(null),
 )
 
 export const blockFinalization$ = accumulate<{
@@ -243,34 +240,10 @@ export const blockFinalization$ = accumulate<{
   },
   (current, prev) => current.finalizedSum === prev.finalizedSum,
 )
-export const avgFinalizedTime$ = blockFinalization$.pipeState(
-  filter((v) => v != null),
-  map((blocks) =>
-    blocks
-      .slice(-AVG_BLOCKS)
-      // blocks is an array that starts at "block_number". filter makes it 0-based instead, which is what we need
-      .filter((v) =>
-        Object.values(v).some(
-          (v) => v.finalized !== null && v.finalizedSum != null,
-        ),
-      ),
-  ),
-  filter((v) => v.length >= 3),
-  map((blocks) => {
-    // We're skipping the first one since it's very often an outlier
-    const first = Object.values(blocks[1]).find(
-      (v) => v.finalized !== null && v.finalizedSum != null,
-    )!
-    const last = Object.values(blocks.at(-1)!).find(
-      (v) => v.finalized !== null && v.finalizedSum != null,
-    )!
-    return (last.finalizedSum! - first.finalizedSum!) / (blocks.length - 2)
-  }),
-  withDefault(null),
-)
 
 export const transactionCount$ = accumulate<{
   created: number
+  transactions: number | null
   transactionSum: number | null
 }>(
   (stats, prev) => {
@@ -279,6 +252,7 @@ export const transactionCount$ = accumulate<{
 
     return {
       created: stats.created,
+      transactions,
       transactionSum:
         transactions == null
           ? (parentAcc?.transactionSum ?? null)
@@ -287,31 +261,10 @@ export const transactionCount$ = accumulate<{
   },
   (current, prev) => current.transactionSum === prev.transactionSum,
 )
-export const transactionsStats$ = transactionCount$.pipeState(
-  filter((v) => v != null),
-  map((blocks) =>
-    blocks
-      .slice(-AVG_BLOCKS)
-      // blocks is an array that starts at "block_number". filter makes it 0-based instead, which is what we need
-      .filter((v) => Object.values(v).some((v) => v.transactionSum !== null)),
-  ),
-  filter((v) => v.length >= 2),
-  map((blocks) => {
-    const first = Object.values(blocks[0]).find(
-      (v) => v.transactionSum != null,
-    )!
-    const last = Object.values(blocks.at(-1)!).find(
-      (v) => v.transactionSum !== null,
-    )!
-    const totalCount = last.transactionSum! - first.transactionSum!
-    const tpm = (totalCount * (1000 * 60)) / (last.created - first.created)
-    return { totalCount, tpm }
-  }),
-  withDefault(null),
-)
 
 export const eventsCount$ = accumulate<{
   created: number
+  events: number | null
   eventSum: number | null
 }>(
   (stats, prev) => {
@@ -320,6 +273,7 @@ export const eventsCount$ = accumulate<{
 
     return {
       created: stats.created,
+      events,
       eventSum:
         events == null
           ? (parentAcc?.eventSum ?? null)
@@ -327,24 +281,6 @@ export const eventsCount$ = accumulate<{
     }
   },
   (current, prev) => current.eventSum === prev.eventSum,
-)
-export const eventsStats$ = eventsCount$.pipeState(
-  filter((v) => v != null),
-  map((blocks) =>
-    blocks
-      .slice(-AVG_BLOCKS)
-      // blocks is an array that starts at "block_number". filter makes it 0-based instead, which is what we need
-      .filter((v) => Object.values(v).some((v) => v.eventSum !== null)),
-  ),
-  filter((v) => v.length >= 2),
-  map((blocks) => {
-    const first = Object.values(blocks[0]).find((v) => v.eventSum != null)!
-    const last = Object.values(blocks.at(-1)!).find((v) => v.eventSum !== null)!
-    const totalCount = last.eventSum! - first.eventSum!
-    const epm = (totalCount * (1000 * 60)) / (last.created - first.created)
-    return { totalCount, epm }
-  }),
-  withDefault(null),
 )
 
 export const blockWeights$ = client$.pipeState(
@@ -393,82 +329,4 @@ export const blockWeights$ = client$.pipeState(
         )
       : [null],
   ),
-)
-
-export const avgBlockWeight$ = blockWeights$.pipeState(
-  filter((v) => v != null),
-  map((blocks) =>
-    blocks
-      .slice(-AVG_BLOCKS)
-      // blocks is an array that starts at "block_number". filter makes it 0-based instead, which is what we need
-      .filter((v) => Object.values(v).some((v) => v.weightSum !== null)),
-  ),
-  filter((v) => v.length >= 2),
-  map((blocks) => {
-    // Although we might match different branches, they happen very randomly and we're
-    // computing a long average, so the difference will be minimal.
-    const first = Object.values(blocks[0]).find((v) => v.weightSum != null)!
-    const last = Object.values(blocks.at(-1)!).find(
-      (v) => v.weightSum !== null,
-    )!
-    return {
-      refTime:
-        (last.weightSum!.refTime - first.weightSum!.refTime) /
-        (blocks.length - 1),
-      proofSize:
-        (last.weightSum!.proofSize - first.weightSum!.proofSize) /
-        (blocks.length - 1),
-    }
-  }),
-  withDefault(null),
-)
-
-const RECENT_BLOCKS = 80
-export type RecentMetricBlock = {
-  hash: string
-  parent: string
-  number: number
-  created: number
-  finalized: number | null
-  finalizationTime: number | null
-  blockTime: number | null
-  transactions: number | null
-  events: number | null
-  weight: {
-    refTime: number
-    proofSize: number
-  } | null
-}
-export const recentMetricBlocks$ = state(
-  combineLatest([
-    blockStats$,
-    blockTimes$,
-    blockFinalization$,
-    blockWeights$,
-  ]).pipe(
-    map(([{ stats }, blockTimes, blockFinalization, blockWeights]) =>
-      stats
-        .slice(-RECENT_BLOCKS)
-        .flatMap((blocks) => Object.values(blocks ?? {}))
-        .map(
-          (block): RecentMetricBlock => ({
-            hash: block.hash,
-            parent: block.parent,
-            number: block.number,
-            created: block.created,
-            finalized: block.finalized,
-            finalizationTime:
-              blockFinalization?.[block.number]?.[block.hash]?.finalized ??
-              null,
-            blockTime:
-              blockTimes?.[block.number]?.[block.hash]?.blockTime ?? null,
-            transactions: block.info.transactions,
-            events: block.info.events,
-            weight: blockWeights?.[block.number]?.[block.hash]?.weight ?? null,
-          }),
-        )
-        .sort((a, b) => a.number - b.number || a.created - b.created),
-    ),
-  ),
-  [],
 )
