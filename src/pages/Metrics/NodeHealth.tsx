@@ -2,7 +2,16 @@ import { client$ } from "@/state/chains/chain.state"
 import { useStateObservable, withDefault } from "@react-rxjs/core"
 import { CheckCircle2 } from "lucide-react"
 import { FC } from "react"
-import { catchError, combineLatest, from, map, of, switchMap } from "rxjs"
+import {
+  catchError,
+  combineLatest,
+  defer,
+  from,
+  map,
+  of,
+  repeat,
+  switchMap,
+} from "rxjs"
 import { formatBlockNumber, formatInteger } from "./format"
 
 export const chainStatus$ = client$.pipeState(
@@ -21,13 +30,17 @@ export const chainStatus$ = client$.pipeState(
 
 export const nodeHealth$ = client$.pipeState(
   switchMap((client) =>
-    from(
+    defer(() =>
       client._request<{
         peers: number
         isSyncing: boolean
-        shouldHavePeers: boolean
       }>("system_health", []),
-    ).pipe(catchError(() => of(null))),
+    ).pipe(
+      repeat({
+        delay: 5000,
+      }),
+      catchError(() => of(null)),
+    ),
   ),
   withDefault(null),
 )
@@ -63,8 +76,6 @@ export const NodeStatus: FC = () => {
           label="Network connectivity"
           healthy={nodeHealth?.peers == null || nodeHealth.peers > 0}
         />
-        <HealthRow label="RPC server" healthy />
-        <HealthRow label="Metrics stream" healthy={chainStatus?.best != null} />
       </div>
     </div>
   )
