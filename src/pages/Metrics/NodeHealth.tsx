@@ -6,7 +6,6 @@ import {
   catchError,
   combineLatest,
   defer,
-  from,
   map,
   of,
   repeat,
@@ -36,10 +35,10 @@ export const nodeHealth$ = client$.pipeState(
         isSyncing: boolean
       }>("system_health", []),
     ).pipe(
+      catchError(() => of(null)),
       repeat({
         delay: 5000,
       }),
-      catchError(() => of(null)),
     ),
   ),
   withDefault(null),
@@ -74,7 +73,7 @@ export const NodeStatus: FC = () => {
         />
         <HealthRow
           label="Network connectivity"
-          healthy={nodeHealth?.peers == null || nodeHealth.peers > 0}
+          healthy={nodeHealth != null && nodeHealth.peers > 0}
         />
       </div>
     </div>

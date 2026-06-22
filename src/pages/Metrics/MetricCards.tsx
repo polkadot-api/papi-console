@@ -7,7 +7,9 @@ import {
   Scale,
   ShieldCheck,
 } from "lucide-react"
-import { FC, PropsWithChildren, ReactNode, useMemo, useState } from "react"
+import { FC, PropsWithChildren, ReactNode, useMemo } from "react"
+import { filter, map, scan } from "rxjs"
+import { DataChart } from "./DataChart"
 import { ForkChart } from "./ForkChart"
 import { nodeHealth$ } from "./NodeHealth"
 import {
@@ -26,8 +28,6 @@ import {
   transactionCount$,
   withDefer,
 } from "./metrics.state"
-import { filter, map, scan } from "rxjs"
-import { DataChart } from "./DataChart"
 
 const MetricCard: FC<
   PropsWithChildren<{

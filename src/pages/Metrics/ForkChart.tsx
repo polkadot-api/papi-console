@@ -63,6 +63,7 @@ const buildForkChartData = <T extends { parent: string }>(
     }
 
     if (!primaryLane.parent) {
+      // Arbitrary select one block. Ideally we would select the actual best, but at this point this isn't important.
       const [first, ...others] = Object.values(blocksAtHeight)
       if (first) {
         primaryLane.data = [select(first)]
@@ -103,6 +104,8 @@ const buildForkChartData = <T extends { parent: string }>(
     primaryLane.data.push(blockValues[primaryLane.parent])
     primaryLane.parent = primaryParent.parent
 
+    // Remember we are building the data from recent to old, and we'll reverse at the end for the chart
+    // For this reason, we don't need to pad new forks, since the series will end at that point.
     newForks.forEach((hash) => {
       forks.push({
         data: [blockValues[hash]],

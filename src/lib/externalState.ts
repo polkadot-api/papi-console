@@ -1,16 +1,7 @@
 import { state } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
 import { useState } from "react"
-import {
-  defer,
-  from,
-  map,
-  mergeAll,
-  Observable,
-  retry,
-  take,
-  timer,
-} from "rxjs"
+import { defer, from, map, mergeAll, Observable, retry, timer } from "rxjs"
 import { getHashParams, setHashParams } from "../hashParams"
 
 interface Parser<T> {
