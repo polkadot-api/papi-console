@@ -20,11 +20,6 @@ export const formatDuration = (value: number | null | undefined) =>
 export const formatPercent = (value: number | null | undefined) =>
   value == null || !Number.isFinite(value) ? "-" : `${Math.round(value)}%`
 
-export const formatAge = (value: number) => {
-  if (value < 1000) return "now"
-  return `${Math.round(value / 1000)}s ago`
-}
-
 export const nodeStatusText = (health: {
   isSyncing: boolean
   peers: number

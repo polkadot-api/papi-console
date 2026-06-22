@@ -2,7 +2,12 @@ import { Link } from "@/hashParams"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { combineLatest, map } from "rxjs"
 import "uplot/dist/uPlot.min.css"
-import { formatAge, formatInteger, formatPercent, shortHash } from "./format"
+import {
+  formatDuration,
+  formatInteger,
+  formatPercent,
+  shortHash,
+} from "./format"
 import { blockStats$, blockTimes$, blockWeights$ } from "./metrics.state"
 
 const latestBlocks$ = state(
@@ -12,17 +17,20 @@ const latestBlocks$ = state(
         .slice(-8)
         .flatMap((blocks) => Object.values(blocks))
         .slice(-8)
-        .map((block) => ({
-          hash: block.hash,
-          number: block.number,
-          created: block.created,
-          blockTime:
-            blockTimes?.[block.number]?.[block.hash]?.blockTime ?? null,
-          transactions: block.info.transactions,
-          events: block.info.events,
-          weight: blockWeights?.[block.number]?.[block.hash]?.weight ?? null,
-        }))
-        .sort((a, b) => a.number - b.number || a.created - b.created),
+        .map((block) => {
+          const blockTime = blockTimes.find((blocks) => blocks[block.hash])
+          const blockWeight = blockWeights?.find((blocks) => blocks[block.hash])
+          return {
+            hash: block.hash,
+            number: block.number,
+            created: block.created,
+            blockTime: blockTime?.[block.hash]?.blockTime ?? null,
+            transactions: block.info.transactions,
+            events: block.info.events,
+            weight: blockWeight?.[block.hash]?.weight ?? null,
+          }
+        })
+        .sort((a, b) => b.number - a.number || b.created - a.created),
     ),
   ),
   [],
@@ -30,7 +38,6 @@ const latestBlocks$ = state(
 
 export const RecentBlocksTable = () => {
   const blocks = useStateObservable(latestBlocks$)
-  const latest = blocks.at(-1) ?? null
 
   return (
     <table className="w-full min-w-120 text-sm">
@@ -52,7 +59,7 @@ export const RecentBlocksTable = () => {
               </Link>
             </td>
             <td className="py-3 pr-3 text-muted-foreground">
-              {latest == null ? "-" : formatAge(latest.created - block.created)}
+              {formatDuration(block.blockTime)}
             </td>
             <td className="py-3 pr-3 text-right tabular-nums">
               {formatInteger(block.transactions)}

@@ -37,7 +37,6 @@ export type BlockMapType<T> = T extends BlockMap<infer R> ? R : never
 
 export const WINDOW_SIZE = 50
 export const blockStats$ = client$.pipeState(
-  // logs("client$"),
   switchMap((client) => {
     const timeRef = Date.now()
 
@@ -71,7 +70,6 @@ export const blockStats$ = client$.pipeState(
     const blocksComplete$ = client.blocks$.pipe(ignoreElements(), endWith(true))
 
     return client.blocks$.pipe(
-      // logs("blocks$"),
       mergeMap((block) => {
         const created = Date.now() - timeRef
 
@@ -201,11 +199,16 @@ const accumulate = <T>(
       ),
     ),
     filter((v) => v.changed && v.acc !== null),
-    map((v) => {
-      const lastWithValue = v.acc!.findLastIndex(
+    map((v): Array<Record<string, T>> => {
+      const broadSlice = v.acc!.slice(-2 * WINDOW_SIZE)
+      const lastWithValue = broadSlice.findLastIndex(
         (v) => v && Object.values(v).some(hasValue),
       )
-      return v.acc!.slice(-(v.acc!.length - lastWithValue + WINDOW_SIZE))
+      const r = broadSlice!
+        .slice(-(broadSlice!.length - lastWithValue + WINDOW_SIZE))
+        // Remove empty values, since we're turning this into a 0-based array.
+        .filter(() => true)
+      return r
     }),
   )
 
