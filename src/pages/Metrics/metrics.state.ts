@@ -20,13 +20,7 @@ import {
 } from "rxjs"
 import { getBlockWeight } from "../Explorer/BlockPopover"
 
-// const logs = <T>(tag: string) =>
-//   tap<T>({
-//     next: () => console.log(tag, "next"),
-//     unsubscribe: () => console.log(tag, "unsubscribe"),
-//     subscribe: () => console.log(tag, "subscribe"),
-//   })
-const withDefer =
+export const withDefer =
   <I, O>(fn: () => OperatorFunction<I, O>): OperatorFunction<I, O> =>
   (source$) =>
     defer(() => fn()(source$))

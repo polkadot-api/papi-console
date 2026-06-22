@@ -1,4 +1,4 @@
-import { useStateObservable } from "@react-rxjs/core"
+import { useStateObservable, withDefault } from "@react-rxjs/core"
 import {
   ArrowRight,
   Clock3,
@@ -7,7 +7,7 @@ import {
   Scale,
   ShieldCheck,
 } from "lucide-react"
-import { FC, PropsWithChildren, ReactNode, useMemo } from "react"
+import { FC, PropsWithChildren, ReactNode, useMemo, useState } from "react"
 import { ForkChart } from "./ForkChart"
 import { nodeHealth$ } from "./NodeHealth"
 import {
@@ -24,7 +24,10 @@ import {
   blockWeights$,
   eventsCount$,
   transactionCount$,
+  withDefer,
 } from "./metrics.state"
+import { filter, map, scan } from "rxjs"
+import { DataChart } from "./DataChart"
 
 const MetricCard: FC<
   PropsWithChildren<{
@@ -235,7 +238,20 @@ export const EventMetrics = () => {
   )
 }
 
+const peerHistory$ = nodeHealth$.pipeState(
+  map((v) => v?.peers ?? null),
+  filter((v) => v != null),
+  withDefer(() =>
+    scan(
+      (acc: number[], newValue) => [newValue, ...acc].slice(0, WINDOW_SIZE),
+      [],
+    ),
+  ),
+  map((v) => [...v].reverse()),
+  withDefault([]),
+)
 export const NodeStatusMetrics = () => {
+  const peerHistory = useStateObservable(peerHistory$)
   const nodeHealth = useStateObservable(nodeHealth$)
 
   return (
@@ -244,6 +260,8 @@ export const NodeStatusMetrics = () => {
       value={formatInteger(nodeHealth?.peers)}
       caption={nodeHealth ? nodeStatusText(nodeHealth) : "unavailable"}
       icon={<Network className="h-5 w-5" />}
-    />
+    >
+      <DataChart color="#8b5cf6" values={peerHistory} />
+    </MetricCard>
   )
 }
