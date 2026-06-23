@@ -1,15 +1,15 @@
 import { localStorageSubject } from "@/utils/localStorageSubject"
 import {
+  getMetadata,
   IdentityData,
   IdentityJudgement,
   polkadot_people,
-  getMetadata,
 } from "@polkadot-api/descriptors"
 import { state } from "@react-rxjs/core"
 import { Binary, createClient, SS58String } from "polkadot-api"
+import { fromHex } from "polkadot-api/utils"
 import { catchError, from, of, tap } from "rxjs"
 import { getProvider } from "./chains/chain.state"
-import { fromHex } from "polkadot-api/utils"
 
 export interface Identity {
   displayName: string

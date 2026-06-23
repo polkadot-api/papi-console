@@ -8,12 +8,17 @@ import { merge } from "rxjs"
 import App from "./App.tsx"
 import { TooltipProvider } from "./components/ui/tooltip.tsx"
 import "./index.css"
+import { codeSplit$ } from "./lib/externalState.ts"
 import { explorer$ } from "./pages/Explorer"
 import { polkaHub } from "./state/polkahub.ts"
 import { ThemeProvider } from "./ThemeProvider.tsx"
 
+const metrics$ = codeSplit$(() =>
+  import("./pages/Metrics/metrics.state.ts").then((r) => r.blockStats$),
+)
+
 createRoot(document.getElementById("root")!).render(
-  <Subscribe source$={merge(dynamicBuilder$, explorer$)}>
+  <Subscribe source$={merge(dynamicBuilder$, explorer$, metrics$)}>
     <RemoveSubscribe>
       <StrictMode>
         <ThemeProvider>
