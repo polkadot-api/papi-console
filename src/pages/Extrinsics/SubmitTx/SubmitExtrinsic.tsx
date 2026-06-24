@@ -12,7 +12,11 @@ import {
 import { createState } from "@/lib/externalState"
 import { PolkahubModalBasedManagers } from "@/pages/Accounts/Providers"
 import { client$, unsafeApi$ } from "@/state/chains/chain.state"
-import { selectedAccount$ } from "@/state/polkahub"
+import {
+  getAccountGenericAddress,
+  getAccountPublicKey,
+  selectedAccount$,
+} from "@/state/polkahub"
 import { polkadot_people } from "@polkadot-api/descriptors"
 import {
   Button,
@@ -27,6 +31,7 @@ import {
   state,
   SUSPENSE,
   useStateObservable,
+  withDefault,
 } from "@react-rxjs/core"
 import {
   createSignal,
@@ -34,7 +39,7 @@ import {
   switchMapSuspended,
 } from "@react-rxjs/utils"
 import { ChevronLeft, Send, Settings, WalletCards } from "lucide-react"
-import { AccountId, TxOptions } from "polkadot-api"
+import { TxOptions } from "polkadot-api"
 import {
   ModalContext,
   PjsWalletButtons,
@@ -45,7 +50,8 @@ import { FC, forwardRef, ReactNode, useState } from "react"
 import {
   catchError,
   combineLatest,
-  defer,
+  distinctUntilChanged,
+  exhaustMap,
   map,
   of,
   scan,
@@ -73,19 +79,20 @@ const customExtensionsCount$ = state(
 
 const [nonceChanged$, setNonce] = createSignal<string>()
 const [nonceBlurred$, blurNonce] = createSignal()
-const chainNonce$ = unsafeApi$.pipe(
+const chainNonce$ = unsafeApi$.pipeState(
   switchMapSuspended((api) =>
     selectedAccount$.pipe(
-      switchMapSuspended((account) =>
-        account?.signer
-          ? api.apis.AccountNonceApi.account_nonce(
-              AccountId(42).dec(account.signer.publicKey),
-              {
-                at: "best",
-              },
+      switchMapSuspended((account) => {
+        const address = account && getAccountGenericAddress(account)
+        return address
+          ? client$.pipe(
+              switchMap((c) => c.bestBlocks$),
+              exhaustMap(([{ hash }]) =>
+                api.apis.AccountNonceApi.account_nonce(address, { at: hash }),
+              ),
             )
-          : [],
-      ),
+          : []
+      }),
       liftSuspense(),
       catchError((ex) => {
         console.error(ex)
@@ -95,45 +102,20 @@ const chainNonce$ = unsafeApi$.pipe(
   ),
   liftSuspense(),
   map((v) => (v === SUSPENSE ? null : (v as number))),
+  withDefault(null),
 )
 const isIntegerStr = (str: string) => /^\d+$/.test(str)
 const nonce$ = state(
-  defer(() =>
-    mergeWithKey({
-      chainNonce$,
-      nonceChanged$,
-      nonceBlurred$,
-    }).pipe(
-      scan(
-        (
-          acc: {
-            chain: number | null
-            inputValue: string
-          },
-          v,
-        ) => {
-          switch (v.type) {
-            case "chainNonce$":
-              if (v.payload != null)
-                return { chain: v.payload, inputValue: v.payload.toString() }
-              break
-            case "nonceBlurred$":
-              if (!isIntegerStr(acc.inputValue)) {
-                return {
-                  chain: acc.chain,
-                  inputValue: acc.chain?.toString() ?? "",
-                }
-              }
-              break
-            case "nonceChanged$":
-              return { chain: acc.chain, inputValue: v.payload }
-          }
-          return acc
-        },
-        { chain: null, inputValue: "" },
-      ),
-      map((v) => v.inputValue),
+  mergeWithKey({
+    nonceChanged$,
+    nonceBlurred$,
+  }).pipe(
+    scan(
+      (acc, v) =>
+        v.type === "nonceChanged$" ? v.payload : isIntegerStr(acc) ? acc : "",
+      "",
     ),
+    distinctUntilChanged(),
   ),
   "",
 )
@@ -178,17 +160,20 @@ const txOptions$ = state(
   {} satisfies TxOptions<any, any>,
 )
 
-const paymentInfo$ = state(
+export const paymentInfo$ = state(
   combineLatest([transaction$, selectedAccount$, txOptions$]).pipe(
     switchMapSuspended(([tx, account, txOptions]) => {
-      if (!tx || !account?.signer) return [null]
+      if (!tx || !account) return [null]
 
       // Adding a small delay for debouncing quick input changes
       return timer(200).pipe(
         switchMap(() =>
-          tx.getPaymentInfo(account.signer!.publicKey, txOptions),
+          tx.getPaymentInfo(getAccountPublicKey(account), txOptions),
         ),
-        catchError(() => of(null)),
+        catchError((ex) => {
+          console.error(ex)
+          return of(null)
+        }),
       )
     }),
     liftSuspense(),
@@ -196,16 +181,13 @@ const paymentInfo$ = state(
   ),
   null,
 )
-
 const accountBalance$ = state(
   combineLatest([selectedAccount$, client$]).pipe(
     switchMapSuspended(([account, client]) =>
-      account?.signer
+      account
         ? client
             .getTypedApi(polkadot_people)
-            .query.System.Account.getValue(
-              AccountId().dec(account.signer.publicKey),
-            )
+            .query.System.Account.getValue(getAccountGenericAddress(account))
         : [],
     ),
     liftSuspense(),
@@ -226,6 +208,7 @@ const accountBalance$ = state(
 
 export const SubmitExtrinsic = forwardRef<HTMLElement>((_, ref) => {
   const [account] = useSelectedAccount()
+  const chainNonce = useStateObservable(chainNonce$)
   const nonce = useStateObservable(nonce$)
   const mortality = useStateObservable(mortality$)
   const tip = useStateObservable(tip$)
@@ -284,6 +267,7 @@ export const SubmitExtrinsic = forwardRef<HTMLElement>((_, ref) => {
             type="number"
             min={0}
             value={nonce}
+            placeholder={chainNonce?.toString()}
             onChange={(evt) => setNonce(evt.target.value)}
             onBlur={blurNonce}
             className="tabular-nums"
