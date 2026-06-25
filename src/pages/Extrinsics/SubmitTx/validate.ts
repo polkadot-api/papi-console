@@ -28,14 +28,11 @@ import {
   lastValueFrom,
   map,
   Observable,
-  of,
   switchMap,
   take,
   TeardownLogic,
   toArray,
 } from "rxjs"
-
-const forkliftWorker = new Worker()
 
 const promiseWithTeardown = <T>(
   deferFn: () => Promise<{
@@ -53,18 +50,18 @@ const promiseWithTeardown = <T>(
 const forkLift$ = chainClient$.pipe(
   switchMap(({ client, chainHead }) =>
     promiseWithTeardown(async () => {
-      console.log("Create forklift")
-      const forklift = await createTmpForklift(client, chainHead)
+      const [forklift, worker] = await createTmpForklift(client, chainHead)
       const forkClient = createClient(
         // withLogsRecorder(console.log, forklift.serve),
         forklift.serve,
       )
+
       return {
         value: { forklift, forkClient },
         teardown: () => {
-          console.log("destroy forklift")
           forkClient.destroy()
           forklift.destroy()
+          worker.terminate()
         },
       }
     }),
@@ -192,7 +189,6 @@ const createTmpForklift = async (
   // forklift needs the code, which is a big-ass query (~4MB).
   // PAPI doesn't have it, but we should prevent this query to be repeated by every block when the runtime is the same
   if (!codeCache.has(metadata)) {
-    console.log("cache miss")
     const codeP = firstValueFrom(
       chainHead
         .storage$(block.hash, "value", () => CODE_KEY)
@@ -234,7 +230,6 @@ const createTmpForklift = async (
     if (key === CODE_KEY) return code
     if (key.startsWith(PARAMETERS_KEY)) return parameters[key] ?? null
 
-    console.log("gs", key)
     return firstValueFrom(
       chainHead
         .storage$(block.hash, "value", () => key)
@@ -244,7 +239,6 @@ const createTmpForklift = async (
   const getStorageBatch = async (keys: HexString[]) => {
     if (!keys.length) return []
 
-    console.log("gsb", keys)
     const result = new Array(keys.length)
     const keyToIdx = Object.fromEntries(keys.map((key, i) => [key, i]))
 
@@ -267,7 +261,6 @@ const createTmpForklift = async (
     return result
   }
   const getStorageDescendants = (prefix: HexString) => {
-    console.log("gsd", prefix)
     return firstValueFrom(
       chainHead
         .storage$(block.hash, "descendantsValues", () => prefix)
@@ -282,24 +275,29 @@ const createTmpForklift = async (
   }
   const getChainSpecData = client.getChainSpecData
 
-  return forklift(
-    {
-      block: getBlock(),
-      getStorage,
-      getStorageBatch,
-      getStorageDescendants,
-      getChainSpecData,
-      destroy() {
-        unhodl()
+  const forkliftWorker = new Worker()
+
+  return [
+    forklift(
+      {
+        block: getBlock(),
+        getStorage,
+        getStorageBatch,
+        getStorageDescendants,
+        getChainSpecData,
+        destroy() {
+          unhodl()
+        },
       },
-    },
-    {
-      mockSignatureHost: true,
-      disableOnIdle: true,
-      buildBlockMode: Enum("timer", 0),
-      executor: fromWorker(forkliftWorker),
-    },
-  )
+      {
+        mockSignatureHost: true,
+        disableOnIdle: true,
+        buildBlockMode: Enum("timer", 0),
+        executor: fromWorker(forkliftWorker),
+      },
+    ),
+    forkliftWorker,
+  ] as const
 }
 
 const decodeAddress = (address: AccountAddress) =>

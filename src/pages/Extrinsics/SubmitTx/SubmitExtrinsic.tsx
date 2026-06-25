@@ -38,7 +38,8 @@ import { FC, forwardRef, ReactNode, useState } from "react"
 import { catchError, map, switchMap, timer } from "rxjs"
 import { CustomSignedExt, customSignedExtensions$ } from "../CustomSignedExt"
 import { trackTx } from "../ExtrinsicsWorkspaceEntry"
-import { DryRun, Estimates } from "./Estimates"
+import { Estimates } from "./Estimates"
+import { DryRun } from "./DryRun"
 import {
   blurNonce,
   DEFAULT_MORTAL,
