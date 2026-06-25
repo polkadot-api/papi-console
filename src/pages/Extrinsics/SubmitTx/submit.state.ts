@@ -25,7 +25,6 @@ export const nonce$ = state(
         v.type === "nonceChanged$" ? v.payload : isIntegerStr(acc) ? acc : "",
       "",
     ),
-    distinctUntilChanged(),
   ),
   "",
 )
@@ -52,7 +51,10 @@ export const transaction$ = state(
 
 export const txOptions$ = state(
   combineLatest([
-    nonce$.pipe(map((v) => (isIntegerStr(v) ? Number(v) : null))),
+    nonce$.pipe(
+      distinctUntilChanged(),
+      map((v) => (isIntegerStr(v) ? Number(v) : null)),
+    ),
     mortality$,
     tip$.pipe(map((v) => (isIntegerStr(v) ? BigInt(v) : null))),
     customSignedExtensions$,

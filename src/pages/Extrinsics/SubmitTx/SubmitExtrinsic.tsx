@@ -38,7 +38,7 @@ import { FC, forwardRef, ReactNode, useState } from "react"
 import { catchError, map, switchMap, timer } from "rxjs"
 import { CustomSignedExt, customSignedExtensions$ } from "../CustomSignedExt"
 import { trackTx } from "../ExtrinsicsWorkspaceEntry"
-import { Estimates } from "./Estimates"
+import { DryRun, Estimates } from "./Estimates"
 import {
   blurNonce,
   DEFAULT_MORTAL,
@@ -218,6 +218,8 @@ export const SubmitExtrinsic = forwardRef<HTMLElement>((_, ref) => {
       <Estimates />
 
       <section className="mx-4 space-y-3 border-t border-border py-4">
+        <DryRun />
+
         <ActionButton
           className="flex w-full items-center justify-center gap-2 rounded-md py-2.5 text-sm font-semibold"
           disabled={!tx || !account?.signer || isSigning}
