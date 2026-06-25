@@ -51,7 +51,6 @@ import {
   catchError,
   combineLatest,
   distinctUntilChanged,
-  exhaustMap,
   map,
   of,
   scan,
@@ -85,13 +84,10 @@ const chainNonce$ = unsafeApi$.pipeState(
       switchMapSuspended((account) => {
         const address = account && getAccountGenericAddress(account)
         return address
-          ? client$.pipe(
-              switchMap((c) => c.bestBlocks$),
-              exhaustMap(([{ hash }]) =>
-                api.apis.AccountNonceApi.account_nonce(address, { at: hash }),
-              ),
+          ? timer(0, 60_000).pipe(
+              switchMap(() => api.apis.AccountNonceApi.account_nonce(address)),
             )
-          : []
+          : [null]
       }),
       liftSuspense(),
       catchError((ex) => {
