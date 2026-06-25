@@ -116,10 +116,18 @@ const ExtrinsicsWorkspaceEntry: FC<{ event: TrackedTransactionEvent }> = ({
         </div>
         <div className="contents">
           <dt className="text-muted-foreground">Hash</dt>
-          <dd className="truncate font-mono flex items-center gap-1">
-            {event.txHash ? shortStr(event.txHash, 8) : ""}
-            <CopyText text={event.txHash} disabled={!event.txHash} size={14} />
-          </dd>
+          {event.txHash ? (
+            <dd className="truncate font-mono flex items-center gap-1">
+              {shortStr(event.txHash, 8)}
+              <CopyText
+                text={event.txHash}
+                disabled={!event.txHash}
+                size={14}
+              />
+            </dd>
+          ) : (
+            <dd />
+          )}
         </div>
         {"block" in event ? (
           <div className="contents">
@@ -159,11 +167,11 @@ const ExtrinsicsWorkspaceEntry: FC<{ event: TrackedTransactionEvent }> = ({
             </dd>
           </div>
         ) : null}
-        {event.type === "error" ? (
+        {event.type === "error" || event.type === "invalid" ? (
           <div className="contents">
             <dt className="text-muted-foreground">Error</dt>
-            <dd className="truncate font-bold font-mono text-red-500">
-              {JSON.stringify(event.value, jsonSerialize)}
+            <dd className="text-xs">
+              <JsonDisplay src={event.value?.error ?? event.value} />
             </dd>
           </div>
         ) : null}
