@@ -1,7 +1,7 @@
 import { createMetadataEntryState } from "@/components/MetadataEntryInput"
 import { pushWorkspaceEntry, WorkspaceEntryData } from "@/components/Workspace"
 import { getHashParams } from "@/hashParams"
-import { runtimeCtxAt$, unsafeApi$ } from "@/state/chains/chain.state"
+import { genericUnsafeApi$, runtimeCtxAt$ } from "@/state/chains/chain.state"
 import { RuntimeContext } from "@polkadot-api/observable-client"
 import { state } from "@react-rxjs/core"
 import { ServerCog } from "lucide-react"
@@ -108,7 +108,7 @@ export const runtimeCallToWorkspaceEntry = async (
   query: RuntimeCallQuery,
 ): Promise<WorkspaceEntryData<RuntimeCallWorkspaceContext>> => {
   const [unsafeApi, ctx] = await firstValueFrom(
-    combineLatest([unsafeApi$, runtimeCtxAt$(query.blockHash)]),
+    combineLatest([genericUnsafeApi$, runtimeCtxAt$(query.blockHash)]),
   )
 
   const query$ = from(

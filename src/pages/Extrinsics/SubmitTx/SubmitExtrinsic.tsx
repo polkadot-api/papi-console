@@ -1,6 +1,5 @@
 import { ActionButton } from "@/components/ActionButton"
 import { Spinner } from "@/components/Icons"
-import { TokenAmount } from "@/components/TokenAmount"
 import { Dialog, DialogTrigger } from "@/components/ui/dialog"
 import {
   Select,
@@ -9,15 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { createState } from "@/lib/externalState"
 import { PolkahubModalBasedManagers } from "@/pages/Accounts/Providers"
-import { client$, unsafeApi$ } from "@/state/chains/chain.state"
-import {
-  getAccountGenericAddress,
-  getAccountPublicKey,
-  selectedAccount$,
-} from "@/state/polkahub"
-import { polkadot_people } from "@polkadot-api/descriptors"
+import { unsafeApi$ } from "@/state/chains/chain.state"
+import { getAccountGenericAddress, selectedAccount$ } from "@/state/polkahub"
 import {
   Button,
   DialogBody,
@@ -33,13 +26,8 @@ import {
   useStateObservable,
   withDefault,
 } from "@react-rxjs/core"
-import {
-  createSignal,
-  mergeWithKey,
-  switchMapSuspended,
-} from "@react-rxjs/utils"
+import { switchMapSuspended } from "@react-rxjs/utils"
 import { ChevronLeft, Send, Settings, WalletCards } from "lucide-react"
-import { TxOptions } from "polkadot-api"
 import {
   ModalContext,
   PjsWalletButtons,
@@ -47,19 +35,22 @@ import {
   useSelectedAccount,
 } from "polkahub"
 import { FC, forwardRef, ReactNode, useState } from "react"
-import {
-  catchError,
-  combineLatest,
-  distinctUntilChanged,
-  map,
-  of,
-  scan,
-  switchMap,
-  timer,
-} from "rxjs"
-import { callData$ } from "../componentValue.state"
+import { catchError, map, switchMap, timer } from "rxjs"
 import { CustomSignedExt, customSignedExtensions$ } from "../CustomSignedExt"
 import { trackTx } from "../ExtrinsicsWorkspaceEntry"
+import { Estimates } from "./Estimates"
+import {
+  blurNonce,
+  DEFAULT_MORTAL,
+  mortality$,
+  nonce$,
+  setMortality,
+  setNonce,
+  setTip,
+  tip$,
+  transaction$,
+  txOptions$,
+} from "./submit.state"
 import { SelectAccount } from "./SubmitTxForm"
 
 const customExtensionsCount$ = state(
@@ -76,8 +67,9 @@ const customExtensionsCount$ = state(
   null,
 )
 
-const [nonceChanged$, setNonce] = createSignal<string>()
-const [nonceBlurred$, blurNonce] = createSignal()
+// powers of 2 from 4 to 16 (incl)
+const periodOptions = new Array(16 - 4 + 1).fill(0).map((_, i) => 1 << (i + 4))
+
 const chainNonce$ = unsafeApi$.pipeState(
   switchMapSuspended((api) =>
     selectedAccount$.pipe(
@@ -100,107 +92,6 @@ const chainNonce$ = unsafeApi$.pipeState(
   map((v) => (v === SUSPENSE ? null : (v as number))),
   withDefault(null),
 )
-const isIntegerStr = (str: string) => /^\d+$/.test(str)
-const nonce$ = state(
-  mergeWithKey({
-    nonceChanged$,
-    nonceBlurred$,
-  }).pipe(
-    scan(
-      (acc, v) =>
-        v.type === "nonceChanged$" ? v.payload : isIntegerStr(acc) ? acc : "",
-      "",
-    ),
-    distinctUntilChanged(),
-  ),
-  "",
-)
-
-type Mortality = NonNullable<TxOptions<any, any>["mortality"]>
-const DEFAULT_MORTAL = {
-  mortal: true,
-  period: 64,
-}
-// powers of 2 from 4 to 16 (incl)
-const periodOptions = new Array(16 - 4 + 1).fill(0).map((_, i) => 1 << (i + 4))
-const [mortality$, setMortality] = createState<Mortality>(DEFAULT_MORTAL)
-const [tip$, setTip] = createState("0")
-
-const transaction$ = state(
-  combineLatest([unsafeApi$, callData$]).pipe(
-    switchMapSuspended(([unsafeApi, callData]) =>
-      callData ? unsafeApi.txFromCallData(callData) : [null],
-    ),
-    liftSuspense(),
-    map((v) => (v === SUSPENSE ? null : v)),
-  ),
-  null,
-)
-
-const txOptions$ = state(
-  combineLatest([
-    nonce$.pipe(map((v) => (isIntegerStr(v) ? Number(v) : null))),
-    mortality$,
-    tip$.pipe(map((v) => (isIntegerStr(v) ? BigInt(v) : null))),
-    customSignedExtensions$,
-  ]).pipe(
-    map(([nonce, mortality, tip, signedExt]): TxOptions<any, any> => {
-      return {
-        mortality,
-        nonce: nonce ?? undefined,
-        tip: tip ?? undefined,
-        customSignedExtensions: signedExt,
-      }
-    }),
-  ),
-  {} satisfies TxOptions<any, any>,
-)
-
-export const paymentInfo$ = state(
-  combineLatest([transaction$, selectedAccount$, txOptions$]).pipe(
-    switchMapSuspended(([tx, account, txOptions]) => {
-      if (!tx || !account) return [null]
-
-      // Adding a small delay for debouncing quick input changes
-      return timer(200).pipe(
-        switchMap(() =>
-          tx.getPaymentInfo(getAccountPublicKey(account), txOptions),
-        ),
-        catchError((ex) => {
-          console.error(ex)
-          return of(null)
-        }),
-      )
-    }),
-    liftSuspense(),
-    map((v) => (v === SUSPENSE ? null : v)),
-  ),
-  null,
-)
-const accountBalance$ = state(
-  combineLatest([selectedAccount$, client$]).pipe(
-    switchMapSuspended(([account, client]) =>
-      account
-        ? client
-            .getTypedApi(polkadot_people)
-            .query.System.Account.getValue(getAccountGenericAddress(account))
-        : [],
-    ),
-    liftSuspense(),
-    map((v) => (v === SUSPENSE ? null : v)),
-    map((v) => {
-      if (!v) return null
-      const { reserved, free, frozen } = v.data
-      const total = reserved + free
-
-      // TODO ED
-      const untouchable = total == 0n ? 0n : maxBigInt(frozen - reserved, 0n)
-
-      return free - untouchable
-    }),
-  ),
-  null,
-)
 
 export const SubmitExtrinsic = forwardRef<HTMLElement>((_, ref) => {
   const [account] = useSelectedAccount()
@@ -208,8 +99,6 @@ export const SubmitExtrinsic = forwardRef<HTMLElement>((_, ref) => {
   const nonce = useStateObservable(nonce$)
   const mortality = useStateObservable(mortality$)
   const tip = useStateObservable(tip$)
-  const paymentInfo = useStateObservable(paymentInfo$)
-  const balance = useStateObservable(accountBalance$)
   const tx = useStateObservable(transaction$)
   const txOptions = useStateObservable(txOptions$)
   const [isSigning, setIsSigning] = useState(false)
@@ -326,23 +215,7 @@ export const SubmitExtrinsic = forwardRef<HTMLElement>((_, ref) => {
         <CustomSignedExtDialog />
       </section>
 
-      <section className="mx-4 space-y-3 border-t border-border py-4">
-        <h3 className="text-sm font-medium">Fees</h3>
-        <FeeRow
-          label="Estimated fee"
-          value={
-            paymentInfo ? (
-              <TokenAmount>{paymentInfo.partial_fee}</TokenAmount>
-            ) : (
-              "…"
-            )
-          }
-        />
-        <FeeRow
-          label="Account spendable balance"
-          value={balance == null ? "…" : <TokenAmount>{balance}</TokenAmount>}
-        />
-      </section>
+      <Estimates />
 
       <section className="mx-4 space-y-3 border-t border-border py-4">
         <ActionButton
@@ -471,11 +344,3 @@ const SubmitRow: FC<{
     {children}
   </div>
 )
-
-const FeeRow: FC<{ label: string; value: ReactNode }> = ({ label, value }) => (
-  <div className="flex items-center justify-between gap-3 py-1.5">
-    <span className="text-sm text-muted-foreground">{label}</span>
-    <span className="text-right font-mono text-sm">{value}</span>
-  </div>
-)
-const maxBigInt = (a: bigint, b: bigint) => (a > b ? a : b)
