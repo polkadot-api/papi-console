@@ -133,7 +133,7 @@ const EstimateRow: FC<{ label: string; value: ReactNode }> = ({
   label,
   value,
 }) => (
-  <div className="flex items-top justify-between gap-3 py-1.5">
+  <div className="flex items-start justify-between gap-3 py-1.5">
     <span className="text-sm text-muted-foreground">{label}</span>
     <span className="text-right font-mono text-sm">{value}</span>
   </div>

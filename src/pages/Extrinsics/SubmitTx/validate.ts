@@ -41,10 +41,13 @@ const promiseWithTeardown = <T>(
   }>,
 ) =>
   new Observable<T>((obs) => {
-    deferFn().then(({ value, teardown }) => {
-      obs.add(teardown)
-      obs.next(value)
-    })
+    deferFn().then(
+      ({ value, teardown }) => {
+        obs.add(teardown)
+        obs.next(value)
+      },
+      (ex) => obs.error(ex),
+    )
   })
 
 const forkLift$ = chainClient$.pipe(
