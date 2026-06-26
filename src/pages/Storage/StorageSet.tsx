@@ -1,5 +1,5 @@
 import { LookupTypeEdit } from "@/codec-components/LookupTypeEdit"
-import { Chopsticks } from "@/components/Icons"
+import { ForkMethodIcon } from "@/components/Icons"
 import { Button } from "@/components/ui/button"
 import { chainClient$, client$, lookup$ } from "@/state/chains/chain.state"
 import { getTypeComplexity } from "@/utils"
@@ -112,7 +112,7 @@ export const StorageSet: FC = () => {
             }}
           >
             Set Storage
-            <Chopsticks />
+            <ForkMethodIcon />
           </Button>
         </>
       ) : null}

@@ -1,6 +1,10 @@
 import { CopyText } from "@/components/Copy"
-import { Chopsticks, Spinner } from "@/components/Icons"
-import SliderToggle from "@/components/Toggle"
+import {
+  Chopsticks,
+  Forklift,
+  ForkMethodIcon,
+  Spinner,
+} from "@/components/Icons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -24,6 +28,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   AUTO_RPC_ENDPOINT,
   currentWsStatus$,
+  ForkMethod,
   LIGHT_CLIENT_ENDPOINT,
   Network,
   networkCategories,
@@ -56,9 +61,7 @@ export function NetworkSwitcher({ className }: { className?: string }) {
         >
           <span className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-left flex items-center gap-1">
             {getChainLabel(selectedChain)}
-            {selectedChain.withChopsticks ? (
-              <Chopsticks className="inline-block align-text-top" />
-            ) : null}
+            <ForkMethodIcon className="inline-block align-text-top" />
             <span className="text-sm text-muted-foreground">
               {getConnectionLabel(selectedChain, websocketStatus)}
             </span>
@@ -67,7 +70,7 @@ export function NetworkSwitcher({ className }: { className?: string }) {
         </Button>
       </DialogTrigger>
       <NetworkSwitchDialogContent
-        key={`${selectedChain.network.id}-${selectedChain.endpoint}`}
+        key={`${selectedChain.network.id}-${selectedChain.endpoint}-${selectedChain.forkMethod}`}
         selectedChain={selectedChain}
         onClose={() => setOpen(false)}
       />
@@ -82,16 +85,14 @@ const NetworkSwitchDialogContent: FC<{
   const [query, setQuery] = useState("")
   const [network, setNetwork] = useState(selectedChain.network)
   const [endpoint, setEndpoint] = useState(selectedChain.endpoint)
-  const [withChopsticks, setWithChopsticks] = useState(
-    selectedChain.withChopsticks,
-  )
+  const [forkMethod, setForkMethod] = useState(selectedChain.forkMethod)
   const customUrl = normalizeWsUrl(query)
   const canFork = endpoint !== LIGHT_CLIENT_ENDPOINT
-  const forked = canFork && withChopsticks
+  const selectedForkMethod = canFork ? forkMethod : "none"
   const hasChanged =
     network.id !== selectedChain.network.id ||
     endpoint !== selectedChain.endpoint ||
-    forked !== selectedChain.withChopsticks
+    selectedForkMethod !== selectedChain.forkMethod
 
   const selectNetwork = (
     next: Network,
@@ -100,7 +101,7 @@ const NetworkSwitchDialogContent: FC<{
     setNetwork(next)
     setEndpoint(nextEndpoint)
     if (nextEndpoint === LIGHT_CLIENT_ENDPOINT) {
-      setWithChopsticks(false)
+      setForkMethod("none")
     }
   }
 
@@ -112,13 +113,12 @@ const NetworkSwitchDialogContent: FC<{
   const setConnection = (nextEndpoint: string) => {
     setEndpoint(nextEndpoint)
     if (nextEndpoint === LIGHT_CLIENT_ENDPOINT) {
-      setWithChopsticks(false)
+      setForkMethod("none")
     }
   }
 
-  const toggleChopsticks = () => {
-    if (endpoint === LIGHT_CLIENT_ENDPOINT) return
-    setWithChopsticks(!withChopsticks)
+  const toggleForkMethod = (method: ForkMethod) => {
+    setForkMethod((current) => (current === method ? "none" : method))
   }
 
   const confirm = () => {
@@ -134,7 +134,7 @@ const NetworkSwitchDialogContent: FC<{
           onChangeChain({
             network: localNetwork,
             endpoint,
-            withChopsticks: forked,
+            forkMethod: selectedForkMethod,
           })
           onClose()
           return
@@ -144,10 +144,10 @@ const NetworkSwitchDialogContent: FC<{
       onChangeChain({
         network: getCustomNetwork(),
         endpoint,
-        withChopsticks: forked,
+        forkMethod: selectedForkMethod,
       })
     } else {
-      onChangeChain({ network, endpoint, withChopsticks: forked })
+      onChangeChain({ network, endpoint, forkMethod: selectedForkMethod })
     }
     onClose()
   }
@@ -187,16 +187,26 @@ const NetworkSwitchDialogContent: FC<{
 
         <div className="flex shrink-0 items-center justify-between gap-3 border-t pt-3">
           {canFork ? (
-            <div className="flex items-center gap-2">
-              <Chopsticks size={18} />
-              <Label htmlFor="use-chopsticks" className="cursor-pointer">
-                Fork with Chopsticks
-              </Label>
-              <SliderToggle
-                id="use-chopsticks"
-                isToggled={forked}
-                toggle={toggleChopsticks}
-              />
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Fork with
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <ForkMethodOption
+                  value="chopsticks"
+                  title="Chopsticks"
+                  selected={selectedForkMethod === "chopsticks"}
+                  icon={<Chopsticks size={18} />}
+                  onSelect={toggleForkMethod}
+                />
+                <ForkMethodOption
+                  value="forklift"
+                  title="Forklift"
+                  selected={selectedForkMethod === "forklift"}
+                  icon={<Forklift size={18} />}
+                  onSelect={toggleForkMethod}
+                />
+              </div>
             </div>
           ) : (
             <div />
@@ -216,6 +226,27 @@ const NetworkSwitchDialogContent: FC<{
     </DialogContent>
   )
 }
+
+const ForkMethodOption: FC<{
+  value: Exclude<ForkMethod, "none">
+  title: string
+  selected: boolean
+  icon?: React.ReactNode
+  onSelect: (value: ForkMethod) => void
+}> = ({ value, title, selected, icon, onSelect }) => (
+  <button
+    type="button"
+    className={twMerge(
+      "flex items-center gap-1.5 rounded-md border border-transparent px-2 py-1.5 text-sm",
+      selected && "border-polkadot bg-polkadot/5",
+    )}
+    aria-pressed={selected}
+    onClick={() => onSelect(value)}
+  >
+    {icon}
+    {title}
+  </button>
+)
 
 const NetworkList: FC<{
   query: string
@@ -524,10 +555,10 @@ const getConnectionLabel = (
   selectedChain: SelectedChain,
   websocketStatus: StatusChange | null,
 ) => {
-  const { network, endpoint, withChopsticks } = selectedChain
+  const { network, endpoint, forkMethod } = selectedChain
   if (endpoint === LIGHT_CLIENT_ENDPOINT) return "Smoldot"
   if (endpoint === AUTO_RPC_ENDPOINT) {
-    if (withChopsticks) return null
+    if (forkMethod !== "none") return null
     if (!websocketStatus) return <Spinner className="inline-block" />
 
     const isReady = "uri" in websocketStatus

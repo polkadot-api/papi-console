@@ -1,4 +1,4 @@
-import { Chopsticks } from "@/components/Icons"
+import { ForkMethodIcon } from "@/components/Icons"
 import { Button } from "@/components/ui/button"
 import {
   canProduceBlocks$,
@@ -122,7 +122,7 @@ const Jump = () => {
         disabled={loading}
       >
         New Block{" "}
-        <Chopsticks className="inline-block align-middle ml-1" size={20} />
+        <ForkMethodIcon className="inline-block align-middle ml-1" size={20} />
       </Button>
     </SummaryItem>
   )

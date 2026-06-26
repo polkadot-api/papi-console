@@ -1,5 +1,6 @@
-import { chopsticksInstance$ } from "@/chopsticks/chopsticks"
-import { chainClient$, client$ } from "@/state/chains/chain.state"
+import { getChopsticksBlockDiff$ } from "@/chopsticks/chopsticks"
+import { client$, selectedChain$ } from "@/state/chains/chain.state"
+import { getForkliftBlockDiff$ } from "@/state/forklift"
 import { SystemEvent } from "@polkadot-api/observable-client"
 import { blockHeader, SizedHex } from "@polkadot-api/substrate-bindings"
 import { liftSuspense, state, SUSPENSE } from "@react-rxjs/core"
@@ -37,8 +38,6 @@ import {
   take,
   takeWhile,
   tap,
-  toArray,
-  withLatestFrom,
 } from "rxjs"
 
 export const finalized$ = client$.pipeState(
@@ -52,6 +51,13 @@ export enum BlockState {
   Pruned = "pruned",
   Unknown = "unknown",
 }
+export type BlockDiff = Record<
+  string,
+  {
+    value: Uint8Array | null
+    prev: Uint8Array | null
+  }
+>
 export interface BlockInfo {
   hash: string
   parent: string
@@ -60,7 +66,7 @@ export interface BlockInfo {
   events: SystemEvent[] | null
   header: BlockHeader | null
   status: BlockState
-  diff: Record<string, [string | null, string | null]> | null
+  diff: BlockDiff | null
 }
 export const BlockContext = createContext<BlockInfo | null>(null)
 
@@ -428,47 +434,14 @@ const getBlockStatus$ = (
 const getBlockDiff$ = (
   parent: string,
   hash: string,
-): Observable<Record<string, [string | null, string | null]> | null> =>
-  chopsticksInstance$.pipe(
+): Observable<BlockDiff | null> =>
+  selectedChain$.pipe(
     take(1),
-    switchMap((chain) => (chain ? chain.getBlock(hash as any) : [null])),
-    switchMap((block) => (block ? block.storageDiff() : [null])),
-    map((v) =>
-      v && Object.keys(v).length > 0
-        ? (v as Record<string, string | null>)
-        : null,
+    switchMap(({ forkMethod }) =>
+      forkMethod === "chopsticks"
+        ? getChopsticksBlockDiff$(parent, hash)
+        : forkMethod === "forklift"
+          ? getForkliftBlockDiff$(parent, hash)
+          : [null],
     ),
-    startWith(null),
-    withLatestFrom(chainClient$),
-    switchMap(([diff, { chainHead }]) => {
-      if (!diff) return [null]
-
-      return chainHead
-        .storageQueries$(
-          parent,
-          Object.keys(diff).map((key) => ({
-            key,
-            type: "value",
-          })),
-        )
-        .pipe(
-          toArray(),
-          map((v) => Object.fromEntries(v.map((v) => [v.key, v.value]))),
-          map(
-            (previousResults): Record<string, [string | null, string | null]> =>
-              Object.fromEntries(
-                Object.entries(diff)
-                  .map(([key, newValue]) => [
-                    key,
-                    [previousResults[key] ?? null, newValue],
-                  ])
-                  .filter(([, [prevVal, newVal]]) => prevVal !== newVal),
-              ),
-          ),
-        )
-    }),
-    catchError((ex) => {
-      console.error(ex)
-      return [null]
-    }),
   )

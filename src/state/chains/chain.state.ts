@@ -1,4 +1,5 @@
 import { createChopsticksProvider } from "@/chopsticks/chopsticks"
+import { createForkliftProvider } from "@/state/forklift"
 import { getHashParams, setHashParams } from "@/hashParams"
 import { DotAh } from "@polkadot-api/descriptors"
 import { getDynamicBuilder, getLookupFn } from "@polkadot-api/metadata-builders"
@@ -68,23 +69,24 @@ import {
 export type ChainSource = WebsocketSource | SmoldotSource
 export const LIGHT_CLIENT_ENDPOINT = "light-client"
 export const AUTO_RPC_ENDPOINT = "auto-rpc"
+export type ForkMethod = "none" | "chopsticks" | "forklift"
 
 export type SelectedChain = {
   network: Network
   endpoint: string
-  withChopsticks: boolean
+  forkMethod: ForkMethod
 }
 export const getChainSource = ({
   endpoint,
   network,
-  withChopsticks,
+  forkMethod,
 }: SelectedChain) =>
   endpoint === LIGHT_CLIENT_ENDPOINT
     ? createSmoldotSource(network.id, network.relayChain)
     : createWebsocketSource(
         network.id,
         endpoint === AUTO_RPC_ENDPOINT ? shuffleEndpoints(network) : endpoint,
-        withChopsticks,
+        forkMethod,
       )
 const shuffleEndpoints = (network: Network) =>
   Object.values(network.endpoints)
@@ -101,9 +103,11 @@ console.log("You can enable JSON-RPC logs by calling `setRpcLogsEnabled(true)`")
 export const getProvider = (source: ChainSource) => {
   const provider =
     source.type === "websocket"
-      ? source.withChopsticks
+      ? source.forkMethod === "chopsticks"
         ? createChopsticksProvider(source.endpoint)
-        : getWebsocketProvider(source)
+        : source.forkMethod === "forklift"
+          ? createForkliftProvider(source.endpoint)
+          : getWebsocketProvider(source)
       : getSmoldotProvider(source)
 
   const recorder = withLogsRecorder((msg) => {
@@ -118,11 +122,11 @@ export const getProvider = (source: ChainSource) => {
 
 export const [selectedChainChanged$, onChangeChain] =
   createSignal<SelectedChain>()
-selectedChainChanged$.subscribe(({ network, endpoint, withChopsticks }) =>
+selectedChainChanged$.subscribe(({ network, endpoint, forkMethod }) =>
   setHashParams({
     networkId: network.id,
     endpoint,
-    chopsticks: withChopsticks ? "true" : null,
+    fork: forkMethod === "none" ? null : forkMethod,
   }),
 )
 
@@ -142,16 +146,14 @@ export const isValidUri = (input: string): boolean => {
 const defaultSelectedChain: SelectedChain = {
   network: defaultNetwork,
   endpoint: LIGHT_CLIENT_ENDPOINT,
-  withChopsticks: false,
+  forkMethod: "none",
 }
 const getDefaultChain = (): SelectedChain => {
   const hashParams = getHashParams()
   if (hashParams.has("networkId") && hashParams.has("endpoint")) {
     const networkId = hashParams.get("networkId")!
     const endpoint = hashParams.get("endpoint")!
-    const withChopsticks =
-      hashParams.get("chopsticks") === "true" &&
-      endpoint !== LIGHT_CLIENT_ENDPOINT
+    const forkMethod = getForkMethod(hashParams, endpoint)
 
     if (networkId === "custom") {
       if (!isValidUri(endpoint)) return defaultSelectedChain
@@ -159,14 +161,26 @@ const getDefaultChain = (): SelectedChain => {
       return {
         network: getCustomNetwork(),
         endpoint,
-        withChopsticks,
+        forkMethod,
       }
     }
     const network = findNetwork(networkId)
-    if (network) return { network, endpoint, withChopsticks }
+    if (network) return { network, endpoint, forkMethod }
   }
 
   return defaultSelectedChain
+}
+
+const getForkMethod = (
+  hashParams: URLSearchParams,
+  endpoint: string,
+): ForkMethod => {
+  if (endpoint === LIGHT_CLIENT_ENDPOINT) return "none"
+
+  const fork = hashParams.get("fork")
+  if (fork === "chopsticks" || fork === "forklift") return fork
+
+  return "none"
 }
 export const selectedChain$ = state<SelectedChain>(
   selectedChainChanged$,

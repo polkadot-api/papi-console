@@ -5,15 +5,15 @@ export interface WebsocketSource {
   type: "websocket"
   id: string
   endpoint: string | string[]
-  withChopsticks: boolean
+  forkMethod: "none" | "chopsticks" | "forklift"
 }
 
 export async function createWebsocketSource(
   id: string,
   endpoint: string | string[],
-  withChopsticks: boolean,
+  forkMethod: WebsocketSource["forkMethod"],
 ): Promise<WebsocketSource> {
-  return { type: "websocket", id, endpoint, withChopsticks }
+  return { type: "websocket", id, endpoint, forkMethod }
 }
 
 export type WsStatusJsonRpcProvider = WsJsonRpcProvider & {

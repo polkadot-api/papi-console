@@ -1,11 +1,23 @@
+import type { BlockDiff } from "@/state/block.state"
+import { chainClient$ } from "@/state/chains/chain.state"
 import { Blockchain, ChopsticksProvider } from "@acala-network/chopsticks-core"
 import {
   getSyncProvider,
   InnerJsonRpcProvider,
 } from "@polkadot-api/json-rpc-provider-proxy"
-import { blockHeader } from "@polkadot-api/substrate-bindings"
+import { Binary, blockHeader } from "@polkadot-api/substrate-bindings"
 import type { JsonRpcProvider } from "polkadot-api"
-import { BehaviorSubject } from "rxjs"
+import {
+  BehaviorSubject,
+  catchError,
+  map,
+  Observable,
+  startWith,
+  switchMap,
+  take,
+  toArray,
+  withLatestFrom,
+} from "rxjs"
 
 export const chopsticksInstance$ = new BehaviorSubject<Blockchain | null>(null)
 
@@ -181,3 +193,56 @@ const withChopsticksEnhancer =
       },
     }
   }
+
+export const getChopsticksBlockDiff$ = (
+  parent: string,
+  hash: string,
+): Observable<BlockDiff | null> =>
+  chopsticksInstance$.pipe(
+    take(1),
+    switchMap((chain) => (chain ? chain.getBlock(hash as any) : [null])),
+    switchMap((block) => (block ? block.storageDiff() : [null])),
+    map((diff) =>
+      diff && Object.keys(diff).length > 0
+        ? (diff as Record<string, string | null>)
+        : null,
+    ),
+    startWith(null),
+    withLatestFrom(chainClient$),
+    switchMap(([diff, { chainHead }]) => {
+      if (!diff) return [null]
+
+      return chainHead
+        .storageQueries$(
+          parent,
+          Object.keys(diff).map((key) => ({
+            key,
+            type: "value",
+          })),
+        )
+        .pipe(
+          toArray(),
+          map((v) => Object.fromEntries(v.map((v) => [v.key, v.value]))),
+          map((v) => ({
+            ...Object.fromEntries(
+              Object.entries(diff)
+                .filter(([key, newValue]) => (v[key] ?? null) !== newValue)
+                .map(([key, newValue]) => {
+                  const prevValue = v[key] ?? null
+                  return [
+                    key,
+                    {
+                      value: newValue ? Binary.fromHex(newValue) : null,
+                      prev: prevValue ? Binary.fromHex(prevValue) : null,
+                    },
+                  ] as const
+                }),
+            ),
+          })),
+        )
+    }),
+    catchError((ex) => {
+      console.error(ex)
+      return [null]
+    }),
+  )
