@@ -19,6 +19,7 @@
     "@monaco-editor/react": "^4.7.0",
     "@paraspell/sdk": "^13.7.2",
     "@polkadot-api/descriptors": "file:.papi/descriptors",
+    "@polkadot-api/forklift": "^0.3.0",
     "@polkadot-api/json-rpc-provider-proxy": "^0.4.0",
     "@polkadot-api/metadata-builders": "^0.14.3",
     "@polkadot-api/observable-client": "^0.18.7",

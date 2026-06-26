@@ -1,5 +1,6 @@
 import { createChopsticksProvider } from "@/chopsticks/chopsticks"
 import { getHashParams, setHashParams } from "@/hashParams"
+import { DotAh } from "@polkadot-api/descriptors"
 import { getDynamicBuilder, getLookupFn } from "@polkadot-api/metadata-builders"
 import type {
   ChainHead$,
@@ -10,10 +11,16 @@ import {
   HexString,
   unifyMetadata,
 } from "@polkadot-api/substrate-bindings"
-import { liftSuspense, sinkSuspense, state, SUSPENSE } from "@react-rxjs/core"
+import {
+  liftSuspense,
+  sinkSuspense,
+  state,
+  StateObservable,
+  SUSPENSE,
+} from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
 import { get, update } from "idb-keyval"
-import { createClient } from "polkadot-api"
+import { ChainDefinition, createClient, TypedApi } from "polkadot-api"
 import { withLogsRecorder } from "polkadot-api/logs-provider"
 import { fromHex, toHex } from "polkadot-api/utils"
 import {
@@ -249,8 +256,11 @@ export const canSetStorage$ = state(
 )
 
 export const unsafeApi$ = chainClient$.pipeState(
-  map(({ client }) => client.getUnsafeApi()),
+  map(({ client }) => client.getUnsafeApi<DotAh>()),
 )
+export const genericUnsafeApi$ = unsafeApi$ as StateObservable<
+  TypedApi<ChainDefinition, false>
+>
 
 const uncachedRuntimeCtx$ = chainClient$.pipeState(
   switchMap(({ chainHead }) => chainHead.runtime$),

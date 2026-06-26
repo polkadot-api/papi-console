@@ -14,5 +14,5 @@ export const whitelist: WhitelistEntriesByChain = {
     "query.Session.CurrentIndex",
     "api.TransactionPaymentApi.query_info",
   ],
-  dotAh: ["query.*", "tx.*", "const.*"],
+  dotAh: ["query.*", "tx.*", "const.*", "api.*"],
 }
