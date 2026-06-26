@@ -1,4 +1,4 @@
-import { createChopsticksProvider } from "@/chopsticks/chopsticks"
+import { createForkliftProvider } from "@/state/forklift"
 import { getHashParams, setHashParams } from "@/hashParams"
 import { DotAh } from "@polkadot-api/descriptors"
 import { getDynamicBuilder, getLookupFn } from "@polkadot-api/metadata-builders"
@@ -63,16 +63,16 @@ export type ChainSource = WebsocketSource | SmoldotSource
 export type SelectedChain = {
   network: Network
   endpoint: string
-  withChopsticks: boolean
+  withForklift: boolean
 }
 export const getChainSource = ({
   endpoint,
   network: { id, relayChain },
-  withChopsticks,
+  withForklift,
 }: SelectedChain) =>
   endpoint === "light-client"
     ? createSmoldotSource(id, relayChain)
-    : createWebsocketSource(id, endpoint, withChopsticks)
+    : createWebsocketSource(id, endpoint, withForklift)
 
 const setRpcLogsEnabled = (enabled: boolean) =>
   localStorage.setItem("rpc-logs", String(enabled))
@@ -83,8 +83,8 @@ console.log("You can enable JSON-RPC logs by calling `setRpcLogsEnabled(true)`")
 export const getProvider = (source: ChainSource) => {
   const provider =
     source.type === "websocket"
-      ? source.withChopsticks
-        ? createChopsticksProvider(source.endpoint)
+      ? source.withForklift
+        ? createForkliftProvider(source.endpoint)
         : getWebsocketProvider(source)
       : getSmoldotProvider(source)
 
@@ -120,7 +120,7 @@ export const isValidUri = (input: string): boolean => {
 const defaultSelectedChain: SelectedChain = {
   network: defaultNetwork,
   endpoint: "light-client",
-  withChopsticks: false,
+  withForklift: false,
 }
 const getDefaultChain = (): SelectedChain => {
   const hashParams = getHashParams()
@@ -134,11 +134,11 @@ const getDefaultChain = (): SelectedChain => {
       return {
         network: getCustomNetwork(),
         endpoint,
-        withChopsticks: false,
+        withForklift: false,
       }
     }
     const network = findNetwork(networkId)
-    if (network) return { network, endpoint, withChopsticks: false }
+    if (network) return { network, endpoint, withForklift: false }
   }
 
   return defaultSelectedChain

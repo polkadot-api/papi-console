@@ -1,5 +1,5 @@
 import { ButtonGroup } from "@/components/ButtonGroup"
-import { Chopsticks } from "@/components/Icons"
+import { Forklift } from "@/components/Icons"
 import { LoadingMetadata } from "@/components/Loading"
 import { withSubscribe } from "@/components/withSuspense"
 import { createState } from "@/lib/externalState"
@@ -54,7 +54,7 @@ const StorageEntry: FC = () => {
                   content: (
                     <>
                       Set Value
-                      <Chopsticks
+                      <Forklift
                         className="inline-block align-middle ml-2"
                         size={20}
                       />

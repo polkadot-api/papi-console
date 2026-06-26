@@ -1,4 +1,4 @@
-import { Chopsticks } from "@/components/Icons"
+import { Forklift } from "@/components/Icons"
 import { Loading } from "@/components/Loading"
 import { getHashParams } from "@/hashParams"
 import { groupBy } from "@/lib/groupBy"
@@ -122,10 +122,7 @@ export const BlockBody: FC = () => {
               value="diff"
             >
               Diff
-              <Chopsticks
-                className="inline-block align-middle ml-2"
-                size={20}
-              />
+              <Forklift className="inline-block align-middle ml-2" size={20} />
             </Tabs.Trigger>
           )}
         </Tabs.List>

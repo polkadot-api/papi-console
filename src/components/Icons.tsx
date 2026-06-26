@@ -16,8 +16,8 @@ import { FC, useCallback, useEffect, useRef } from "react"
 import { Props, ReactSVG } from "react-svg"
 import { twMerge } from "tailwind-merge"
 import binarySvg from "./icons/binary.svg"
-import chopsticksLogoDark from "./icons/chopsticks_dark.svg"
-import chopsticksLogoLight from "./icons/chopsticks_light.svg"
+import forkliftLogoDark from "./icons/chopsticks_dark.svg"
+import forkliftLogoLight from "./icons/forklift_light.svg"
 import enumSvg from "./icons/enum.svg"
 import focusSvg from "./icons/focus.svg"
 import githubLightSvg from "./icons/github_light.svg"
@@ -63,7 +63,7 @@ export const Focus = customIcon(focusSvg)
 export const Enum = customIcon(enumSvg)
 export const BinaryEdit = customIcon(binarySvg)
 export const SwitchBinary = customIcon(switchBinarySvg)
-export const Chopsticks = themeIcon(chopsticksLogoLight, chopsticksLogoDark)
+export const Forklift = themeIcon(forkliftLogoLight, forkliftLogoDark)
 export const GithubIcon = themeIcon(githubLightSvg, githubDarkSvg)
 
 export const Spinner = (props: LucideProps) => (

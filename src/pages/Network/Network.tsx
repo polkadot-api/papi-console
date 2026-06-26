@@ -1,6 +1,6 @@
 import { CommandPopover } from "@/components/CommandPopover"
 import { CopyText } from "@/components/Copy"
-import { Chopsticks } from "@/components/Icons"
+import { Forklift } from "@/components/Icons"
 import SliderToggle from "@/components/Toggle"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -56,8 +56,8 @@ export function NetworkSwitcher({ className }: { className?: string }) {
     return selectedChain.network.display
   }
   const getNodeName = () => {
-    if (selectedChain.withChopsticks) {
-      return <Chopsticks className="inline-block align-text-top" />
+    if (selectedChain.withForklift) {
+      return <Forklift className="inline-block align-text-top" />
     }
 
     if (selectedChain.network.id === "localhost") {
@@ -119,14 +119,14 @@ const NetworkSwitchDialogContent: FC<{
   const currentRpc = selectedChain.endpoint ?? "light-client"
   const [selectedRpc, setSelectedRpc] = useState<string>(currentRpc)
   const [enteredText, setEnteredText] = useState<string>("")
-  const [withChopsticks, setWithChopsticks] = useState(
-    selectedChain.withChopsticks ?? false,
+  const [withForklift, setWithForklift] = useState(
+    selectedChain.withForklift ?? false,
   )
 
   const hasChanged =
     selectedNetwork.id !== selectedChain.network.id ||
     selectedRpc !== currentRpc ||
-    selectedChain.withChopsticks !== withChopsticks
+    selectedChain.withForklift !== withForklift
 
   const handleNetworkSelect = (network: Network) => {
     if (network === selectedNetwork) return
@@ -140,20 +140,20 @@ const NetworkSwitchDialogContent: FC<{
   }
 
   const handleConfirm = () => {
-    const chopsticksEnabled = selectedRpc !== "light-client" && withChopsticks
+    const forkliftEnabled = selectedRpc !== "light-client" && withForklift
     if (selectedNetwork.id === "custom") {
       addCustomNetwork(selectedRpc)
       onChangeChain({
         network: getCustomNetwork(),
         endpoint: selectedRpc,
-        withChopsticks: chopsticksEnabled,
+        withForklift: forkliftEnabled,
       })
       setEnteredText("")
     } else {
       onChangeChain({
         network: selectedNetwork,
         endpoint: selectedRpc,
-        withChopsticks: chopsticksEnabled,
+        withForklift: forkliftEnabled,
       })
     }
     onClose()
@@ -320,18 +320,18 @@ const NetworkSwitchDialogContent: FC<{
               <div className="mt-4 p-3 border rounded-md bg-muted/30">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <Chopsticks size={20} />
+                    <Forklift size={20} />
                     <Label
-                      htmlFor="use-chopsticks"
+                      htmlFor="use-forklift"
                       className="font-medium cursor-pointer"
                     >
-                      Fork with Chopsticks
+                      Fork with Forklift
                     </Label>
                   </div>
                   <SliderToggle
-                    id="use-chopsticks"
-                    isToggled={withChopsticks}
-                    toggle={() => setWithChopsticks(!withChopsticks)}
+                    id="use-forklift"
+                    isToggled={withForklift}
+                    toggle={() => setWithForklift(!withForklift)}
                   />
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 ml-6">
