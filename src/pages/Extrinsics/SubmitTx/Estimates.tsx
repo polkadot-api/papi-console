@@ -72,7 +72,7 @@ export const txValidity$ = state(
     txOptions: txOptions$,
   }).pipe(
     switchMapSuspended(({ tx, txOptions }) =>
-      tx ? validate$(tx, txOptions) : [null],
+      tx ? timer(500).pipe(switchMap(() => validate$(tx, txOptions))) : [null],
     ),
     liftSuspense(),
     map((v) => (v === SUSPENSE ? null : v)),

@@ -167,7 +167,12 @@ export const dryRun$ = (tx: Transaction, txOptions: any) =>
         ]
       }
       console.error(ex)
-      return []
+      return [
+        {
+          type: "error" as const,
+          value: ex.error,
+        },
+      ]
     }),
     filter((v) => v !== null),
     take(1),
@@ -276,7 +281,6 @@ const createTmpForklift = async (
   const getChainSpecData = client.getChainSpecData
 
   const forkliftWorker = new Worker()
-
   return [
     forklift(
       {

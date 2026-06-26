@@ -118,7 +118,7 @@ const DryRunModalContent: FC = () => {
     )
   }
 
-  if (result.type === "invalid") {
+  if (result.type === "invalid" || result.type === "error") {
     return (
       <div
         className="rounded-md border border-red-500/30 bg-red-500/5 p-4 text-red-700 dark:text-red-300"
@@ -167,7 +167,7 @@ const DryRunModalContent: FC = () => {
 
       {dispatchError ? (
         <DryRunSection title="Dispatch Error">
-          <JsonDisplay src={dispatchError} collapsed={1} />
+          <JsonDisplay src={dispatchError} />
         </DryRunSection>
       ) : null}
 
