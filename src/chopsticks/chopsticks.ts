@@ -9,7 +9,7 @@ import { BehaviorSubject } from "rxjs"
 
 export const chopsticksInstance$ = new BehaviorSubject<Blockchain | null>(null)
 
-export const createChopsticksProvider = (endpoint: string) =>
+export const createChopsticksProvider = (endpoint: string | string[]) =>
   withChopsticksEnhancer(
     getSyncProvider((onReady) => {
       let isRunning = true
