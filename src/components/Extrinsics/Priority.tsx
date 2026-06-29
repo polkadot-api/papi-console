@@ -1,4 +1,4 @@
-import { TokenAmount } from "@/components/TokenAmount"
+import { roundToSignificantDigits, TokenAmount } from "@/components/TokenAmount"
 import { BlockContext } from "@/state/block.state"
 import { client$ } from "@/state/chains/chain.state"
 import { polkadot_people } from "@polkadot-api/descriptors"
@@ -53,7 +53,7 @@ export const AnalyzePriority: FC<{
               />
               <DetailRow
                 label="Weight"
-                value={`${(Number(details.queryInfo.weight.proof_size) / 1024).toLocaleString(undefined, { maximumSignificantDigits: 3 })} KB / ${(Number(details.queryInfo.weight.ref_time) / 1_000_000).toLocaleString(undefined, { maximumSignificantDigits: 3 })} Mref`}
+                value={`${roundToSignificantDigits(Number(details.queryInfo.weight.proof_size) / 1024)} KB / ${roundToSignificantDigits(Number(details.queryInfo.weight.ref_time) / 1_000_000)} Mref`}
               />
             </div>
           </div>
