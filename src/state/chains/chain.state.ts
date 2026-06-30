@@ -17,10 +17,16 @@ import {
   state,
   StateObservable,
   SUSPENSE,
+  withDefault,
 } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
 import { get, update } from "idb-keyval"
-import { ChainDefinition, createClient, TypedApi } from "polkadot-api"
+import {
+  ChainDefinition,
+  createClient,
+  JsonRpcProvider,
+  TypedApi,
+} from "polkadot-api"
 import { withLogsRecorder } from "polkadot-api/logs-provider"
 import { fromHex, toHex } from "polkadot-api/utils"
 import {
@@ -56,9 +62,12 @@ import {
   createWebsocketSource,
   getWebsocketProvider,
   WebsocketSource,
+  WsStatusJsonRpcProvider,
 } from "./websocket"
 
 export type ChainSource = WebsocketSource | SmoldotSource
+export const LIGHT_CLIENT_ENDPOINT = "light-client"
+export const AUTO_RPC_ENDPOINT = "auto-rpc"
 
 export type SelectedChain = {
   network: Network
@@ -67,12 +76,21 @@ export type SelectedChain = {
 }
 export const getChainSource = ({
   endpoint,
-  network: { id, relayChain },
+  network,
   withChopsticks,
 }: SelectedChain) =>
-  endpoint === "light-client"
-    ? createSmoldotSource(id, relayChain)
-    : createWebsocketSource(id, endpoint, withChopsticks)
+  endpoint === LIGHT_CLIENT_ENDPOINT
+    ? createSmoldotSource(network.id, network.relayChain)
+    : createWebsocketSource(
+        network.id,
+        endpoint === AUTO_RPC_ENDPOINT ? shuffleEndpoints(network) : endpoint,
+        withChopsticks,
+      )
+const shuffleEndpoints = (network: Network) =>
+  Object.values(network.endpoints)
+    .map((endpoint) => ({ endpoint, luckyNumber: Math.random() }))
+    .sort((a, b) => a.luckyNumber - b.luckyNumber)
+    .map(({ endpoint }) => endpoint)
 
 const setRpcLogsEnabled = (enabled: boolean) =>
   localStorage.setItem("rpc-logs", String(enabled))
@@ -88,19 +106,23 @@ export const getProvider = (source: ChainSource) => {
         : getWebsocketProvider(source)
       : getSmoldotProvider(source)
 
-  return withLogsRecorder((msg) => {
+  const recorder = withLogsRecorder((msg) => {
     if (import.meta.env.DEV || getRpcLogsEnabled()) {
       console.debug(msg)
     }
   }, provider)
+
+  // Bring over extra properties from the original provider.
+  return Object.assign(recorder, provider)
 }
 
 export const [selectedChainChanged$, onChangeChain] =
   createSignal<SelectedChain>()
-selectedChainChanged$.subscribe(({ network, endpoint }) =>
+selectedChainChanged$.subscribe(({ network, endpoint, withChopsticks }) =>
   setHashParams({
     networkId: network.id,
     endpoint,
+    chopsticks: withChopsticks ? "true" : null,
   }),
 )
 
@@ -119,7 +141,7 @@ export const isValidUri = (input: string): boolean => {
 
 const defaultSelectedChain: SelectedChain = {
   network: defaultNetwork,
-  endpoint: "light-client",
+  endpoint: LIGHT_CLIENT_ENDPOINT,
   withChopsticks: false,
 }
 const getDefaultChain = (): SelectedChain => {
@@ -127,6 +149,9 @@ const getDefaultChain = (): SelectedChain => {
   if (hashParams.has("networkId") && hashParams.has("endpoint")) {
     const networkId = hashParams.get("networkId")!
     const endpoint = hashParams.get("endpoint")!
+    const withChopsticks =
+      hashParams.get("chopsticks") === "true" &&
+      endpoint !== LIGHT_CLIENT_ENDPOINT
 
     if (networkId === "custom") {
       if (!isValidUri(endpoint)) return defaultSelectedChain
@@ -134,11 +159,11 @@ const getDefaultChain = (): SelectedChain => {
       return {
         network: getCustomNetwork(),
         endpoint,
-        withChopsticks: false,
+        withChopsticks,
       }
     }
     const network = findNetwork(networkId)
-    if (network) return { network, endpoint, withChopsticks: false }
+    if (network) return { network, endpoint, withChopsticks }
   }
 
   return defaultSelectedChain
@@ -221,7 +246,7 @@ export const chainClient$ = state(
       const chainHead: ChainHead$ = (client as any).___INTERNAL_DO_NOT_USE
       return concat(
         i === 0 ? EMPTY : of(SUSPENSE),
-        of({ id, client, chainHead }),
+        of({ id, client, chainHead, provider }),
         NEVER,
       ).pipe(
         finalize(() => {
@@ -232,7 +257,20 @@ export const chainClient$ = state(
     sinkSuspense(),
   ),
 )
-export const client$ = state(chainClient$.pipe(map(({ client }) => client)))
+export const currentWsStatus$ = chainClient$.pipeState(
+  switchMap(({ provider }) => {
+    const isWsProvider = (
+      provider: JsonRpcProvider,
+    ): provider is WsStatusJsonRpcProvider => "statusChange$" in provider
+
+    return isWsProvider(provider)
+      ? provider.statusChange$.pipe(startWith(provider.getStatus()))
+      : of(null)
+  }),
+  withDefault(null),
+)
+
+export const client$ = chainClient$.pipeState(map(({ client }) => client))
 export const canProduceBlocks$ = state(
   client$.pipe(
     switchMap((client) => client._request("rpc_methods", [])),
