@@ -30,6 +30,6 @@ export function getWebsocketProvider(
   })
 
   return Object.assign(provider, {
-    statusChange$,
+    statusChange$: statusChange$.asObservable(),
   })
 }

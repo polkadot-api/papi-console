@@ -130,7 +130,6 @@ const NetworkSwitchDialogContent: FC<{
         const localNetwork = networkCategories.find(
           (cat) => cat.name === "Localhost",
         )?.networks[0]
-        console.log(localNetwork)
         if (localNetwork) {
           onChangeChain({
             network: localNetwork,
@@ -466,12 +465,13 @@ const ConnectionOption: FC<{
   </div>
 )
 
-const defaultEndpoint = (network: Network) =>
-  network.lightclient
-    ? LIGHT_CLIENT_ENDPOINT
-    : network.id === "localhost"
-      ? Object.values(network.endpoints)[0]
-      : AUTO_RPC_ENDPOINT
+const defaultEndpoint = (network: Network) => {
+  if (network.lightclient) return LIGHT_CLIENT_ENDPOINT
+  const endpoints = Object.values(network.endpoints)
+  return network.id === "localhost" || endpoints.length === 1
+    ? endpoints[0]
+    : AUTO_RPC_ENDPOINT
+}
 
 const createCustomNetwork = (url: string): Network => ({
   id: "custom",
