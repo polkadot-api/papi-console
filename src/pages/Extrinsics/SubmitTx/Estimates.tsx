@@ -15,7 +15,15 @@ import {
 import { switchMapSuspended } from "@react-rxjs/utils"
 import { CheckCircle, CircleX, Loader2 } from "lucide-react"
 import { FC, ReactNode } from "react"
-import { catchError, combineLatest, map, of, switchMap, timer } from "rxjs"
+import {
+  catchError,
+  combineLatest,
+  map,
+  of,
+  startWith,
+  switchMap,
+  timer,
+} from "rxjs"
 import { transaction$, txOptions$ } from "./submit.state"
 import { validate$ } from "./validate"
 
@@ -72,7 +80,13 @@ export const txValidity$ = state(
     txOptions: txOptions$,
   }).pipe(
     switchMapSuspended(({ tx, txOptions }) =>
-      tx ? timer(500).pipe(switchMap(() => validate$(tx, txOptions))) : [null],
+      tx
+        ? timer(500).pipe(
+            // Revalidate every time selectedAccount changes, with no delay
+            switchMap(() => selectedAccount$),
+            switchMap(() => validate$(tx, txOptions).pipe(startWith(null))),
+          )
+        : [null],
     ),
     liftSuspense(),
     map((v) => (v === SUSPENSE ? null : v)),
