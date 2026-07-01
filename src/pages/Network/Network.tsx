@@ -524,9 +524,10 @@ const getConnectionLabel = (
   selectedChain: SelectedChain,
   websocketStatus: StatusChange | null,
 ) => {
-  const { network, endpoint } = selectedChain
+  const { network, endpoint, withChopsticks } = selectedChain
   if (endpoint === LIGHT_CLIENT_ENDPOINT) return "Smoldot"
   if (endpoint === AUTO_RPC_ENDPOINT) {
+    if (withChopsticks) return null
     if (!websocketStatus) return <Spinner className="inline-block" />
 
     const isReady = "uri" in websocketStatus
