@@ -57,7 +57,7 @@ export const EditMode: React.FC<{
             <div
               ref={treeRef}
               className={cn(
-                "min-w-fit w-96 sticky top-0 pl-2 pb-16 leading-loose overflow-hidden text-sm",
+                "w-96 shrink-0 sticky top-0 pl-2 pb-16 leading-loose overflow-hidden text-sm",
                 treeViewBreak,
                 {
                   hidden: collapsed,
@@ -73,11 +73,9 @@ export const EditMode: React.FC<{
                 <VisibleWindow />
               </div>
             </div>
-            <div className="flex-1">
-              <div className="p-2">
-                <Marker id={[]} />
-                <EditCodec {...props} />
-              </div>
+            <div className="flex-1 p-2">
+              <Marker id={[]} />
+              <EditCodec {...props} />
             </div>
           </div>
         </MarkersContextProvider>

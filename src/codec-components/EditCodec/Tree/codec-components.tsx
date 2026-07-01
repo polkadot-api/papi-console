@@ -181,7 +181,7 @@ export const ItemTitle: FC<
           ref={titleRef}
           className="flex flex-1 ml-1 flex-wrap leading-none"
         />
-        <div className="visible_when_parent_hover px-1 flex gap-1.5 items-center">
+        <div className="visible_when_parent_hover px-1 flex gap-1.5 items-center absolute right-0 bg-secondary">
           {onZoom && binaryStatus && (
             <BinaryEdit
               size={24}

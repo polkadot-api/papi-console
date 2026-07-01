@@ -168,12 +168,9 @@ const SidebarContent: FC<{ mobile?: boolean; onNavigate?: () => void }> = ({
         src="/papi_logo-light.svg"
         alt="papi logo"
       />
-      <div className="min-w-0 leading-tight">
-        <div className="truncate text-base">
-          <span className="poppins-regular">papi</span>{" "}
-          <span className="poppins-extralight">console</span>
-        </div>
-        <div className="text-xs text-muted-foreground">beta</div>
+      <div className="min-w-0 leading-tight truncate text-base">
+        <span className="poppins-regular">papi</span>{" "}
+        <span className="poppins-extralight">console</span>
       </div>
     </div>
     {mobile ? (
