@@ -89,7 +89,9 @@ finalizedBlocks$.pipe(liftSuspense(), retry()).subscribe()
 const MAX_HEIGHT = 600
 const sharedBlocks$ = client$.pipe(
   liftSuspense(),
-  switchMap((client) => (client === SUSPENSE ? [] : client.blocks$)),
+  switchMap((client) =>
+    client === SUSPENSE ? [] : client.blocks$.pipe(repeat()),
+  ),
   share(),
 )
 export const [blockInfo$, recordedBlocks$] = partitionByKey(
