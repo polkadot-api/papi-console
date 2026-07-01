@@ -267,9 +267,13 @@ const NetworkList: FC<{
     () => networkCategories.filter((category) => category.name !== "Custom"),
     [],
   )
+  const selectedValue = getNetworkItemValue(categories, selectedNetwork)
 
   return (
-    <Command className="flex min-h-0 flex-1 basis-0 flex-col overflow-hidden rounded-md border bg-transparent">
+    <Command
+      defaultValue={selectedValue}
+      className="flex min-h-0 flex-1 basis-0 flex-col overflow-hidden rounded-md border bg-transparent"
+    >
       <CommandInput
         value={query}
         onValueChange={onQueryChange}
@@ -327,6 +331,20 @@ const NetworkItem: FC<{
     <div className="truncate text-sm">{title}</div>
   </CommandItem>
 )
+
+const getNetworkItemValue = (
+  categories: Array<{ name: string; networks: Network[] }>,
+  network: Network,
+) => {
+  if (network.id === "custom") {
+    return undefined
+  }
+
+  const category = categories.find((category) =>
+    category.networks.some((x) => x.id === network.id),
+  )
+  return category ? networkSearchValue(category.name, network) : undefined
+}
 
 const ConnectionList: FC<{
   network: Network
