@@ -61,6 +61,7 @@ export const getForkliftBlockDiff$ = (
       const missingPrevValues = Object.entries(diff).filter(
         ([_, { prev }]) => prev === undefined,
       )
+      if (!missingPrevValues.length) return [diff as BlockDiff]
 
       return chainHead
         .storageQueries$(
@@ -69,6 +70,9 @@ export const getForkliftBlockDiff$ = (
         )
         .pipe(
           toArray(),
+          catchError(() => [
+            missingPrevValues.map(([key]) => ({ key, value: null })),
+          ]),
           map((v) => ({
             ...(diff as BlockDiff),
             ...Object.fromEntries(
@@ -81,7 +85,6 @@ export const getForkliftBlockDiff$ = (
               ]),
             ),
           })),
-          catchError(() => [diff as BlockDiff]),
         )
     }),
     catchError((ex) => {
