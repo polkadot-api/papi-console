@@ -1,4 +1,4 @@
-import { Chopsticks } from "@/components/Icons"
+import { ForkMethodIcon } from "@/components/Icons"
 import { Button } from "@/components/ui/button"
 import {
   canProduceBlocks$,
@@ -7,13 +7,13 @@ import {
 } from "@/state/chains/chain.state"
 import { useStateObservable, withDefault } from "@react-rxjs/core"
 import { FC, PropsWithChildren, ReactElement, useEffect, useState } from "react"
-import { firstValueFrom, map, switchMap } from "rxjs"
+import { firstValueFrom, map, repeat, switchMap } from "rxjs"
 import { twMerge } from "tailwind-merge"
 import { BlockTime } from "./BlockTime"
 import { EpochRemainingTime } from "./EpochTime"
 
 const finalizedNum$ = client$.pipeState(
-  switchMap((chainHead) => chainHead.finalizedBlock$),
+  switchMap((chainHead) => chainHead.finalizedBlock$.pipe(repeat())),
   map((v) => v.number),
 )
 const finalized$ = finalizedNum$.pipeState(map((v) => v.toLocaleString()))
@@ -77,14 +77,18 @@ const SummaryItem: FC<
   )
 }
 
+const bestNum$ = client$.pipeState(
+  switchMap((chainHead) => chainHead.bestBlocks$.pipe(repeat())),
+  map((v) => v[0].number),
+)
 const Jump = () => {
-  const finalized = useStateObservable(finalizedNum$)
-  const [value, setValue] = useState(finalized + 1)
+  const best = useStateObservable(bestNum$)
+  const [value, setValue] = useState(best + 1)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    setValue((v) => Math.max(v, finalized + 1))
-  }, [finalized])
+    setValue((v) => Math.max(v, best + 1))
+  }, [best])
 
   return (
     <SummaryItem title="" className="bg-card/0 border-none text-center">
@@ -107,7 +111,7 @@ const Jump = () => {
             const client = await firstValueFrom(client$)
             await client._request(
               "dev_newBlock",
-              value === finalized + 1
+              value === best + 1
                 ? []
                 : [
                     {
@@ -122,7 +126,7 @@ const Jump = () => {
         disabled={loading}
       >
         New Block{" "}
-        <Chopsticks className="inline-block align-middle ml-1" size={20} />
+        <ForkMethodIcon className="inline-block align-middle ml-1" size={20} />
       </Button>
     </SummaryItem>
   )

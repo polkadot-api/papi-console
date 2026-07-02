@@ -95,7 +95,7 @@ const proxyProvider = createProxyProvider((address) =>
 const multisigProvider$ = selectedChain$.pipe(
   switchMap(getChainSource),
   map((source) => {
-    if (source.type === "websocket" && source.withChopsticks) {
+    if (source.type === "websocket" && source.forkMethod !== "none") {
       return null
     }
 
