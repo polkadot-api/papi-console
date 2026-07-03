@@ -342,9 +342,15 @@
     },
     "rpcs": {
       "Dwellir": "wss://hydration-rpc.n.dwellir.com",
-      "Helikon": "wss://rpc.helikon.io/hydradx",
-      "IBP1": "wss://hydration.ibp.network",
-      "IBP2": "wss://hydration.dotters.network"
+      "Rotko (SEA)": "wss://hydration.rotko.net",
+      "sin": "wss://subway.sin.hydration.cloud",
+      "coke": "wss://subway.coke.hydration.cloud",
+      "kril": "wss://rpc.kril.hydration.cloud",
+      "shellfish": "wss://subway.shellfish.hydration.cloud",
+      "catfish-1": "wss://rpc-catfish-1.catfish.hydration.cloud",
+      "catfish-2": "wss://rpc-catfish-2.catfish.hydration.cloud",
+      "catfish-3": "wss://rpc-catfish-3.catfish.hydration.cloud",
+      "catfish-4": "wss://rpc-catfish-4.catfish.hydration.cloud"
     },
     "nativeToken": {
       "symbol": "HDX",
