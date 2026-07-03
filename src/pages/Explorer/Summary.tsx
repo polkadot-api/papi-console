@@ -1,4 +1,4 @@
-import { ForkMethodIcon } from "@/components/Icons"
+import { ForkMethodIcon, Spinner } from "@/components/Icons"
 import { Button } from "@/components/ui/button"
 import {
   canProduceBlocks$,
@@ -123,10 +123,11 @@ const Jump = () => {
             setLoading(false)
           }
         }}
-        disabled={loading}
+        disabled={loading || value <= best}
       >
         New Block{" "}
         <ForkMethodIcon className="inline-block align-middle ml-1" size={20} />
+        {loading && <Spinner />}
       </Button>
     </SummaryItem>
   )
