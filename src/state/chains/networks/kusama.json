@@ -241,14 +241,15 @@
       "parachain": 2281
     },
     "rpcs": {
-      "Kippu": "wss://kreivo.kippu.rocks/",
-      "Virto": "wss://kreivo.io/"
+      "Bloque": "wss://rpc.kreivo.bloque.sh",
+      "Kippu": "wss://kreivo.kippu.rocks",
+      "Virto": "wss://kreivo.io"
     },
     "nativeToken": {
       "symbol": "KSM",
       "decimals": 12
     },
-    "hasChainSpecs": false
+    "hasChainSpecs": true
   },
   {
     "id": "krest",
