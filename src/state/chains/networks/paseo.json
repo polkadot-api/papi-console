@@ -4,8 +4,6 @@
     "display": "Paseo AssetHub",
     "rpcs": {
       "Dwellir": "wss://asset-hub-paseo-rpc.n.dwellir.com",
-      "IBP1": "wss://sys.ibp.network/asset-hub-paseo",
-      "IBP2": "wss://asset-hub-paseo.dotters.network",
       "TurboFlakes": "wss://sys.turboflakes.io/asset-hub-paseo",
       "StakeWorld": "wss://pas-rpc.stakeworld.io/assethub"
     },
@@ -27,8 +25,6 @@
     "rpcs": {
       "Amforc": "wss://paseo.rpc.amforc.com",
       "Dwellir": "wss://paseo-rpc.n.dwellir.com",
-      "IBP1": "wss://rpc.ibp.network/paseo",
-      "IBP2": "wss://paseo.dotters.network",
       "StakeWorld": "wss://pas-rpc.stakeworld.io"
     },
     "nativeToken": {
@@ -37,57 +33,10 @@
     }
   },
   {
-    "id": "paseo_bridge_hub",
-    "display": "Paseo BridgeHub",
-    "rpcs": {
-      "IBP1": "wss://bridge-hub-paseo.ibp.network",
-      "IBP2": "wss://bridge-hub-paseo.dotters.network"
-    },
-    "relayChainInfo": {
-      "id": "paseo",
-      "isSystem": true,
-      "parachain": 1002
-    },
-    "nativeToken": {
-      "symbol": "PAS",
-      "decimals": 12
-    },
-    "hasChainSpecs": false
-  },
-  {
-    "id": "paseo_collectives",
-    "display": "Collectives",
-    "rpcs": {
-      "IBP1": "wss://collectives-paseo.ibp.network",
-      "IBP2": "wss://collectives-paseo.dotters.network"
-    }
-  },
-  {
-    "id": "paseo_coretime",
-    "display": "Paseo Coretime",
-    "rpcs": {
-      "IBP1": "wss://coretime-paseo.ibp.network",
-      "IBP2": "wss://coretime-paseo.dotters.network",
-      "ParaNodes": "wss://paseo-coretime.paranodes.io"
-    },
-    "relayChainInfo": {
-      "id": "paseo",
-      "isSystem": true,
-      "parachain": 1005
-    },
-    "nativeToken": {
-      "symbol": "PAS",
-      "decimals": 12
-    },
-    "hasChainSpecs": false
-  },
-  {
     "id": "paseo_people_chain",
     "display": "Paseo People",
     "rpcs": {
-      "Amforc": "wss://people-paseo.rpc.amforc.com",
-      "IBP1": "wss://people-paseo.ibp.network",
-      "IBP2": "wss://people-paseo.dotters.network"
+      "Amforc": "wss://people-paseo.rpc.amforc.com"
     },
     "relayChainInfo": {
       "id": "paseo",

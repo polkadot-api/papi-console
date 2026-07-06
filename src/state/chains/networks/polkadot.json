@@ -4,8 +4,7 @@
     "display": "AssetHub",
     "rpcs": {
       "Dwellir": "wss://asset-hub-polkadot-rpc.n.dwellir.com",
-      "IBP1": "wss://sys.ibp.network/asset-hub-polkadot",
-      "IBP2": "wss://asset-hub-polkadot.dotters.network",
+      "Gatotech Unlimited": "wss://asset-hub-polkadot.gatotech.network",
       "LuckyFriday": "wss://rpc-asset-hub-polkadot.luckyfriday.io",
       "Parity": "wss://polkadot-asset-hub-rpc.polkadot.io",
       "Stakeworld": "wss://dot-rpc.stakeworld.io/assethub"
@@ -28,9 +27,8 @@
     "rpcs": {
       "Allnodes": "wss://polkadot-rpc.publicnode.com",
       "Dwellir": "wss://polkadot-rpc.n.dwellir.com",
+      "Gatotech Unlimited": "wss://polkadot.gatotech.network",    
       "Helixstreet": "wss://rpc-polkadot.helixstreet.io",
-      "IBP1": "wss://polkadot.ibp.network",
-      "IBP2": "wss://polkadot.dotters.network",
       "LuckyFriday": "wss://rpc-polkadot.luckyfriday.io",
       "OnFinality": "wss://polkadot.api.onfinality.io/public-ws",
       "RockX": "wss://rockx-dot.w3node.com/polka-public-dot/ws",
@@ -48,8 +46,6 @@
     "display": "BridgeHub",
     "rpcs": {
       "Dwellir": "wss://bridge-hub-polkadot-rpc.n.dwellir.com",
-      "IBP1": "wss://sys.ibp.network/bridgehub-polkadot",
-      "IBP2": "wss://bridge-hub-polkadot.dotters.network",
       "LuckyFriday": "wss://rpc-bridge-hub-polkadot.luckyfriday.io",
       "OnFinality": "wss://bridgehub-polkadot.api.onfinality.io/public-ws",
       "Parity": "wss://polkadot-bridge-hub-rpc.polkadot.io",
@@ -71,8 +67,6 @@
     "display": "Collectives",
     "rpcs": {
       "Dwellir": "wss://collectives-polkadot-rpc.n.dwellir.com",
-      "IBP1": "wss://sys.ibp.network/collectives-polkadot",
-      "IBP2": "wss://collectives-polkadot.dotters.network",
       "LuckyFriday": "wss://rpc-collectives-polkadot.luckyfriday.io",
       "OnFinality": "wss://collectives.api.onfinality.io/public-ws",
       "Parity": "wss://polkadot-collectives-rpc.polkadot.io",
@@ -94,8 +88,6 @@
     "display": "Coretime",
     "rpcs": {
       "Dwellir": "wss://coretime-polkadot-rpc.n.dwellir.com",
-      "IBP1": "wss://coretime-polkadot.ibp.network",
-      "IBP2": "wss://coretime-polkadot.dotters.network",
       "LuckyFriday": "wss://rpc-coretime-polkadot.luckyfriday.io",
       "Parity": "wss://polkadot-coretime-rpc.polkadot.io"
     },
@@ -115,8 +107,6 @@
     "display": "People",
     "rpcs": {
       "Dwellir": "wss://people-polkadot-rpc.n.dwellir.com",
-      "IBP1": "wss://sys.ibp.network/people-polkadot",
-      "IBP2": "wss://people-polkadot.dotters.network",
       "LuckyFriday": "wss://rpc-people-polkadot.luckyfriday.io",
       "Parity": "wss://polkadot-people-rpc.polkadot.io"
     },
@@ -158,9 +148,7 @@
       "parachain": 2000
     },
     "rpcs": {
-      "Dwellir": "wss://acala-rpc.n.dwellir.com",
-      "IBP1": "wss://acala.ibp.network",
-      "IBP2": "wss://acala.dotters.network"
+      "Dwellir": "wss://acala-rpc.n.dwellir.com"
     },
     "nativeToken": {
       "symbol": "ACA",
@@ -177,9 +165,7 @@
       "parachain": 2051
     },
     "rpcs": {
-      "AjunaNetwork": "wss://rpc-para.ajuna.network",
-      "IBP1": "wss://ajuna.ibp.network",
-      "IBP2": "wss://ajuna.dotters.network"
+      "AjunaNetwork": "wss://rpc-para.ajuna.network"
     },
     "nativeToken": {
       "symbol": "AJUN",
@@ -231,8 +217,6 @@
       "parachain": 2030
     },
     "rpcs": {
-      "IBP1": "wss://bifrost-polkadot.ibp.network",
-      "IBP2": "wss://bifrost-polkadot.dotters.network",
       "Liebi": "wss://hk.p.bifrost-rpc.liebi.com/ws",
       "LiebiEU": "wss://eu.bifrost-polkadot-rpc.liebi.com/ws"
     },
@@ -367,9 +351,7 @@
       "parachain": 3367
     },
     "rpcs": {
-      "BlockOps": "wss://hyperbridge-nexus-rpc.blockops.network",
-      "IBP1": "wss://nexus.ibp.network",
-      "IBP2": "wss://nexus.dotters.network"
+      "BlockOps": "wss://hyperbridge-nexus-rpc.blockops.network"
     },
     "nativeToken": {
       "symbol": "BRIDGE",
@@ -453,8 +435,6 @@
       "parachain": 2004
     },
     "rpcs": {
-      "IBP1": "wss://moonbeam.ibp.network",
-      "IBP2": "wss://moonbeam.dotters.network",
       "Moonbeam Foundation": "wss://wss.api.moonbeam.network",
       "UnitedBloc": "wss://moonbeam.unitedbloc.com"
     },
@@ -556,8 +536,6 @@
     },
     "rpcs": {
       "Geo Load Balancer": "wss://ws.unique.network",
-      "IBP1": "wss://unique.ibp.network",
-      "IBP2": "wss://unique.dotters.network",
       "Unique America": "wss://us-ws.unique.network",
       "Unique Asia": "wss://asia-ws.unique.network",
       "Unique Europe": "wss://eu-ws.unique.network"
