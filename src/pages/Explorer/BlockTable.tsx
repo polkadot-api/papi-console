@@ -32,11 +32,18 @@ interface ForkPath {
   d: string
 }
 
+interface PositionedEdge {
+  childIndex: number
+  parentIndex: number
+  childPosition: number
+  parentPosition: number
+  lane: number
+}
+
 const CELL_WIDTH = 20
 const CELL_HEIGHT = 40
 const CIRCLE_R = 5
 const CORNER_R = 5
-const CIRCLE_GAP = CIRCLE_R + 3
 
 const getPositionCenter = (p: number) => CELL_WIDTH * p + CELL_WIDTH / 2
 
@@ -141,50 +148,43 @@ const getVerticalPath = (position: number, y1: number, y2: number) => {
   return `M ${x} ${y1} L ${x} ${y2}`
 }
 
-const getVerticalPaths = (
-  row: PositionedBlock,
-  position: number,
-  y1: number,
-  y2: number,
-  connectsToBlock: boolean,
-) => {
-  if (connectsToBlock || row.position !== position) {
-    return [getVerticalPath(position, y1, y2)]
+const getChildPath = (blockPosition: number, lane: number) => {
+  const blockX = getPositionCenter(blockPosition)
+  const laneX = getPositionCenter(lane)
+  if (blockPosition === lane) {
+    return `M ${blockX} ${CELL_HEIGHT / 2} L ${blockX} ${CELL_HEIGHT}`
   }
 
-  const topEnd = CELL_HEIGHT / 2 - CIRCLE_GAP
-  const bottomStart = CELL_HEIGHT / 2 + CIRCLE_GAP
-  const paths: string[] = []
+  const direction = Math.sign(laneX - blockX)
+  const radius = Math.min(CORNER_R, Math.abs(laneX - blockX) / 2)
 
-  if (y1 < topEnd) {
-    paths.push(getVerticalPath(position, y1, Math.min(y2, topEnd)))
-  }
-  if (y2 > bottomStart) {
-    paths.push(getVerticalPath(position, Math.max(y1, bottomStart), y2))
-  }
-
-  return paths
+  return [
+    `M ${blockX} ${CELL_HEIGHT / 2}`,
+    `L ${blockX} ${CELL_HEIGHT - radius}`,
+    `Q ${blockX} ${CELL_HEIGHT} ${blockX + direction * radius} ${CELL_HEIGHT}`,
+    `L ${laneX} ${CELL_HEIGHT}`,
+  ].join(" ")
 }
 
-const getParentPath = (fromPosition: number, toPosition: number) => {
-  const fromX = getPositionCenter(fromPosition)
-  const toX = getPositionCenter(toPosition)
+const getParentPath = (lane: number, parentPosition: number) => {
+  const laneX = getPositionCenter(lane)
+  const parentX = getPositionCenter(parentPosition)
   const parentTop = CELL_HEIGHT / 2 - CIRCLE_R
-  if (fromPosition === toPosition) {
-    return `M ${fromX} 0 L ${fromX} ${parentTop}`
+  if (lane === parentPosition) {
+    return `M ${laneX} 0 L ${laneX} ${parentTop}`
   }
 
-  const direction = Math.sign(toX - fromX)
-  const radius = Math.min(CORNER_R, Math.abs(toX - fromX) / 2)
+  const direction = Math.sign(parentX - laneX)
+  const radius = Math.min(CORNER_R, Math.abs(parentX - laneX) / 2)
   const forkY = Math.min(parentTop - radius, CIRCLE_R + radius)
 
   return [
-    `M ${fromX} 0`,
-    `L ${fromX} ${forkY - radius}`,
-    `Q ${fromX} ${forkY} ${fromX + direction * radius} ${forkY}`,
-    `L ${toX - direction * radius} ${forkY}`,
-    `Q ${toX} ${forkY} ${toX} ${forkY + radius}`,
-    `L ${toX} ${parentTop}`,
+    `M ${laneX} 0`,
+    `L ${laneX} ${forkY - radius}`,
+    `Q ${laneX} ${forkY} ${laneX + direction * radius} ${forkY}`,
+    `L ${parentX - direction * radius} ${forkY}`,
+    `Q ${parentX} ${forkY} ${parentX} ${forkY + radius}`,
+    `L ${parentX} ${parentTop}`,
   ].join(" ")
 }
 
@@ -194,16 +194,46 @@ const addPath = (row: PositionedBlock, d: string, pathPositions: number[]) => {
   row.pathPositions.push(...pathPositions)
 }
 
-const addVerticalPaths = (
-  row: PositionedBlock,
-  position: number,
-  y1: number,
-  y2: number,
-  connectsToBlock: boolean,
+const edgeSpansOverlap = (
+  a: Pick<PositionedEdge, "childIndex" | "parentIndex">,
+  b: Pick<PositionedEdge, "childIndex" | "parentIndex">,
 ) => {
-  getVerticalPaths(row, position, y1, y2, connectsToBlock).forEach((path) => {
-    addPath(row, path, [position])
-  })
+  return a.childIndex < b.parentIndex && b.childIndex < a.parentIndex
+}
+
+const canUseEdgeLane = (
+  lane: number,
+  edge: Pick<PositionedEdge, "childIndex" | "parentIndex">,
+  rows: PositionedBlock[],
+  edges: PositionedEdge[],
+) => {
+  // Edge lanes are independent from block lanes: never let a line pass through
+  // an unrelated block, because that visually gives the block a second parent.
+  for (let i = edge.childIndex + 1; i < edge.parentIndex; i++) {
+    if (rows[i].position === lane) return false
+  }
+
+  return edges.every(
+    (other) => other.lane !== lane || !edgeSpansOverlap(edge, other),
+  )
+}
+
+const getEdgeLane = (
+  edge: Pick<
+    PositionedEdge,
+    "childIndex" | "parentIndex" | "childPosition" | "parentPosition"
+  >,
+  rows: PositionedBlock[],
+  edges: PositionedEdge[],
+) => {
+  const preferred = [edge.childPosition, edge.parentPosition]
+  for (const lane of preferred) {
+    if (canUseEdgeLane(lane, edge, rows, edges)) return lane
+  }
+
+  for (let lane = 0; ; lane++) {
+    if (canUseEdgeLane(lane, edge, rows, edges)) return lane
+  }
 }
 
 const blockTable$ = state(
@@ -227,20 +257,43 @@ const blockTable$ = state(
         result.map((row, index) => [row.block.hash, index]),
       )
 
+      const edges: PositionedEdge[] = []
       result.forEach((row, childIndex) => {
         const parentIndex = rowIndexes.get(row.block.parent)
         if (parentIndex == null) return
 
         const parent = result[parentIndex]
-        addVerticalPaths(row, row.position, CELL_HEIGHT / 2, CELL_HEIGHT, true)
-
-        for (let i = childIndex + 1; i < parentIndex; i++) {
-          addVerticalPaths(result[i], row.position, 0, CELL_HEIGHT, false)
+        const edge = {
+          childIndex,
+          parentIndex,
+          childPosition: row.position,
+          parentPosition: parent.position,
         }
 
-        addPath(parent, getParentPath(row.position, parent.position), [
-          row.position,
-          parent.position,
+        edges.push({
+          ...edge,
+          lane: getEdgeLane(edge, result, edges),
+        })
+      })
+
+      edges.forEach((edge) => {
+        const child = result[edge.childIndex]
+        const parent = result[edge.parentIndex]
+
+        addPath(child, getChildPath(edge.childPosition, edge.lane), [
+          edge.childPosition,
+          edge.lane,
+        ])
+
+        for (let i = edge.childIndex + 1; i < edge.parentIndex; i++) {
+          addPath(result[i], getVerticalPath(edge.lane, 0, CELL_HEIGHT), [
+            edge.lane,
+          ])
+        }
+
+        addPath(parent, getParentPath(edge.lane, edge.parentPosition), [
+          edge.lane,
+          edge.parentPosition,
         ])
       })
 
