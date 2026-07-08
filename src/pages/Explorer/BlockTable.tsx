@@ -35,9 +35,8 @@ interface ForkPath {
 interface PositionedEdge {
   childIndex: number
   parentIndex: number
-  childPosition: number
-  parentPosition: number
   lane: number
+  isCanonical: boolean
 }
 
 const CELL_WIDTH = 20
@@ -166,32 +165,71 @@ const getChildPath = (blockPosition: number, lane: number) => {
   ].join(" ")
 }
 
-const getParentPath = (lane: number, parentPosition: number) => {
-  const laneX = getPositionCenter(lane)
+const getParentStemPath = (parentPosition: number, y: number) => {
   const parentX = getPositionCenter(parentPosition)
   const parentTop = CELL_HEIGHT / 2 - CIRCLE_R
-  if (lane === parentPosition) {
-    return `M ${laneX} 0 L ${laneX} ${parentTop}`
-  }
 
-  const direction = Math.sign(parentX - laneX)
-  const radius = Math.min(CORNER_R, Math.abs(parentX - laneX) / 2)
-  const forkY = Math.min(parentTop - radius, CIRCLE_R + radius)
+  return `M ${parentX} ${parentTop} L ${parentX} ${y}`
+}
 
-  return [
-    `M ${laneX} 0`,
-    `L ${laneX} ${forkY - radius}`,
-    `Q ${laneX} ${forkY} ${laneX + direction * radius} ${forkY}`,
-    `L ${parentX - direction * radius} ${forkY}`,
-    `Q ${parentX} ${forkY} ${parentX} ${forkY + radius}`,
-    `L ${parentX} ${parentTop}`,
-  ].join(" ")
+const getParentContinuationPath = (parentPosition: number) => {
+  const parentX = getPositionCenter(parentPosition)
+  const parentTop = CELL_HEIGHT / 2 - CIRCLE_R
+
+  return `M ${parentX} 0 L ${parentX} ${parentTop}`
+}
+
+const getParentLanePath = (lane: number, parentPosition: number, y: number) => {
+  const laneX = getPositionCenter(lane)
+  const parentX = getPositionCenter(parentPosition)
+
+  return `M ${laneX} 0 L ${laneX} ${y} L ${parentX} ${y}`
 }
 
 const addPath = (row: PositionedBlock, d: string, pathPositions: number[]) => {
   if (row.paths.some((path) => path.d === d)) return
   row.paths.push({ d })
   row.pathPositions.push(...pathPositions)
+}
+
+const addParentFork = (
+  row: PositionedBlock,
+  parentPosition: number,
+  lanes: number[],
+) => {
+  const childLanes = [...new Set(lanes)].sort((a, b) => a - b)
+  if (!childLanes.length) return
+
+  if (childLanes.includes(parentPosition)) {
+    addPath(row, getParentContinuationPath(parentPosition), [parentPosition])
+  }
+
+  const sideLanes = childLanes
+    .filter((lane) => lane !== parentPosition)
+    .sort((a, b) => Math.abs(a - parentPosition) - Math.abs(b - parentPosition))
+  if (!sideLanes.length) return
+
+  const parentTop = CELL_HEIGHT / 2 - CIRCLE_R
+  const firstForkY = CIRCLE_R + 1
+  const lastForkY = parentTop - 1
+  const getForkY = (index: number) =>
+    sideLanes.length === 1
+      ? CIRCLE_R + CORNER_R
+      : firstForkY + ((lastForkY - firstForkY) * index) / (sideLanes.length - 1)
+  const forkYs = sideLanes.map((_, index) => getForkY(index))
+
+  if (!childLanes.includes(parentPosition)) {
+    addPath(row, getParentStemPath(parentPosition, Math.min(...forkYs)), [
+      parentPosition,
+    ])
+  }
+
+  sideLanes.forEach((lane, index) => {
+    addPath(row, getParentLanePath(lane, parentPosition, forkYs[index]), [
+      lane,
+      parentPosition,
+    ])
+  })
 }
 
 const edgeSpansOverlap = (
@@ -201,40 +239,32 @@ const edgeSpansOverlap = (
   return a.childIndex < b.parentIndex && b.childIndex < a.parentIndex
 }
 
-const canUseEdgeLane = (
-  lane: number,
-  edge: Pick<PositionedEdge, "childIndex" | "parentIndex">,
-  rows: PositionedBlock[],
-  edges: PositionedEdge[],
+const compareEdgeOrder = (
+  a: Pick<PositionedEdge, "childIndex" | "parentIndex">,
+  b: Pick<PositionedEdge, "childIndex" | "parentIndex">,
 ) => {
-  // Edge lanes are independent from block lanes: never let a line pass through
-  // an unrelated block, because that visually gives the block a second parent.
-  for (let i = edge.childIndex + 1; i < edge.parentIndex; i++) {
-    if (rows[i].position === lane) return false
-  }
-
-  return edges.every(
-    (other) => other.lane !== lane || !edgeSpansOverlap(edge, other),
-  )
+  if (a.parentIndex !== b.parentIndex) return b.parentIndex - a.parentIndex
+  return a.childIndex - b.childIndex
 }
 
-const getEdgeLane = (
-  edge: Pick<
-    PositionedEdge,
-    "childIndex" | "parentIndex" | "childPosition" | "parentPosition"
-  >,
-  rows: PositionedBlock[],
-  edges: PositionedEdge[],
-) => {
-  const preferred = [edge.childPosition, edge.parentPosition]
-  for (const lane of preferred) {
-    if (canUseEdgeLane(lane, edge, rows, edges)) return lane
-  }
-
-  for (let lane = 0; ; lane++) {
-    if (canUseEdgeLane(lane, edge, rows, edges)) return lane
-  }
-}
+const getEdgeLanes = (
+  edges: Array<Omit<PositionedEdge, "lane">>,
+): PositionedEdge[] =>
+  edges.map((edge) => ({
+    ...edge,
+    // Overlapping fork edges must keep the same left-to-right order for their
+    // full span. Lower-parent forks stay left; earlier/outer overlapping
+    // branches are pushed right instead of crossing back through them.
+    lane: edge.isCanonical
+      ? 0
+      : 1 +
+        edges.filter(
+          (other) =>
+            !other.isCanonical &&
+            edgeSpansOverlap(edge, other) &&
+            compareEdgeOrder(other, edge) < 0,
+        ).length,
+  }))
 
 const blockTable$ = state(
   combineLatest([blocksByHeight$, best$]).pipe(
@@ -257,31 +287,35 @@ const blockTable$ = state(
         result.map((row, index) => [row.block.hash, index]),
       )
 
-      const edges: PositionedEdge[] = []
-      result.forEach((row, childIndex) => {
-        const parentIndex = rowIndexes.get(row.block.parent)
-        if (parentIndex == null) return
+      const edges = getEdgeLanes(
+        result.flatMap((row, childIndex) => {
+          const parentIndex = rowIndexes.get(row.block.parent)
+          if (parentIndex == null) return []
 
-        const parent = result[parentIndex]
-        const edge = {
-          childIndex,
-          parentIndex,
-          childPosition: row.position,
-          parentPosition: parent.position,
-        }
+          return [
+            {
+              childIndex,
+              parentIndex,
+              isCanonical: row.isCanonical,
+            },
+          ]
+        }),
+      )
+      const outgoingEdges = new Map(
+        edges.map((edge) => [edge.childIndex, edge.lane]),
+      )
 
-        edges.push({
-          ...edge,
-          lane: getEdgeLane(edge, result, edges),
-        })
+      result.forEach((row, index) => {
+        row.position =
+          outgoingEdges.get(index) ??
+          (row.isCanonical ? 0 : Math.max(1, row.position))
       })
 
       edges.forEach((edge) => {
-        const child = result[edge.childIndex]
-        const parent = result[edge.parentIndex]
+        const row = result[edge.childIndex]
 
-        addPath(child, getChildPath(edge.childPosition, edge.lane), [
-          edge.childPosition,
+        addPath(row, getChildPath(row.position, edge.lane), [
+          row.position,
           edge.lane,
         ])
 
@@ -290,11 +324,22 @@ const blockTable$ = state(
             edge.lane,
           ])
         }
+      })
 
-        addPath(parent, getParentPath(edge.lane, edge.parentPosition), [
-          edge.lane,
-          edge.parentPosition,
-        ])
+      const edgesByParent = new Map<number, PositionedEdge[]>()
+      edges.forEach((edge) => {
+        const parentEdges = edgesByParent.get(edge.parentIndex) ?? []
+        parentEdges.push(edge)
+        edgesByParent.set(edge.parentIndex, parentEdges)
+      })
+
+      edgesByParent.forEach((parentEdges, parentIndex) => {
+        const parent = result[parentIndex]
+        addParentFork(
+          parent,
+          parent.position,
+          parentEdges.map((edge) => edge.lane),
+        )
       })
 
       const totalCells =
