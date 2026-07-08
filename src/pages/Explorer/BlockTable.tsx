@@ -169,19 +169,22 @@ const getVerticalPaths = (
 const getParentPath = (fromPosition: number, toPosition: number) => {
   const fromX = getPositionCenter(fromPosition)
   const toX = getPositionCenter(toPosition)
+  const parentTop = CELL_HEIGHT / 2 - CIRCLE_R
   if (fromPosition === toPosition) {
-    return `M ${fromX} 0 L ${fromX} ${CELL_HEIGHT / 2}`
+    return `M ${fromX} 0 L ${fromX} ${parentTop}`
   }
 
   const direction = Math.sign(toX - fromX)
   const radius = Math.min(CORNER_R, Math.abs(toX - fromX) / 2)
-  const middleY = CELL_HEIGHT / 2
+  const forkY = Math.min(parentTop - radius, CIRCLE_R + radius)
 
   return [
     `M ${fromX} 0`,
-    `L ${fromX} ${middleY - radius}`,
-    `Q ${fromX} ${middleY} ${fromX + direction * radius} ${middleY}`,
-    `L ${toX} ${middleY}`,
+    `L ${fromX} ${forkY - radius}`,
+    `Q ${fromX} ${forkY} ${fromX + direction * radius} ${forkY}`,
+    `L ${toX - direction * radius} ${forkY}`,
+    `Q ${toX} ${forkY} ${toX} ${forkY + radius}`,
+    `L ${toX} ${parentTop}`,
   ].join(" ")
 }
 
