@@ -5,8 +5,7 @@
     "rpcs": {
       "Dwellir": "wss://asset-hub-kusama-rpc.n.dwellir.com",
       "LuckyFriday": "wss://rpc-asset-hub-kusama.luckyfriday.io",
-      "Parity": "wss://kusama-asset-hub-rpc.polkadot.io",
-      "Stakeworld": "wss://ksm-rpc.stakeworld.io/assethub"
+      "Parity": "wss://kusama-asset-hub-rpc.polkadot.io"
     },
     "relayChainInfo": {
       "id": "kusama",
@@ -30,7 +29,6 @@
       "Helixstreet": "wss://rpc-kusama.helixstreet.io",
       "LuckyFriday": "wss://rpc-kusama.luckyfriday.io",
       "OnFinality": "wss://kusama.api.onfinality.io/public-ws",
-      "Stakeworld": "wss://ksm-rpc.stakeworld.io",
       "RockX": "wss://rockx-ksm.w3node.com/polka-public-ksm/ws"
     },
     "nativeToken": {
@@ -45,8 +43,7 @@
       "Dwellir": "wss://bridge-hub-kusama-rpc.n.dwellir.com",
       "LuckyFriday": "wss://rpc-bridge-hub-kusama.luckyfriday.io",
       "OnFinality": "wss://bridgehub-kusama.api.onfinality.io/public-ws",
-      "Parity": "wss://kusama-bridge-hub-rpc.polkadot.io",
-      "Stakeworld": "wss://ksm-rpc.stakeworld.io/bridgehub"
+      "Parity": "wss://kusama-bridge-hub-rpc.polkadot.io"
     },
     "relayChainInfo": {
       "id": "kusama",
@@ -65,8 +62,7 @@
     "rpcs": {
       "Dwellir": "wss://coretime-kusama-rpc.n.dwellir.com",
       "LuckyFriday": "wss://rpc-coretime-kusama.luckyfriday.io",
-      "Parity": "wss://kusama-coretime-rpc.polkadot.io",
-      "Stakeworld": "wss://ksm-rpc.stakeworld.io/coretime"
+      "Parity": "wss://kusama-coretime-rpc.polkadot.io"
     },
     "relayChainInfo": {
       "id": "kusama",
@@ -86,8 +82,7 @@
       "Dwellir": "wss://people-kusama-rpc.n.dwellir.com",
       "Helixstreet": "wss://rpc-people-kusama.helixstreet.io",
       "LuckyFriday": "wss://rpc-people-kusama.luckyfriday.io",
-      "Parity": "wss://kusama-people-rpc.polkadot.io",
-      "Stakeworld": "wss://ksm-rpc.stakeworld.io/people"
+      "Parity": "wss://kusama-people-rpc.polkadot.io"
     },
     "relayChainInfo": {
       "id": "kusama",

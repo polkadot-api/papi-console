@@ -4,8 +4,7 @@
     "display": "Paseo AssetHub",
     "rpcs": {
       "Dwellir": "wss://asset-hub-paseo-rpc.n.dwellir.com",
-      "TurboFlakes": "wss://sys.turboflakes.io/asset-hub-paseo",
-      "StakeWorld": "wss://pas-rpc.stakeworld.io/assethub"
+      "TurboFlakes": "wss://sys.turboflakes.io/asset-hub-paseo"
     },
     "relayChainInfo": {
       "id": "paseo",
@@ -25,7 +24,7 @@
     "rpcs": {
       "Amforc": "wss://paseo.rpc.amforc.com",
       "Dwellir": "wss://paseo-rpc.n.dwellir.com",
-      "StakeWorld": "wss://pas-rpc.stakeworld.io"
+      "StakeWorld": "wss://rpc-paseo.stakeworld.io"
     },
     "nativeToken": {
       "symbol": "PAS",
