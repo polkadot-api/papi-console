@@ -22,66 +22,234 @@ const best$ = client$.pipeState(
 interface PositionedBlock {
   block: BlockInfo
   position: number
-  branched: number | null
-  branches: number[]
+  paths: ForkPath[]
+  pathPositions: number[]
+  totalCells: number
+  isCanonical: boolean
+}
+
+interface ForkPath {
+  d: string
+}
+
+const CELL_WIDTH = 20
+const CELL_HEIGHT = 40
+const CIRCLE_R = 5
+const CORNER_R = 5
+const CIRCLE_GAP = CIRCLE_R + 3
+
+const getPositionCenter = (p: number) => CELL_WIDTH * p + CELL_WIDTH / 2
+
+const getContiguousHeights = (
+  blocks: Record<number, Map<string, BlockInfo>>,
+  bestNumber: number,
+) => {
+  const heights: number[] = []
+  for (let height = bestNumber; blocks[height]; height--) {
+    heights.push(height)
+  }
+  return heights
+}
+
+const getBlockPositions = (
+  blocks: Record<number, Map<string, BlockInfo>>,
+  heights: number[],
+) => {
+  const blockPositions: Record<string, number> = {}
+  const ascendingHeights = [...heights].reverse()
+
+  ascendingHeights.forEach((height, i) => {
+    const competingBlocks = [...blocks[height].values()]
+
+    if (i === 0) {
+      competingBlocks.forEach((block, position) => {
+        blockPositions[block.hash] = position
+      })
+      return
+    }
+
+    const previousBlocks = blocks[ascendingHeights[i - 1]]
+    const childrenByParent = new Map<string, BlockInfo[]>()
+    const blocksWithoutVisibleParent: BlockInfo[] = []
+
+    competingBlocks.forEach((block) => {
+      if (!previousBlocks.has(block.parent)) {
+        blocksWithoutVisibleParent.push(block)
+        return
+      }
+
+      const children = childrenByParent.get(block.parent) ?? []
+      children.push(block)
+      childrenByParent.set(block.parent, children)
+    })
+
+    let nextPosition = 0
+    const parentsWithChildren = [...previousBlocks.values()]
+      .filter((block) => childrenByParent.has(block.hash))
+      .sort((a, b) => blockPositions[a.hash] - blockPositions[b.hash])
+
+    parentsWithChildren.forEach((block) => {
+      childrenByParent.get(block.hash)!.forEach((child) => {
+        blockPositions[child.hash] = nextPosition++
+      })
+    })
+
+    blocksWithoutVisibleParent.forEach((block) => {
+      blockPositions[block.hash] = nextPosition++
+    })
+  })
+
+  return blockPositions
+}
+
+const getBlocksByHash = (
+  blocks: Record<number, Map<string, BlockInfo>>,
+  heights: number[],
+) =>
+  new Map(
+    heights.flatMap((height) =>
+      [...blocks[height].values()].map((block) => [block.hash, block] as const),
+    ),
+  )
+
+const getCanonicalBlocks = (
+  blocks: Record<number, Map<string, BlockInfo>>,
+  heights: number[],
+  bestHash: string,
+) => {
+  const blocksByHash = getBlocksByHash(blocks, heights)
+  const canonicalBlocks = new Set<string>()
+
+  for (
+    let block = blocksByHash.get(bestHash);
+    block;
+    block = blocksByHash.get(block.parent)
+  ) {
+    canonicalBlocks.add(block.hash)
+  }
+
+  return canonicalBlocks
+}
+
+const getRenderBlocks = (
+  blocks: Record<number, Map<string, BlockInfo>>,
+  heights: number[],
+) => heights.flatMap((height) => [...blocks[height].values()].reverse())
+
+const getVerticalPath = (position: number, y1: number, y2: number) => {
+  const x = getPositionCenter(position)
+  return `M ${x} ${y1} L ${x} ${y2}`
+}
+
+const getVerticalPaths = (
+  row: PositionedBlock,
+  position: number,
+  y1: number,
+  y2: number,
+  connectsToBlock: boolean,
+) => {
+  if (connectsToBlock || row.position !== position) {
+    return [getVerticalPath(position, y1, y2)]
+  }
+
+  const topEnd = CELL_HEIGHT / 2 - CIRCLE_GAP
+  const bottomStart = CELL_HEIGHT / 2 + CIRCLE_GAP
+  const paths: string[] = []
+
+  if (y1 < topEnd) {
+    paths.push(getVerticalPath(position, y1, Math.min(y2, topEnd)))
+  }
+  if (y2 > bottomStart) {
+    paths.push(getVerticalPath(position, Math.max(y1, bottomStart), y2))
+  }
+
+  return paths
+}
+
+const getParentPath = (fromPosition: number, toPosition: number) => {
+  const fromX = getPositionCenter(fromPosition)
+  const toX = getPositionCenter(toPosition)
+  if (fromPosition === toPosition) {
+    return `M ${fromX} 0 L ${fromX} ${CELL_HEIGHT / 2}`
+  }
+
+  const direction = Math.sign(toX - fromX)
+  const radius = Math.min(CORNER_R, Math.abs(toX - fromX) / 2)
+  const middleY = CELL_HEIGHT / 2
+
+  return [
+    `M ${fromX} 0`,
+    `L ${fromX} ${middleY - radius}`,
+    `Q ${fromX} ${middleY} ${fromX + direction * radius} ${middleY}`,
+    `L ${toX} ${middleY}`,
+  ].join(" ")
+}
+
+const addPath = (row: PositionedBlock, d: string, pathPositions: number[]) => {
+  if (row.paths.some((path) => path.d === d)) return
+  row.paths.push({ d })
+  row.pathPositions.push(...pathPositions)
+}
+
+const addVerticalPaths = (
+  row: PositionedBlock,
+  position: number,
+  y1: number,
+  y2: number,
+  connectsToBlock: boolean,
+) => {
+  getVerticalPaths(row, position, y1, y2, connectsToBlock).forEach((path) => {
+    addPath(row, path, [position])
+  })
 }
 
 const blockTable$ = state(
   combineLatest([blocksByHeight$, best$]).pipe(
     debounceTime(0),
     map(([blocks, best]) => {
-      const result: Array<PositionedBlock> = []
+      const heights = getContiguousHeights(blocks, best.number)
+      const blockPositions = getBlockPositions(blocks, heights)
+      const canonicalBlocks = getCanonicalBlocks(blocks, heights, best.hash)
+      const result: PositionedBlock[] = getRenderBlocks(blocks, heights).map(
+        (block) => ({
+          block,
+          position: blockPositions[block.hash],
+          paths: [],
+          pathPositions: [],
+          totalCells: 1,
+          isCanonical: canonicalBlocks.has(block.hash),
+        }),
+      )
+      const rowIndexes = new Map(
+        result.map((row, index) => [row.block.hash, index]),
+      )
 
-      const blockPositions: Record<string, number> = {}
-      const positionsTaken = new Set<number>()
-      const getFreePosition = () => {
-        for (let i = 0; ; i++) {
-          if (!positionsTaken.has(i)) {
-            return i
-          }
-        }
-      }
-      for (let height = best.number; blocks[height]; height--) {
-        const competingBlocks = [...blocks[height].values()]
-        if (competingBlocks.length > 1) {
-          if (height === best.number) {
-            competingBlocks.sort((a) => (a.hash === best.hash ? -1 : 1))
-          } else {
-            competingBlocks.sort((a, b) =>
-              (blockPositions[a.hash] ?? Number.POSITIVE_INFINITY) <
-              (blockPositions[b.hash] ?? Number.POSITIVE_INFINITY)
-                ? -1
-                : 1,
-            )
-          }
-        }
-        competingBlocks.forEach((block) => {
-          const branches = [...positionsTaken]
+      result.forEach((row, childIndex) => {
+        const parentIndex = rowIndexes.get(row.block.parent)
+        if (parentIndex == null) return
 
-          const position = blockPositions[block.hash] ?? getFreePosition()
-          if (blockPositions[block.parent] != null) {
-            // then it means the parent was already discovered by a previous
-            // so this is the start of a branch
-            result.push({
-              block,
-              branched: blockPositions[block.parent],
-              branches,
-              position,
-            })
-            positionsTaken.delete(position)
-          } else {
-            // We put our parent underneath us
-            blockPositions[block.parent] = position
-            positionsTaken.add(position)
-            result.push({
-              block,
-              branched: null,
-              branches,
-              position,
-            })
-          }
-        })
-      }
+        const parent = result[parentIndex]
+        addVerticalPaths(row, row.position, CELL_HEIGHT / 2, CELL_HEIGHT, true)
+
+        for (let i = childIndex + 1; i < parentIndex; i++) {
+          addVerticalPaths(result[i], row.position, 0, CELL_HEIGHT, false)
+        }
+
+        addPath(parent, getParentPath(row.position, parent.position), [
+          row.position,
+          parent.position,
+        ])
+      })
+
+      const totalCells =
+        result.reduce((max, row) => {
+          return Math.max(max, row.position, ...row.pathPositions)
+        }, 0) + 1
+
+      result.forEach((row) => {
+        row.totalCells = totalCells
+        row.pathPositions.sort((a, b) => a - b)
+      })
 
       return result
     }),
@@ -112,7 +280,7 @@ export const BlockTable = () => {
             key={row.block.hash}
             number={row.block.number}
             finalized={finalized.number}
-            firstInGroup={row.position === 0}
+            firstInGroup={rows[i - 1]?.block.number !== row.block.number}
             idx={i}
           >
             {rows[i - 1]?.block.number !== row.block.number ? (
@@ -147,7 +315,7 @@ export const BlockTable = () => {
                     className={twMerge(
                       "overflow-hidden text-ellipsis whitespace-nowrap font-mono text-sm",
                       "text-card-foreground/80 hover:text-card-foreground",
-                      row.position === 0
+                      row.isCanonical
                         ? ""
                         : row.block.number > finalized.number
                           ? "opacity-80"
@@ -167,55 +335,27 @@ export const BlockTable = () => {
   )
 }
 
-const CELL_WIDTH = 20
-const CELL_HEIGHT = 40
-const CIRCLE_R = 5
 const ForkRenderer: FC<{ row: PositionedBlock }> = ({ row }) => {
-  const totalCells = Math.max(row.position, ...row.branches) + 1
-
-  const getPositionCenter = (p: number) => CELL_WIDTH * p + CELL_WIDTH / 2
-
   return (
     <svg
       height={CELL_HEIGHT}
-      width={CELL_WIDTH * totalCells}
+      width={CELL_WIDTH * row.totalCells}
       className="stroke-card-foreground/60"
     >
-      {row.branches.map((branch, i) => (
-        <line
+      {row.paths.map((path, i) => (
+        <path
           key={i}
-          x1={getPositionCenter(branch)}
-          y1={0}
-          x2={getPositionCenter(branch)}
-          y2={
-            row.branched != null && branch === row.position
-              ? CELL_HEIGHT / 2
-              : CELL_HEIGHT
-          }
+          d={path.d}
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
       ))}
-      {row.branched != null ? (
-        <line
-          x1={getPositionCenter(row.branched)}
-          y1={CELL_HEIGHT / 2}
-          x2={getPositionCenter(row.position)}
-          y2={CELL_HEIGHT / 2}
-        />
-      ) : row.branches.includes(row.position) ? null : (
-        <line
-          x1={getPositionCenter(row.position)}
-          y1={CELL_HEIGHT / 2}
-          x2={getPositionCenter(row.position)}
-          y2={CELL_HEIGHT}
-        />
-      )}
       <circle
         cx={getPositionCenter(row.position)}
         cy={CELL_HEIGHT / 2}
         r={CIRCLE_R}
-        className={
-          row.position === 0 ? "fill-polkadot-500" : "fill-polkadot-600"
-        }
+        className={row.isCanonical ? "fill-polkadot-500" : "fill-polkadot-600"}
       />
     </svg>
   )
