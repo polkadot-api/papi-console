@@ -29,6 +29,7 @@ interface PositionedBlock {
 const positionContiguousBlocks = (
   blocks: Record<number, Map<string, BlockInfo>>,
   startHeight: number,
+  best: string,
 ) => {
   // We need a way to decide on the lanes each block will take.
   // If we go in increasing block number, then we might find forks that push previously-set lanes.
@@ -36,8 +37,13 @@ const positionContiguousBlocks = (
   // The idea here is to do two passes. An increasing block number sets a "score" that holds the information of the block tree.
   // Then a decreasing block number sets the lanes, using that score as a means to
   const blockScore = new Map<string, [number, number]>()
-  // Sorted in increasing height
-  const flattenedBlocks: BlockInfo[] = []
+  const getBlockScore = (hash: string) => {
+    const score = blockScore.get(hash)
+    if (!score) throw new Error("Block not scored")
+    return score[0] / 2 + score[1] / 2
+  }
+  // Sorted in increasing height and discovery
+  const sortedBlocks: BlockInfo[][] = []
 
   const initialBlocks = [...(blocks[startHeight]?.values() ?? [])]
   if (!initialBlocks.length) throw new Error("Requires one block")
@@ -45,9 +51,9 @@ const positionContiguousBlocks = (
   initialBlocks
     .sort((a, b) => a.discoveredAt - b.discoveredAt)
     .forEach((block, i) => {
-      flattenedBlocks.push(block)
-      blockScore.set(block.hash, [i * initialRange, (i + 1) * initialRange - 1])
+      blockScore.set(block.hash, [i * initialRange, (i + 1) * initialRange])
     })
+  sortedBlocks.push(initialBlocks)
 
   let h = startHeight + 1
   for (; blocks[h]?.size; h++) {
@@ -65,20 +71,73 @@ const positionContiguousBlocks = (
         (parentScore[1] - parentScore[0]) / blocksByParent[parent].length
       blocksByParent[parent].sort((a, b) => a.discoveredAt - b.discoveredAt)
       blocksByParent[parent].forEach((block, i) => {
-        flattenedBlocks.push(block)
         blockScore.set(block.hash, [
           parentScore[0] + i * range,
-          parentScore[0] + (i + 1) * range - 1,
+          parentScore[0] + (i + 1) * range,
         ])
       })
     }
+    // TODO this is not fully sorted.
+    sortedBlocks.push(Object.values(blocksByParent).flat())
   }
   const lastHeight = h - 1
+
+  let canonicalHash = best
+  interface Lane {
+    block: BlockInfo
+    pos: number // Vertical position
+    canonical: boolean
+  }
+
+  sortedBlocks.reverse()
+  const lanesByHeight: Array<Array<Lane | null>> = []
+  for (const blocks of sortedBlocks) {
+    const blockToPos = Object.fromEntries(
+      blocks.map((block, i) => [block.hash, i]),
+    )
+    const blockToLane = (block: BlockInfo): Lane => {
+      const canonical = canonicalHash === block.hash
+      if (canonical) canonicalHash = block.parent
+      return {
+        block,
+        canonical,
+        pos: blockToPos[block.hash],
+      }
+    }
+    blocks.sort((a, b) => getBlockScore(a.hash) - getBlockScore(b.hash))
+    const prevLanes = lanesByHeight.at(-1)
+    if (!prevLanes) {
+      lanesByHeight.push(blocks.map(blockToLane))
+      continue
+    }
+
+    // We're restricted to the previous lanes: Put each block underneath the first children
+    const lanes: Array<Lane | null> = []
+    let i = 0
+    for (const block of blocks) {
+      while (
+        i < prevLanes.length &&
+        prevLanes[i]?.block.parent !== block.hash
+      ) {
+        i++
+        // TODO can this push the chart indefinitely to the right as we go down?
+        lanes.push(null)
+      }
+      lanes.push(blockToLane(block))
+    }
+    lanesByHeight.push(lanes)
+  }
+
+  // Now that we have every block in their position and lanes connected, we're
+  // ready to render the tree by deciding how to connect each node.
 }
-const positionBlocks = (blocks: Record<number, Map<string, BlockInfo>>) => {
+const positionBlocks = (
+  blocks: Record<number, Map<string, BlockInfo>>,
+  best: string,
+) => {
   const heights = Object.keys(blocks).map((v) => Number(v))
 
-  positionContiguousBlocks(blocks, heights[0])
+  positionContiguousBlocks(blocks, heights[0], best)
 }
 
 const blockTable$ = state(
