@@ -26,6 +26,61 @@ interface PositionedBlock {
   branches: number[]
 }
 
+const positionContiguousBlocks = (
+  blocks: Record<number, Map<string, BlockInfo>>,
+  startHeight: number,
+) => {
+  // We need a way to decide on the lanes each block will take.
+  // If we go in increasing block number, then we might find forks that push previously-set lanes.
+  // If we go in decreasing block number, then we don't know which fork was "the original" and lanes won't be stable.
+  // The idea here is to do two passes. An increasing block number sets a "score" that holds the information of the block tree.
+  // Then a decreasing block number sets the lanes, using that score as a means to
+  const blockScore = new Map<string, [number, number]>()
+  // Sorted in increasing height
+  const flattenedBlocks: BlockInfo[] = []
+
+  const initialBlocks = [...(blocks[startHeight]?.values() ?? [])]
+  if (!initialBlocks.length) throw new Error("Requires one block")
+  const initialRange = Number.MAX_SAFE_INTEGER / initialBlocks.length
+  initialBlocks
+    .sort((a, b) => a.discoveredAt - b.discoveredAt)
+    .forEach((block, i) => {
+      flattenedBlocks.push(block)
+      blockScore.set(block.hash, [i * initialRange, (i + 1) * initialRange - 1])
+    })
+
+  let h = startHeight + 1
+  for (; blocks[h]?.size; h++) {
+    const blocksByParent: Record<string, BlockInfo[]> = {}
+    blocks[h].forEach((block) => {
+      blocksByParent[block.parent] = [
+        ...(blocksByParent[block.parent] || []),
+        block,
+      ]
+    })
+    for (const parent in blocksByParent) {
+      const parentScore = blockScore.get(parent)
+      if (!parentScore) throw new Error("Parent doesn't exist")
+      const range =
+        (parentScore[1] - parentScore[0]) / blocksByParent[parent].length
+      blocksByParent[parent].sort((a, b) => a.discoveredAt - b.discoveredAt)
+      blocksByParent[parent].forEach((block, i) => {
+        flattenedBlocks.push(block)
+        blockScore.set(block.hash, [
+          parentScore[0] + i * range,
+          parentScore[0] + (i + 1) * range - 1,
+        ])
+      })
+    }
+  }
+  const lastHeight = h - 1
+}
+const positionBlocks = (blocks: Record<number, Map<string, BlockInfo>>) => {
+  const heights = Object.keys(blocks).map((v) => Number(v))
+
+  positionContiguousBlocks(blocks, heights[0])
+}
+
 const blockTable$ = state(
   combineLatest([blocksByHeight$, best$]).pipe(
     debounceTime(0),

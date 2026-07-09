@@ -67,6 +67,7 @@ export interface BlockInfo {
   header: BlockHeader | null
   status: BlockState
   diff: BlockDiff | null
+  discoveredAt: number
 }
 export const BlockContext = createContext<BlockInfo | null>(null)
 
@@ -108,6 +109,7 @@ export const [blockInfo$, recordedBlocks$] = partitionByKey(
             hash: of(hash),
             parent: of(parent),
             number: of(number),
+            discoveredAt: of(Date.now()),
             body: client.getBlockBody$(hash).pipe(
               startWith(null),
               catchError((err) => {
@@ -166,6 +168,7 @@ const getUnpinnedBlockInfo$ = (hash: string): Observable<BlockInfo> =>
   client$.pipe(
     switchMap((client) =>
       combineLatest({
+        discoveredAt: of(Date.now()),
         headerAndStatus: from(client.getBlockHeader(hash)).pipe(
           mergeMap((header) =>
             getBlockStatus$(
@@ -186,16 +189,24 @@ const getUnpinnedBlockInfo$ = (hash: string): Observable<BlockInfo> =>
           at: hash,
         }) as Promise<SystemEvent[]>,
       }).pipe(
-        map(({ headerAndStatus: { header, status }, body, events }) => ({
-          hash: hash,
-          parent: header.parentHash,
-          number: header.number,
-          body,
-          events,
-          header,
-          status,
-          diff: null,
-        })),
+        map(
+          ({
+            discoveredAt,
+            headerAndStatus: { header, status },
+            body,
+            events,
+          }) => ({
+            discoveredAt,
+            hash: hash,
+            parent: header.parentHash,
+            number: header.number,
+            body,
+            events,
+            header,
+            status,
+            diff: null,
+          }),
+        ),
         catchError(() => getUnpinnedBlockInfoFallback$(hash, client)),
         tap((v) => disconnectedBlocks$.next(v)),
       ),
@@ -233,11 +244,13 @@ const getUnpinnedBlockInfoFallback$ = (
     mergeMap((res) => {
       const header = res.block.header
       const number = Number(header.number)
+      const discoveredAt = Date.now()
       return getBlockStatus$(client, hash, number, header.parentHash).pipe(
         map((status) => ({
           ...res,
           number,
           status,
+          discoveredAt,
         })),
       )
     }),
@@ -245,7 +258,13 @@ const getUnpinnedBlockInfoFallback$ = (
 
   return throughRpc$.pipe(
     map(
-      ({ block: { extrinsics, header }, status, number }): BlockInfo => ({
+      ({
+        block: { extrinsics, header },
+        status,
+        number,
+        discoveredAt,
+      }): BlockInfo => ({
+        discoveredAt,
         hash,
         parent: header.parentHash,
         body: extrinsics.map(fromHex),
