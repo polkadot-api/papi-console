@@ -9,6 +9,7 @@ import { combineLatest, debounceTime, map, repeat, switchMap } from "rxjs"
 import { twMerge } from "tailwind-merge"
 import { BlockPopover } from "./BlockPopover"
 import * as Finalizing from "./FinalizingTable"
+import { Enum } from "polkadot-api"
 
 const best$ = client$.pipeState(
   switchMap((client) =>
@@ -113,15 +114,19 @@ const positionContiguousBlocks = (
 
     // We're restricted to the previous lanes: Put each block underneath the first children
     const lanes: Array<Lane | null> = []
-    let i = 0
     for (const block of blocks) {
+      let i = lanes.length
       while (
         i < prevLanes.length &&
         prevLanes[i]?.block.parent !== block.hash
       ) {
         i++
-        // TODO can this push the chart indefinitely to the right as we go down?
-        lanes.push(null)
+      }
+      // Always collapse the lanes to the left: so initial lane can never be empty.
+      if (i !== prevLanes.length && lanes.length) {
+        // The lane was found, so align it with the previous lane
+        lanes.push(...new Array(i - lanes.length).fill(null))
+        // Otherwise we must preserve the ordering set by blockScore, so in that case we don't offset the lanes.
       }
       lanes.push(blockToLane(block))
     }
@@ -130,6 +135,38 @@ const positionContiguousBlocks = (
 
   // Now that we have every block in their position and lanes connected, we're
   // ready to render the tree by deciding how to connect each node.
+  interface TableLine {
+    cells: Array<
+      Enum<{
+        block: {
+          // whether the children are forked into left / vertical / right
+          child: Array<"l" | "v" | "r">
+          // whether the parent comes from left / vertical / right
+          parent?: "l" | "v" | "r"
+        }
+        line: {
+          // Whether it has a corner from left to up / right to up / up to left / up to right
+          corner: Array<"lu" | "ru" | "ul" | "ur">
+          // Whether it has a vertical / horizontal line
+          line?: "v" | "h"
+          // Whether to squeeze it up the cell (connects with a block in the same row)
+          squeeze: boolean
+        }
+      }>
+    >
+  }
+
+  let prevHashes: Array<string | null> | null = null
+  const tableLines: TableLine[] = []
+  for (const lanes of lanesByHeight) {
+    const lineToLane = lanes
+      .map((lane, idx) => ({ lane: lane!, idx }))
+      .filter((v) => v.lane !== null)
+      .sort((a, b) => a.lane.pos - b.lane.pos)
+      .map(({ idx }) => idx)
+    if (!prevHashes) {
+    }
+  }
 }
 const positionBlocks = (
   blocks: Record<number, Map<string, BlockInfo>>,
