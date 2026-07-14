@@ -26,6 +26,7 @@ import {
 } from "rxjs"
 import { transaction$, txOptions$ } from "./submit.state"
 import { validate$ } from "./validate"
+import { getFakeTxCreator } from "polkadot-api/tx-creator"
 
 const accountBalance$ = state(
   combineLatest([selectedAccount$, client$]).pipe(
@@ -60,7 +61,10 @@ export const paymentInfo$ = state(
       // Adding a small delay for debouncing quick input changes
       return timer(200).pipe(
         switchMap(() =>
-          tx.getPaymentInfo(getAccountPublicKey(account), txOptions),
+          tx.getPaymentInfo(
+            account.txCreator ?? getFakeTxCreator(getAccountPublicKey(account)),
+            txOptions,
+          ),
         ),
         catchError((ex) => {
           console.error(ex)

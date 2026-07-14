@@ -9,7 +9,7 @@ import { useParams } from "react-router-dom"
 import { trackTx } from "../Extrinsics/ExtrinsicsWorkspaceEntry"
 
 export const TransactionButton: FC<{
-  tx: Transaction
+  tx: Transaction<any>
 }> = ({ tx }) => {
   const { accountId } = useParams()
   const [selectedAccount] = useSelectedAccount()
@@ -24,7 +24,7 @@ export const TransactionButton: FC<{
       ? selectedAccount
       : Object.values(allAccounts)
           .flat()
-          .find((v) => v.signer && v.address === accountId)
+          .find((v) => v.txCreator && v.address === accountId)
 
   useEffect(() => {
     let cancelled = false
@@ -43,8 +43,8 @@ export const TransactionButton: FC<{
   }, [tx])
 
   const submit = async () => {
-    if (!account?.signer) return
-    const signed = await tx.sign(account.signer)
+    if (!account?.txCreator) return
+    const signed = await tx.create(account.txCreator)
     trackTx(signed, tx.decodedCall, account)
   }
 
@@ -52,7 +52,7 @@ export const TransactionButton: FC<{
     <div className="flex min-w-48 flex-col gap-2">
       <Button
         type="button"
-        disabled={!account?.signer}
+        disabled={!account?.txCreator}
         onClick={submit}
         className="h-9 justify-center gap-2"
       >

@@ -281,7 +281,7 @@ const ExportTx: FC<{
 
   const submit = async () => {
     if (!account?.txCreator) return
-    const signed = await tx.sign(account.txCreator)
+    const signed = await tx.create(account.txCreator)
     trackTx(signed, tx.decodedCall, account)
   }
 
