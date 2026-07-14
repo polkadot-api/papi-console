@@ -130,8 +130,8 @@ const selectedAsset$ = state(
 const balance$ = selectedAsset$.pipeState(
   switchMap((asset) =>
     combineLatest([selectedAccount$, origin$, client$]).pipe(
-      switchMap(([selectedAccount, origin, client]) => {
-        if (!asset || !selectedAccount) return [null]
+      switchMap(async ([selectedAccount, origin, client]) => {
+        if (!asset || !selectedAccount) return null
         return getBalance({
           address: selectedAccount.address,
           chain: origin,
@@ -165,7 +165,7 @@ const AssetPicker = () => {
         contentClassName="w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-2rem)]"
       />
       <KeyValue
-        label="Balance"
+        label="Spendable balance"
         value={
           balance != null && selectedAsset
             ? formatToken(balance, selectedAsset)

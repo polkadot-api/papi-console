@@ -10,12 +10,9 @@ export const formatToken = (
     symbol?: string
   },
 ) => {
-  const formattedValue = (
-    Number(amount) /
-    10 ** properties.decimals
-  ).toLocaleString(undefined, {
-    maximumSignificantDigits: 3,
-  })
+  const formattedValue = roundToSignificantDigits(
+    Number(amount) / 10 ** properties.decimals,
+  )
 
   return `${formattedValue} ${properties.symbol}`
 }
@@ -40,4 +37,17 @@ export const TokenAmount: FC<{
       })}
     </span>
   )
+}
+
+export const roundToSignificantDigits = (value: number) => {
+  const abs = Math.abs(value)
+  const maximumFractionDigits = abs >= 100 ? 0 : abs >= 10 ? 1 : 2
+
+  return abs >= 1
+    ? value.toLocaleString(undefined, {
+        maximumFractionDigits,
+      })
+    : value.toLocaleString(undefined, {
+        maximumSignificantDigits: 3,
+      })
 }

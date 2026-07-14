@@ -52,26 +52,26 @@ const blockDiff$ = state(
 
         return Object.entries(block.diff)
           .map(
-            ([key, [prevValue, newValue]]): {
+            ([key, { value, prev }]): {
               key: HexString
               decodedKey: [string, ...unknown[]]
-              prevValue: HexString | null
+              prevValue: Uint8Array | null | undefined
               decodedPrevValue: unknown
-              newValue: HexString | null
+              newValue: Uint8Array | null
               decodedNewValue: unknown
             } | null => {
               try {
                 if (wellKnownKeys[key]) {
                   return {
                     key,
-                    prevValue,
-                    newValue,
+                    prevValue: prev,
+                    newValue: value,
                     decodedKey: [wellKnownKeys[key].name],
-                    decodedNewValue: newValue
-                      ? wellKnownKeys[key].codec.dec(newValue)
+                    decodedNewValue: value
+                      ? wellKnownKeys[key].codec.dec(value)
                       : null,
-                    decodedPrevValue: prevValue
-                      ? wellKnownKeys[key].codec.dec(prevValue)
+                    decodedPrevValue: prev
+                      ? wellKnownKeys[key].codec.dec(prev)
                       : null,
                   }
                 }
@@ -86,18 +86,18 @@ const blockDiff$ = state(
                   if (storageCodec) {
                     return {
                       key,
-                      prevValue,
-                      newValue,
+                      prevValue: prev,
+                      newValue: value,
                       decodedKey: [
                         pallet.name,
                         entry,
                         ...storageCodec.keys.dec(key),
                       ],
-                      decodedNewValue: newValue
-                        ? storageCodec.value.dec(newValue)
+                      decodedNewValue: value
+                        ? storageCodec.value.dec(value)
                         : null,
-                      decodedPrevValue: prevValue
-                        ? storageCodec.value.dec(prevValue)
+                      decodedPrevValue: prev
+                        ? storageCodec.value.dec(prev)
                         : null,
                     }
                   }

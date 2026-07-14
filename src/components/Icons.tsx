@@ -18,11 +18,15 @@ import { twMerge } from "tailwind-merge"
 import binarySvg from "./icons/binary.svg"
 import chopsticksLogoDark from "./icons/chopsticks_dark.svg"
 import chopsticksLogoLight from "./icons/chopsticks_light.svg"
+import forkliftLogoDark from "./icons/forklift_dark.svg"
+import forkliftLogoLight from "./icons/forklift_light.svg"
 import enumSvg from "./icons/enum.svg"
 import focusSvg from "./icons/focus.svg"
 import githubLightSvg from "./icons/github_light.svg"
 import githubDarkSvg from "./icons/github_dark.svg"
 import switchBinarySvg from "./icons/switch_binary.svg"
+import { useStateObservable } from "@react-rxjs/core"
+import { selectedChain$ } from "@/state/chains/chain.state"
 
 type CustomIconProps = Omit<Props, "ref" | "src"> & { size?: number }
 const CustomIcon: FC<
@@ -64,6 +68,7 @@ export const Enum = customIcon(enumSvg)
 export const BinaryEdit = customIcon(binarySvg)
 export const SwitchBinary = customIcon(switchBinarySvg)
 export const Chopsticks = themeIcon(chopsticksLogoLight, chopsticksLogoDark)
+export const Forklift = themeIcon(forkliftLogoLight, forkliftLogoDark)
 export const GithubIcon = themeIcon(githubLightSvg, githubDarkSvg)
 
 export const Spinner = (props: LucideProps) => (
@@ -124,3 +129,19 @@ export const CopyBinaryIcon = ({ size = 16, ...props }: CustomIconProps) => (
     </text>
   </svg>
 )
+
+export const ForkMethodIcon: FC<{
+  size?: number
+  className?: string
+}> = ({ size, className }) => {
+  const chain = useStateObservable(selectedChain$)
+  const method = chain.forkMethod
+
+  const Icon =
+    method === "chopsticks"
+      ? Chopsticks
+      : method === "forklift"
+        ? Forklift
+        : null
+  return Icon ? <Icon size={size} className={className} /> : null
+}

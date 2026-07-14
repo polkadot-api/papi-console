@@ -4,8 +4,7 @@
     "display": "Westend AssetHub",
     "rpcs": {
       "Dwellir": "wss://asset-hub-westend-rpc.n.dwellir.com",
-      "Parity": "wss://westend-asset-hub-rpc.polkadot.io",
-      "IBP1": "wss://sys.ibp.network/westmint"
+      "Parity": "wss://westend-asset-hub-rpc.polkadot.io"
     },
     "relayChainInfo": {
       "id": "westend",
@@ -25,8 +24,7 @@
     "rpcs": {
       "Dwellir": "wss://westend-rpc.n.dwellir.com",
       "OnFinality": "wss://westend.api.onfinality.io/public-ws",
-      "Parity": "wss://westend-rpc.polkadot.io",
-      "IBP1": "wss://rpc.ibp.network/westend"
+      "Parity": "wss://westend-rpc.polkadot.io"
     },
     "nativeToken": {
       "symbol": "WND",
@@ -92,8 +90,7 @@
     "display": "Westend People",
     "rpcs": {
       "Dwellir": "wss://people-westend-rpc.n.dwellir.com",
-      "Parity": "wss://westend-people-rpc.polkadot.io",
-      "IBP1": "wss://sys.ibp.network/people-westend"
+      "Parity": "wss://westend-people-rpc.polkadot.io"
     },
     "relayChainInfo": {
       "id": "westend",

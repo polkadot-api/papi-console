@@ -1,6 +1,6 @@
 import { polkadot_people } from "@polkadot-api/descriptors"
 import { liftSuspense, state, SUSPENSE, withDefault } from "@react-rxjs/core"
-import { AccountId, HexString, SS58String } from "polkadot-api"
+import { AccountId, Binary, HexString, SS58String } from "polkadot-api"
 import {
   Account,
   createLedgerProvider,
@@ -95,7 +95,7 @@ const proxyProvider = createProxyProvider((address) =>
 const multisigProvider$ = selectedChain$.pipe(
   switchMap(getChainSource),
   map((source) => {
-    if (source.type === "websocket" && source.withChopsticks) {
+    if (source.type === "websocket" && source.forkMethod !== "none") {
       return null
     }
 
@@ -214,3 +214,20 @@ export const toggleExtension = async (id: string) => {
       : [...extensions, id],
   )
 }
+
+export const getAccountPublicKey = (account: Account) =>
+  account.signer
+    ? account.signer.publicKey
+    : account.address.startsWith("0x")
+      ? Binary.fromHex(account.address)
+      : AccountId().enc(account.address)
+
+// Important, the SS58 format is not guaranteed. Only to be used for internal queries
+export const getAccountGenericAddress = (account: Account) =>
+  account.address.startsWith("0x")
+    ? account.signer
+      ? Binary.toHex(account.signer.publicKey)
+      : account.address
+    : account.signer
+      ? AccountId().dec(account.signer.publicKey)
+      : account.address

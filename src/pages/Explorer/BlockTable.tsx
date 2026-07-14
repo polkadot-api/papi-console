@@ -5,13 +5,18 @@ import { BlockInfo, blocksByHeight$, finalized$ } from "@/state/block.state"
 import { client$ } from "@/state/chains/chain.state"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { FC } from "react"
-import { combineLatest, debounceTime, map, switchMap } from "rxjs"
+import { combineLatest, debounceTime, map, repeat, switchMap } from "rxjs"
 import { twMerge } from "tailwind-merge"
 import { BlockPopover } from "./BlockPopover"
 import * as Finalizing from "./FinalizingTable"
 
 const best$ = client$.pipeState(
-  switchMap((client) => client.bestBlocks$.pipe(map(([best]) => best))),
+  switchMap((client) =>
+    client.bestBlocks$.pipe(
+      repeat(),
+      map(([best]) => best),
+    ),
+  ),
 )
 
 interface PositionedBlock {

@@ -5,10 +5,10 @@ import { getHashParams } from "@/hashParams"
 import {
   chainClient$,
   client$,
+  genericUnsafeApi$,
   runtimeCtx$,
   runtimeCtxAt$,
   selectedChainChanged$,
-  unsafeApi$,
 } from "@/state/chains/chain.state"
 import {
   BlockInfo,
@@ -180,7 +180,7 @@ export const storageSubscriptionToWorkspaceEntry = async ({
   const [ctx, unsafeApi] = await firstValueFrom(
     combineLatest([
       blockHash ? runtimeCtxAt$(blockHash) : runtimeCtx$,
-      unsafeApi$,
+      genericUnsafeApi$,
     ]),
   )
   const entry = getEntry(ctx, getStorageItem(ctx, pallet, item)!.item.type)

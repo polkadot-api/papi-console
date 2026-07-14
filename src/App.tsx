@@ -1,4 +1,5 @@
 import { VaultTxModal } from "polkahub"
+import { lazy } from "react"
 import { Navigate, Route, Routes } from "react-router-dom"
 import { ConnectionState } from "./components/ConnectionState"
 import { Accounts } from "./pages/Accounts/Accounts"
@@ -11,9 +12,9 @@ import { RpcCalls } from "./pages/RpcCalls"
 import { RuntimeCalls } from "./pages/RuntimeCalls"
 import { Storage } from "./pages/Storage"
 import { ViewFns } from "./pages/ViewFns"
-import { lazy } from "react"
 
 const Teleport = lazy(() => import("./pages/Teleport/Teleport"))
+const Metrics = lazy(() => import("./pages/Metrics/Metrics"))
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="rpcCalls/*" element={<RpcCalls />} />
           <Route path="accounts/*" element={<Accounts />} />
           <Route path="teleport" element={<Teleport />} />
+          <Route path="metrics" element={<Metrics />} />
           <Route path="*" element={<Navigate to="/explorer" replace />} />
         </Routes>
       </AppShell>

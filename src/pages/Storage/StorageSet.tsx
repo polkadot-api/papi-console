@@ -1,5 +1,6 @@
 import { LookupTypeEdit } from "@/codec-components/LookupTypeEdit"
-import { Chopsticks } from "@/components/Icons"
+import { ForkMethodIcon } from "@/components/Icons"
+import { MetadataEntryInput } from "@/components/MetadataEntryInput"
 import { Button } from "@/components/ui/button"
 import { chainClient$, client$, lookup$ } from "@/state/chains/chain.state"
 import { getTypeComplexity } from "@/utils"
@@ -71,6 +72,13 @@ export const StorageSet: FC = () => {
 
   return (
     <div className="flex flex-col gap-4 items-start w-full overflow-hidden">
+      <MetadataEntryInput
+        state={storageEntryState}
+        labels={{
+          group: "Pallet",
+          item: "Entry",
+        }}
+      />
       <KeyInput />
       <StorageKeysInput disableToggle />
       {currentValue && currentValue.encodedKey ? (
@@ -112,7 +120,7 @@ export const StorageSet: FC = () => {
             }}
           >
             Set Storage
-            <Chopsticks />
+            <ForkMethodIcon />
           </Button>
         </>
       ) : null}

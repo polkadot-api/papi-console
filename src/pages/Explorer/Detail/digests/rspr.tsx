@@ -28,4 +28,4 @@ const RsprConsensusLog = Struct({
   storageRoot: Hex(32),
   blockNumber: compactNumber,
 })
-const decodeRsprConsensus = createDecodeDigestFn(RsprConsensusLog)
+export const decodeRsprConsensus = createDecodeDigestFn(RsprConsensusLog)

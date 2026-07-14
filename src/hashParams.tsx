@@ -31,7 +31,7 @@ export const setHashParams = (
   location.hash = "#" + params.toString()
 }
 
-const persistingKeys = ["networkId", "endpoint", "chopsticks"]
+const persistingKeys = ["networkId", "endpoint", "fork"]
 
 const usePersistKeys = () => {
   const location = useLocation()

@@ -1,7 +1,7 @@
 import { state } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
 import { useState } from "react"
-import { map } from "rxjs"
+import { defer, from, map, mergeAll, Observable, retry, timer } from "rxjs"
 import { getHashParams, setHashParams } from "../hashParams"
 
 interface Parser<T> {
@@ -131,3 +131,13 @@ export const createState = <T>(defaultValue: T) => {
 
   return [state$, setValue] as const
 }
+
+export const codeSplit$ = <T>(fetch: () => Promise<Observable<T>>) =>
+  defer(() =>
+    from(fetch()).pipe(
+      retry({
+        delay: () => timer(1000),
+      }),
+      mergeAll(),
+    ),
+  )

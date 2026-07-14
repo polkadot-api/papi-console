@@ -1,4 +1,4 @@
-import { Chopsticks } from "@/components/Icons"
+import { ForkMethodIcon } from "@/components/Icons"
 import { Loading } from "@/components/Loading"
 import { getHashParams } from "@/hashParams"
 import { groupBy } from "@/lib/groupBy"
@@ -122,7 +122,7 @@ export const BlockBody: FC = () => {
               value="diff"
             >
               Diff
-              <Chopsticks
+              <ForkMethodIcon
                 className="inline-block align-middle ml-2"
                 size={20}
               />

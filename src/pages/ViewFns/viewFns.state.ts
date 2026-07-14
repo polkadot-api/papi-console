@@ -1,7 +1,7 @@
 import { createMetadataEntryState } from "@/components/MetadataEntryInput"
 import { pushWorkspaceEntry, WorkspaceEntryData } from "@/components/Workspace"
 import { getHashParams } from "@/hashParams"
-import { runtimeCtxAt$, unsafeApi$ } from "@/state/chains/chain.state"
+import { genericUnsafeApi$, runtimeCtxAt$ } from "@/state/chains/chain.state"
 import { RuntimeContext } from "@polkadot-api/observable-client"
 import { shareLatest, state } from "@react-rxjs/core"
 import { SquareFunction } from "lucide-react"
@@ -110,7 +110,7 @@ export const viewFnCallToWorkspaceEntry = async (
   call: ViewFnCall,
 ): Promise<WorkspaceEntryData<ViewFnWorkspaceContext>> => {
   const [unsafeApi, ctx] = await firstValueFrom(
-    combineLatest([unsafeApi$, runtimeCtxAt$(call.blockHash)]),
+    combineLatest([genericUnsafeApi$, runtimeCtxAt$(call.blockHash)]),
   )
 
   const query$ = from(

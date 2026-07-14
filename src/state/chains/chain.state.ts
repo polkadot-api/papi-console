@@ -1,5 +1,7 @@
 import { createChopsticksProvider } from "@/chopsticks/chopsticks"
+import { createForkliftProvider } from "@/state/forklift"
 import { getHashParams, setHashParams } from "@/hashParams"
+import { DotAh } from "@polkadot-api/descriptors"
 import { getDynamicBuilder, getLookupFn } from "@polkadot-api/metadata-builders"
 import type {
   ChainHead$,
@@ -10,10 +12,22 @@ import {
   HexString,
   unifyMetadata,
 } from "@polkadot-api/substrate-bindings"
-import { liftSuspense, sinkSuspense, state, SUSPENSE } from "@react-rxjs/core"
+import {
+  liftSuspense,
+  sinkSuspense,
+  state,
+  StateObservable,
+  SUSPENSE,
+  withDefault,
+} from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
 import { get, update } from "idb-keyval"
-import { createClient } from "polkadot-api"
+import {
+  ChainDefinition,
+  createClient,
+  JsonRpcProvider,
+  TypedApi,
+} from "polkadot-api"
 import { withLogsRecorder } from "polkadot-api/logs-provider"
 import { fromHex, toHex } from "polkadot-api/utils"
 import {
@@ -49,23 +63,36 @@ import {
   createWebsocketSource,
   getWebsocketProvider,
   WebsocketSource,
+  WsStatusJsonRpcProvider,
 } from "./websocket"
 
 export type ChainSource = WebsocketSource | SmoldotSource
+export const LIGHT_CLIENT_ENDPOINT = "light-client"
+export const AUTO_RPC_ENDPOINT = "auto-rpc"
+export type ForkMethod = "none" | "chopsticks" | "forklift"
 
 export type SelectedChain = {
   network: Network
   endpoint: string
-  withChopsticks: boolean
+  forkMethod: ForkMethod
 }
 export const getChainSource = ({
   endpoint,
-  network: { id, relayChain },
-  withChopsticks,
+  network,
+  forkMethod,
 }: SelectedChain) =>
-  endpoint === "light-client"
-    ? createSmoldotSource(id, relayChain)
-    : createWebsocketSource(id, endpoint, withChopsticks)
+  endpoint === LIGHT_CLIENT_ENDPOINT
+    ? createSmoldotSource(network.id, network.relayChain)
+    : createWebsocketSource(
+        network.id,
+        endpoint === AUTO_RPC_ENDPOINT ? shuffleEndpoints(network) : endpoint,
+        forkMethod,
+      )
+const shuffleEndpoints = (network: Network) =>
+  Object.values(network.endpoints)
+    .map((endpoint) => ({ endpoint, luckyNumber: Math.random() }))
+    .sort((a, b) => a.luckyNumber - b.luckyNumber)
+    .map(({ endpoint }) => endpoint)
 
 const setRpcLogsEnabled = (enabled: boolean) =>
   localStorage.setItem("rpc-logs", String(enabled))
@@ -76,24 +103,30 @@ console.log("You can enable JSON-RPC logs by calling `setRpcLogsEnabled(true)`")
 export const getProvider = (source: ChainSource) => {
   const provider =
     source.type === "websocket"
-      ? source.withChopsticks
+      ? source.forkMethod === "chopsticks"
         ? createChopsticksProvider(source.endpoint)
-        : getWebsocketProvider(source)
+        : source.forkMethod === "forklift"
+          ? createForkliftProvider(source.endpoint)
+          : getWebsocketProvider(source)
       : getSmoldotProvider(source)
 
-  return withLogsRecorder((msg) => {
+  const recorder = withLogsRecorder((msg) => {
     if (import.meta.env.DEV || getRpcLogsEnabled()) {
       console.debug(msg)
     }
   }, provider)
+
+  // Bring over extra properties from the original provider.
+  return Object.assign(recorder, provider)
 }
 
 export const [selectedChainChanged$, onChangeChain] =
   createSignal<SelectedChain>()
-selectedChainChanged$.subscribe(({ network, endpoint }) =>
+selectedChainChanged$.subscribe(({ network, endpoint, forkMethod }) =>
   setHashParams({
     networkId: network.id,
     endpoint,
+    fork: forkMethod === "none" ? null : forkMethod,
   }),
 )
 
@@ -112,14 +145,15 @@ export const isValidUri = (input: string): boolean => {
 
 const defaultSelectedChain: SelectedChain = {
   network: defaultNetwork,
-  endpoint: "light-client",
-  withChopsticks: false,
+  endpoint: LIGHT_CLIENT_ENDPOINT,
+  forkMethod: "none",
 }
 const getDefaultChain = (): SelectedChain => {
   const hashParams = getHashParams()
   if (hashParams.has("networkId") && hashParams.has("endpoint")) {
     const networkId = hashParams.get("networkId")!
     const endpoint = hashParams.get("endpoint")!
+    const forkMethod = getForkMethod(hashParams, endpoint)
 
     if (networkId === "custom") {
       if (!isValidUri(endpoint)) return defaultSelectedChain
@@ -127,14 +161,26 @@ const getDefaultChain = (): SelectedChain => {
       return {
         network: getCustomNetwork(),
         endpoint,
-        withChopsticks: false,
+        forkMethod,
       }
     }
     const network = findNetwork(networkId)
-    if (network) return { network, endpoint, withChopsticks: false }
+    if (network) return { network, endpoint, forkMethod }
   }
 
   return defaultSelectedChain
+}
+
+const getForkMethod = (
+  hashParams: URLSearchParams,
+  endpoint: string,
+): ForkMethod => {
+  if (endpoint === LIGHT_CLIENT_ENDPOINT) return "none"
+
+  const fork = hashParams.get("fork")
+  if (fork === "chopsticks" || fork === "forklift") return fork
+
+  return "none"
 }
 export const selectedChain$ = state<SelectedChain>(
   selectedChainChanged$,
@@ -214,7 +260,7 @@ export const chainClient$ = state(
       const chainHead: ChainHead$ = (client as any).___INTERNAL_DO_NOT_USE
       return concat(
         i === 0 ? EMPTY : of(SUSPENSE),
-        of({ id, client, chainHead }),
+        of({ id, client, chainHead, provider }),
         NEVER,
       ).pipe(
         finalize(() => {
@@ -225,7 +271,20 @@ export const chainClient$ = state(
     sinkSuspense(),
   ),
 )
-export const client$ = state(chainClient$.pipe(map(({ client }) => client)))
+export const currentWsStatus$ = chainClient$.pipeState(
+  switchMap(({ provider }) => {
+    const isWsProvider = (
+      provider: JsonRpcProvider,
+    ): provider is WsStatusJsonRpcProvider => "statusChange$" in provider
+
+    return isWsProvider(provider)
+      ? provider.statusChange$.pipe(startWith(provider.getStatus()))
+      : of(null)
+  }),
+  withDefault(null),
+)
+
+export const client$ = chainClient$.pipeState(map(({ client }) => client))
 export const canProduceBlocks$ = state(
   client$.pipe(
     switchMap((client) => client._request("rpc_methods", [])),
@@ -249,8 +308,11 @@ export const canSetStorage$ = state(
 )
 
 export const unsafeApi$ = chainClient$.pipeState(
-  map(({ client }) => client.getUnsafeApi()),
+  map(({ client }) => client.getUnsafeApi<DotAh>()),
 )
+export const genericUnsafeApi$ = unsafeApi$ as StateObservable<
+  TypedApi<ChainDefinition, false>
+>
 
 const uncachedRuntimeCtx$ = chainClient$.pipeState(
   switchMap(({ chainHead }) => chainHead.runtime$),

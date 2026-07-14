@@ -1,5 +1,5 @@
 import { ButtonGroup } from "@/components/ButtonGroup"
-import { Chopsticks } from "@/components/Icons"
+import { ForkMethodIcon } from "@/components/Icons"
 import { LoadingMetadata } from "@/components/Loading"
 import { withSubscribe } from "@/components/withSuspense"
 import { createState } from "@/lib/externalState"
@@ -7,11 +7,11 @@ import { canSetStorage$ } from "@/state/chains/chain.state"
 import { useStateObservable } from "@react-rxjs/core"
 import { FC } from "react"
 import { Route, Routes } from "react-router-dom"
+import { CenteredScrollContainer } from "../AppShell"
 import { StorageDecode } from "./StorageDecode"
 import { StorageQuery } from "./StorageQuery"
 import { StorageSet } from "./StorageSet"
 import { StorageSubscriptions } from "./StorageSubscriptions"
-import { CenteredScrollContainer } from "../AppShell"
 
 export const Storage = withSubscribe(
   () => (
@@ -54,7 +54,7 @@ const StorageEntry: FC = () => {
                   content: (
                     <>
                       Set Value
-                      <Chopsticks
+                      <ForkMethodIcon
                         className="inline-block align-middle ml-2"
                         size={20}
                       />
