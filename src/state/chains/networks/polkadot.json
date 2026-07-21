@@ -27,7 +27,7 @@
     "rpcs": {
       "Allnodes": "wss://polkadot-rpc.publicnode.com",
       "Dwellir": "wss://polkadot-rpc.n.dwellir.com",
-      "Gatotech Unlimited": "wss://polkadot.gatotech.network",    
+      "Gatotech Unlimited": "wss://polkadot.gatotech.network",
       "Helixstreet": "wss://rpc-polkadot.helixstreet.io",
       "LuckyFriday": "wss://rpc-polkadot.luckyfriday.io",
       "OnFinality": "wss://polkadot.api.onfinality.io/public-ws",
