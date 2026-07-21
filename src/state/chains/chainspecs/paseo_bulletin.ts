@@ -6,7 +6,7 @@ export const chainSpec = JSON.stringify({
     "/dns/bulletin-paseo.faradaynodes.com/tcp/35503/p2p/12D3KooWRVrepgbKXa8qUq1NAR6ehqZr1tZZK8Y7NynaruNJy9gA",
     "/dns/bulletin-paseo.faradaynodes.com/tcp/35507/wss/p2p/12D3KooWRVrepgbKXa8qUq1NAR6ehqZr1tZZK8Y7NynaruNJy9gA",
     "/dns/paseo-bulletin-bootnode.bestvalidator.com/tcp/49043/p2p/12D3KooWGM3gLv9wwZicmEbh57jV1ZuCa23rYW3pXEp2B76UTZvk",
-    "/dns/paseo-bulletin-bootnode.bestvalidator.com/tcp/30345/wss/p2p/12D3KooWGM3gLv9wwZicmEbh57jV1ZuCa23rYW3pXEp2B76UTZvk",
+    "/dns/paseo-bulletin-bootnode.bestvalidator.com/tcp/443/wss/p2p/12D3KooWGM3gLv9wwZicmEbh57jV1ZuCa23rYW3pXEp2B76UTZvk",
   ],
   properties: {
     ss58Format: 42,
