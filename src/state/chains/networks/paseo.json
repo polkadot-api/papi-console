@@ -127,13 +127,6 @@
     "hasChainSpecs": false
   },
   {
-    "id": "bulletin",
-    "display": "Bulletin (Paseo)",
-    "rpcs": {
-      "Parity": "wss://paseo-bulletin-rpc.polkadot.io"
-    }
-  },
-  {
     "id": "paseo_frequency",
     "display": "Frequency(Paseo)",
     "relayChainInfo": {
