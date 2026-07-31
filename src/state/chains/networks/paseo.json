@@ -49,6 +49,25 @@
     "hasChainSpecs": false
   },
   {
+    "id": "paseo_bulletin",
+    "display": "Paseo Bulletin",
+    "rpcs": {
+      "SIK": "wss://bullet.sik.rocks",
+      "StakingLand": "wss://bulletin-paseo.tservices.es:8443",
+      "Tuna Staking": "wss://bullet.tunastaking.eu"
+    },
+    "relayChainInfo": {
+      "id": "paseo",
+      "isSystem": true,
+      "parachain": 1010
+    },
+    "nativeToken": {
+      "symbol": "PAS",
+      "decimals": 10
+    },
+    "hasChainSpecs": true
+  },
+  {
     "id": "paseo_ajuna",
     "display": "Ajuna Network (Paseo)",
     "relayChainInfo": {
@@ -106,13 +125,6 @@
       "decimals": 12
     },
     "hasChainSpecs": false
-  },
-  {
-    "id": "bulletin",
-    "display": "Bulletin (Paseo)",
-    "rpcs": {
-      "Parity": "wss://paseo-bulletin-rpc.polkadot.io"
-    }
   },
   {
     "id": "paseo_frequency",

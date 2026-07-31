@@ -9,10 +9,10 @@ import {
 import { combineLatest, distinctUntilChanged, map, scan } from "rxjs"
 import { callData$ } from "../componentValue.state"
 import { customSignedExtensions$ } from "../CustomSignedExt"
-import { ArgsForCreator, TxCreator } from "@polkadot-api/tx-creator"
-import type { CommonEnhancersSpecs } from "@polkadot-api/signers-common"
+import { ArgsForCreator } from "@polkadot-api/tx-creator"
+import type { CommonSignerTxCreator } from "@polkadot-api/signers-common"
 
-type CommonOpts = ArgsForCreator<TxCreator<CommonEnhancersSpecs>, any>
+type CommonOpts = ArgsForCreator<CommonSignerTxCreator, any>
 type CustomSignedExtensions = Record<
   string,
   {

@@ -175,9 +175,11 @@ const DryRunChainResult: FC<{ result: TDryRunChainResult }> = ({ result }) => {
       <div className="space-y-2 text-sm">
         <StatusBadge value={false} />
         <div className="text-red-700 dark:text-red-300">
-          {result.failureReason}
+          {result.dryRunError.reason}
         </div>
-        {result.failureSubReason ? <div>{result.failureSubReason}</div> : null}
+        {result.dryRunError.subReason ? (
+          <div>{result.dryRunError.subReason}</div>
+        ) : null}
       </div>
     )
   }

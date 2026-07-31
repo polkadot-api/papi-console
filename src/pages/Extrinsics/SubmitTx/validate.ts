@@ -146,7 +146,7 @@ export const dryRun$ = (tx: Transaction<any>, txOptions: any) =>
           value: undefined,
         }
       }
-      if (evt.type === "txBestBlocksState" && evt.found) {
+      if (evt.type === "inBestBlock") {
         return {
           type: "valid" as const,
           value: {
