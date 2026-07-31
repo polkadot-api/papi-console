@@ -1,0 +1,12 @@
+allowBuilds:
+  "@reown/appkit": true
+  esbuild: true
+minimumReleaseAgeExclude:
+  - "@paraspell/assets@14.1.0-rc.1"
+  - "@paraspell/descriptors@14.1.0-rc.1"
+  - "@paraspell/pallets@14.1.0-rc.1"
+  - "@paraspell/sdk-common@14.1.0-rc.1"
+  - "@paraspell/sdk-core@14.1.0-rc.1"
+  - "@paraspell/sdk@14.1.0-rc.1"
+  - "@polkahub/ui-components@0.9.0"
+  - polkahub@0.9.0
