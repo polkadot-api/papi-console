@@ -72,7 +72,7 @@ export const txOptions$ = state(
     tip$.pipe(map((v) => (isIntegerStr(v) ? BigInt(v) : null))),
     customSignedExtensions$,
   ]).pipe(
-    map(([nonce, mortality, tip, signedExt]): TxOptions => {
+    map(([nonce, mortality, tip, signedExt]): Omit<TxOptions, "asset"> => {
       return {
         mortality,
         nonce: nonce ?? undefined,
@@ -81,5 +81,5 @@ export const txOptions$ = state(
       }
     }),
   ),
-  {} satisfies TxOptions,
+  {},
 )

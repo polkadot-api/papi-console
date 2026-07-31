@@ -5,9 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
-  react18-json-view:
-    hash: 962696fac5fe7ad3e94fd36dad07521c6c3eafd52f219ab335d52438387f6b66
-    path: patches/react18-json-view.patch
+  react18-json-view: 962696fac5fe7ad3e94fd36dad07521c6c3eafd52f219ab335d52438387f6b66
 
 importers:
 
