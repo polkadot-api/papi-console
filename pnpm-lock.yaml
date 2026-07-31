@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  react18-json-view:
+    hash: 962696fac5fe7ad3e94fd36dad07521c6c3eafd52f219ab335d52438387f6b66
+    path: patches/react18-json-view.patch
+
 importers:
 
   .:
@@ -136,7 +141,7 @@ importers:
         version: 4.18.11(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react18-json-view:
         specifier: ^0.2.10
-        version: 0.2.10(react@19.2.8)
+        version: 0.2.10(patch_hash=962696fac5fe7ad3e94fd36dad07521c6c3eafd52f219ab335d52438387f6b66)(react@19.2.8)
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
@@ -9521,7 +9526,7 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  react18-json-view@0.2.10(react@19.2.8):
+  react18-json-view@0.2.10(patch_hash=962696fac5fe7ad3e94fd36dad07521c6c3eafd52f219ab335d52438387f6b66)(react@19.2.8):
     dependencies:
       copy-to-clipboard: 3.3.3
       react: 19.2.8

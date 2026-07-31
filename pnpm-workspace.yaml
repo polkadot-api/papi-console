@@ -1,6 +1,8 @@
 allowBuilds:
   "@reown/appkit": true
   esbuild: true
+patchedDependencies:
+  react18-json-view: patches/react18-json-view.patch
 minimumReleaseAgeExclude:
   - "@paraspell/assets@14.1.0-rc.1"
   - "@paraspell/descriptors@14.1.0-rc.1"
