@@ -70,7 +70,7 @@ const forkLift$ = chainClient$.pipe(
   shareLatest(),
 )
 
-const fakeSign$ = (tx: Transaction<any>, txOptions: any) =>
+const fakeSign$ = (tx: Transaction, txOptions: any) =>
   combineLatest({
     signer: selectedAccount$.pipe(
       map((account) => (account ? getFakeTxCreator(account.address) : null)),
@@ -95,7 +95,7 @@ const fakeSign$ = (tx: Transaction<any>, txOptions: any) =>
     }),
   )
 
-export const validate$ = (tx: Transaction<any>, txOptions: any) =>
+export const validate$ = (tx: Transaction, txOptions: any) =>
   fakeSign$(tx, txOptions).pipe(
     switchMap(async (evt) =>
       evt
@@ -134,7 +134,7 @@ export const validate$ = (tx: Transaction<any>, txOptions: any) =>
     take(1),
   )
 
-export const dryRun$ = (tx: Transaction<any>, txOptions: any) =>
+export const dryRun$ = (tx: Transaction, txOptions: any) =>
   fakeSign$(tx, txOptions).pipe(
     switchMap((evt) =>
       evt ? evt.client.submitAndWatch(evt.extrinsic) : [null],

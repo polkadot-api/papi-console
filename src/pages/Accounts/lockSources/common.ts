@@ -21,8 +21,8 @@ export const getRelayBlock = async (client: PolkadotClient) => {
 
 export const batch = (
   api: TypedApi<DotAh, boolean>,
-  txs: Transaction<any>[],
-): Transaction<any> | undefined =>
+  txs: Transaction[],
+): Transaction | undefined =>
   txs.length > 1
     ? api.tx.Utility.batch({
         calls: txs.map((tx) => tx.decodedCall),
@@ -33,7 +33,7 @@ export interface UnlockAction {
   amount: bigint
   warn?: string
   action: string
-  tx: Transaction<any> | null
+  tx: Transaction | null
 }
 export interface IdentifiedLock {
   id: string

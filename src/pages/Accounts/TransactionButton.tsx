@@ -8,9 +8,7 @@ import { FC, useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { trackTx } from "../Extrinsics/ExtrinsicsWorkspaceEntry"
 
-export const TransactionButton: FC<{
-  tx: Transaction<any>
-}> = ({ tx }) => {
+export const TransactionButton: FC<{ tx: Transaction }> = ({ tx }) => {
   const { accountId } = useParams()
   const [selectedAccount] = useSelectedAccount()
   const allAccounts = useAvailableAccounts()
