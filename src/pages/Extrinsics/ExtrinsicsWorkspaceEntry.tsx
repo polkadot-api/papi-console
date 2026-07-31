@@ -29,7 +29,12 @@ type TrackedTransactionEvent =
       callData: TxCallData
     }
 
-const onGoingEvents = new Set(["signed", "broadcasted", "txBestBlocksState"])
+const onGoingEvents: Set<TrackedTransactionEvent["type"]> = new Set([
+  "created",
+  "broadcasted",
+  "inBestBlock",
+  "notInBestBlock",
+])
 
 export const trackTx = async (
   extrinsic: Uint8Array,
