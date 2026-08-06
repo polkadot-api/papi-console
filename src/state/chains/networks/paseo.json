@@ -35,7 +35,8 @@
     "id": "paseo_people_chain",
     "display": "Paseo People",
     "rpcs": {
-      "Amforc": "wss://people-paseo.rpc.amforc.com"
+      "Amforc": "wss://people-paseo.rpc.amforc.com",
+      "Rotko": "wss://people-paseo.rotko.net"
     },
     "relayChainInfo": {
       "id": "paseo",
