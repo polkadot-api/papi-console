@@ -1,4 +1,5 @@
-import { runtimeCtx$ } from "@/state/chains/chain.state"
+import { cn } from "@/lib/utils"
+import { selectedBlock$ } from "@/pages/Storage/BlockPicker"
 import { byteArraysAreEqual } from "@/utils/byteArray"
 import {
   CodecComponentType,
@@ -20,10 +21,10 @@ import { EditCodec } from "../EditCodec"
 import { TreeCodec } from "../EditCodec/Tree"
 import { BinaryDisplay } from "./BinaryDisplay"
 import { FocusPath } from "./FocusPath"
-import { cn } from "@/lib/utils"
 
 const editTypeMetadataProps$ = state(
-  runtimeCtx$.pipe(
+  selectedBlock$.pipe(
+    map(({ ctx }) => ctx),
     map(({ dynamicBuilder, lookup }) => ({
       builder: dynamicBuilder,
       metadata: lookup.metadata,

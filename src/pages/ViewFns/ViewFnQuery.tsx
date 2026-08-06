@@ -5,7 +5,7 @@ import {
 import { ActionButton } from "@/components/ActionButton"
 import { ExpandBtn } from "@/components/Expand"
 import { useNavigate } from "@/hashParams"
-import { client$, dynamicBuilder$, lookup$ } from "@/state/chains/chain.state"
+import { client$, dynamicBuilder$ } from "@/state/chains/chain.state"
 import { getTypeComplexity } from "@/utils/shape"
 import { state, useStateObservable, withDefault } from "@react-rxjs/core"
 import { createSignal } from "@react-rxjs/utils"
@@ -138,7 +138,10 @@ const inputValue$ = state(
   (idx: number) => inputValues$.pipe(map((v) => v[idx])),
   null,
 )
-const lookupState$ = state(lookup$, null)
+const lookupState$ = state(
+  selectedBlock$.pipe(map(({ ctx }) => ctx.lookup)),
+  null,
+)
 const RuntimeValueInput: FC<{ idx: number; name: string; type: number }> = ({
   idx,
   type,
