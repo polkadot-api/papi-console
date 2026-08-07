@@ -80,6 +80,33 @@ const createNameAllocator = (
   return { getName, hasName: (id: number) => names.has(id) }
 }
 
+const getWellKnownVariant = (entry: V14Lookup[number]) => {
+  if (entry.def.tag !== "variant" || entry.path.length !== 1) return null
+  if (
+    entry.path[0] === "Option" &&
+    entry.params.length === 1 &&
+    entry.params[0].name === "T" &&
+    entry.params[0].type != null
+  ) {
+    return { type: "option" as const, value: entry.params[0].type }
+  }
+  if (
+    entry.path[0] === "Result" &&
+    entry.params.length === 2 &&
+    entry.params[0].name === "T" &&
+    entry.params[0].type != null &&
+    entry.params[1].name === "E" &&
+    entry.params[1].type != null
+  ) {
+    return {
+      type: "result" as const,
+      ok: entry.params[0].type,
+      error: entry.params[1].type,
+    }
+  }
+  return null
+}
+
 const printDefinition = (
   lookup: V14Lookup,
   id: number,
@@ -113,6 +140,12 @@ const printDefinition = (
       return `{\n${indent(body)}\n}`
     }
     case "variant": {
+      const wellKnown = getWellKnownVariant(entry)
+      if (wellKnown?.type === "option")
+        return `Option<${printReference(wellKnown.value)}>`
+      if (wellKnown?.type === "result")
+        return `Result<${printReference(wellKnown.ok)}, ${printReference(wellKnown.error)}>`
+
       const body = entry.def.value
         .toSorted((a, b) => a.index - b.index)
         .map((variant, index) => {
@@ -179,6 +212,8 @@ const printInline = (lookup: V14Lookup, typeId: number) => {
 }
 
 const isComplexType = (entry: V14Lookup[number]) => {
+  if (getWellKnownVariant(entry)) return false
+
   switch (entry.def.tag) {
     case "composite":
     case "variant":

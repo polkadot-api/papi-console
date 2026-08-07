@@ -9,6 +9,8 @@ type TypeNode =
   | { type: "struct"; fields: Array<{ name: string; value: TypeNode }> }
   | { type: "sequence"; value: TypeNode }
   | { type: "array"; value: TypeNode; length: number }
+  | { type: "option"; value: TypeNode }
+  | { type: "result"; ok: TypeNode; error: TypeNode }
   | { type: "tuple"; values: TypeNode[] }
   | {
       type: "enum"
@@ -141,6 +143,24 @@ const parseType = (text: string): [TypeNode, string] => {
         throw new Error("Vector expects to end with `>`")
       return [{ type: "sequence", value }, innerRest.slice(1)]
     }
+    case "Option": {
+      if (!rest.startsWith("<")) throw new Error("Option expects `<type>`")
+      const [value, innerRest] = parseType(rest.slice(1))
+      if (!innerRest.startsWith(">"))
+        throw new Error("Option expects to end with `>`")
+      return [{ type: "option", value }, innerRest.slice(1)]
+    }
+    case "Result": {
+      if (!rest.startsWith("<"))
+        throw new Error("Result expects `<ok type, error type>`")
+      const [ok, afterOk] = parseType(rest.slice(1))
+      if (!afterOk.startsWith(","))
+        throw new Error("Result expects an error type after `,`")
+      const [error, afterError] = parseType(afterOk.slice(1))
+      if (!afterError.startsWith(">"))
+        throw new Error("Result expects to end with `>`")
+      return [{ type: "result", ok, error }, afterError.slice(1)]
+    }
     case "Arr": {
       if (!rest.startsWith("<"))
         throw new Error("Array expects `<type, length>`")
@@ -210,8 +230,13 @@ const compileDocument = (
     entries.push(null)
   })
 
-  const entry = (id: number, def: LookupDef, path: string[] = []) => {
-    entries[id] = { id, def, path, params: [], docs: [] }
+  const entry = (
+    id: number,
+    def: LookupDef,
+    path: string[] = [],
+    params: V14Lookup[number]["params"] = [],
+  ) => {
+    entries[id] = { id, def, path, params, docs: [] }
   }
   const allocate = () => {
     const id = entries.length
@@ -271,6 +296,78 @@ const compileDocument = (
           value: { type: typeId(node.value), len: node.length },
         })
         return
+      case "option": {
+        const value = typeId(node.value)
+        entry(
+          id,
+          {
+            tag: "variant",
+            value: [
+              { name: "None", index: 0, fields: [], docs: [] },
+              {
+                name: "Some",
+                index: 1,
+                fields: [
+                  {
+                    name: undefined,
+                    type: value,
+                    typeName: undefined,
+                    docs: [],
+                  },
+                ],
+                docs: [],
+              },
+            ],
+          },
+          ["Option"],
+          [{ name: "T", type: value }],
+        )
+        return
+      }
+      case "result": {
+        const ok = typeId(node.ok)
+        const error = typeId(node.error)
+        entry(
+          id,
+          {
+            tag: "variant",
+            value: [
+              {
+                name: "Ok",
+                index: 0,
+                fields: [
+                  {
+                    name: undefined,
+                    type: ok,
+                    typeName: undefined,
+                    docs: [],
+                  },
+                ],
+                docs: [],
+              },
+              {
+                name: "Err",
+                index: 1,
+                fields: [
+                  {
+                    name: undefined,
+                    type: error,
+                    typeName: undefined,
+                    docs: [],
+                  },
+                ],
+                docs: [],
+              },
+            ],
+          },
+          ["Result"],
+          [
+            { name: "T", type: ok },
+            { name: "E", type: error },
+          ],
+        )
+        return
+      }
       case "tuple":
         entry(id, { tag: "tuple", value: node.values.map(typeId) })
         return

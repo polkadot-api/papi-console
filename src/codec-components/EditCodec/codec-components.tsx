@@ -6,6 +6,7 @@ import {
   EditOption,
   EditResult,
   EditVoid,
+  NOTIN,
 } from "@polkadot-api/react-builder"
 import { FC, ReactNode, useState } from "react"
 import { twMerge } from "tailwind-merge"
@@ -88,12 +89,54 @@ export const COption: EditOption = ({
   )
 }
 
-// TODO
-export const CResult: EditResult = ({ value, inner, type }) => {
-  return type === "blank" ? null : (
-    <>
-      {value.success ? "ok" : "ko"}-{inner}
-    </>
+export const CResult: EditResult = ({
+  value,
+  inner,
+  shape,
+  onValueChanged,
+}) => {
+  const success = value === NOTIN ? null : value.success
+  const select = (nextSuccess: boolean) => {
+    if (success === nextSuccess) return
+    onValueChanged({
+      success: nextSuccess,
+      value: getDefaultValue(nextSuccess ? shape.value.ok : shape.value.ko),
+    })
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div
+        className="flex w-fit rounded-md border border-border bg-muted p-0.5"
+        role="group"
+        aria-label="Result variant"
+      >
+        <button
+          type="button"
+          aria-pressed={success === true}
+          className={twMerge(
+            "rounded-sm px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
+            success === true &&
+              "bg-background text-emerald-600 shadow-xs dark:text-emerald-400",
+          )}
+          onClick={() => select(true)}
+        >
+          Ok
+        </button>
+        <button
+          type="button"
+          aria-pressed={success === false}
+          className={twMerge(
+            "rounded-sm px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
+            success === false && "bg-background text-destructive shadow-xs",
+          )}
+          onClick={() => select(false)}
+        >
+          Err
+        </button>
+      </div>
+      {inner}
+    </div>
   )
 }
 

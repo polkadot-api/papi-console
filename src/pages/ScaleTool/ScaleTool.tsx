@@ -329,6 +329,10 @@ const SyntaxReference = () => (
           description="Variable and fixed-length collections"
         />
         <SyntaxRow
+          code="Option<u32> · Result<u32, str>"
+          description="Optional values and success or error results"
+        />
+        <SyntaxRow
           code="[u32, bool]"
           description="A tuple; use [] for an empty tuple"
         />
