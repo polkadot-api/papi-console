@@ -22,6 +22,7 @@ import {
   MoonStar,
   Send,
   ServerCog,
+  Shapes,
   SquareEqual,
   SquareFunction,
   UserRound,
@@ -99,6 +100,11 @@ const navigationGroups: Array<{
         label: "Accounts",
         // Alt Wallet
         icon: UserRound,
+      },
+      {
+        path: "/scale-tool",
+        label: "SCALE tool",
+        icon: Shapes,
       },
       {
         path: "/teleport",

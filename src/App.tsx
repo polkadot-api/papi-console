@@ -10,6 +10,7 @@ import { Extrinsics } from "./pages/Extrinsics"
 import { Metadata } from "./pages/Metadata"
 import { RpcCalls } from "./pages/RpcCalls"
 import { RuntimeCalls } from "./pages/RuntimeCalls"
+import { ScaleTool } from "./pages/ScaleTool"
 import { Storage } from "./pages/Storage"
 import { ViewFns } from "./pages/ViewFns"
 
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="constants/*" element={<Constants />} />
           <Route path="metadata/*" element={<Metadata />} />
           <Route path="rpcCalls/*" element={<RpcCalls />} />
+          <Route path="scale-tool" element={<ScaleTool />} />
           <Route path="accounts/*" element={<Accounts />} />
           <Route path="teleport" element={<Teleport />} />
           <Route path="metrics" element={<Metrics />} />

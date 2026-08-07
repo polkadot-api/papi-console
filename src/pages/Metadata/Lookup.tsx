@@ -1,5 +1,5 @@
 import { ExpandBtn } from "@/components/Expand"
-import { IconLink } from "@/components/IconButton"
+import { ScaleToolLink } from "@/components/ScaleToolLink"
 import { V14Lookup } from "@polkadot-api/substrate-bindings"
 import { Edit, Search } from "lucide-react"
 import {
@@ -124,13 +124,23 @@ export const LookupLink: FC<{ id: number }> = ({ id }) => {
     <div
       className={twMerge("border rounded p-2", expanded && "bg-slate-400/5")}
     >
-      <button
-        onClick={() => setExpanded((e) => !e)}
-        className="flex items-center gap-1"
-      >
-        <ExpandBtn expanded={expanded} />
-        id: {id}
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setExpanded((e) => !e)}
+          className="flex items-center gap-1"
+        >
+          <ExpandBtn expanded={expanded} />
+          id: {id}
+        </button>
+        <ScaleToolLink
+          typeId={id}
+          className="hover:text-polkadot-400"
+          aria-label={`Open lookup type ${id} in SCALE tool`}
+          title="Open in SCALE tool"
+        >
+          <Edit size={16} />
+        </ScaleToolLink>
+      </div>
       {expanded && <LookupNode id={id} />}
     </div>
   )
@@ -232,13 +242,13 @@ const GenericLookupNode: FC<PropsWithChildren<{ entry: V14Entry }>> = ({
     <div className="flex flex-col gap-2 w-full py-2">
       <div>
         <div className="flex gap-2 items-center">
-          <IconLink
-            tooltip="Edit lookup type"
-            to={`/metadata/lookup/editor/${entry.id}`}
+          <ScaleToolLink
+            typeId={entry.id}
             className="hover:text-polkadot-400"
+            title="Open in SCALE tool"
           >
             <Edit size={20} />
-          </IconLink>
+          </ScaleToolLink>
           <h4 className="font-bold">Type: {entry.def.tag}</h4>
         </div>
         {entry.path.length ? <p>Path: {entry.path.join(".")}</p> : null}
