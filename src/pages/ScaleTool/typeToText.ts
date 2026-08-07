@@ -145,6 +145,7 @@ const printDefinition = (
         return `Option<${printReference(wellKnown.value)}>`
       if (wellKnown?.type === "result")
         return `Result<${printReference(wellKnown.ok)}, ${printReference(wellKnown.error)}>`
+      if (entry.def.value.length === 0) return "{}"
 
       const body = entry.def.value
         .toSorted((a, b) => a.index - b.index)
