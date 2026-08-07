@@ -27,7 +27,7 @@ import {
   CircleAlert,
   Link2,
 } from "lucide-react"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useLocation } from "react-router-dom"
 import { CenteredScrollContainer } from "../AppShell"
 import { textToMetadata } from "./textToMetadata"
@@ -77,6 +77,8 @@ const TypeTool = () => {
     type: CodecComponentType.Initial,
     value: data ?? "",
   })
+  const componentValueRef = useRef(componentValue)
+  componentValueRef.current = componentValue
 
   useEffect(() => {
     // Ensure a fresh tool URL is immediately self-contained and shareable.
@@ -87,14 +89,47 @@ const TypeTool = () => {
   useEffect(() => {
     try {
       const nextLookup = getLookupFn(unifyMetadata(textToMetadata(definition)))
-      getDynamicBuilder(nextLookup).buildDefinition(0)
+      const nextCodec = getDynamicBuilder(nextLookup).buildDefinition(0)
+      const currentValue = componentValueRef.current
+
+      try {
+        if (currentValue.type === CodecComponentType.Initial) {
+          if (currentValue.value) nextCodec.dec(currentValue.value)
+        } else if (!currentValue.value.empty) {
+          const previousDecoded = currentValue.value.decoded
+          const nextValue = codecValueCandidates(previousDecoded)
+            .map((candidate) => {
+              try {
+                const encoded = nextCodec.enc(candidate)
+                return { encoded, decoded: nextCodec.dec(encoded) }
+              } catch {
+                return null
+              }
+            })
+            .find(
+              (value) =>
+                value && codecValuesEqual(value.decoded, previousDecoded),
+            )
+          if (!nextValue) {
+            throw new Error("The value is not compatible with the new type")
+          }
+          setComponentValue({
+            type: CodecComponentType.Updated,
+            value: { ...currentValue.value, ...nextValue },
+          })
+        }
+      } catch {
+        setComponentValue({ type: CodecComponentType.Initial, value: "" })
+        setData(null)
+      }
+
       setLookup(() => nextLookup)
       setError("")
     } catch (error) {
       setLookup(null)
       setError(error instanceof Error ? error.message : String(error))
     }
-  }, [definition])
+  }, [definition, setData])
 
   const builder = useMemo(
     () => (lookup ? getDynamicBuilder(lookup) : null),
@@ -398,3 +433,51 @@ const useFragmentParamState = <T extends string | null>(
 }
 
 const identity = (value: string) => value
+
+const codecValueCandidates = (value: unknown) => {
+  if (typeof value === "number" && Number.isSafeInteger(value)) {
+    return [value, BigInt(value)]
+  }
+  if (typeof value === "bigint") {
+    const asNumber = Number(value)
+    if (Number.isSafeInteger(asNumber) && BigInt(asNumber) === value) {
+      return [value, asNumber]
+    }
+  }
+  return [value]
+}
+
+const codecValuesEqual = (left: unknown, right: unknown): boolean => {
+  if (Object.is(left, right)) return true
+  if (typeof left === "number" && typeof right === "bigint") {
+    return Number.isSafeInteger(left) && BigInt(left) === right
+  }
+  if (typeof left === "bigint" && typeof right === "number") {
+    return Number.isSafeInteger(right) && left === BigInt(right)
+  }
+  if (left instanceof Uint8Array && right instanceof Uint8Array) {
+    return (
+      left.length === right.length &&
+      left.every((value, i) => value === right[i])
+    )
+  }
+  if (Array.isArray(left) && Array.isArray(right)) {
+    return (
+      left.length === right.length &&
+      left.every((value, i) => codecValuesEqual(value, right[i]))
+    )
+  }
+  if (left && right && typeof left === "object" && typeof right === "object") {
+    const leftEntries = Object.entries(left)
+    const rightRecord = right as Record<string, unknown>
+    return (
+      leftEntries.length === Object.keys(rightRecord).length &&
+      leftEntries.every(
+        ([key, value]) =>
+          Object.hasOwn(rightRecord, key) &&
+          codecValuesEqual(value, rightRecord[key]),
+      )
+    )
+  }
+  return false
+}
