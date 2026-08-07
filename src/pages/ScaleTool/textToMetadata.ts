@@ -1,16 +1,27 @@
 import { V14Lookup, V15 } from "@polkadot-api/substrate-bindings"
 
 type LookupDef = V14Lookup[number]["def"]
+type Primitive = Extract<LookupDef, { tag: "primitive" }>["value"]["tag"]
 
-const wordRegex = /^[a-zA-Z0-9_]+/
+type TypeNode =
+  | { type: "primitive"; value: Primitive }
+  | { type: "compact"; value: TypeNode }
+  | { type: "struct"; fields: Array<{ name: string; value: TypeNode }> }
+  | { type: "sequence"; value: TypeNode }
+  | { type: "array"; value: TypeNode; length: number }
+  | { type: "tuple"; values: TypeNode[] }
+  | {
+      type: "enum"
+      variants: Array<{ name: string; index: number; value: TypeNode }>
+    }
+  | { type: "bitSequence"; order: "LSB" | "MSB" }
+  | { type: "reference"; name: string }
 
-const nextToken = (text: string): [string, string] => {
-  const word = wordRegex.exec(text)
-  if (!word) return [text.slice(0, 1), text.slice(1)]
-  return [word[0], text.slice(word[0].length)]
-}
+const wordRegex = /^[a-zA-Z_][a-zA-Z0-9_]*/
+const numberRegex = /^\d+/
+const referenceRegex = /^\$([a-zA-Z_][a-zA-Z0-9_]*)/
 
-const primitiveTypes = [
+const primitiveTypes = new Set<Primitive>([
   "u8",
   "u16",
   "u32",
@@ -26,193 +37,297 @@ const primitiveTypes = [
   "bool",
   "char",
   "str",
-]
+])
 
-const readStruct = (text: string, base: number): [LookupDef[], string] => {
-  const result: LookupDef[] = []
-  const fields: Extract<LookupDef, { tag: "composite" }>["value"] = []
-  result.push({ tag: "composite", value: fields })
-
-  let token = nextToken(text)
-  while (token[0] !== "}") {
-    if (!token[0]) throw new Error("Expected struct to end with `}`")
-    const name = token[0]
-    if (!token[1].startsWith(":"))
-      throw new Error("Expected struct field to have `:`")
-
-    const innerBase = base + result.length
-    const [inner, rest] = textToLookup(token[1].slice(1), innerBase)
-    result.push(...inner)
-    fields.push({ docs: [], name, type: innerBase, typeName: undefined })
-    token = nextToken(rest)
-    if (token[0] === ",") token = nextToken(token[1])
-  }
-
-  return [result, token[1]]
+const readWord = (text: string, expected: string) => {
+  const match = wordRegex.exec(text)
+  if (!match) throw new Error(`Expected ${expected}`)
+  return [match[0], text.slice(match[0].length)] as const
 }
 
-const readTuple = (text: string, base: number): [LookupDef[], string] => {
-  const result: LookupDef[] = []
-  const fields: number[] = []
-  result.push({ tag: "tuple", value: fields })
+const readReference = (text: string) => {
+  const match = referenceRegex.exec(text)
+  if (!match) throw new Error("Type names must begin with `$`")
+  return [match[1], text.slice(match[0].length)] as const
+}
 
-  while (!text.startsWith("]")) {
-    if (!text) throw new Error("Expected tuple to end with `]`")
-    const innerBase = base + result.length
-    const [inner, rest] = textToLookup(text, innerBase)
-    result.push(...inner)
-    fields.push(innerBase)
+const parseStruct = (text: string): [TypeNode, string] => {
+  const fields: Extract<TypeNode, { type: "struct" }>["fields"] = []
+
+  while (!text.startsWith("}")) {
+    if (!text) throw new Error("Expected struct to end with `}`")
+    const [name, afterName] = readWord(text, "a struct field name")
+    if (!afterName.startsWith(":"))
+      throw new Error("Expected struct field to have `:`")
+
+    const [value, rest] = parseType(afterName.slice(1))
+    fields.push({ name, value })
     text = rest.startsWith(",") ? rest.slice(1) : rest
   }
 
-  return [result, text.slice(1)]
+  return [{ type: "struct", fields }, text.slice(1)]
 }
 
-const readEnum = (text: string, base: number): [LookupDef[], string] => {
-  const result: LookupDef[] = []
-  const variants: Extract<LookupDef, { tag: "variant" }>["value"] = []
-  result.push({ tag: "variant", value: variants })
+const parseTuple = (text: string): [TypeNode, string] => {
+  const values: TypeNode[] = []
 
-  let token = nextToken(text)
-  while (token[0] !== "}") {
-    if (!token[0]) throw new Error("Expected enum to end with `}`")
-    const name = token[0]
-    let restAfterName = token[1]
+  while (!text.startsWith("]")) {
+    if (!text) throw new Error("Expected tuple to end with `]`")
+    const [value, rest] = parseType(text)
+    values.push(value)
+    text = rest.startsWith(",") ? rest.slice(1) : rest
+  }
+
+  return [{ type: "tuple", values }, text.slice(1)]
+}
+
+const parseEnum = (text: string): [TypeNode, string] => {
+  const variants: Extract<TypeNode, { type: "enum" }>["variants"] = []
+
+  while (!text.startsWith("}")) {
+    if (!text) throw new Error("Expected enum to end with `}`")
+    const [name, afterName] = readWord(text, "an enum variant name")
+    let rest = afterName
     let index = variants.length
-    if (restAfterName.startsWith("@")) {
-      const indexToken = nextToken(restAfterName.slice(1))
-      index = Number(indexToken[0])
-      if (!Number.isInteger(index) || index < 0 || index > 255)
+
+    if (rest.startsWith("@")) {
+      const match = numberRegex.exec(rest.slice(1))
+      if (!match) throw new Error("Expected an enum variant index after `@`")
+      index = Number(match[0])
+      if (index > 255)
         throw new Error("Enum variant index must be between 0 and 255")
-      restAfterName = indexToken[1]
+      rest = rest.slice(match[0].length + 1)
     }
-    if (!restAfterName.startsWith(":"))
+    if (!rest.startsWith(":"))
       throw new Error("Expected enum variant to have `:`")
 
-    const innerBase = base + result.length
-    const [inner, rest] = textToLookup(restAfterName.slice(1), innerBase)
-    result.push(...inner)
-    variants.push({
-      docs: [],
-      name,
-      fields: [
-        { docs: [], name: undefined, type: innerBase, typeName: undefined },
-      ],
-      index,
-    })
-    token = nextToken(rest)
-    if (token[0] === ",") token = nextToken(token[1])
+    const [value, afterValue] = parseType(rest.slice(1))
+    variants.push({ name, index, value })
+    text = afterValue.startsWith(",") ? afterValue.slice(1) : afterValue
   }
 
-  return [result, token[1]]
+  return [{ type: "enum", variants }, text.slice(1)]
 }
 
-const textToLookup = (text: string, base: number): [LookupDef[], string] => {
-  const [token, rest] = nextToken(text)
-
-  if (primitiveTypes.includes(token)) {
-    return [
-      [
-        {
-          tag: "primitive",
-          value: { tag: token as "u8", value: undefined },
-        },
-      ],
-      rest,
-    ]
+const parseType = (text: string): [TypeNode, string] => {
+  if (text.startsWith("$")) {
+    const [name, rest] = readReference(text)
+    return [{ type: "reference", name }, rest]
   }
+  if (text.startsWith("{")) return parseStruct(text.slice(1))
+  if (text.startsWith("[")) return parseTuple(text.slice(1))
+
+  const [token, rest] = readWord(text, "a type")
+  if (primitiveTypes.has(token as Primitive))
+    return [{ type: "primitive", value: token as Primitive }, rest]
 
   switch (token) {
     case "compact":
       return [
-        [
-          { tag: "compact", value: base + 1 },
-          {
-            tag: "primitive",
-            value: { tag: "u256", value: undefined },
-          },
-        ],
+        { type: "compact", value: { type: "primitive", value: "u256" } },
         rest,
       ]
-    case "{":
-      return readStruct(rest, base)
+    case "Compact": {
+      if (!rest.startsWith("<")) throw new Error("Compact expects `<type>`")
+      const [value, innerRest] = parseType(rest.slice(1))
+      if (!innerRest.startsWith(">"))
+        throw new Error("Compact expects to end with `>`")
+      return [{ type: "compact", value }, innerRest.slice(1)]
+    }
     case "Vec": {
       if (!rest.startsWith("<")) throw new Error("Vector expects `<type>`")
-      const [inner, innerRest] = textToLookup(rest.slice(1), base + 1)
+      const [value, innerRest] = parseType(rest.slice(1))
       if (!innerRest.startsWith(">"))
         throw new Error("Vector expects to end with `>`")
-      return [
-        [{ tag: "sequence", value: base + 1 }, ...inner],
-        innerRest.slice(1),
-      ]
+      return [{ type: "sequence", value }, innerRest.slice(1)]
     }
     case "Arr": {
       if (!rest.startsWith("<"))
         throw new Error("Array expects `<type, length>`")
-      const [inner, innerRest] = textToLookup(rest.slice(1), base + 1)
-      const match = /^,(\d+)>/.exec(innerRest)
-      if (!match) throw new Error("Array expects a numeric length parameter")
+      const [value, innerRest] = parseType(rest.slice(1))
+      if (!innerRest.startsWith(","))
+        throw new Error("Array expects a numeric length parameter")
+      const match = numberRegex.exec(innerRest.slice(1))
+      if (!match || !innerRest.slice(match[0].length + 1).startsWith(">"))
+        throw new Error("Array expects a numeric length parameter")
       return [
-        [
-          { tag: "array", value: { len: Number(match[1]), type: base + 1 } },
-          ...inner,
-        ],
-        innerRest.slice(match[0].length),
+        { type: "array", value, length: Number(match[0]) },
+        innerRest.slice(match[0].length + 2),
       ]
     }
-    case "[":
-      return readTuple(rest, base)
     case "Enum":
       if (!rest.startsWith("{"))
         throw new Error("Expected Enum to begin with `{`")
-      return readEnum(rest.slice(1), base)
+      return parseEnum(rest.slice(1))
     case "BitSequence": {
       const match = /^<(LSB|MSB)>/.exec(rest)
       if (!match) throw new Error("BitSequence expects `<LSB>` or `<MSB>`")
       return [
-        [
-          {
-            tag: "bitSequence",
-            value: { bitStoreType: base + 1, bitOrderType: base + 2 },
-          },
-          { tag: "primitive", value: { tag: "u8", value: undefined } },
-          {
-            tag: "primitive",
-            value: {
-              tag: match[1] === "LSB" ? "bool" : "u8",
-              value: undefined,
-            },
-          },
-        ],
+        { type: "bitSequence", order: match[1] as "LSB" | "MSB" },
         rest.slice(match[0].length),
       ]
     }
     default:
-      throw new Error(`Unexpected token ${token || "(end of input)"}`)
+      throw new Error(`Unexpected token ${token}`)
   }
 }
 
-export const textToMetadata = (text: string): V15 => {
-  const [definitions, rest] = textToLookup(text.replace(/\s+/g, ""), 0)
-  if (rest.length)
+const parseDocument = (text: string) => {
+  const declarations = new Map<string, TypeNode>()
+  let firstDeclaration: string | null = null
+
+  while (text.startsWith("$")) {
+    const [name, afterName] = readReference(text)
+    if (!afterName.startsWith("=")) break
+    if (declarations.has(name))
+      throw new Error(`Type $${name} is declared twice`)
+
+    const [value, rest] = parseType(afterName.slice(1))
+    declarations.set(name, value)
+    firstDeclaration ??= name
+    text = rest.startsWith(";") ? rest.slice(1) : rest
+  }
+
+  if (!text && !firstDeclaration) throw new Error("Expected a type definition")
+  const [root, rest] = text
+    ? parseType(text)
+    : ([{ type: "reference", name: firstDeclaration! }, ""] as const)
+  if (rest)
     throw new Error(`Couldn't read all input near: ${rest.slice(0, 20)}`)
 
-  const lookup: V14Lookup = definitions.map((def, id) => ({
-    def,
-    docs: [],
-    id,
-    params: [],
-    path: [],
-  }))
-  lookup.forEach((entry) => {
-    if (entry.def.tag !== "bitSequence") return
-    const order = lookup[entry.def.value.bitOrderType]
-    order.path = [
-      order.def.tag === "primitive" && order.def.value.tag === "bool"
-        ? "Lsb0"
-        : "Msb0",
-    ]
+  return { declarations, root }
+}
+
+const compileDocument = (
+  declarations: Map<string, TypeNode>,
+  root: TypeNode,
+): V14Lookup => {
+  const entries: Array<V14Lookup[number] | null> = [null]
+  const declarationIds = new Map<string, number>()
+
+  declarations.forEach((_, name) => {
+    declarationIds.set(name, entries.length)
+    entries.push(null)
   })
+
+  const entry = (id: number, def: LookupDef, path: string[] = []) => {
+    entries[id] = { id, def, path, params: [], docs: [] }
+  }
+  const allocate = () => {
+    const id = entries.length
+    entries.push(null)
+    return id
+  }
+  const typeId = (node: TypeNode) => {
+    if (node.type === "reference") {
+      const id = declarationIds.get(node.name)
+      if (id == null) throw new Error(`Type $${node.name} is not declared`)
+      return id
+    }
+    const id = allocate()
+    compile(id, node)
+    return id
+  }
+  const compile = (id: number, node: TypeNode) => {
+    switch (node.type) {
+      case "reference": {
+        const target = declarationIds.get(node.name)
+        if (target == null)
+          throw new Error(`Type $${node.name} is not declared`)
+        entry(id, {
+          tag: "composite",
+          value: [
+            { name: undefined, type: target, typeName: undefined, docs: [] },
+          ],
+        })
+        return
+      }
+      case "primitive":
+        entry(id, {
+          tag: "primitive",
+          value: { tag: node.value, value: undefined },
+        })
+        return
+      case "compact":
+        entry(id, { tag: "compact", value: typeId(node.value) })
+        return
+      case "struct":
+        entry(id, {
+          tag: "composite",
+          value: node.fields.map(({ name, value }) => ({
+            name,
+            type: typeId(value),
+            typeName: undefined,
+            docs: [],
+          })),
+        })
+        return
+      case "sequence":
+        entry(id, { tag: "sequence", value: typeId(node.value) })
+        return
+      case "array":
+        entry(id, {
+          tag: "array",
+          value: { type: typeId(node.value), len: node.length },
+        })
+        return
+      case "tuple":
+        entry(id, { tag: "tuple", value: node.values.map(typeId) })
+        return
+      case "enum":
+        entry(id, {
+          tag: "variant",
+          value: node.variants.map(({ name, index, value }) => ({
+            name,
+            index,
+            docs: [],
+            fields:
+              value.type === "tuple" && value.values.length === 0
+                ? []
+                : value.type === "struct"
+                  ? value.fields.map((field) => ({
+                      name: field.name,
+                      type: typeId(field.value),
+                      typeName: undefined,
+                      docs: [],
+                    }))
+                  : [
+                      {
+                        name: undefined,
+                        type: typeId(value),
+                        typeName: undefined,
+                        docs: [],
+                      },
+                    ],
+          })),
+        })
+        return
+      case "bitSequence": {
+        const store = allocate()
+        entry(store, {
+          tag: "primitive",
+          value: { tag: "u8", value: undefined },
+        })
+        const order = allocate()
+        entry(order, { tag: "tuple", value: [] }, [
+          node.order === "LSB" ? "Lsb0" : "Msb0",
+        ])
+        entry(id, {
+          tag: "bitSequence",
+          value: { bitStoreType: store, bitOrderType: order },
+        })
+      }
+    }
+  }
+
+  compile(0, root)
+  declarations.forEach((node, name) => compile(declarationIds.get(name)!, node))
+  return entries as V14Lookup
+}
+
+export const textToMetadata = (text: string): V15 => {
+  const { declarations, root } = parseDocument(text.replace(/\s+/g, ""))
+  const lookup = compileDocument(declarations, root)
 
   return {
     lookup,

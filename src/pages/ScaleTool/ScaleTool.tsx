@@ -156,6 +156,10 @@ const TypeTool = () => {
           <code>Arr&lt;type, length&gt;</code>, tuples, indexed enums, and bit
           sequences are supported.
         </p>
+        <p>
+          Declare reusable or recursive types with <code>$Name = type</code>.
+          Declarations are hoisted and may reference types declared later.
+        </p>
       </div>
     </section>
   )
