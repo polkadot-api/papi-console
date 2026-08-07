@@ -15,6 +15,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { useLocation } from "react-router-dom"
 import { CenteredScrollContainer } from "../AppShell"
 import { textToMetadata } from "./textToMetadata"
+import { decodeTypeParam, encodeTypeParam } from "./typeParam"
 
 const initialType = `{
   compactValue: compact,
@@ -41,7 +42,12 @@ export const ScaleTool = () => (
 )
 
 const TypeTool = () => {
-  const [definition, setDefinition] = useFragmentParamState("type", initialType)
+  const [definition, setDefinition] = useFragmentParamState(
+    "type",
+    initialType,
+    encodeTypeParam,
+    decodeTypeParam,
+  )
   const [data, setData] = useFragmentParamState("data", null)
   const [lookup, setLookup] = useState<MetadataLookup | null>(null)
   const [error, setError] = useState("")
@@ -168,29 +174,35 @@ const TypeTool = () => {
 const useFragmentParamState = <T extends string | null>(
   key: string,
   fallback: T,
+  encode: (value: string) => string = identity,
+  decode: (value: string) => string = identity,
 ) => {
   const location = useLocation()
-  const [value, setValue] = useState<T>(
-    () => (getHashParams().get(key) as T | null) ?? fallback,
-  )
+  const [value, setValue] = useState<T>(() => {
+    const initialValue = getHashParams().get(key)
+    return (initialValue == null ? fallback : decode(initialValue)) as T
+  })
 
   useEffect(() => {
-    setValue((getHashParams(location).get(key) as T | null) ?? fallback)
-  }, [fallback, key, location])
+    const nextValue = getHashParams(location).get(key)
+    setValue((nextValue == null ? fallback : decode(nextValue)) as T)
+  }, [decode, fallback, key, location])
 
   const update = useCallback(
     (nextValue: string | null) => {
       setValue((nextValue ?? fallback) as T)
       const params = getHashParams()
       if (nextValue == null) params.delete(key)
-      else params.set(key, nextValue)
+      else params.set(key, encode(nextValue))
 
       const url = new URL(globalThis.location.href)
       url.hash = params.toString()
       globalThis.history.replaceState(globalThis.history.state, "", url)
     },
-    [fallback, key],
+    [encode, fallback, key],
   )
 
   return [value, update] as const
 }
+
+const identity = (value: string) => value

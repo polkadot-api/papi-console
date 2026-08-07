@@ -5,6 +5,7 @@ import { withSubscribe } from "@/components/withSuspense"
 import { useNavigate } from "@/hashParams"
 import { metadata$ } from "@/state/chains/chain.state"
 import { lookupTypeToText } from "../ScaleTool/typeToText"
+import { encodeTypeParam } from "../ScaleTool/typeParam"
 import { useStateObservable } from "@react-rxjs/core"
 import {
   Navigate,
@@ -110,7 +111,10 @@ const LegacyEditorRedirect = () => {
   const metadata = useStateObservable(metadata$)
   const params = new URLSearchParams(location.hash.slice(1))
   try {
-    params.set("type", lookupTypeToText(metadata.lookup, Number(id)))
+    params.set(
+      "type",
+      encodeTypeParam(lookupTypeToText(metadata.lookup, Number(id))),
+    )
   } catch {
     params.delete("type")
   }

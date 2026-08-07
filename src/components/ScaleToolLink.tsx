@@ -1,6 +1,7 @@
 import { Link } from "@/hashParams"
 import { lookup$ } from "@/state/chains/chain.state"
 import { lookupTypeToText } from "@/pages/ScaleTool/typeToText"
+import { encodeTypeParam } from "@/pages/ScaleTool/typeParam"
 import { useStateObservable } from "@react-rxjs/core"
 import { ComponentProps, FC } from "react"
 
@@ -23,7 +24,7 @@ export const ScaleToolLink: FC<
       </span>
     )
   }
-  const hash = `#${new URLSearchParams({ type }).toString()}`
+  const hash = `#${new URLSearchParams({ type: encodeTypeParam(type) }).toString()}`
 
   return <Link {...props} to={{ pathname: "/scale-tool", hash }} />
 }
