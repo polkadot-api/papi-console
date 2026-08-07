@@ -1,86 +1,244 @@
 import { V14Lookup } from "@polkadot-api/substrate-bindings"
 
+const INLINE_TYPE_LIMIT = 10
+
 const indent = (value: string) =>
   value
     .split("\n")
     .map((line) => `  ${line}`)
     .join("\n")
 
-export const lookupTypeToText = (lookup: V14Lookup, typeId: number) => {
-  const visiting = new Set<number>()
+const referencesOf = (entry: V14Lookup[number]): number[] => {
+  switch (entry.def.tag) {
+    case "sequence":
+      return [entry.def.value]
+    case "array":
+      return [entry.def.value.type]
+    case "tuple":
+      return entry.def.value
+    case "composite":
+      return entry.def.value.map((field) => field.type)
+    case "variant":
+      return entry.def.value.flatMap((variant) =>
+        variant.fields.map((field) => field.type),
+      )
+    case "primitive":
+    case "compact":
+    case "bitSequence":
+      return []
+  }
+}
 
-  const print = (id: number): string => {
+const getReachableTypes = (lookup: V14Lookup, rootTypeId: number) => {
+  const result: number[] = []
+  const seen = new Set<number>()
+  const pending = [rootTypeId]
+
+  while (pending.length) {
+    const id = pending.pop()!
+    if (seen.has(id)) continue
     const entry = lookup[id]
     if (!entry) throw new Error(`Lookup type ${id} does not exist`)
-    if (visiting.has(id))
-      throw new Error(
-        "Recursive runtime types are not supported by the type editor yet",
-      )
 
-    visiting.add(id)
-    try {
-      switch (entry.def.tag) {
-        case "primitive":
-          return entry.def.value.tag
-        case "compact":
-          return `compact`
-        case "sequence":
-          return `Vec<${print(entry.def.value)}>`
-        case "array":
-          return `Arr<${print(entry.def.value.type)}, ${entry.def.value.len}>`
-        case "tuple":
-          return `[${entry.def.value.map(print).join(", ")}]`
-        case "composite": {
-          const fields = entry.def.value
-          if (fields.every((field) => field.name == null))
-            return `[${fields.map((field) => print(field.type)).join(", ")}]`
-
-          const body = fields
-            .map(
-              (field, index) =>
-                `${field.name ?? `item_${index}`}: ${print(field.type)}`,
-            )
-            .join(",\n")
-          return `{\n${indent(body)}\n}`
-        }
-        case "variant": {
-          const body = entry.def.value
-            .sort((a, b) => a.index - b.index)
-            .map((variant, idx) => {
-              const fields = variant.fields
-              const value =
-                fields.length === 0
-                  ? "[]"
-                  : fields.every((field) => field.name != null)
-                    ? `{\n${indent(
-                        fields
-                          .map((field) => `${field.name}: ${print(field.type)}`)
-                          .join(",\n"),
-                      )}\n}`
-                    : fields.length === 1
-                      ? print(fields[0].type)
-                      : `[${fields.map((field) => print(field.type)).join(", ")}]`
-              const label =
-                variant.index === idx
-                  ? variant.name
-                  : `${variant.name}@${variant.index}`
-              return `${label}: ${value}`
-            })
-            .join(",\n")
-          return `Enum {\n${indent(body)}\n}`
-        }
-        case "bitSequence": {
-          const isLsb = lookup[entry.def.value.bitOrderType]?.path
-            .at(-1)
-            ?.toUpperCase()
-            .startsWith("LSB")
-          return `BitSequence<${isLsb ? "LSB" : "MSB"}>`
-        }
-      }
-    } finally {
-      visiting.delete(id)
-    }
+    seen.add(id)
+    result.push(id)
+    pending.push(...referencesOf(entry).toReversed())
   }
 
-  return print(typeId)
+  return result
+}
+
+const createNameAllocator = (
+  lookup: V14Lookup,
+  fallbackPrefix: "CircularRef" | "Type",
+) => {
+  const names = new Map<number, string>()
+  const usedNames = new Set<string>()
+  let fallbackIndex = 1
+
+  const getName = (id: number) => {
+    const existing = names.get(id)
+    if (existing) return existing
+
+    const pathName = lookup[id].path.at(-1)
+    const candidate = pathName?.replace(/[^a-zA-Z0-9_]/g, "_")
+    let name =
+      candidate && /^[a-zA-Z_]/.test(candidate) && !usedNames.has(candidate)
+        ? candidate
+        : null
+
+    if (!name) {
+      do name = `${fallbackPrefix}${fallbackIndex++}`
+      while (usedNames.has(name))
+    }
+
+    usedNames.add(name)
+    names.set(id, name)
+    return name
+  }
+
+  return { getName, hasName: (id: number) => names.has(id) }
+}
+
+const printDefinition = (
+  lookup: V14Lookup,
+  id: number,
+  printReference: (id: number) => string,
+) => {
+  const entry = lookup[id]
+  if (!entry) throw new Error(`Lookup type ${id} does not exist`)
+
+  switch (entry.def.tag) {
+    case "primitive":
+      return entry.def.value.tag
+    case "compact":
+      return "compact"
+    case "sequence":
+      return `Vec<${printReference(entry.def.value)}>`
+    case "array":
+      return `Arr<${printReference(entry.def.value.type)}, ${entry.def.value.len}>`
+    case "tuple":
+      return `[${entry.def.value.map(printReference).join(", ")}]`
+    case "composite": {
+      const fields = entry.def.value
+      if (fields.every((field) => field.name == null))
+        return `[${fields.map((field) => printReference(field.type)).join(", ")}]`
+
+      const body = fields
+        .map(
+          (field, index) =>
+            `${field.name ?? `item_${index}`}: ${printReference(field.type)}`,
+        )
+        .join(",\n")
+      return `{\n${indent(body)}\n}`
+    }
+    case "variant": {
+      const body = entry.def.value
+        .toSorted((a, b) => a.index - b.index)
+        .map((variant, index) => {
+          const fields = variant.fields
+          const value =
+            fields.length === 0
+              ? "[]"
+              : fields.every((field) => field.name != null)
+                ? `{\n${indent(
+                    fields
+                      .map(
+                        (field) =>
+                          `${field.name}: ${printReference(field.type)}`,
+                      )
+                      .join(",\n"),
+                  )}\n}`
+                : fields.length === 1
+                  ? printReference(fields[0].type)
+                  : `[${fields.map((field) => printReference(field.type)).join(", ")}]`
+          const label =
+            variant.index === index
+              ? variant.name
+              : `${variant.name}@${variant.index}`
+          return `${label}: ${value}`
+        })
+        .join(",\n")
+      return `Enum {\n${indent(body)}\n}`
+    }
+    case "bitSequence": {
+      const isLsb = lookup[entry.def.value.bitOrderType]?.path
+        .at(-1)
+        ?.toUpperCase()
+        .startsWith("LSB")
+      return `BitSequence<${isLsb ? "LSB" : "MSB"}>`
+    }
+  }
+}
+
+const printInline = (lookup: V14Lookup, typeId: number) => {
+  const active = new Set<number>()
+  const declarations = new Map<number, string>()
+  const { getName, hasName } = createNameAllocator(lookup, "CircularRef")
+
+  const print = (id: number): string => {
+    if (active.has(id)) return `$${getName(id)}`
+    if (declarations.has(id)) return `$${getName(id)}`
+
+    active.add(id)
+    const value = printDefinition(lookup, id, print)
+    active.delete(id)
+
+    if (!hasName(id)) return value
+    declarations.set(id, value)
+    return `$${getName(id)}`
+  }
+
+  const root = print(typeId)
+  if (!declarations.size) return root
+
+  const declarationText = [...declarations]
+    .map(([id, value]) => `$${getName(id)} = ${value}`)
+    .join("\n")
+  return `${declarationText}\n${root}`
+}
+
+const isComplexType = (entry: V14Lookup[number]) => {
+  switch (entry.def.tag) {
+    case "composite":
+    case "variant":
+      return entry.def.value.length >= 2
+    case "tuple":
+      return entry.def.value.length >= 2
+    case "primitive":
+    case "compact":
+    case "sequence":
+    case "array":
+    case "bitSequence":
+      return false
+  }
+}
+
+const printDeclared = (
+  lookup: V14Lookup,
+  typeIds: number[],
+  rootTypeId: number,
+) => {
+  const declaredTypes = new Set(
+    typeIds.filter((id) => isComplexType(lookup[id])),
+  )
+  const active = new Set<number>()
+  const declarations = new Map<number, string>()
+  const { getName, hasName } = createNameAllocator(lookup, "Type")
+  declaredTypes.forEach(getName)
+
+  const print = (id: number): string => {
+    if (declaredTypes.has(id) || declarations.has(id)) return `$${getName(id)}`
+    if (active.has(id)) return `$${getName(id)}`
+
+    active.add(id)
+    const value = printDefinition(lookup, id, print)
+    active.delete(id)
+
+    if (!hasName(id)) return value
+    declarations.set(id, value)
+    return `$${getName(id)}`
+  }
+
+  declaredTypes.forEach((id) => {
+    active.add(id)
+    const value = printDefinition(lookup, id, print)
+    active.delete(id)
+    declarations.set(id, value)
+  })
+
+  const root = print(rootTypeId)
+  if (!declarations.size) return root
+
+  const declarationText = [...declarations]
+    .map(([id, value]) => `$${getName(id)} = ${value}`)
+    .join("\n")
+  return `${declarationText}\n${root}`
+}
+
+export const lookupTypeToText = (lookup: V14Lookup, typeId: number) => {
+  const reachableTypes = getReachableTypes(lookup, typeId)
+  return reachableTypes.length < INLINE_TYPE_LIMIT
+    ? printInline(lookup, typeId)
+    : printDeclared(lookup, reachableTypes, typeId)
 }
