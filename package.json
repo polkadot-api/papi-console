@@ -14,7 +14,7 @@
     "semi": false
   },
   "dependencies": {
-    "@acala-network/chopsticks-core": "^1.5.0",
+    "@acala-network/chopsticks-core": "^1.5.1",
     "@ledgerhq/hw-transport-webusb": "^6.35.0",
     "@monaco-editor/react": "^4.7.0",
     "@paraspell/sdk": "14.1.0-rc.1",
@@ -47,40 +47,40 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "idb-keyval": "^6.3.0",
-    "lucide-react": "^1.28.0",
+    "lucide-react": "^1.33.0",
     "polkadot-api": "^3.0.0",
     "polkahub": "^0.9.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-portal": "^4.3.0",
     "react-router-dom": "^7.18.2",
-    "react-svg": "^17.2.5",
-    "react-virtuoso": "^4.18.11",
+    "react-svg": "^19.1.4",
+    "react-virtuoso": "^4.18.12",
     "react18-json-view": "^0.2.10",
     "rxjs": "^7.8.2",
     "save-as": "^0.1.8",
     "tailwind-merge": "^3.6.0",
     "tailwindcss-animate": "^1.0.7",
     "uplot": "^1.6.32",
-    "uuid": "^14.0.1"
+    "uuid": "^14.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.3",
-    "@types/node": "^26.1.2",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
     "@types/react-portal": "^4.0.7",
     "@vitejs/plugin-react": "^6.0.5",
-    "eslint": "^10.8.0",
+    "eslint": "^10.8.1",
     "eslint-plugin-react-hooks": "7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.3",
-    "globals": "^17.8.0",
+    "eslint-plugin-react-refresh": "^0.5.4",
+    "globals": "^17.11.0",
     "prettier": "^3.9.6",
     "tailwindcss": "^4.3.3",
-    "typescript": "^7.0.2",
-    "typescript-eslint": "^8.65.0",
-    "vite": "^8.1.5"
+    "typescript": "6",
+    "typescript-eslint": "^8.67.0",
+    "vite": "^8.2.1"
   },
-  "packageManager": "pnpm@11.19.0+sha512.7881f3ed590d472c4a955e2b88b2121791116066dcc88cbca3849ec9b60f1bbaa6d2ccb221fa91da4e1c65bef2bcbe379365aea7ac539c7bf86dedc3a1b22dce"
+  "packageManager": "pnpm@11.22.0+sha512.1ff870c4c6133dfd88fb2afc46dd13d47f09c9794b438c6fdb47ca98caf3bc16381ee0be93a091b8e3824cf01f889f46d7d9e20910fb0be1ab0fb5baa80dd621"
 }
