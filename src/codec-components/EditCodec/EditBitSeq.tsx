@@ -3,7 +3,7 @@ import { TextInputField } from "./codec-components"
 import { useGenericSynchronizeInput } from "@/components/useSynchroniseInput"
 
 const getValidation = (value: string) =>
-  !!value.match(/^[01]+$/) ? null : `Only "0" and "1" allowed`
+  value.match(/^[01]+$/) ? null : `Only "0" and "1" allowed`
 
 export const CBitSeq: EditBitSeq = ({ value, onValueChanged }) => {
   const [inputValue, setInputValue] = useGenericSynchronizeInput<
