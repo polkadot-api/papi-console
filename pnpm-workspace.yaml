@@ -3,12 +3,15 @@ allowBuilds:
   esbuild: true
 patchedDependencies:
   react18-json-view: patches/react18-json-view.patch
+# TODO: remove when ParaSpell uses PAPI v3 stable
+overrides:
+  "@paraspell/sdk@14.1.0-rc.1>polkadot-api": "3.0.0"
+  "@paraspell/sdk@14.1.0-rc.1>@polkadot-api/signers-common": "0.3.0"
+  "@paraspell/sdk@14.1.0-rc.1>@polkadot-api/substrate-bindings": "0.21.0"
+  "@paraspell/descriptors@14.1.0-rc.1>polkadot-api": "3.0.0"
+# TODO: remove
 minimumReleaseAgeExclude:
-  - "@paraspell/assets@14.1.0-rc.1"
-  - "@paraspell/descriptors@14.1.0-rc.1"
-  - "@paraspell/pallets@14.1.0-rc.1"
-  - "@paraspell/sdk-common@14.1.0-rc.1"
-  - "@paraspell/sdk-core@14.1.0-rc.1"
-  - "@paraspell/sdk@14.1.0-rc.1"
-  - "@polkahub/ui-components@0.9.0"
-  - polkahub@0.9.0
+  - "@polkadot-api/forklift@0.5.1"
+  - "@polkahub/*"
+  - polkahub@0.9.1
+  - lucide-react@1.33.0
