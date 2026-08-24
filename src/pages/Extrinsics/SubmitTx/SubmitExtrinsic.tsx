@@ -69,7 +69,7 @@ const customExtensionsCount$ = state(
 )
 
 // powers of 2 from 4 to 16 (incl)
-const periodOptions = new Array(16 - 4 + 1).fill(0).map((_, i) => 1 << (i + 4))
+const periodOptions = new Array(12 - 4 + 1).fill(0).map((_, i) => 1 << (i + 4))
 
 const chainNonce$ = unsafeApi$.pipeState(
   switchMapSuspended((api) =>
@@ -105,11 +105,11 @@ export const SubmitExtrinsic = forwardRef<HTMLElement>((_, ref) => {
   const [isSigning, setIsSigning] = useState(false)
 
   const signAndSubmit = async () => {
-    if (!account?.signer || !tx) return
+    if (!account?.txCreator || !tx) return
 
     setIsSigning(true)
     try {
-      const signedExtrinsic = await tx.sign(account.signer, txOptions)
+      const signedExtrinsic = await tx.create(account.txCreator, txOptions)
       trackTx(signedExtrinsic, tx.decodedCall, account)
     } catch (ex) {
       console.error(ex)
@@ -223,7 +223,7 @@ export const SubmitExtrinsic = forwardRef<HTMLElement>((_, ref) => {
 
         <ActionButton
           className="flex w-full items-center justify-center gap-2 rounded-md py-2.5 text-sm font-semibold"
-          disabled={!tx || !account?.signer || isSigning}
+          disabled={!tx || !account?.txCreator || isSigning}
           onClick={signAndSubmit}
         >
           <Send className="h-4 w-4" />

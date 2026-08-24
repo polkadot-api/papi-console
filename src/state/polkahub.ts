@@ -216,8 +216,8 @@ export const toggleExtension = async (id: string) => {
 }
 
 export const getAccountPublicKey = (account: Account) =>
-  account.signer
-    ? account.signer.publicKey
+  account.txCreator && "publicKey" in account.txCreator
+    ? (account.txCreator.publicKey as Uint8Array)
     : account.address.startsWith("0x")
       ? Binary.fromHex(account.address)
       : AccountId().enc(account.address)
@@ -225,9 +225,9 @@ export const getAccountPublicKey = (account: Account) =>
 // Important, the SS58 format is not guaranteed. Only to be used for internal queries
 export const getAccountGenericAddress = (account: Account) =>
   account.address.startsWith("0x")
-    ? account.signer
-      ? Binary.toHex(account.signer.publicKey)
+    ? account.txCreator && "publicKey" in account.txCreator
+      ? Binary.toHex(account.txCreator.publicKey as Uint8Array)
       : account.address
-    : account.signer
-      ? AccountId().dec(account.signer.publicKey)
+    : account.txCreator && "publicKey" in account.txCreator
+      ? AccountId().dec(account.txCreator.publicKey as Uint8Array)
       : account.address

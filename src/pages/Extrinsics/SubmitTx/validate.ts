@@ -9,7 +9,6 @@ import Worker from "@polkadot-api/forklift/worker?worker"
 import { ChainHead$ } from "@polkadot-api/observable-client"
 import { shareLatest } from "@react-rxjs/core"
 import {
-  AccountId,
   Binary,
   createClient,
   Enum,
@@ -18,8 +17,7 @@ import {
   PolkadotClient,
   Transaction,
 } from "polkadot-api"
-import { getPolkadotSigner } from "polkadot-api/signer"
-import { AccountAddress } from "polkahub"
+import { getFakeTxCreator } from "polkadot-api/tx-creator"
 import {
   catchError,
   combineLatest,
@@ -75,7 +73,7 @@ const forkLift$ = chainClient$.pipe(
 const fakeSign$ = (tx: Transaction, txOptions: any) =>
   combineLatest({
     signer: selectedAccount$.pipe(
-      map((account) => (account ? createFakeSigner(account.address) : null)),
+      map((account) => (account ? getFakeTxCreator(account.address) : null)),
     ),
     mockChain: forkLift$.pipe(
       switchMap(async ({ forkClient }) => {
@@ -91,7 +89,7 @@ const fakeSign$ = (tx: Transaction, txOptions: any) =>
     switchMap(async ({ signer, mockChain: { tx, unsafeApi, client } }) => {
       if (!signer) return null
 
-      const extrinsic = await tx.sign(signer, txOptions)
+      const extrinsic = await tx.create(signer, txOptions)
 
       return { extrinsic, tx, unsafeApi, client }
     }),
@@ -148,7 +146,7 @@ export const dryRun$ = (tx: Transaction, txOptions: any) =>
           value: undefined,
         }
       }
-      if (evt.type === "txBestBlocksState" && evt.found) {
+      if (evt.type === "inBestBlock") {
         return {
           type: "valid" as const,
           value: {
@@ -306,15 +304,3 @@ const createTmpForklift = async (
     forkliftWorker,
   ] as const
 }
-
-const decodeAddress = (address: AccountAddress) =>
-  address.startsWith("0x") ? Binary.fromHex(address) : AccountId().enc(address)!
-
-export const createFakeSigner = (address: AccountAddress) =>
-  getPolkadotSigner(decodeAddress(address), "Sr25519", () => {
-    // From https://wiki.acala.network/build/sdks/homa
-    const signature = new Uint8Array(64)
-    signature.fill(0xcd)
-    signature.set([0xde, 0xad, 0xbe, 0xef])
-    return signature
-  })

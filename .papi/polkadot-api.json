@@ -6,13 +6,13 @@
       "chain": "polkadot_people",
       "metadata": ".papi/metadata/polkadot_people.scale",
       "genesis": "0x67fa177a097bfa18f77ea95ab56e9bcdfeb0e5b8a40e46298bb93e16b6fc5008",
-      "codeHash": "0x4f2b23add794f311aa80b487b3cca971fe4bdc1850ebd5d96a693352f49743cb"
+      "codeHash": "0x931bec645b70c064a449717598861bf3b75fc1499d3650c43889d3b4a5d33853"
     },
     "dotAh": {
       "chain": "polkadot_asset_hub",
       "metadata": ".papi/metadata/dotAh.scale",
       "genesis": "0x68d56f15f85d3136970ec16946040bc1752654e906147f7e43e9d539d7c3de2f",
-      "codeHash": "0xd8c8c132cd1f51504af2cd45c8dd7c5565dff0a4e9d7fde72daa8975c58ef961"
+      "codeHash": "0x80019b852cb8dbd47f5c13dc9a56eb5a30b9d68440d681e9959ecd25f3751de9"
     }
   }
 }

@@ -6,10 +6,23 @@ import {
   mergeWithKey,
   switchMapSuspended,
 } from "@react-rxjs/utils"
-import { TxOptions } from "polkadot-api"
 import { combineLatest, distinctUntilChanged, map, scan } from "rxjs"
 import { callData$ } from "../componentValue.state"
 import { customSignedExtensions$ } from "../CustomSignedExt"
+import { ArgsForCreator } from "@polkadot-api/tx-creator"
+import type { CommonSignerTxCreator } from "@polkadot-api/signers-common"
+
+type CommonOpts = ArgsForCreator<CommonSignerTxCreator, any>
+type CustomSignedExtensions = Record<
+  string,
+  {
+    value?: Uint8Array
+    additionalSigned?: Uint8Array
+  }
+>
+type TxOptions = CommonOpts & {
+  customSignedExtensions?: CustomSignedExtensions
+}
 
 export const [nonceChanged$, setNonce] = createSignal<string>()
 export const [nonceBlurred$, blurNonce] = createSignal()
@@ -29,7 +42,7 @@ export const nonce$ = state(
   "",
 )
 
-type Mortality = NonNullable<TxOptions<any, any>["mortality"]>
+type Mortality = NonNullable<TxOptions["mortality"]>
 export const DEFAULT_MORTAL = {
   mortal: true,
   period: 64,
@@ -59,7 +72,7 @@ export const txOptions$ = state(
     tip$.pipe(map((v) => (isIntegerStr(v) ? BigInt(v) : null))),
     customSignedExtensions$,
   ]).pipe(
-    map(([nonce, mortality, tip, signedExt]): TxOptions<any, any> => {
+    map(([nonce, mortality, tip, signedExt]): Omit<TxOptions, "asset"> => {
       return {
         mortality,
         nonce: nonce ?? undefined,
@@ -68,5 +81,5 @@ export const txOptions$ = state(
       }
     }),
   ),
-  {} satisfies TxOptions<any, any>,
+  {},
 )

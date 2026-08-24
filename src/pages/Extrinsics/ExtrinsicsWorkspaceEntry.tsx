@@ -11,7 +11,7 @@ import { chainClient$ } from "@/state/chains/chain.state"
 import { shortStr } from "@/utils"
 import { state, StateObservable, useStateObservable } from "@react-rxjs/core"
 import { Send } from "lucide-react"
-import { InvalidTxError, TxBroadcastEvent, TxCallData } from "polkadot-api"
+import { InvalidTxError, TxCallData, TxEvent } from "polkadot-api"
 import { jsonSerialize, toHex } from "polkadot-api/utils"
 import { Account } from "polkahub"
 import { FC } from "react"
@@ -20,7 +20,7 @@ import { v4 } from "uuid"
 import { BlockStatusIcon } from "../Explorer/Detail/BlockState"
 
 type TrackedTransactionEvent =
-  | (TxBroadcastEvent & { raw: Uint8Array; callData: TxCallData })
+  | (TxEvent & { raw: Uint8Array; callData: TxCallData })
   | {
       type: "invalid" | "error"
       value: any
@@ -29,7 +29,12 @@ type TrackedTransactionEvent =
       callData: TxCallData
     }
 
-const onGoingEvents = new Set(["signed", "broadcasted", "txBestBlocksState"])
+const onGoingEvents: Set<TrackedTransactionEvent["type"]> = new Set([
+  "created",
+  "broadcasted",
+  "inBestBlock",
+  "notInBestBlock",
+])
 
 export const trackTx = async (
   extrinsic: Uint8Array,
@@ -189,10 +194,12 @@ const getStatus = (event: TrackedTransactionEvent): string => {
       return "Unexpected error"
     case "invalid":
       return `Invalid`
-    case "txBestBlocksState":
-      return event.found ? `Found in best block` : "No longer in a best block"
-    case "signed":
-      return `Signed`
+    case "inBestBlock":
+      return `Found in best block`
+    case "notInBestBlock":
+      return "No longer in a best block"
+    case "created":
+      return `Created`
     case "broadcasted":
       return `Broadcasting`
     case "finalized":
