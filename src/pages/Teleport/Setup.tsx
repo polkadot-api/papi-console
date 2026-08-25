@@ -25,8 +25,9 @@ import {
   UserRound,
   Wallet,
 } from "lucide-react"
+import { PolkadotClient } from "polkadot-api"
 import { jsonSerialize } from "polkadot-api/utils"
-import { AddressInput } from "polkahub"
+import { Account, AddressInput } from "polkahub"
 import { FC, PropsWithChildren, ReactNode } from "react"
 import {
   catchError,
@@ -176,14 +177,60 @@ const AssetPicker = () => {
   )
 }
 
+// We add the HOLLAR destination in Hydration
+const getParaspellBuilder = (
+  client: PolkadotClient,
+  cfg: {
+    origin: TChain
+    dest: TChain
+    asset: TAssetInfo
+    amount: bigint
+    recipient: string
+    account: Account
+  },
+) => {
+  return Builder({
+    apiOverrides: { [cfg.origin]: client },
+    customAssets: {
+      Hydration: [
+        {
+          symbol: "HOLLAR",
+          assetId: "222",
+          decimals: 18,
+          existentialDeposit: "20000000000000000",
+          location: {
+            parents: 1,
+            interior: {
+              X2: [{ Parachain: 2034 }, { GeneralIndex: 222 }],
+            },
+          },
+          forceOverride: true,
+        },
+      ],
+    },
+  })
+    .from(cfg.origin)
+    .to(cfg.dest)
+    .currency({ location: cfg.asset.location, amount: cfg.amount })
+    .recipient(cfg.recipient)
+    .sender(cfg.account.address)
+}
+
 const supportedDestinations$ = state(
   combineLatest([origin$, selectedAsset$]).pipe(
     map(([origin, selectedAsset]) => {
       if (!origin || !selectedAsset) return []
 
-      return getSupportedDestinations(origin, {
+      const destinations = getSupportedDestinations(origin, {
         location: selectedAsset.location,
       })
+      if (origin === "AssetHubPolkadot" && selectedAsset.symbol === "HOLLAR") {
+        return [...destinations, "Hydration" as const]
+      }
+      if (origin === "Hydration" && selectedAsset.symbol === "HOLLAR") {
+        return [...destinations, "AssetHubPolkadot" as const]
+      }
+      return destinations
     }),
   ),
 )
@@ -199,6 +246,7 @@ const selectedDest$ = state(
     tap((destination) => setHashParams({ destination })),
   ),
 )
+
 const selectedDestError$ = selectedDest$.pipeState(
   withLatestFrom(client$, origin$, selectedAsset$, selectedAccount$),
   switchMap(([dest, client, origin, asset, account]) =>
@@ -207,13 +255,14 @@ const selectedDestError$ = selectedDest$.pipeState(
 
       const tryWithRecipient = (address: string) =>
         from(
-          Builder(client)
-            .from(origin)
-            .to(dest)
-            .currency({ location: asset.location, amount: 0n })
-            .recipient(address)
-            .sender(account.address)
-            .getTransferInfo(),
+          getParaspellBuilder(client, {
+            origin,
+            dest,
+            asset,
+            amount: 0n,
+            recipient: address,
+            account,
+          }).getTransferInfo(),
         ).pipe(map(() => null))
       const mapError = catchError<string | null, ObservableInput<null>>(
         (ex) => [ex.message ?? "Uknown error"],
@@ -293,6 +342,7 @@ const amount$ = state(
 const AmountPicker = () => {
   const amount = useStateObservable(amount$)
   const selectedAsset = useStateObservable(selectedAsset$)
+  const balance = useStateObservable(balance$)
   const token =
     selectedAsset && typeof selectedAsset.decimals === "number"
       ? {
@@ -302,7 +352,24 @@ const AmountPicker = () => {
       : undefined
 
   return (
-    <TokenInput value={amount} onValueChange={changeAmount} token={token} />
+    <TokenInput
+      value={amount}
+      onValueChange={changeAmount}
+      token={token}
+      inputAction={
+        balance == null ? undefined : (
+          <button
+            type="button"
+            className="h-7 rounded px-2 text-xs font-medium text-polkadot transition-colors hover:bg-polkadot/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-polkadot/50"
+            onClick={() => changeAmount(balance)}
+            aria-label="Use full available balance"
+            title="Use full available balance"
+          >
+            Use max
+          </button>
+        )
+      }
+    />
   )
 }
 
@@ -351,21 +418,7 @@ export const setupConfig$ = state(
 )
 export const paraspellBuilder$ = setupConfig$.pipeState(
   withLatestFrom(client$),
-  map(([v, client]) =>
-    v
-      ? Builder({
-          abstractDecimals: false,
-          apiOverrides: {
-            [v.origin]: client,
-          },
-        })
-          .from(v.origin)
-          .to(v.dest)
-          .currency({ location: v.asset.location, amount: v.amount })
-          .recipient(v.recipient)
-          .sender(v.account.address)
-      : null,
-  ),
+  map(([v, client]) => (v ? getParaspellBuilder(client, v) : null)),
 )
 
 const SetupCard: FC<
