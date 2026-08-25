@@ -246,6 +246,7 @@ const selectedDest$ = state(
     tap((destination) => setHashParams({ destination })),
   ),
 )
+
 const selectedDestError$ = selectedDest$.pipeState(
   withLatestFrom(client$, origin$, selectedAsset$, selectedAccount$),
   switchMap(([dest, client, origin, asset, account]) =>
@@ -341,6 +342,7 @@ const amount$ = state(
 const AmountPicker = () => {
   const amount = useStateObservable(amount$)
   const selectedAsset = useStateObservable(selectedAsset$)
+  const balance = useStateObservable(balance$)
   const token =
     selectedAsset && typeof selectedAsset.decimals === "number"
       ? {
@@ -350,7 +352,24 @@ const AmountPicker = () => {
       : undefined
 
   return (
-    <TokenInput value={amount} onValueChange={changeAmount} token={token} />
+    <TokenInput
+      value={amount}
+      onValueChange={changeAmount}
+      token={token}
+      inputAction={
+        balance == null ? undefined : (
+          <button
+            type="button"
+            className="h-7 rounded px-2 text-xs font-medium text-polkadot transition-colors hover:bg-polkadot/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-polkadot/50"
+            onClick={() => changeAmount(balance)}
+            aria-label="Use full available balance"
+            title="Use full available balance"
+          >
+            Use max
+          </button>
+        )
+      }
+    />
   )
 }
 

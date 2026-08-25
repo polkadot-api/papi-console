@@ -5,7 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ChangeEvent, FC, useEffect, useRef, useState } from "react"
+import { ChangeEvent, FC, ReactNode, useEffect, useRef, useState } from "react"
 
 type TokenUnit = "token" | "planck"
 
@@ -16,7 +16,8 @@ export const TokenInput: FC<{
     decimals: number
     symbol?: string
   }
-}> = ({ value, onValueChange, token }) => {
+  inputAction?: ReactNode
+}> = ({ value, onValueChange, token, inputAction }) => {
   const [unit, setUnit] = useState<TokenUnit>(() =>
     token ? "token" : "planck",
   )
@@ -95,6 +96,11 @@ export const TokenInput: FC<{
         onChange={handleChange}
         className="h-10 min-w-0 flex-1 rounded-l-md rounded-r-none border border-border border-r-0 bg-background px-3 py-2 font-mono text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
       />
+      {inputAction ? (
+        <div className="flex h-10 shrink-0 items-center border-y border-border bg-background pr-1">
+          {inputAction}
+        </div>
+      ) : null}
       <Select
         value={unit}
         onValueChange={(value) => handleUnitChange(value as TokenUnit)}
