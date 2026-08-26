@@ -111,6 +111,7 @@ export type StorageSubscription = {
   item: string
   value: Enum<{
     decode: HexString
+    rawQuery: HexString
     query: unknown[]
   }>
 }
@@ -132,7 +133,7 @@ const storageSubscriptionId = (
     sub.pallet,
     sub.item,
     sub.value.type,
-    ...(sub.value.type === "decode"
+    ...(sub.value.type === "decode" || sub.value.type === "rawQuery"
       ? [sub.value.value]
       : sub.value.value.map((v, i) =>
           Binary.toHex(
@@ -162,12 +163,14 @@ export const idToStorageSubscription = async (
     value:
       type === "decode"
         ? Enum("decode", values[0])
-        : Enum(
-            "query",
-            values.map((v, i) =>
-              ctx.dynamicBuilder.buildDefinition(entry.keys[i].type).dec(v),
+        : type === "rawQuery"
+          ? Enum("rawQuery", values[0])
+          : Enum(
+              "query",
+              values.map((v, i) =>
+                ctx.dynamicBuilder.buildDefinition(entry.keys[i].type).dec(v),
+              ),
             ),
-          ),
   }
 }
 
@@ -177,38 +180,55 @@ export const storageSubscriptionToWorkspaceEntry = async ({
   item,
   value,
 }: StorageSubscription): Promise<WorkspaceEntryData<StorageEntryContext>> => {
-  const [ctx, unsafeApi] = await firstValueFrom(
+  const [ctx, unsafeApi, chainHead] = await firstValueFrom(
     combineLatest([
       blockHash ? runtimeCtxAt$(blockHash) : runtimeCtx$,
       genericUnsafeApi$,
+      chainClient$.pipe(map((v) => v.chainHead)),
     ]),
   )
   const entry = getEntry(ctx, getStorageItem(ctx, pallet, item)!.item.type)
 
   const storageEntry = unsafeApi.query[pallet][item]
+
   const name = `${pallet}.${item}`
   const args = value.type === "query" ? value.value : []
-  const isEntries = value.type === "query" && args.length !== entry.keys.length
+  const isEntries =
+    (value.type === "query" && args.length !== entry.keys.length) ||
+    value.type === "rawQuery"
 
   const at = (blockHash: string) => {
-    const value$ = from(
-      isEntries
-        ? storageEntry.getEntries(...args, {
-            at: blockHash,
-          })
-        : storageEntry.getValue(...args, {
-            at: blockHash,
-          }),
-    )
-    const hash$ = chainClient$.pipe(
-      switchMap(({ chainHead }) =>
-        chainHead
-          .storage$(blockHash, "hash", (ctx) =>
-            ctx.dynamicBuilder.buildStorage(pallet, item).keys.enc(...args),
+    const value$ =
+      value.type === "rawQuery"
+        ? chainHead
+            .storage$(
+              blockHash,
+              "descendantsValues",
+              () => value.value,
+              null,
+              (values, ctx) => {
+                const codecs = ctx.dynamicBuilder.buildStorage(pallet, item)
+                return values.map(({ key, value }) => ({
+                  keyArgs: codecs.keys.dec(key),
+                  value: codecs.value.dec(value),
+                }))
+              },
+            )
+            .pipe(map((r) => r.value))
+        : from(
+            isEntries
+              ? storageEntry.getEntries(...args, {
+                  at: blockHash,
+                })
+              : storageEntry.getValue(...args, {
+                  at: blockHash,
+                }),
           )
-          .pipe(map(({ value }) => value)),
-      ),
-    )
+    const hash$ = chainHead
+      .storage$(blockHash, "hash", (ctx) =>
+        ctx.dynamicBuilder.buildStorage(pallet, item).keys.enc(...args),
+      )
+      .pipe(map(({ value }) => value))
     const ctxType$ = runtimeCtxAt$(blockHash).pipe(
       map((ctx) => {
         const ctxEntry = getStorageItem(ctx, pallet, item)

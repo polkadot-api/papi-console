@@ -3,6 +3,7 @@ import { Twox128 } from "@polkadot-api/substrate-bindings"
 import { fromHex, toHex } from "polkadot-api/utils"
 
 const textEncoder = new TextEncoder()
+const twoxHash = (value: string) => toHex(Twox128(textEncoder.encode(value)))
 const hashersToLength: Record<string, number> = {
   Identity: 0,
   Twox64Concat: 8,
@@ -13,12 +14,10 @@ const hashersToLength: Record<string, number> = {
   Twox256: -32,
 }
 
-export const decodeKey = (
-  ctx: Pick<RuntimeContext, "lookup" | "dynamicBuilder">,
+export const decodeKeyTarget = (
+  ctx: Pick<RuntimeContext, "lookup">,
   key: Uint8Array,
 ) => {
-  const twoxHash = (v: string) => toHex(Twox128(textEncoder.encode(v)))
-
   const keyHex = toHex(key)
   const pallet = ctx.lookup.metadata.pallets.find(
     (p) => p.storage && keyHex.startsWith(twoxHash(p.storage.prefix)),
@@ -31,6 +30,17 @@ export const decodeKey = (
   )
   if (!item) return null
 
+  return { pallet, item, keyRemaining }
+}
+
+export const decodeKeyArgs = (
+  ctx: Pick<RuntimeContext, "dynamicBuilder">,
+  {
+    pallet,
+    item,
+    keyRemaining,
+  }: NonNullable<ReturnType<typeof decodeKeyTarget>>,
+) => {
   const codec = ctx.dynamicBuilder.buildStorage(pallet.name, item.name)
   const hasherLengths =
     item.type.tag === "plain"
@@ -56,6 +66,8 @@ export const decodeKey = (
         const value = argCodec.dec(argsRemaining)
         // This is needed not just for the length, but see case AccountId: Can decode 0x, but then can't re-encode back. <- TODO bug?
         const reEnc = argCodec.enc(value)
+        // If reencoding ends up with a longer key, it means the key was actually cut out
+        if (reEnc.length > argsRemaining.length) return null
         argsRemaining = argsRemaining.slice(reEnc.length)
         args.push(value)
       } catch {
@@ -64,14 +76,8 @@ export const decodeKey = (
     }
   }
 
-  return {
-    pallet,
-    item,
-    entry: getEntry(ctx, item.type),
-    args,
-  }
+  return args
 }
-export type DecodedKey = ReturnType<typeof decodeKey>
 
 export const getEntry = (
   ctx: Pick<RuntimeContext, "lookup">,
