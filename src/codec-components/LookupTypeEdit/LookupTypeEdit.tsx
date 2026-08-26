@@ -4,6 +4,7 @@ import { byteArraysAreEqual } from "@/utils/byteArray"
 import {
   CodecComponentType,
   CodecComponentValue,
+  NOTIN,
 } from "@polkadot-api/react-builder"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { Codec } from "polkadot-api"
@@ -142,6 +143,7 @@ const useCodecProps = (
     if (!codec) return
     const encodedValue = (() => {
       if (componentValue.value.encoded) return componentValue.value.encoded
+      if (detectNotin(componentValue.value.decoded)) return null
       try {
         return codec.enc(componentValue.value.decoded)
       } catch (_) {
@@ -223,4 +225,10 @@ const useCodecProps = (
         value,
       }),
   }
+}
+const detectNotin: <T>(x: T) => boolean = (x) => {
+  if (x === NOTIN) return true
+  return x != null && typeof x === "object"
+    ? Object.values(x).some(detectNotin)
+    : false
 }
