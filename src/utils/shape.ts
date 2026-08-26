@@ -58,9 +58,10 @@ export const getDefaultValue = (innerVar: Var, depth = 0): any => {
     case "struct":
       return mapObject(innerVar.value, (v) => nextDefault(v))
     case "array":
-      return new Array(innerVar.len)
-        .fill(0)
-        .map(() => nextDefault(innerVar.value))
+      return innerVar.value.type === "primitive" &&
+        innerVar.value.value === "u8"
+        ? NOTIN
+        : new Array(innerVar.len).fill(0).map(() => nextDefault(innerVar.value))
     case "tuple":
       return innerVar.value.map(nextDefault)
     case "enum": {
