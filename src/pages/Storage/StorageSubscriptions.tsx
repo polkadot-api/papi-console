@@ -32,7 +32,7 @@ import {
   stringifyArg,
 } from "./storage.state"
 import { setValue } from "./StorageDecode"
-import { setKeysEnabled, setKeyValue } from "./StorageQuery"
+import { setKeysEnabled, setKeyValue, setSelectedKey } from "./StorageQuery"
 
 export const StorageSubscriptions: FC = () => {
   const params = useParams()
@@ -174,8 +174,7 @@ const ValuesSubscriptionBox: FC<{ subscription: string }> = ({
       ? status.value.length - 1
       : status.value.findIndex((v) => v.height > target) - 1
   const targetValue = status.value[targetValueIdx] as
-    | StorageSubscriptionValue
-    | undefined
+    StorageSubscriptionValue | undefined
   const hasNext = targetValueIdx < status.value.length - 1
   const hasPrev = targetValueIdx > 0
 
@@ -494,13 +493,19 @@ const useSynchronizeInputs = (id: string) => {
         group: params.pallet,
         item: params.item,
       })
-      setMode(params.value.type)
+      setMode(params.value.type === "rawQuery" ? "query" : params.value.type)
       // Let entry settle
       await Promise.resolve()
+      if (cancelled) return
       if (params.value.type === "query") {
-        if (cancelled) return
         setKeysEnabled(params.value.value.length)
         params.value.value.forEach((value, idx) => setKeyValue({ idx, value }))
+      } else if (params.value.type === "rawQuery") {
+        setKeysEnabled(0)
+        setSelectedKey({
+          type: "raw",
+          key: params.value.value,
+        })
       } else {
         setValue(params.value.value)
       }

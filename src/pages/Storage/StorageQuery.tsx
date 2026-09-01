@@ -25,11 +25,12 @@ import {
   scan,
   startWith,
   switchMap,
+  take,
   withLatestFrom,
 } from "rxjs"
 import { twMerge } from "tailwind-merge"
 import { selectedBlock$ } from "./BlockPicker"
-import { decodeKey } from "./decodeKey"
+import { decodeKeyArgs, decodeKeyTarget } from "./decodeKey"
 import { addStorageSubscription, storageEntryState } from "./storage.state"
 
 export const StorageQuery: FC = () => {
@@ -37,23 +38,35 @@ export const StorageQuery: FC = () => {
   const navigate = useNavigate()
 
   const submit = async () => {
-    const [entry, keyValues, keysEnabled, { hash }] = await firstValueFrom(
-      combineLatest([
-        storageEntryState.selectedEntry$,
-        keyValues$,
-        argsEnabled$,
-        selectedBlock$,
-      ]),
-    )
-    const args = keyValues.slice(0, keysEnabled)
+    const [entry, keyValues, keysEnabled, { hash }, selectedKey] =
+      await firstValueFrom(
+        combineLatest([
+          storageEntryState.selectedEntry$,
+          keyValues$,
+          argsEnabled$,
+          selectedBlock$,
+          selectedKey$,
+        ]),
+      )
+    if (selectedKey?.type === "raw") {
+      const id = await addStorageSubscription({
+        blockHash: hash ?? null,
+        pallet: entry!.pallet,
+        item: entry!.entry,
+        value: Enum("rawQuery", selectedKey.key),
+      })
+      navigate(`/storage/${id}`)
+    } else {
+      const args = keyValues.slice(0, keysEnabled)
 
-    const id = await addStorageSubscription({
-      blockHash: hash ?? null,
-      pallet: entry!.pallet,
-      item: entry!.entry,
-      value: Enum("query", args),
-    })
-    navigate(`/storage/${id}`)
+      const id = await addStorageSubscription({
+        blockHash: hash ?? null,
+        pallet: entry!.pallet,
+        item: entry!.entry,
+        value: Enum("query", args),
+      })
+      navigate(`/storage/${id}`)
+    }
   }
 
   return (
@@ -134,17 +147,6 @@ export const keyValues$ = keys$.pipeState(
     )
   }),
   withDefault([] as unknown[]),
-)
-
-const isReady$ = state(
-  combineLatest([keyValues$, argsEnabled$]).pipe(
-    map(
-      ([keyValues, keysEnabled]) =>
-        keyValues.length >= keysEnabled &&
-        keyValues.slice(0, keysEnabled).every((v) => v !== NOTIN),
-    ),
-  ),
-  false,
 )
 
 export const StorageKeysInput: FC<{
@@ -348,6 +350,26 @@ export const encodedKey$ = state(
   null,
 )
 
+export const [selectedKeyChange$, setSelectedKey] = createSignal<{
+  type: "fromValue" | "raw"
+  key: string
+}>()
+
+const selectedKey$ = state(
+  merge(
+    encodedKey$.pipe(
+      distinctUntilChanged(),
+      map((key) => (key ? { type: "fromValue", key } : null)),
+    ),
+    selectedKeyChange$,
+  ),
+)
+
+const isReady$ = state(
+  selectedKey$.pipe(map((v) => v && v.key.length > 2)),
+  false,
+)
+
 const [keyInputChange$, onKeyInputChange] =
   createSignal<ChangeEvent<HTMLInputElement>>()
 const [keyInputBlur$, onKeyInputBlur] = createSignal<void>()
@@ -361,7 +383,7 @@ const keyInput$ = state(
           value.length > 3 &&
           (() => {
             try {
-              return !decodeKey(ctx, Binary.fromHex(value))
+              return !decodeKeyTarget(ctx, Binary.fromHex(value))
             } catch {
               return true
             }
@@ -370,9 +392,10 @@ const keyInput$ = state(
         return { value, error }
       }),
     ),
-    merge(encodedKey$, keyInputBlur$.pipe(switchMap(() => encodedKey$))).pipe(
-      map((value) => ({ value: value ?? "", error: false })),
-    ),
+    merge(
+      selectedKey$,
+      keyInputBlur$.pipe(switchMap(() => selectedKey$.pipe(take(1)))),
+    ).pipe(map((value) => ({ value: value?.key ?? "", error: false }))),
   ),
   {
     value: "",
@@ -404,39 +427,47 @@ export const KeyInput: FC = () => {
           onKeyInputBlur()
 
           try {
-            const decoded = decodeKey(
-              {
-                dynamicBuilder: builder,
-                lookup: builder.lookup,
-              },
-              Binary.fromHex(keyInput.value),
-            )
-            if (!decoded) return
+            const ctx = {
+              dynamicBuilder: builder,
+              lookup: builder.lookup,
+            }
+            const target = decodeKeyTarget(ctx, Binary.fromHex(keyInput.value))
+            if (!target) return
 
             let newKeysEnabled = keysEnabled
             if (
-              decoded.pallet.name !== selectedEntry.pallet ||
-              decoded.item.name !== selectedEntry.entry
+              target.pallet.name !== selectedEntry.pallet ||
+              target.item.name !== selectedEntry.entry
             ) {
               storageEntryState.selectEntry({
-                group: decoded.pallet.name,
-                item: decoded.item.name,
+                group: target.pallet.name,
+                item: target.item.name,
               })
               newKeysEnabled =
-                decoded.item.type.tag === "plain"
+                target.item.type.tag === "plain"
                   ? 0
-                  : decoded.item.type.value.hashers.length
+                  : target.item.type.value.hashers.length
             }
 
-            if (decoded.args.length !== newKeysEnabled) {
-              if (decoded.args.length > newKeysEnabled) {
-                toggleKey(decoded.args.length - 1)
+            const args = decodeKeyArgs(ctx, target)
+            if (!args) {
+              setKeysEnabled(0)
+              setSelectedKey({
+                type: "raw",
+                key: keyInput.value,
+              })
+              return
+            }
+
+            if (args.length !== newKeysEnabled) {
+              if (args.length > newKeysEnabled) {
+                toggleKey(args.length - 1)
               } else {
-                toggleKey(decoded.args.length)
+                toggleKey(args.length)
               }
             }
 
-            decoded.args.forEach((value, idx) =>
+            args.forEach((value, idx) =>
               setKeyValue({
                 idx,
                 value,
