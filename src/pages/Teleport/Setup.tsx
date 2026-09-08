@@ -177,7 +177,6 @@ const AssetPicker = () => {
   )
 }
 
-// We add the HOLLAR destination in Hydration
 const getParaspellBuilder = (
   client: PolkadotClient,
   cfg: {
@@ -191,23 +190,6 @@ const getParaspellBuilder = (
 ) => {
   return Builder({
     apiOverrides: { [cfg.origin]: client },
-    customAssets: {
-      Hydration: [
-        {
-          symbol: "HOLLAR",
-          assetId: "222",
-          decimals: 18,
-          existentialDeposit: "20000000000000000",
-          location: {
-            parents: 1,
-            interior: {
-              X2: [{ Parachain: 2034 }, { GeneralIndex: 222 }],
-            },
-          },
-          forceOverride: true,
-        },
-      ],
-    },
   })
     .from(cfg.origin)
     .to(cfg.dest)
@@ -224,12 +206,7 @@ const supportedDestinations$ = state(
       const destinations = getSupportedDestinations(origin, {
         location: selectedAsset.location,
       })
-      if (origin === "AssetHubPolkadot" && selectedAsset.symbol === "HOLLAR") {
-        return [...destinations, "Hydration" as const]
-      }
-      if (origin === "Hydration" && selectedAsset.symbol === "HOLLAR") {
-        return [...destinations, "AssetHubPolkadot" as const]
-      }
+      console.log({ origin, location: selectedAsset.location }, destinations)
       return destinations
     }),
   ),

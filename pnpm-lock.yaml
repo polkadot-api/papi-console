@@ -21,8 +21,8 @@ importers:
         specifier: ^4.7.0
         version: 4.7.0(monaco-editor@0.56.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@paraspell/sdk':
-        specifier: 14.3.3
-        version: 14.3.3(@paraspell/descriptors@14.3.3(polkadot-api@3.1.0(esbuild@0.28.1)(rxjs@7.8.2)))(polkadot-api@3.1.0(esbuild@0.28.1)(rxjs@7.8.2))(rxjs@7.8.2)(typescript@7.0.2)(zod@3.25.76)
+        specifier: 14.3.4
+        version: 14.3.4(@paraspell/descriptors@14.3.4(polkadot-api@3.1.0(esbuild@0.28.1)(rxjs@7.8.2)))(polkadot-api@3.1.0(esbuild@0.28.1)(rxjs@7.8.2))(rxjs@7.8.2)(typescript@7.0.2)(zod@3.25.76)
       '@polkadot-api/descriptors':
         specifier: file:.papi/descriptors
         version: file:.papi/descriptors(polkadot-api@3.1.0(esbuild@0.28.1)(rxjs@7.8.2))
@@ -659,27 +659,27 @@ packages:
   '@oxc-project/types@0.148.0':
     resolution: {integrity: sha512-Nm4s/jB+4FpFsPhWGEC4h7rzksesmtnMXomo6rCMcg/b8zLQuOziRgkCS1fxDCXOlJB/6Q8oABOZ/OP6RIPj9A==}
 
-  '@paraspell/assets@14.3.3':
-    resolution: {integrity: sha512-BQRVQjtE5dua0ecz+nGZIOK7N6bFMCi+6cFt4kN+ptodz+Jvpn2pEMf1/9ebkp89hE2XyRI8oTwaYWCpFCqB5w==}
+  '@paraspell/assets@14.3.4':
+    resolution: {integrity: sha512-lQC2tFibN/rxP5ARJqXGdk5xbrxRID+e7/tLoUJq+6iyoy+F4WUuD+Ah4nsMOHmSv7s3dX17VXi93Sz0eveikg==}
 
-  '@paraspell/descriptors@14.3.3':
-    resolution: {integrity: sha512-elekmICwpfjOVC/qzeZmqmLem6Oy6A6GjGFlRhRLTsj39fPXugIqMf327qWmcAEbPZCpjc4XRmfDMqYsIfN2Rw==}
+  '@paraspell/descriptors@14.3.4':
+    resolution: {integrity: sha512-kZU7Tl3hinGSfFfD3+efzEAcqcQxxcfxh9CpMY6W38U45K4BSVt8RBw7POApYvK5xgTbTlUXb6Ln67ywtj6CDw==}
     peerDependencies:
       polkadot-api: '>= 3 < 4'
 
-  '@paraspell/pallets@14.3.3':
-    resolution: {integrity: sha512-RqVHjCR9xRviqKJeZeZnamb0sFFU+UfP4ZFNc9191EHimK1HDIIbeaxS1RMw4AG6M/qlX9GWjkDYuZZBhMrHGg==}
+  '@paraspell/pallets@14.3.4':
+    resolution: {integrity: sha512-pYYfnCWW9eGunD29pcBXewLQxMZTJN68YZ8a5/eJm5jsIKVGi7hfKr/H22XNqM5yEViWhdYazIBmQScPahpsnw==}
 
-  '@paraspell/sdk-common@14.3.3':
-    resolution: {integrity: sha512-wQS7kwTfiFmM8PZR6aCkkzNSLcJqB+mctu8yBURmMcHjp7sf5ReNucvCXYdvzu6XPy3ljpEf23fKclxvwUt15A==}
+  '@paraspell/sdk-common@14.3.4':
+    resolution: {integrity: sha512-pWswWnVLKEweOy4nXgnJtpMDr4GtV7lirgvdnt0P2fsRPK1dJXjrayV4YdfwDO4aR7HLd67uiPpcqhl2ZjXtiQ==}
 
-  '@paraspell/sdk-core@14.3.3':
-    resolution: {integrity: sha512-SReH5Q/2YgXct6QxRiXAWQh6AXtywIULNNBoXiOfSK0U/BJLO2ej3mT7eZYvsieerKqNFcY4VOU3r88SSp5L6A==}
+  '@paraspell/sdk-core@14.3.4':
+    resolution: {integrity: sha512-B7fVOczIA6dWFWGYdDCJshbn8RBHH9j4rt5CUTcQ/EzKVk4huEFqlrZXBBzd2Za8hR1i6neoEwcj3B5X70vsKA==}
 
-  '@paraspell/sdk@14.3.3':
-    resolution: {integrity: sha512-GkZVVG7SOL5fozqwr6vhepsAx36jm1ij1BHrZVnbXCTVPFqn34saK/7PDajnSW8ClllRgkT8hLDLf2jLqMi6sg==}
+  '@paraspell/sdk@14.3.4':
+    resolution: {integrity: sha512-7t1zLzg/f36DRzI2vzC4Hz1hH18WaQKeY8sm52Nk8Gnn7qy0bgwcyS1qK+Ymlq5K/AmQdurwmKqG9vFiomZO4w==}
     peerDependencies:
-      '@paraspell/descriptors': 14.3.3
+      '@paraspell/descriptors': 14.3.4
       polkadot-api: '>= 3 < 4'
 
   '@phosphor-icons/webcomponents@2.1.5':
@@ -4989,26 +4989,26 @@ snapshots:
 
   '@oxc-project/types@0.148.0': {}
 
-  '@paraspell/assets@14.3.3':
+  '@paraspell/assets@14.3.4':
     dependencies:
-      '@paraspell/sdk-common': 14.3.3
+      '@paraspell/sdk-common': 14.3.4
 
-  '@paraspell/descriptors@14.3.3(polkadot-api@3.1.0(esbuild@0.28.1)(rxjs@7.8.2))':
+  '@paraspell/descriptors@14.3.4(polkadot-api@3.1.0(esbuild@0.28.1)(rxjs@7.8.2))':
     dependencies:
       polkadot-api: 3.1.0(esbuild@0.28.1)(rxjs@7.8.2)
 
-  '@paraspell/pallets@14.3.3':
+  '@paraspell/pallets@14.3.4':
     dependencies:
-      '@paraspell/sdk-common': 14.3.3
+      '@paraspell/sdk-common': 14.3.4
 
-  '@paraspell/sdk-common@14.3.3': {}
+  '@paraspell/sdk-common@14.3.4': {}
 
-  '@paraspell/sdk-core@14.3.3(typescript@7.0.2)(zod@3.25.76)':
+  '@paraspell/sdk-core@14.3.4(typescript@7.0.2)(zod@3.25.76)':
     dependencies:
       '@noble/hashes': 2.4.0
-      '@paraspell/assets': 14.3.3
-      '@paraspell/pallets': 14.3.3
-      '@paraspell/sdk-common': 14.3.3
+      '@paraspell/assets': 14.3.4
+      '@paraspell/pallets': 14.3.4
+      '@paraspell/sdk-common': 14.3.4
       '@scure/base': 2.4.0
       viem: 2.56.3(typescript@7.0.2)(zod@3.25.76)
     transitivePeerDependencies:
@@ -5017,11 +5017,11 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@paraspell/sdk@14.3.3(@paraspell/descriptors@14.3.3(polkadot-api@3.1.0(esbuild@0.28.1)(rxjs@7.8.2)))(polkadot-api@3.1.0(esbuild@0.28.1)(rxjs@7.8.2))(rxjs@7.8.2)(typescript@7.0.2)(zod@3.25.76)':
+  '@paraspell/sdk@14.3.4(@paraspell/descriptors@14.3.4(polkadot-api@3.1.0(esbuild@0.28.1)(rxjs@7.8.2)))(polkadot-api@3.1.0(esbuild@0.28.1)(rxjs@7.8.2))(rxjs@7.8.2)(typescript@7.0.2)(zod@3.25.76)':
     dependencies:
       '@noble/hashes': 2.4.0
-      '@paraspell/descriptors': 14.3.3(polkadot-api@3.1.0(esbuild@0.28.1)(rxjs@7.8.2))
-      '@paraspell/sdk-core': 14.3.3(typescript@7.0.2)(zod@3.25.76)
+      '@paraspell/descriptors': 14.3.4(polkadot-api@3.1.0(esbuild@0.28.1)(rxjs@7.8.2))
+      '@paraspell/sdk-core': 14.3.4(typescript@7.0.2)(zod@3.25.76)
       '@polkadot-api/signers-common': 0.3.1(rxjs@7.8.2)
       '@polkadot-api/substrate-bindings': 0.21.1
       '@polkadot-labs/hdkd': 0.0.31

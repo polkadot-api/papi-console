@@ -17,7 +17,7 @@
     "@acala-network/chopsticks-core": "^1.5.1",
     "@ledgerhq/hw-transport-webusb": "^6.35.0",
     "@monaco-editor/react": "^4.7.0",
-    "@paraspell/sdk": "14.3.3",
+    "@paraspell/sdk": "14.3.4",
     "@polkadot-api/descriptors": "file:.papi/descriptors",
     "@polkadot-api/forklift": "^0.5.1",
     "@polkadot-api/json-rpc-provider-proxy": "^0.4.1",

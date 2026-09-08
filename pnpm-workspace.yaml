@@ -2,11 +2,11 @@ allowBuilds:
   "@reown/appkit": true
   esbuild: true
 minimumReleaseAgeExclude:
-  - '@paraspell/assets@14.3.0'
-  - '@paraspell/descriptors@14.3.0'
-  - '@paraspell/pallets@14.3.0'
-  - '@paraspell/sdk-common@14.3.0'
-  - '@paraspell/sdk-core@14.3.0'
-  - '@paraspell/sdk@14.3.0'
+  - '@paraspell/assets@14.3.0 || 14.3.4'
+  - '@paraspell/descriptors@14.3.0 || 14.3.4'
+  - '@paraspell/pallets@14.3.0 || 14.3.4'
+  - '@paraspell/sdk-common@14.3.0 || 14.3.4'
+  - '@paraspell/sdk-core@14.3.0 || 14.3.4'
+  - '@paraspell/sdk@14.3.0 || 14.3.4'
 patchedDependencies:
   react18-json-view: patches/react18-json-view.patch
