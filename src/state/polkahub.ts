@@ -1,20 +1,21 @@
 import { polkadot_people } from "@polkadot-api/descriptors"
 import { liftSuspense, state, SUSPENSE, withDefault } from "@react-rxjs/core"
 import { AccountId, Binary, HexString, SS58String } from "polkadot-api"
+import { WsEvent } from "polkadot-api/ws"
 import {
   Account,
   createLedgerProvider,
   createMultisigProvider,
-  multisigExternalSigner,
   createPjsWalletProvider,
   createPolkadotVaultProvider,
   createPolkaHub,
+  createProxyProvider,
   createReadOnlyProvider,
   createSelectedAccountPlugin,
   createWalletConnectProvider,
   knownChains,
+  multisigExternalSigner,
   Plugin,
-  createProxyProvider,
 } from "polkahub"
 import {
   combineLatest,
@@ -29,11 +30,13 @@ import { chainProperties$ } from "./chain-props.state"
 import {
   canSetStorage$,
   client$,
+  currentWsStatus$,
   getChainSource,
   selectedChain$,
   unsafeApi$,
 } from "./chains/chain.state"
 import { identity$, isVerified } from "./identity.state"
+import { WebsocketSource } from "./chains/websocket"
 
 const removeSuspense = <T>() =>
   pipe(
@@ -93,8 +96,10 @@ const proxyProvider = createProxyProvider((address) =>
   ),
 )
 const multisigProvider$ = selectedChain$.pipe(
-  switchMap(getChainSource),
-  map((source) => {
+  switchMap((chain) =>
+    combineLatest([getChainSource(chain), currentWsStatus$]),
+  ),
+  map(([source, wsStatus]) => {
     if (source.type === "websocket" && source.forkMethod !== "none") {
       return null
     }
@@ -115,8 +120,15 @@ const multisigProvider$ = selectedChain$.pipe(
       return null
     }
 
+    const getWsUri = (source: WebsocketSource) => {
+      if (wsStatus?.type === WsEvent.CONNECTED) return wsStatus.uri
+      return typeof source.endpoint === "string"
+        ? source.endpoint
+        : source.endpoint[0]
+    }
+
     const chain =
-      source.type === "chainSpec" ? `sm-${source.id}` : `ws-${source.endpoint}`
+      source.type === "chainSpec" ? `sm-${source.id}` : `ws-${getWsUri(source)}`
 
     return createMultisigProvider(
       multisigExternalSigner(
