@@ -35,8 +35,8 @@ import {
   selectedChain$,
   unsafeApi$,
 } from "./chains/chain.state"
-import { identity$, isVerified } from "./identity.state"
 import { WebsocketSource } from "./chains/websocket"
+import { identity$, isVerified } from "./identity.state"
 
 const removeSuspense = <T>() =>
   pipe(
@@ -150,7 +150,11 @@ export const polkaHub = createPolkaHub(
     [walletConnectProvider],
     [proxyProvider],
     multisigProvider$,
-  ]).pipe(map((v: (Plugin<any> | null)[]) => v.filter((v) => v != null))),
+  ]).pipe(
+    liftSuspense(),
+    filter((v) => v !== SUSPENSE),
+    map((v: (Plugin<any> | null)[]) => v.filter((v) => v != null)),
+  ),
   {
     getIdentity: (address) =>
       identity$(address).pipe(
