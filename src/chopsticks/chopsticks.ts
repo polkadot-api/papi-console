@@ -1,6 +1,9 @@
 import type { BlockDiff } from "@/state/block.state"
 import { chainClient$ } from "@/state/chains/chain.state"
-import { Blockchain, ChopsticksProvider } from "@acala-network/chopsticks-core"
+import type {
+  Blockchain,
+  ChopsticksProvider,
+} from "@acala-network/chopsticks-core"
 import {
   getSyncProvider,
   InnerJsonRpcProvider,
@@ -19,7 +22,7 @@ import {
   withLatestFrom,
 } from "rxjs"
 
-export const chopsticksInstance$ = new BehaviorSubject<Blockchain | null>(null)
+const chopsticksInstance$ = new BehaviorSubject<Blockchain | null>(null)
 
 export const createChopsticksProvider = (endpoint: string | string[]) =>
   withChopsticksEnhancer(
