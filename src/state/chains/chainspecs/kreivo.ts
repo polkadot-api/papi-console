@@ -4,9 +4,17 @@ export const chainSpec = JSON.stringify({
   chainType: "Live",
   bootNodes: [
     "/dns/boot-1.kreivo.bloque.network/tcp/443/wss/p2p/12D3KooWEht3GDE23nGEhpyNgAJ6B2GiGT9hquBDko6PtWuFRRB8",
+    "/dns/boot.kreivo.kippu.rocks/tcp/443/wss/p2p/12D3KooWNpsPXUKvg9Gk9te54r4xodSPzVgLUkrfhDPpYXNepCb7",
     "/dns/boot-2.kreivo.bloque.network/tcp/443/wss/p2p/12D3KooWLqz8Aj5g3snhLx2VZJzfAMNMZbwBrNs8LJGjY1ks4LcG",
     "/dns/boot-3.kreivo.bloque.network/tcp/443/wss/p2p/12D3KooWDAtFSYCotCmX5DtXTP2xsHvxtzfUSrVsgegFXopCzUBU",
-    "/dns/boot.kreivo.kippu.rocks/tcp/443/wss/p2p/12D3KooWNpsPXUKvg9Gk9te54r4xodSPzVgLUkrfhDPpYXNepCb7",
+    "/ip4/216.66.25.12/tcp/30004/p2p/12D3KooWA3cjeQpxXAxTSf72LtgDVGsnnuWUeF2VbDX9jFr93VHg",
+    "/dns/boot.kreivo.kippu.rocks/tcp/30333/p2p/12D3KooWNpsPXUKvg9Gk9te54r4xodSPzVgLUkrfhDPpYXNepCb7",
+    "/dns/boot-1.kreivo.bloque.network/tcp/30333/p2p/12D3KooWEht3GDE23nGEhpyNgAJ6B2GiGT9hquBDko6PtWuFRRB8",
+    "/ip4/216.66.25.12/tcp/30005/p2p/12D3KooWL2646Cg3zBLDHgH3EfW11vg6X7xJF7hsidxukj8oFawm",
+    "/dns/boot-2.kreivo.bloque.network/tcp/30333/p2p/12D3KooWLqz8Aj5g3snhLx2VZJzfAMNMZbwBrNs8LJGjY1ks4LcG",
+    "/ip4/216.66.25.12/tcp/30006/p2p/12D3KooWGuGkYYX4cEizgkxkUfjdKfjjy9fWUoCfiGFFTfEJcMmA",
+    "/dns/boot-3.kreivo.bloque.network/tcp/30333/p2p/12D3KooWDAtFSYCotCmX5DtXTP2xsHvxtzfUSrVsgegFXopCzUBU",
+    "/ip4/216.66.25.12/tcp/30007/p2p/12D3KooWDR1wp44HWdgUtFRHBmgUBsGoPg2EDxHUmmWYtbmaCDeK"
   ],
   properties: {
     ss58Format: 2,
