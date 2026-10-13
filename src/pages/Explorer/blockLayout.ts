@@ -119,12 +119,16 @@ export function layoutBlocks(
   }
 
   // The line from a block to its parent leaves the block's row at the
-  // parent's lane and crosses every row in between.
+  // parent's lane and crosses every row in between. Siblings share that
+  // line, so each lane is drawn once per row: overlapping semi-transparent
+  // strokes would show up as a darker double line.
   rows.forEach((row, childRow) => {
     const parentRow = rowOf.get(row.block.parent)
     if (parentRow == null || row.parentPosition == null) return
     for (let r = childRow + 1; r < parentRow; r++) {
-      rows[r].passThrough.push(row.parentPosition)
+      if (!rows[r].passThrough.includes(row.parentPosition)) {
+        rows[r].passThrough.push(row.parentPosition)
+      }
     }
   })
 
