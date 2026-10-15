@@ -54,6 +54,8 @@ const RuntimeCallResultContent: FC<{
   context: RuntimeCallWorkspaceContext
 }> = ({ id, context }) => {
   const [mode, setMode] = useState<"json" | "decoded">("decoded")
+  // Re-runs from the workspace move the result to another block
+  const blockHash = useStateObservable(context.result$)?.blockHash
 
   return (
     <li className="border rounded bg-card text-card-foreground p-2">
@@ -64,7 +66,7 @@ const RuntimeCallResultContent: FC<{
         <div className="flex items-center shrink-0 gap-2">
           <div className="text-xs text-center">
             <p>Block</p>
-            <p>{shortStr(context.blockHash, 6)}</p>
+            <p>{shortStr(blockHash ?? context.blockHash, 6)}</p>
           </div>
           <ButtonGroup
             value={mode}
