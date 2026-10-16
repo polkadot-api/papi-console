@@ -1,19 +1,33 @@
 import { createMetadataEntryState } from "@/components/MetadataEntryInput"
 import { pushWorkspaceEntry, WorkspaceEntryData } from "@/components/Workspace"
 import { getHashParams } from "@/hashParams"
-import { genericUnsafeApi$, runtimeCtxAt$ } from "@/state/chains/chain.state"
+import {
+  client$,
+  genericUnsafeApi$,
+  runtimeCtxAt$,
+} from "@/state/chains/chain.state"
 import { RuntimeContext } from "@polkadot-api/observable-client"
 import { state } from "@react-rxjs/core"
 import { ServerCog } from "lucide-react"
 import { Binary, Codec, HexString, ResultPayload } from "polkadot-api"
 import {
+  BehaviorSubject,
   catchError,
   combineLatest,
+  concatMap,
+  distinctUntilChanged,
+  EMPTY,
+  filter,
+  finalize,
   firstValueFrom,
   from,
   map,
+  merge,
   of,
-  startWith,
+  Subject,
+  switchMap,
+  take,
+  throttle,
 } from "rxjs"
 import { stringifyArg } from "../Storage/storage.state"
 import {
@@ -111,30 +125,72 @@ export const runtimeCallToWorkspaceEntry = async (
     combineLatest([genericUnsafeApi$, runtimeCtxAt$(query.blockHash)]),
   )
 
-  const query$ = from(
-    unsafeApi.apis[query.api][query.method](...query.args, {
-      at: query.blockHash,
-    }),
-  ).pipe(
-    map((result) => ({
-      success: true,
-      value: result,
-    })),
-    catchError((ex) => {
-      console.error(ex)
-      return of({
-        success: false,
-        value: ex,
-      })
-    }),
+  const runAt = (blockHash: HexString) =>
+    from(
+      unsafeApi.apis[query.api][query.method](...query.args, {
+        at: blockHash,
+      }),
+    ).pipe(
+      map((result) => ({
+        success: true,
+        value: result,
+        blockHash,
+      })),
+      catchError((ex) => {
+        console.error(ex)
+        return of({
+          success: false,
+          value: ex,
+          blockHash,
+        })
+      }),
+    )
+
+  // The call first runs at the queried block, and a re-run goes to the latest
+  // best block. While following, it re-runs as new best blocks arrive, but
+  // with only one call in flight: when a call completes, it runs again at the
+  // newest best block if that changed meanwhile, so chains with short block
+  // times don't get a call per block.
+  const rerun$ = new Subject<void>()
+  const follow$ = new BehaviorSubject(false)
+  const latestBest$ = client$.pipe(
+    switchMap((client) => client.bestBlocks$),
+    filter((blocks) => blocks.length > 0),
+    map((blocks) => blocks[0].hash),
+  )
+  const runDone$ = new Subject<void>()
+  const blockHash$ = merge(
+    of(query.blockHash),
+    rerun$.pipe(switchMap(() => latestBest$.pipe(take(1)))),
+    follow$.pipe(
+      distinctUntilChanged(),
+      switchMap((follow) =>
+        follow
+          ? latestBest$.pipe(
+              distinctUntilChanged(),
+              throttle(() => runDone$, { leading: true, trailing: true }),
+            )
+          : EMPTY,
+      ),
+    ),
   )
 
-  const result$ = state(query$, null)
+  const result$ = state(
+    blockHash$.pipe(
+      concatMap((blockHash) =>
+        runAt(blockHash).pipe(finalize(() => runDone$.next())),
+      ),
+    ),
+    null,
+  )
   const context: RuntimeCallWorkspaceContext = {
     api: query.api,
     method: query.method,
     blockHash: query.blockHash,
     result$,
+    follow$: state(follow$, false),
+    setFollow: (follow) => follow$.next(follow),
+    rerun: () => rerun$.next(),
   }
   const id = runtimeQueryToId(ctx, query)
 
@@ -144,9 +200,14 @@ export const runtimeCallToWorkspaceEntry = async (
     title: [query.api, query.method].join("."),
     subtitle: `${query.args.map(stringifyArg)}`,
     link: `/runtimeCalls/${id}`,
-    status: query$.pipe(
-      map((v) => (v.success ? ("done" as const) : ("error" as const))),
-      startWith("pending" as const),
+    status: result$.pipe(
+      map((v) =>
+        v == null
+          ? ("pending" as const)
+          : v.success
+            ? ("done" as const)
+            : ("error" as const),
+      ),
     ),
     icon: ServerCog,
     context,
@@ -154,7 +215,10 @@ export const runtimeCallToWorkspaceEntry = async (
   }
 }
 
-export type RuntimeCallResult = ResultPayload<unknown, any>
+export type RuntimeCallResult = ResultPayload<unknown, any> & {
+  // The block the call ran at
+  blockHash: HexString
+}
 
 export const addRuntimeCallQuery = async (query: RuntimeCallQuery) => {
   const data = await runtimeCallToWorkspaceEntry(query)

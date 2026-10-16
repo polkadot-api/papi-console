@@ -11,7 +11,10 @@ import { filter, firstValueFrom } from "rxjs"
 import { setBlockHashValue } from "../Storage/BlockPicker"
 import { ValueDisplay } from "../Storage/StorageSubscriptions"
 import { setInputValue } from "./RuntimeCallQuery"
-import { RuntimeCallWorkspaceContext } from "./RuntimeCallWorkspaceEntry"
+import {
+  FollowToggle,
+  RuntimeCallWorkspaceContext,
+} from "./RuntimeCallWorkspaceEntry"
 import {
   idToRuntimeQuery,
   runtimeCallEntryState,
@@ -54,6 +57,8 @@ const RuntimeCallResultContent: FC<{
   context: RuntimeCallWorkspaceContext
 }> = ({ id, context }) => {
   const [mode, setMode] = useState<"json" | "decoded">("decoded")
+  // Re-runs from the workspace move the result to another block
+  const blockHash = useStateObservable(context.result$)?.blockHash
 
   return (
     <li className="border rounded bg-card text-card-foreground p-2">
@@ -62,9 +67,10 @@ const RuntimeCallResultContent: FC<{
           {context.api}.{context.method}
         </h3>
         <div className="flex items-center shrink-0 gap-2">
+          <FollowToggle context={context} />
           <div className="text-xs text-center">
             <p>Block</p>
-            <p>{shortStr(context.blockHash, 6)}</p>
+            <p>{shortStr(blockHash ?? context.blockHash, 6)}</p>
           </div>
           <ButtonGroup
             value={mode}
