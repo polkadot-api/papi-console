@@ -22,7 +22,6 @@ export const RuntimeCallWorkspaceEntry: FC<{
   context: RuntimeCallWorkspaceContext
 }> = ({ context }) => {
   const result = useStateObservable(context.result$)
-  const follow = useStateObservable(context.follow$)
 
   return (
     <div className="p-3 text-sm">
@@ -39,20 +38,30 @@ export const RuntimeCallWorkspaceEntry: FC<{
           >
             <RefreshCw size={14} />
           </IconButton>
-          <IconButton
-            tooltip={
-              follow ? "Stop following" : "Keep it updated with new best blocks"
-            }
-            aria-label="Follow best blocks"
-            aria-pressed={follow}
-            className={twMerge("h-7 w-7", follow && "text-primary")}
-            onClick={() => context.setFollow(!follow)}
-          >
-            <Radio size={14} />
-          </IconButton>
+          <FollowToggle context={context} />
         </div>
       </div>
       {result && <JsonDisplay src={result.value} />}
     </div>
+  )
+}
+
+export const FollowToggle: FC<{
+  context: RuntimeCallWorkspaceContext
+}> = ({ context }) => {
+  const follow = useStateObservable(context.follow$)
+
+  return (
+    <IconButton
+      tooltip={
+        follow ? "Stop following" : "Keep it updated with new best blocks"
+      }
+      aria-label="Follow best blocks"
+      aria-pressed={follow}
+      className={twMerge("h-7 w-7", follow && "text-polkadot")}
+      onClick={() => context.setFollow(!follow)}
+    >
+      <Radio size={14} />
+    </IconButton>
   )
 }
