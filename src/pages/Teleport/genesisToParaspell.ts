@@ -20,11 +20,13 @@ export const genesisHashToParaspell: Record<string, TChain> = {
   "0x638cd2b9": "CoretimeKusama",
   "0xefb56e30": "CoretimePolkadot",
   "0xf938510e": "CoretimeWestend",
-  "0x4319cc49": "Crust",
-  "0xd4c0c08c": "CrustShadow",
+  // Curio
   "0xf0b8924b": "Darwinia",
   "0x7dd99936": "Encointer",
   "0x5a51e04b": "EnergyWebX",
+  // EnergyWebXPaseo
+  // Ethereum
+  // EthereumTestnet
   "0x2fc8bb6e": "Heima",
   "0x40d175ca": "HeimaPaseo",
   "0xafdc188f": "Hydration",
@@ -32,8 +34,10 @@ export const genesisHashToParaspell: Record<string, TChain> = {
   "0xbb9233e2": "Jamton",
   "0xbaf5aabe": "Karura",
   "0xb0a8d493": "Kusama",
+  // Mythos
   "0xe7e09623": "NeuroWeb",
   "0x77afd619": "Paseo",
+  // Peaq
   "0x5d3c2986": "Pendulum",
   "0xafb18a62": "Penpal",
   "0xc1af4cb4": "PeopleKusama",

@@ -2,12 +2,56 @@ allowBuilds:
   "@reown/appkit": true
   esbuild: true
 minimumReleaseAgeExclude:
-  - '@paraspell/assets@14.3.0 || 14.3.4'
-  - '@paraspell/descriptors@14.3.0 || 14.3.4'
-  - '@paraspell/pallets@14.3.0 || 14.3.4'
-  - '@paraspell/sdk-common@14.3.0 || 14.3.4'
-  - '@paraspell/sdk-core@14.3.0 || 14.3.4'
-  - '@paraspell/sdk@14.3.0 || 14.3.4'
-  - '@polkadot-api/forklift@0.6.1'
+  - "@paraspell/assets@14.3.0 || 14.3.4"
+  - "@paraspell/descriptors@14.3.0 || 14.3.4"
+  - "@paraspell/pallets@14.3.0 || 14.3.4"
+  - "@paraspell/sdk-common@14.3.0 || 14.3.4"
+  - "@paraspell/sdk-core@14.3.0 || 14.3.4"
+  - "@paraspell/sdk@14.3.0 || 14.3.4"
+  - "@polkadot-api/forklift@0.6.1"
+  - "polkadot-api@3.3.0"
+  - "polkahub@0.10.0"
+  - "@coinbase/cdp-sdk@1.60.0"
+  - "@polkadot-api/cli@0.22.5"
+  - "@polkadot-api/observable-client@0.19.4"
+  - "@polkadot-api/pjs-signer@0.9.0"
+  - "@polkahub/context@0.10.0"
+  - "@polkahub/ledger@0.10.0"
+  - "@polkahub/multisig@0.10.0"
+  - "@polkahub/pjs-wallet@0.10.0"
+  - "@polkahub/plugin@0.10.0"
+  - "@polkahub/proxy@0.10.0"
+  - "@polkahub/read-only@0.10.0"
+  - "@polkahub/select-account@0.10.0"
+  - "@polkahub/state@0.10.0"
+  - "@polkahub/ui-components@0.10.0"
+  - "@polkahub/vault@0.10.0"
+  - "@polkahub/wallet-connect@0.10.0"
+  - "@rollup/rollup-android-arm-eabi@4.65.0"
+  - "@rollup/rollup-android-arm64@4.65.0"
+  - "@rollup/rollup-darwin-arm64@4.65.0"
+  - "@rollup/rollup-darwin-x64@4.65.0"
+  - "@rollup/rollup-freebsd-arm64@4.65.0"
+  - "@rollup/rollup-freebsd-x64@4.65.0"
+  - "@rollup/rollup-linux-arm-gnueabihf@4.65.0"
+  - "@rollup/rollup-linux-arm-musleabihf@4.65.0"
+  - "@rollup/rollup-linux-arm64-gnu@4.65.0"
+  - "@rollup/rollup-linux-arm64-musl@4.65.0"
+  - "@rollup/rollup-linux-loong64-gnu@4.65.0"
+  - "@rollup/rollup-linux-loong64-musl@4.65.0"
+  - "@rollup/rollup-linux-ppc64-gnu@4.65.0"
+  - "@rollup/rollup-linux-ppc64-musl@4.65.0"
+  - "@rollup/rollup-linux-riscv64-gnu@4.65.0"
+  - "@rollup/rollup-linux-riscv64-musl@4.65.0"
+  - "@rollup/rollup-linux-s390x-gnu@4.65.0"
+  - "@rollup/rollup-linux-x64-gnu@4.65.0"
+  - "@rollup/rollup-linux-x64-musl@4.65.0"
+  - "@rollup/rollup-openbsd-x64@4.65.0"
+  - "@rollup/rollup-openharmony-arm64@4.65.0"
+  - "@rollup/rollup-win32-arm64-msvc@4.65.0"
+  - "@rollup/rollup-win32-ia32-msvc@4.65.0"
+  - "@rollup/rollup-win32-x64-gnu@4.65.0"
+  - "@rollup/rollup-win32-x64-msvc@4.65.0"
+  - "rollup@4.65.0"
 patchedDependencies:
   react18-json-view: patches/react18-json-view.patch
