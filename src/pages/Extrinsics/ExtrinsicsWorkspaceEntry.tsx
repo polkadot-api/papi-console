@@ -24,8 +24,8 @@ type TrackedTransactionEvent =
   | {
       type: "invalid" | "error"
       value: any
-      txHash: string
-      raw: Uint8Array
+      txHash?: string
+      raw?: Uint8Array
       callData: TxCallData
     }
 
@@ -96,6 +96,37 @@ export const trackTx = async (
   setWorkspaceOpen(true)
 }
 
+export const pushSignError = (
+  err: unknown,
+  callData: TxCallData,
+  signer?: Account,
+) => {
+  const title = callData ? `${callData.type}.${callData.value.type}` : null
+
+  pushWorkspaceEntry({
+    id: v4(),
+    source: "Extrinsics",
+    title: title ?? "Transaction",
+    // TODO correct format
+    subtitle: signer ? `Signer ${signer.name ?? signer.address}` : undefined,
+    icon: Send,
+    status: of("error"),
+    content: () => {
+      return (
+        <ExtrinsicsWorkspaceEntry
+          event={{
+            type: "error",
+            callData,
+            value: err,
+          }}
+        />
+      )
+    },
+  })
+  // Forcing it to open as it's the only place where Transactions are tracked
+  setWorkspaceOpen(true)
+}
+
 const ExtrinsicsWorkspaceEntry: FC<{ event: TrackedTransactionEvent }> = ({
   event,
 }) => {
@@ -108,17 +139,19 @@ const ExtrinsicsWorkspaceEntry: FC<{ event: TrackedTransactionEvent }> = ({
             {getStatus(event)}
           </dd>
         </div>
-        <div className="contents">
-          <dt className="text-muted-foreground">Extrinsic</dt>
-          <dd className="truncate font-mono flex items-center gap-1">
-            <Link
-              className="underline"
-              to={`/extrinsics/analyzer#extrinsic=${toHex(event.raw)}`}
-            >
-              {shortStr(toHex(event.raw), 8)}
-            </Link>
-          </dd>
-        </div>
+        {event.raw ? (
+          <div className="contents">
+            <dt className="text-muted-foreground">Extrinsic</dt>
+            <dd className="truncate font-mono flex items-center gap-1">
+              <Link
+                className="underline"
+                to={`/extrinsics/analyzer#extrinsic=${toHex(event.raw)}`}
+              >
+                {shortStr(toHex(event.raw), 8)}
+              </Link>
+            </dd>
+          </div>
+        ) : null}
         <div className="contents">
           <dt className="text-muted-foreground">Hash</dt>
           {event.txHash ? (

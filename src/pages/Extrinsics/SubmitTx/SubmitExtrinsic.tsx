@@ -37,9 +37,9 @@ import {
 import { FC, forwardRef, ReactNode, useState } from "react"
 import { catchError, map, switchMap, timer } from "rxjs"
 import { CustomSignedExt, customSignedExtensions$ } from "../CustomSignedExt"
-import { trackTx } from "../ExtrinsicsWorkspaceEntry"
-import { Estimates } from "./Estimates"
+import { pushSignError, trackTx } from "../ExtrinsicsWorkspaceEntry"
 import { DryRun } from "./DryRun"
+import { Estimates } from "./Estimates"
 import {
   blurNonce,
   DEFAULT_MORTAL,
@@ -112,6 +112,8 @@ export const SubmitExtrinsic = forwardRef<HTMLElement>((_, ref) => {
       const signedExtrinsic = await tx.create(account.txCreator, txOptions)
       trackTx(signedExtrinsic, tx.decodedCall, account)
     } catch (ex) {
+      if (!(ex instanceof Error && ex.message === "Cancelled"))
+        pushSignError(ex, tx.decodedCall, account)
       console.error(ex)
     }
     setIsSigning(false)
