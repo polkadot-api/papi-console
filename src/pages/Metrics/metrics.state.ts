@@ -19,6 +19,7 @@ import {
   takeUntil,
 } from "rxjs"
 import { getBlockWeight } from "../Explorer/BlockPopover"
+import { toWeight, weightRatio } from "@/lib/weight"
 
 export const withDefer =
   <I, O>(fn: () => OperatorFunction<I, O>): OperatorFunction<I, O> =>
@@ -305,7 +306,7 @@ export const blockWeights$ = client$.pipeState(
       .constants.System.BlockWeights()
       .catch(() => null),
   ),
-  map((v) => v?.max_block ?? null),
+  map((v) => toWeight(v?.max_block)),
   switchMap((max_weight) =>
     max_weight
       ? accumulate<{
@@ -319,10 +320,11 @@ export const blockWeights$ = client$.pipeState(
 
             const weightPct = weight
               ? {
-                  refTime:
-                    Number(weight.ref_time) / Number(max_weight.ref_time),
-                  proofSize:
-                    Number(weight.proof_size) / Number(max_weight.proof_size),
+                  refTime: weightRatio(weight.ref_time, max_weight.ref_time),
+                  proofSize: weightRatio(
+                    weight.proof_size,
+                    max_weight.proof_size,
+                  ),
                 }
               : null
 
