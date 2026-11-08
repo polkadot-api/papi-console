@@ -193,7 +193,7 @@
     "id": "kabocha",
     "display": "Kabocha",
     "rpcs": {
-      "JelliedOwl": "wss://kabocha.jelliedowl.net"
+      "Birdbrain": "wss://kabocha-rpc.birdbrain.wtf"
     }
   },
   {
