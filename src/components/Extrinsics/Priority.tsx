@@ -4,6 +4,7 @@ import { client$ } from "@/state/chains/chain.state"
 import { polkadot_people } from "@polkadot-api/descriptors"
 import { Binary, HexString } from "polkadot-api"
 import { FC, ReactNode, useContext, useEffect, useState } from "react"
+import { toWeight, Weight } from "@/lib/weight"
 
 export const AnalyzePriority: FC<{
   txPayment?: { tip?: bigint }
@@ -141,7 +142,8 @@ const getPriority = async (
         queryInfo.class.type.toLocaleLowerCase() as keyof typeof length.max
       ]
 
-    const maxTxPerBlockWeight = divWeight(weights.max_block, queryInfo.weight)
+    const weight = toWeight(queryInfo.weight)!
+    const maxTxPerBlockWeight = divWeight(toWeight(weights.max_block)!, weight)
     const maxTxPerBlockLength = BigInt(Math.floor(maxLength / extLength))
     const maxTxPerBlock =
       maxTxPerBlockWeight < maxTxPerBlockLength
@@ -154,7 +156,7 @@ const getPriority = async (
     return {
       priority,
       length: extLength,
-      queryInfo,
+      queryInfo: { ...queryInfo, weight },
       tip,
       maxTxPerBlockLength,
       maxTxPerBlockWeight,
@@ -197,9 +199,14 @@ const usePriorityAnalysis = ({
   return result
 }
 
-type Weight = { ref_time: bigint; proof_size: bigint }
+// A zero dimension (e.g. proof_size on a WeightV1 runtime) puts no limit on the count.
 const divWeight = (a: Weight, b: Weight) => {
-  const ref_time = b.ref_time === 0n ? 1n : a.ref_time / b.ref_time
-  const proof_size = b.proof_size === 0n ? 1n : a.proof_size / b.proof_size
-  return ref_time < proof_size ? ref_time : proof_size
+  const counts = [
+    [a.ref_time, b.ref_time],
+    [a.proof_size, b.proof_size],
+  ]
+    .filter(([, d]) => d !== 0n)
+    .map(([n, d]) => n / d)
+  if (!counts.length) return 1n
+  return counts.reduce((min, c) => (c < min ? c : min))
 }

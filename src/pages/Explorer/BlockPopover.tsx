@@ -9,6 +9,7 @@ import { FC } from "react"
 import { map } from "rxjs"
 import { BlockStatusIcon, statusText } from "./Detail/BlockState"
 import { filterEvt } from "./events.state"
+import { toWeight, weightRatio } from "@/lib/weight"
 
 const maxBlockWeight$ = state(
   runtimeCtx$.pipe(
@@ -17,8 +18,9 @@ const maxBlockWeight$ = state(
         .find((p) => p.name === "System")
         ?.constants.find((ct) => ct.name === "BlockWeights")
       if (!ct) return null
-      return dynamicBuilder.buildDefinition(ct.type).dec(ct.value)
-        .max_block as Weight
+      return toWeight(
+        dynamicBuilder.buildDefinition(ct.type).dec(ct.value).max_block,
+      )
     }),
   ),
   null,
@@ -32,11 +34,7 @@ export const getBlockWeight = (block: BlockInfo) => {
   )
   return (
     extrinsicEvents
-      ?.map(
-        (evt) =>
-          (evt.event.value.value.dispatch_info?.weight ??
-            null) as Weight | null,
-      )
+      ?.map((evt) => toWeight(evt.event.value.value.dispatch_info?.weight))
       .reduce(addWeight, {
         proof_size: 0n,
         ref_time: 0n,
@@ -117,9 +115,8 @@ const WeightLimits: FC<{ weight: Weight | null }> = ({ weight }) => {
   const maxBlockWeight = useStateObservable(maxBlockWeight$)
   if (!weight || !maxBlockWeight) return null
 
-  const refTimeP = Number(weight.ref_time) / Number(maxBlockWeight.ref_time)
-  const proofSizeP =
-    Number(weight.proof_size) / Number(maxBlockWeight.proof_size)
+  const refTimeP = weightRatio(weight.ref_time, maxBlockWeight.ref_time)
+  const proofSizeP = weightRatio(weight.proof_size, maxBlockWeight.proof_size)
   const pct = (progress: number) => Math.round(progress * 100) + "%"
 
   return (
